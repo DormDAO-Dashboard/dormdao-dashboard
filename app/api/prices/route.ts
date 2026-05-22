@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TICKER_TO_COINGECKO } from "@/lib/tokens";
 
-// Module-level cache — prevents hammering CoinGecko's free tier rate limit
 const cache = new Map<string, { prices: Record<string, { usd: number; usd_24h_change: number }>; expiresAt: number }>();
 const CACHE_TTL = 60_000;
+const BATCH_SIZE = 20;
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -14,26 +14,39 @@ export async function GET(req: NextRequest) {
 
   const ids = tickers
     .map((t) => TICKER_TO_COINGECKO[t])
-    .filter(Boolean)
-    .join(",");
+    .filter(Boolean);
 
-  if (!ids) {
+  if (!ids.length) {
     return NextResponse.json({ prices: {}, fetchedAt: new Date().toISOString() });
   }
 
+  const cacheKey = ids.join(",");
   const now = Date.now();
-  const cached = cache.get(ids);
+  const cached = cache.get(cacheKey);
   if (cached && now < cached.expiresAt) {
-    return NextResponse.json({ prices: cached.prices, fetchedAt: new Date(cached.expiresAt - CACHE_TTL).toISOString() });
+    return NextResponse.json({
+      prices: cached.prices,
+      fetchedAt: new Date(cached.expiresAt - CACHE_TTL).toISOString(),
+    });
   }
 
   try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
+    const batches: string[][] = [];
+    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+      batches.push(ids.slice(i, i + BATCH_SIZE));
+    }
+
+    const batchResults = await Promise.all(
+      batches.map(async (batch) => {
+        const res = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${batch.join(",")}&vs_currencies=usd&include_24hr_change=true`
+        );
+        if (!res.ok) return {};
+        return res.json();
+      })
     );
 
-    if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
-    const data = await res.json();
+    const data = Object.assign({}, ...batchResults);
 
     const prices: Record<string, { usd: number; usd_24h_change: number }> = {};
     for (const ticker of tickers) {
@@ -46,13 +59,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    cache.set(ids, { prices, expiresAt: now + CACHE_TTL });
+    cache.set(cacheKey, { prices, expiresAt: now + CACHE_TTL });
     return NextResponse.json({ prices, fetchedAt: new Date().toISOString() });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
-    // Return stale cache on error rather than failing
     if (cached) {
-      return NextResponse.json({ prices: cached.prices, fetchedAt: new Date(cached.expiresAt - CACHE_TTL).toISOString() });
+      return NextResponse.json({
+        prices: cached.prices,
+        fetchedAt: new Date(cached.expiresAt - CACHE_TTL).toISOString(),
+      });
     }
     return NextResponse.json({ error: msg, prices: {} }, { status: 500 });
   }

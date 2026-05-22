@@ -1,6 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
-import { KpiCard, Skeleton } from "@/components/ui/Card";
+import { KpiCard } from "@/components/ui/Card";
 import { NavBarChart } from "@/components/charts/NavBarChart";
 import { EthReturnChart } from "@/components/charts/EthReturnChart";
 import { TopBottomChart } from "@/components/charts/TopBottomChart";
@@ -24,42 +23,7 @@ function computeStats(schools: SchoolRow[]): DaoStats {
   };
 }
 
-function DashboardSkeleton() {
-  return (
-    <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-xl border border-gray-800 bg-gray-900/50 p-5">
-            <Skeleton className="h-3 w-24 mb-3" />
-            <Skeleton className="h-8 w-32" />
-          </div>
-        ))}
-      </div>
-      <div className="grid lg:grid-cols-2 gap-6 mb-8">
-        {[...Array(2)].map((_, i) => (
-          <div key={i} className="rounded-xl border border-gray-800 bg-gray-900/50 p-5">
-            <Skeleton className="h-3 w-40 mb-4" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-export function DashboardClient() {
-  const [schools, setSchools] = useState<SchoolRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/sheets")
-      .then((r) => r.json())
-      .then((d) => setSchools(d.schools ?? []))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <DashboardSkeleton />;
-
+export function DashboardClient({ schools }: { schools: SchoolRow[] }) {
   const stats = computeStats(schools);
 
   return (

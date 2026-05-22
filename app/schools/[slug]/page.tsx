@@ -2,22 +2,12 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatUSD, formatPct } from "@/lib/utils";
-import { fetchSheetsData } from "@/lib/sheets";
+import { getSchoolsData } from "@/lib/cache";
 import { KpiCard, Skeleton } from "@/components/ui/Card";
 import { AddNoteForm } from "@/components/notes/AddNoteForm";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { HoldingsTableClient } from "@/components/HoldingsTableClient";
 import { ArrowLeft } from "lucide-react";
-
-async function getSchoolAndPeers(slug: string) {
-  try {
-    const { schools } = await fetchSheetsData();
-    const school = schools.find((s) => s.slug === slug) ?? null;
-    return { school, allSchools: schools };
-  } catch {
-    return { school: null, allSchools: [] };
-  }
-}
 
 async function getNotes(school: string) {
   try {
@@ -35,16 +25,16 @@ async function getNotes(school: string) {
   }
 }
 
-
 async function SchoolContent({ slug }: { slug: string }) {
-  const { school, allSchools } = await getSchoolAndPeers(slug);
+  const { schools } = await getSchoolsData();
+  const school = schools.find((s) => s.slug === slug) ?? null;
   if (!school) notFound();
 
   const notes = await getNotes(school.name);
 
   const otherSchools: Record<string, string[]> = {};
   for (const h of school.holdings ?? []) {
-    const others = allSchools
+    const others = schools
       .filter((s) => s.slug !== slug && s.holdings?.some((oh) => oh.ticker === h.ticker))
       .map((s) => s.name);
     if (others.length > 0) otherSchools[h.ticker] = others;

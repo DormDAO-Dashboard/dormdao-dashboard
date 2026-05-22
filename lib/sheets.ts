@@ -172,19 +172,33 @@ function parseHoldings(data: string[][]): Holding[] {
   return holdings;
 }
 
+const GECKO_BATCH_SIZE = 20;
+
 async function fetchGeckoPrices(geckoIds: string[]): Promise<Record<string, number>> {
   if (!geckoIds.length) return {};
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${geckoIds.join(",")}&vs_currencies=usd`,
-      { next: { revalidate: 60 } }
-    );
-    if (!res.ok) return {};
-    const data: Record<string, { usd: number }> = await res.json();
-    return Object.fromEntries(Object.entries(data).map(([id, v]) => [id, v.usd ?? 0]));
-  } catch {
-    return {};
+
+  const batches: string[][] = [];
+  for (let i = 0; i < geckoIds.length; i += GECKO_BATCH_SIZE) {
+    batches.push(geckoIds.slice(i, i + GECKO_BATCH_SIZE));
   }
+
+  const results = await Promise.all(
+    batches.map(async (batch) => {
+      try {
+        const res = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${batch.join(",")}&vs_currencies=usd`,
+          { next: { revalidate: 60 } }
+        );
+        if (!res.ok) return {};
+        const data: Record<string, { usd: number }> = await res.json();
+        return Object.fromEntries(Object.entries(data).map(([id, v]) => [id, v.usd ?? 0]));
+      } catch {
+        return {};
+      }
+    })
+  );
+
+  return Object.assign({}, ...results);
 }
 
 export async function fetchSheetsData(): Promise<{
