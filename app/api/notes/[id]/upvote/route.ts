@@ -3,10 +3,10 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: noteId } = await params;
   const { user_id } = await req.json();
-  const noteId = params.id;
 
   const supabase = createServiceClient();
 

@@ -113,7 +113,8 @@ async function SchoolContent({ slug }: { slug: string }) {
   );
 }
 
-export default function SchoolDetailPage({ params }: { params: { slug: string } }) {
+export default async function SchoolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   return (
     <Suspense
       fallback={
@@ -131,7 +132,7 @@ export default function SchoolDetailPage({ params }: { params: { slug: string } 
         </div>
       }
     >
-      <SchoolContent slug={params.slug} />
+      <SchoolContent slug={slug} />
     </Suspense>
   );
 }
