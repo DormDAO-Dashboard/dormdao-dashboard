@@ -15,7 +15,18 @@ const SKIP_NAMES = new Set([
   "24-25 STANDINGS",
   "23-24 STANDINGS",
 ]);
-const ARCHIVED_PREFIX = "[ARCHIVED]";
+
+// Decode JavaScript string hex/unicode escapes that Google Sheets embeds in its HTML,
+// e.g. \x5b → [ and \x5d → ] so that "[ARCHIVED]" tabs are filtered correctly.
+function decodeJsStringEscapes(s: string): string {
+  return s
+    .replace(/\\x([0-9a-fA-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+}
+
+function isArchivedTab(name: string): boolean {
+  return name.toUpperCase().includes("ARCHIVED");
+}
 
 // Known tab names that need special display-name handling
 const TAB_DISPLAY_NAMES: Record<string, string> = {
@@ -60,7 +71,7 @@ async function discoverTabs(): Promise<{ name: string; gid: string }[]> {
   for (const chunk of chunks) {
     const nameMatch = chunk.match(/name:\s*"([^"]+)"/);
     const gidMatch = chunk.match(/gid:\s*"(\d+)"/);
-    if (nameMatch && gidMatch) matches.push([nameMatch[1], gidMatch[1]]);
+    if (nameMatch && gidMatch) matches.push([decodeJsStringEscapes(nameMatch[1]), gidMatch[1]]);
   }
   return matches.map(([name, gid]) => ({ name, gid }));
 }
@@ -208,11 +219,10 @@ export async function fetchSheetsData(): Promise<{
   // 1. Discover tabs and filter to school tabs only
   const tabs = await discoverTabs();
   const schoolTabs = tabs.filter(({ name }) => {
-    const upper = name.toUpperCase();
+    const upper = name.toUpperCase().trim();
     return (
       !SKIP_NAMES.has(upper) &&
-      !upper.startsWith(ARCHIVED_PREFIX) &&
-      !upper.startsWith("[ARCHIVED]") &&
+      !isArchivedTab(name) &&
       !upper.includes("STANDINGS") &&
       !upper.includes("LEADERBOARD") &&
       !upper.includes("SUMMARY")
@@ -242,7 +252,7 @@ export async function fetchSheetsData(): Promise<{
 
   // 4. Compute each school's metrics from holdings × live prices
   const schools: SchoolRowWithHoldings[] = tabResults
-    .filter(({ holdings }) => holdings.length > 0)
+    .filter(({ name, holdings }) => holdings.length > 0 && !isArchivedTab(name))
     .map(({ name, summary, holdings }) => {
       // NAV = Σ(tokens × CoinGecko price) — includes the ETH holding (positive or negative)
       let nav = 0;
