@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DormDAO Portfolio Dashboard
 
-## Getting Started
+A full-stack crypto portfolio tracker for the DormDAO student investment DAO spanning 17 universities.
 
-First, run the development server:
+## Tech Stack
+
+- **Frontend**: Next.js 14 (App Router) · TypeScript · Tailwind CSS · Recharts
+- **Backend**: Next.js API Routes (serverless)
+- **Database**: Supabase (Postgres + Auth)
+- **Data**: Google Sheets CSV (public export) · CoinGecko free API
+- **AI**: Anthropic Claude via Vercel AI SDK (streaming)
+- **Deployment**: Vercel
+
+## Features
+
+- **Leaderboard** — Sortable table of all 17 schools ranked by NAV, USD return, and ETH return
+- **School Detail** — Per-school stats, token holdings, and community research notes
+- **Token Grid** — Live prices and 24h changes from CoinGecko for all portfolio tokens
+- **Token Detail** — 7-day price sparkline, per-token research notes
+- **Research Board** — Community feed with sentiment filtering (bullish/bearish/neutral), upvotes, pagination
+- **AI Analyst** — Streaming chat powered by Claude with live portfolio context injected into the system prompt
+- **Dark/Light mode** — Stored in localStorage
+
+## Setup
+
+### 1. Clone and install
+
+```bash
+git clone <repo>
+cd dormdao-dashboard
+npm install
+```
+
+### 2. Set environment variables
+
+Copy `.env.local.example` to `.env.local` and fill in:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_SHEETS_CSV_URL=https://docs.google.com/spreadsheets/d/1wA8KoPlhZ1YYv6auM5yYlzjYCBRnG9en9i_qLsrlVZs/export?format=csv&gid=0
+```
+
+### 3. Set up Supabase
+
+1. Create a new Supabase project at [supabase.com](https://supabase.com)
+2. Go to **SQL Editor** and run the contents of `supabase/schema.sql`
+3. Enable **Auth → Providers → Email (magic link)** and optionally **Google OAuth**
+4. Copy your project URL and keys to `.env.local`
+
+### 4. Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Google Sheets Format
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The spreadsheet at ID `1wA8KoPlhZ1YYv6auM5yYlzjYCBRnG9en9i_qLsrlVZs` is fetched as a published CSV. The parser auto-detects these columns (case-insensitive):
 
-## Learn More
+| Column | Keywords matched |
+|--------|-----------------|
+| School name | `school`, `name` |
+| Rank | `rank` |
+| NAV | `nav`, `value`, `portfolio` |
+| USD Return | `usd return`, `usd %`, `usd` |
+| ETH Return | `eth return`, `eth %`, `eth` |
+| Avg Entry FDV | `fdv`, `entry fdv`, `avg entry` |
+| % Deployed | `deployed`, `% deployed`, `deployment` |
 
-To learn more about Next.js, take a look at the following resources:
+To publish your Google Sheet: **File → Share → Publish to web → CSV**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy to Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx vercel deploy
+```
 
-## Deploy on Vercel
+Set all environment variables in the Vercel dashboard under **Settings → Environment Variables**.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API Routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Route | Description |
+|-------|-------------|
+| `GET /api/sheets` | School leaderboard data (5-min cache) |
+| `GET /api/prices` | Live token prices from CoinGecko (60s cache) |
+| `POST /api/chat` | Streaming AI analyst (Claude) |
+| `GET /api/notes` | Research notes with filtering/pagination |
+| `POST /api/notes` | Create a research note |
+| `DELETE /api/notes/[id]` | Delete own note |
+| `POST /api/notes/[id]/upvote` | Upvote a note |
+| `GET /api/health` | Health check for all services |
+
+## Database Schema
+
+See `supabase/schema.sql` for the full schema including:
+- `research_notes` table with RLS policies
+- `note_votes` table with unique constraint
+- `increment_note_upvotes` stored function
+- Seed data with 5 example notes
