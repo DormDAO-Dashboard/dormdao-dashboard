@@ -187,7 +187,7 @@ export function ActivityClient({ schools }: { schools: SchoolRow[] }) {
                         <span className="text-gray-600">…</span>
                       ) : pnl !== null ? (
                         <span className={pnl >= 0 ? "text-primary" : "text-danger"}>
-                          {pnl >= 0 ? "+" : ""}{formatUSD(pnl, true)}
+                          {pnl >= 0 ? "+" : ""}{formatUSD(pnl)}
                           {pnlPct !== null && (
                             <span className="opacity-70 ml-1">({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)</span>
                           )}
