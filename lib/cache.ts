@@ -49,6 +49,15 @@ const BATCH_SIZE = 20;
 
 export const getAllPrices = unstable_cache(
   async (): Promise<PricesCache> => {
+    // Log any tickers that still lack a geckoId (and aren't intentional vault/premarket)
+    const { TOKEN_META: META } = await import("./tokens");
+    const noPriceTickers = Object.entries(META)
+      .filter(([, m]) => !m.geckoId && !m.vault)
+      .map(([t, m]) => `${t}${m.premarket ? " (premarket)" : ""}`);
+    if (noPriceTickers.length > 0) {
+      console.warn("[prices] Tickers without CoinGecko ID:", noPriceTickers.join(", "));
+    }
+
     const allGeckoIds = [...new Set(Object.values(TICKER_TO_COINGECKO))];
 
     const batches: string[][] = [];

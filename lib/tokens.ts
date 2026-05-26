@@ -2,9 +2,9 @@
 export interface TokenMeta {
   name: string;
   geckoId?: string;
-  premarket?: boolean; // genuinely unlisted — show orange "Pre-market" badge
-  subnet?: boolean;    // Bittensor subnet — show purple "Subnet" badge
-  vault?: boolean;     // DeFi vault position — show blue "Vault" badge
+  displayTicker?: string; // override ticker shown in UI (e.g. "RFL" for "REFLECT-BASE")
+  premarket?: boolean;    // genuinely unlisted — show orange "Pre-market" badge
+  vault?: boolean;        // DeFi vault position — show blue "Vault" badge
 }
 
 export const TOKEN_META: Record<string, TokenMeta> = {
@@ -45,7 +45,7 @@ export const TOKEN_META: Record<string, TokenMeta> = {
   POWR:              { name: "Power Ledger",            geckoId: "power-ledger" },
   PUMPCADE:          { name: "Pumpcade",                geckoId: "pumpcade" },
   RAIL:              { name: "Railgun",                 geckoId: "railgun" },
-  "REFLECT-BASE":    { name: "Reflect Base",            premarket: true },
+  "REFLECT-BASE":    { name: "Reflect Base",            geckoId: "reflect-base", displayTicker: "RFL" },
   SAND:              { name: "The Sandbox",             geckoId: "the-sandbox" },
   SENT:              { name: "Sentient",                geckoId: "sentient" },
   SKL:               { name: "SKALE",                   geckoId: "skale" },

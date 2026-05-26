@@ -103,7 +103,7 @@ export default function TokenDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-start gap-6">
           <div className="flex-1">
             <div className="text-sm text-gray-400 mb-1">{meta?.name ?? tickerUpper}</div>
-            <h1 className="text-4xl font-bold font-mono text-white mb-4">${tickerUpper}</h1>
+            <h1 className="text-4xl font-bold font-mono text-white mb-4">${meta?.displayTicker ?? tickerUpper}</h1>
             {loadingPrice ? (
               <>
                 <Skeleton className="h-8 w-32 mb-2" />
@@ -117,11 +117,6 @@ export default function TokenDetailPage() {
                   {formatPct(price.usd_24h_change)} (24h)
                 </div>
               </>
-            ) : meta?.subnet ? (
-              <div className="inline-flex items-center gap-2">
-                <span className="text-xs bg-purple-900/40 text-purple-300 border border-purple-800/50 px-2 py-1 rounded">Subnet</span>
-                <span className="text-gray-500 text-sm">Bittensor subnet — no market price</span>
-              </div>
             ) : meta?.vault ? (
               <div className="inline-flex items-center gap-2">
                 <span className="text-xs bg-blue-900/40 text-blue-300 border border-blue-800/50 px-2 py-1 rounded">Vault</span>

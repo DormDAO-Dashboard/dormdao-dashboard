@@ -163,9 +163,9 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
           const meta = TOKEN_META[token.ticker];
           const exposure = price && price.usd > 0 ? price.usd * token.totalTokens : 0;
           const isPremarket = !!meta?.premarket;
-          const isSubnet = !!meta?.subnet;
           const isVault = !!meta?.vault;
-          const noPrice = isPremarket || isSubnet || isVault;
+          const noPrice = isPremarket || isVault;
+          const displayTicker = meta?.displayTicker ?? token.ticker;
 
           return (
             <Link key={token.ticker} href={`/tokens/${token.ticker.toLowerCase()}`}>
@@ -173,12 +173,10 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">{meta?.name ?? token.ticker}</div>
-                    <div className="font-mono font-bold text-white">${token.ticker}</div>
+                    <div className="font-mono font-bold text-white">${displayTicker}</div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    {isSubnet ? (
-                      <span className="text-xs bg-purple-900/40 text-purple-300 border border-purple-800/50 px-1.5 py-0.5 rounded">Subnet</span>
-                    ) : isVault ? (
+                    {isVault ? (
                       <span className="text-xs bg-blue-900/40 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded">Vault</span>
                     ) : isPremarket ? (
                       <span className="text-xs bg-orange-900/40 text-orange-300 border border-orange-800/50 px-1.5 py-0.5 rounded">Pre-market</span>
@@ -192,7 +190,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
 
                 {noPrice ? (
                   <div className="text-xs text-gray-600 mt-1">
-                    {isSubnet ? "Bittensor subnet" : isVault ? "DeFi vault position" : "Pre-market token"}
+                    {isVault ? "DeFi vault position" : "Pre-market token"}
                   </div>
                 ) : price && price.usd > 0 ? (
                   <>
