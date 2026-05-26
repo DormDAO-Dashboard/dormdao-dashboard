@@ -99,7 +99,6 @@ interface SchoolSummary {
   pctDeployed: number;
   avgEntryFdv: number;
   sheetNav: number | null;
-  sheetUsdReturn: number | null;
 }
 
 function parseSchoolSummary(data: string[][]): SchoolSummary {
@@ -108,7 +107,6 @@ function parseSchoolSummary(data: string[][]): SchoolSummary {
   let pctDeployed = 0;
   let avgEntryFdv = 0;
   let sheetNav: number | null = null;
-  let sheetUsdReturn: number | null = null;
 
   for (const row of data) {
     const label = (row[1]?.trim() ?? "").toLowerCase();
@@ -116,19 +114,16 @@ function parseSchoolSummary(data: string[][]): SchoolSummary {
 
     if (label === "liquid positions") break;
 
-    // Left-side fields
     if (isValue(value)) {
       if (label === "invested capital (eth)") investedEth = parseNumber(value);
       else if (label === "invested capital (usd)") investedUsd = parseNumber(value);
       else if (label === "% deployed") pctDeployed = parseNumber(value);
       else if (label === "average entry fdv") avgEntryFdv = parseNumber(value);
       else if (label === "total sub dao nav") sheetNav = parseNumber(value);
-      else if (label === "sub dao portfolio return (usd)") sheetUsdReturn = parseNumber(value);
     }
-
   }
 
-  return { investedEth, investedUsd, pctDeployed, avgEntryFdv, sheetNav, sheetUsdReturn };
+  return { investedEth, investedUsd, pctDeployed, avgEntryFdv, sheetNav };
 }
 
 function parseHoldings(data: string[][]): Holding[] {
@@ -286,15 +281,10 @@ export async function fetchSheetsData(): Promise<{
         ethReturn = ((navEth - summary.investedEth) / summary.investedEth) * 100;
       }
 
-      // Prefer the sheet's pre-computed USD return; fall back to live computation
-      let usdReturn: number;
-      if (summary.sheetUsdReturn !== null) {
-        usdReturn = summary.sheetUsdReturn;
-      } else {
-        usdReturn = 0;
-        if (nav > 0 && summary.investedUsd > 0) {
-          usdReturn = ((nav - summary.investedUsd) / summary.investedUsd) * 100;
-        }
+      // USD return: always compute from NAV vs invested USD
+      let usdReturn = 0;
+      if (nav > 0 && summary.investedUsd > 0) {
+        usdReturn = ((nav - summary.investedUsd) / summary.investedUsd) * 100;
       }
 
       return {
