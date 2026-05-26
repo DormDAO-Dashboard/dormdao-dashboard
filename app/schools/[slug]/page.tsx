@@ -88,7 +88,7 @@ async function SchoolContent({ slug }: { slug: string }) {
           {/* Donut chart */}
           <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-5">
             <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Concentration</h2>
-            <PortfolioDonut holdings={school.holdings ?? []} />
+            <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
           </div>
 
           {/* Stat cards */}

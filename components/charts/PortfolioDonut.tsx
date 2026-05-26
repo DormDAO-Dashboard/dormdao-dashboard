@@ -1,6 +1,7 @@
 "use client";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Holding } from "@/lib/types";
+import { formatUSD } from "@/lib/utils";
 
 const COLORS = [
   "#34d399", "#60a5fa", "#f59e0b", "#a78bfa", "#fb7185",
@@ -9,9 +10,10 @@ const COLORS = [
 
 interface Props {
   holdings: Holding[];
+  nav: number;
 }
 
-export function PortfolioDonut({ holdings }: Props) {
+export function PortfolioDonut({ holdings, nav }: Props) {
   const withPct = holdings.filter((h) => h.pctOfPortfolio > 0);
   if (withPct.length === 0) return null;
 
@@ -21,8 +23,14 @@ export function PortfolioDonut({ holdings }: Props) {
   const otherTotal = other.reduce((s, h) => s + h.pctOfPortfolio, 0);
 
   const data = [
-    ...main.map((h) => ({ name: h.ticker, value: parseFloat(h.pctOfPortfolio.toFixed(1)) })),
-    ...(otherTotal > 0 ? [{ name: "Other", value: parseFloat(otherTotal.toFixed(1)) }] : []),
+    ...main.map((h) => ({
+      name: h.ticker,
+      value: parseFloat(h.pctOfPortfolio.toFixed(1)),
+      usdValue: (h.pctOfPortfolio / 100) * nav,
+    })),
+    ...(otherTotal > 0
+      ? [{ name: "Other", value: parseFloat(otherTotal.toFixed(1)), usdValue: (otherTotal / 100) * nav }]
+      : []),
   ].sort((a, b) => b.value - a.value);
 
   return (
@@ -42,9 +50,20 @@ export function PortfolioDonut({ holdings }: Props) {
           ))}
         </Pie>
         <Tooltip
-          formatter={(v: unknown) => [`${v}%`, "Portfolio"]}
-          contentStyle={{ background: "#1f2937", border: "1px solid #374151", borderRadius: 8 }}
-          labelStyle={{ color: "#f3f4f6" }}
+          content={({ payload }) => {
+            if (!payload?.length) return null;
+            const { name, value, usdValue } = payload[0].payload;
+            const ticker = name === "Other" ? "Other" : `$${name}`;
+            return (
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-sm">
+                <p className="font-medium text-white">{ticker}</p>
+                <p className="text-gray-300">{value}% of portfolio</p>
+                {usdValue > 0 && (
+                  <p className="text-primary">{formatUSD(usdValue, true)}</p>
+                )}
+              </div>
+            );
+          }}
         />
         <Legend
           iconType="circle"
