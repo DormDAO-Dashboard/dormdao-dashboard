@@ -51,9 +51,8 @@ export const getAllPrices = unstable_cache(
   async (): Promise<PricesCache> => {
     // Log any tickers that still lack a geckoId (and aren't intentional vault/premarket)
     const { TOKEN_META: META } = await import("./tokens");
-    const noPriceTickers = Object.entries(META)
-      .filter(([, m]) => !m.geckoId && !m.vault)
-      .map(([t, m]) => `${t}${m.premarket ? " (premarket)" : ""}`);
+    const noGeckoTickers = Object.entries(META).filter(([, m]) => !m.geckoId && !m.vault);
+    const noPriceTickers = noGeckoTickers.map(([t, m]) => `${t}${m.premarket ? " (premarket)" : ""}`);
     if (noPriceTickers.length > 0) {
       console.warn("[prices] Tickers without CoinGecko ID:", noPriceTickers.join(", "));
     }
@@ -89,6 +88,14 @@ export const getAllPrices = unstable_cache(
           usd_24h_change: raw[geckoId].usd_24h_change ?? 0,
         };
       }
+    }
+
+    // Auto-resolve prices for tokens that have no geckoId in TOKEN_META
+    const unknownTickers = noGeckoTickers.map(([t]) => t);
+    if (unknownTickers.length > 0) {
+      const { resolveUnknownPrices } = await import("./gecko-search");
+      const discovered = await resolveUnknownPrices(unknownTickers);
+      Object.assign(prices, discovered);
     }
 
     return { prices, fetchedAt: new Date().toISOString() };

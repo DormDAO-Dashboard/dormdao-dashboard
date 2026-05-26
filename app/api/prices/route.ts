@@ -59,6 +59,14 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Auto-resolve any tickers not in TICKER_TO_COINGECKO
+    const unknownTickers = tickers.filter((t) => !TICKER_TO_COINGECKO[t]);
+    if (unknownTickers.length > 0) {
+      const { resolveUnknownPrices } = await import("@/lib/gecko-search");
+      const discovered = await resolveUnknownPrices(unknownTickers);
+      Object.assign(prices, discovered);
+    }
+
     cache.set(cacheKey, { prices, expiresAt: now + CACHE_TTL });
     return NextResponse.json({ prices, fetchedAt: new Date().toISOString() });
   } catch (err) {
