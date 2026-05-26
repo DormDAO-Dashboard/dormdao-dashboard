@@ -3,11 +3,21 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine, LabelList,
 } from "recharts";
 import { useRouter } from "next/navigation";
+import { useTheme } from "@/components/ThemeProvider";
 import { SchoolRow } from "@/lib/types";
 import { formatPct, slugify } from "@/lib/utils";
 
 export function TopBottomChart({ schools }: { schools: SchoolRow[] }) {
   const router = useRouter();
+  const { theme } = useTheme();
+  const light = theme === "light";
+
+  const tick   = light ? "#6b7280" : "#9ca3af";
+  const ttBg   = light ? "#ffffff" : "#1f2937";
+  const ttBord = light ? "#e5e7eb" : "#374151";
+  const ttLbl  = light ? "#111827" : "#f3f4f6";
+  const refStr = light ? "#d1d5db" : "#4b5563";
+
   if (schools.length < 3) return null;
 
   const sorted = [...schools].sort((a, b) => b.ethReturn - a.ethReturn);
@@ -24,21 +34,21 @@ export function TopBottomChart({ schools }: { schools: SchoolRow[] }) {
       <BarChart data={data} layout="vertical" margin={{ top: 5, right: 65, left: 90, bottom: 5 }}>
         <XAxis
           type="number"
-          tick={{ fill: "#9ca3af", fontSize: 11 }}
+          tick={{ fill: tick, fontSize: 11 }}
           tickFormatter={(v) => `${v}%`}
         />
         <YAxis
           type="category"
           dataKey="name"
-          tick={{ fill: "#9ca3af", fontSize: 11 }}
+          tick={{ fill: tick, fontSize: 11 }}
           width={85}
         />
         <Tooltip
           formatter={(v) => [formatPct(Number(v)), "ETH Return"]}
-          contentStyle={{ background: "#1f2937", border: "1px solid #374151", borderRadius: 8 }}
-          labelStyle={{ color: "#f3f4f6" }}
+          contentStyle={{ background: ttBg, border: `1px solid ${ttBord}`, borderRadius: 8 }}
+          labelStyle={{ color: ttLbl }}
         />
-        <ReferenceLine x={0} stroke="#4b5563" />
+        <ReferenceLine x={0} stroke={refStr} />
         <Bar
           dataKey="value"
           radius={[0, 4, 4, 0]}

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import { formatUSD } from "@/lib/utils";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface SparklineProps {
   geckoId: string;
@@ -11,6 +12,11 @@ interface SparklineProps {
 export function PriceSparkline({ geckoId, positive }: SparklineProps) {
   const [data, setData] = useState<{ price: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
+  const light = theme === "light";
+
+  const ttBg   = light ? "#ffffff" : "#1f2937";
+  const ttBord = light ? "#e5e7eb" : "#374151";
 
   useEffect(() => {
     fetch(
@@ -34,16 +40,10 @@ export function PriceSparkline({ geckoId, positive }: SparklineProps) {
   return (
     <ResponsiveContainer width="100%" height={60}>
       <LineChart data={data}>
-        <Line
-          type="monotone"
-          dataKey="price"
-          stroke={color}
-          dot={false}
-          strokeWidth={1.5}
-        />
+        <Line type="monotone" dataKey="price" stroke={color} dot={false} strokeWidth={1.5} />
         <Tooltip
           formatter={(v) => [formatUSD(Number(v)), "Price"]}
-          contentStyle={{ background: "#1f2937", border: "1px solid #374151", borderRadius: 8, fontSize: 12 }}
+          contentStyle={{ background: ttBg, border: `1px solid ${ttBord}`, borderRadius: 8, fontSize: 12 }}
         />
       </LineChart>
     </ResponsiveContainer>

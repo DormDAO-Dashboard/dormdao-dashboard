@@ -5,6 +5,7 @@ import {
 } from "recharts";
 import { formatUSD } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/ThemeProvider";
 
 const RANGES = [
   { label: "7D", value: "7" },
@@ -21,6 +22,13 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
   const [days, setDays] = useState("7");
   const [data, setData] = useState<{ time: number; price: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
+  const light = theme === "light";
+
+  const tick   = light ? "#6b7280" : "#9ca3af";
+  const ttBg   = light ? "#ffffff" : "#1f2937";
+  const ttBord = light ? "#e5e7eb" : "#374151";
+  const ttLbl  = light ? "#111827" : "#f3f4f6";
 
   useEffect(() => {
     setLoading(true);
@@ -70,12 +78,12 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
               tickFormatter={(t) =>
                 new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" })
               }
-              tick={{ fill: "#9ca3af", fontSize: 10 }}
+              tick={{ fill: tick, fontSize: 10 }}
               interval="preserveStartEnd"
               tickCount={5}
             />
             <YAxis
-              tick={{ fill: "#9ca3af", fontSize: 10 }}
+              tick={{ fill: tick, fontSize: 10 }}
               tickFormatter={(v) => formatUSD(v, true)}
               domain={["auto", "auto"]}
               width={60}
@@ -88,10 +96,10 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
                 })
               }
               contentStyle={{
-                background: "#1f2937", border: "1px solid #374151",
+                background: ttBg, border: `1px solid ${ttBord}`,
                 borderRadius: 8, fontSize: 12,
               }}
-              labelStyle={{ color: "#f3f4f6" }}
+              labelStyle={{ color: ttLbl }}
             />
             <Line
               type="monotone"

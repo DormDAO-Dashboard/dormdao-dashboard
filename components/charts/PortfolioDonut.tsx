@@ -1,5 +1,6 @@
 "use client";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { useTheme } from "@/components/ThemeProvider";
 import { Holding } from "@/lib/types";
 import { formatUSD } from "@/lib/utils";
 
@@ -14,6 +15,13 @@ interface Props {
 }
 
 export function PortfolioDonut({ holdings, nav }: Props) {
+  const { theme } = useTheme();
+  const light = theme === "light";
+
+  const ttBg   = light ? "#ffffff" : "#1f2937";
+  const ttBord = light ? "#e5e7eb" : "#374151";
+  const legClr = light ? "#6b7280" : "#9ca3af";
+
   const withPct = holdings.filter((h) => h.pctOfPortfolio > 0);
   if (withPct.length === 0) return null;
 
@@ -55,12 +63,10 @@ export function PortfolioDonut({ holdings, nav }: Props) {
             const { name, value, usdValue } = payload[0].payload;
             const ticker = name === "Other" ? "Other" : `$${name}`;
             return (
-              <div className="bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-sm">
-                <p className="font-medium text-white">{ticker}</p>
-                <p className="text-gray-300">{value}% of portfolio</p>
-                {usdValue > 0 && (
-                  <p className="text-primary">{formatUSD(usdValue, true)}</p>
-                )}
+              <div style={{ background: ttBg, border: `1px solid ${ttBord}` }} className="rounded-lg p-2.5 text-sm">
+                <p style={{ color: light ? "#111827" : "#ffffff" }} className="font-medium">{ticker}</p>
+                <p style={{ color: light ? "#6b7280" : "#d1d5db" }}>{value}% of portfolio</p>
+                {usdValue > 0 && <p className="text-primary">{formatUSD(usdValue, true)}</p>}
               </div>
             );
           }}
@@ -68,7 +74,7 @@ export function PortfolioDonut({ holdings, nav }: Props) {
         <Legend
           iconType="circle"
           iconSize={8}
-          formatter={(value) => <span style={{ color: "#9ca3af", fontSize: 11 }}>{value}</span>}
+          formatter={(value) => <span style={{ color: legClr, fontSize: 11 }}>{value}</span>}
         />
       </PieChart>
     </ResponsiveContainer>
