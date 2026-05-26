@@ -23,11 +23,25 @@ interface SchoolLogoProps {
   size?: number;
 }
 
+const LOCAL_LOGOS: Record<string, string> = {
+  "Villanova": "/logos/villanova.png",
+};
+
 export function SchoolLogo({ name, size = 32 }: SchoolLogoProps) {
   const [failed, setFailed] = useState(false);
+  const localSrc = LOCAL_LOGOS[name];
   const domain = SCHOOL_DOMAINS[name];
 
   const style: React.CSSProperties = { width: size, height: size, minWidth: size, minHeight: size };
+
+  if (localSrc) {
+    return (
+      <div className="rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center" style={style}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={localSrc} alt={name} width={size} height={size} style={{ objectFit: "contain" }} />
+      </div>
+    );
+  }
 
   if (!domain || failed) {
     return (
