@@ -53,6 +53,8 @@ interface HoldingsTableClientProps {
 export function HoldingsTableClient({ holdings, otherSchools, schoolName = "school" }: HoldingsTableClientProps) {
   const [prices, setPrices] = useState<Record<string, { usd: number }>>({});
   const [ethPrice, setEthPrice] = useState(0);
+  // date string → historical ETH price USD
+  const [historicalEth, setHistoricalEth] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   const fetchPrices = useCallback(() => {
@@ -67,6 +69,20 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
   }, [holdings]);
 
   useEffect(() => { fetchPrices(); }, [fetchPrices]);
+
+  // Fetch historical ETH prices for holdings that lack gainUsd from the sheet
+  useEffect(() => {
+    const datesNeeded = Array.from(new Set(
+      holdings
+        .filter((h) => h.gainUsd === undefined && h.investmentDate && h.costBasisEth > 0)
+        .map((h) => h.investmentDate)
+    ));
+    if (datesNeeded.length === 0) return;
+    fetch(`/api/eth-price-history?dates=${encodeURIComponent(datesNeeded.join(","))}`)
+      .then((r) => r.json())
+      .then((d) => setHistoricalEth(d.prices ?? {}))
+      .catch(() => {});
+  }, [holdings]);
 
   return (
     <div className="overflow-x-auto">
@@ -89,11 +105,23 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
           {holdings.map((h, i) => {
             const price = prices[h.ticker];
             const currentValue = price && h.tokens > 0 ? price.usd * h.tokens : null;
-            const costUsd = ethPrice > 0 && h.costBasisEth > 0 ? h.costBasisEth * ethPrice : null;
-            const pnl = currentValue !== null && costUsd !== null ? currentValue - costUsd : null;
-            const pnlPct = pnl !== null && costUsd !== null && costUsd > 0
-              ? (pnl / costUsd) * 100 : null;
             const others = otherSchools[h.ticker] ?? [];
+
+            // P&L: prefer sheet's pre-computed Gain(USD), then historical ETH, then current ETH
+            let pnl: number | null = null;
+            let pnlPct: number | null = null;
+
+            if (h.gainUsd !== undefined) {
+              pnl = h.gainUsd;
+              pnlPct = h.roiUsdPct ?? null;
+            } else {
+              const ethAtPurchase = historicalEth[h.investmentDate] || ethPrice;
+              const costUsd = ethAtPurchase > 0 && h.costBasisEth > 0
+                ? h.costBasisEth * ethAtPurchase : null;
+              pnl = currentValue !== null && costUsd !== null ? currentValue - costUsd : null;
+              pnlPct = pnl !== null && costUsd !== null && costUsd > 0
+                ? (pnl / costUsd) * 100 : null;
+            }
 
             return (
               <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">

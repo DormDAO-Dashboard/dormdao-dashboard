@@ -180,6 +180,8 @@ function parseHoldings(data: string[][]): Holding[] {
   let fdvIdx = -1;
   let costIdx = -1;
   let dateIdx = -1;
+  let gainIdx = -1;
+  let roiIdx = -1;
 
   const foundPos = headers.findIndex((h) => h === "position");
   if (foundPos !== -1) posIdx = foundPos;
@@ -191,6 +193,8 @@ function parseHoldings(data: string[][]): Holding[] {
   fdvIdx = headers.findIndex((h) => h.includes("entry fdv"));
   costIdx = headers.findIndex((h) => h.includes("cost basis (eth)"));
   dateIdx = headers.findIndex((h) => h.includes("investment date"));
+  gainIdx = headers.findIndex((h) => h.includes("gain(usd)") || h.includes("gain (usd)"));
+  roiIdx = headers.findIndex((h) => h.includes("roi(usd)") || h.includes("roi (usd)"));
 
   const holdings: Holding[] = [];
 
@@ -210,6 +214,8 @@ function parseHoldings(data: string[][]): Holding[] {
     const lower = rawTicker.toLowerCase();
     if (lower.includes("(exit)") || lower.includes("(trim)")) continue;
 
+    const gainRaw = gainIdx >= 0 && isValue(row[gainIdx]) ? row[gainIdx]?.trim() : undefined;
+    const roiRaw = roiIdx >= 0 && isValue(row[roiIdx]) ? row[roiIdx]?.trim() : undefined;
     holdings.push({
       ticker: rawTicker.toUpperCase(),
       blockchain: chainIdx >= 0 ? (row[chainIdx]?.trim() || "") : "",
@@ -218,6 +224,8 @@ function parseHoldings(data: string[][]): Holding[] {
       costBasisEth: costIdx >= 0 && isValue(row[costIdx]) ? parseNumber(row[costIdx]) : 0,
       pctOfPortfolio: isValue(row[pctIdx]) ? parseNumber(row[pctIdx]) : 0,
       investmentDate: dateIdx >= 0 && isValue(row[dateIdx]) ? row[dateIdx]?.trim() || "" : "",
+      ...(gainRaw !== undefined ? { gainUsd: parseNumber(gainRaw) } : {}),
+      ...(roiRaw !== undefined ? { roiUsdPct: parseNumber(roiRaw) } : {}),
     });
   }
 

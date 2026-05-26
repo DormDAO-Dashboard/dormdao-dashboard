@@ -11,6 +11,7 @@ interface Props {
 export function PortfolioInsightsClient({ holdings, rank }: Props) {
   const [prices, setPrices] = useState<Record<string, { usd: number }>>({});
   const [ethPrice, setEthPrice] = useState(0);
+  const [historicalEth, setHistoricalEth] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +24,19 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
         setEthPrice(d.prices?.ETH?.usd ?? 0);
       })
       .finally(() => setLoading(false));
+  }, [holdings]);
+
+  useEffect(() => {
+    const datesNeeded = Array.from(new Set(
+      holdings
+        .filter((h) => h.gainUsd === undefined && h.investmentDate && h.costBasisEth > 0)
+        .map((h) => h.investmentDate)
+    ));
+    if (datesNeeded.length === 0) return;
+    fetch(`/api/eth-price-history?dates=${encodeURIComponent(datesNeeded.join(","))}`)
+      .then((r) => r.json())
+      .then((d) => setHistoricalEth(d.prices ?? {}))
+      .catch(() => {});
   }, [holdings]);
 
   const positions = holdings.length;
@@ -40,13 +54,18 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
       }, 0) / positionsWithDate.length
     : null;
 
-  // P&L per holding: currentValue - (costBasisEth × ethPrice)
-  const pnlByHolding = !loading && ethPrice > 0
+  // P&L: prefer sheet's Gain(USD), then historical ETH, then current ETH
+  const pnlByHolding = !loading
     ? holdings.flatMap((h) => {
+        if (h.gainUsd !== undefined) {
+          return [{ ticker: h.ticker, pnl: h.gainUsd, pnlPct: h.roiUsdPct ?? null }];
+        }
         const p = prices[h.ticker];
         if (!p || !h.tokens || !h.costBasisEth) return [];
+        const ethAtPurchase = historicalEth[h.investmentDate] || ethPrice;
+        if (ethAtPurchase <= 0) return [];
         const currentValue = h.tokens * p.usd;
-        const costUsd = h.costBasisEth * ethPrice;
+        const costUsd = h.costBasisEth * ethAtPurchase;
         const pnl = currentValue - costUsd;
         const pnlPct = costUsd > 0 ? (pnl / costUsd) * 100 : null;
         return [{ ticker: h.ticker, pnl, pnlPct }];

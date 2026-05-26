@@ -6,6 +6,8 @@ export interface Holding {
   costBasisEth: number;
   pctOfPortfolio: number;
   investmentDate: string;
+  gainUsd?: number;
+  roiUsdPct?: number;
 }
 
 export interface SchoolRow {
