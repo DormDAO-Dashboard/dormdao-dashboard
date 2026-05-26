@@ -193,8 +193,9 @@ function parseHoldings(data: string[][]): Holding[] {
   fdvIdx = headers.findIndex((h) => h.includes("entry fdv"));
   costIdx = headers.findIndex((h) => h.includes("cost basis (eth)"));
   dateIdx = headers.findIndex((h) => h.includes("investment date"));
-  gainIdx = headers.findIndex((h) => h.includes("gain(usd)") || h.includes("gain (usd)"));
-  roiIdx = headers.findIndex((h) => h.includes("roi(usd)") || h.includes("roi (usd)"));
+  // Gain(USD) and ROI(USD)% have no header labels — find by fixed offset from Cost Basis
+  gainIdx = costIdx >= 0 ? costIdx + 5 : -1;
+  roiIdx  = costIdx >= 0 ? costIdx + 3 : -1;
 
   const holdings: Holding[] = [];
 
@@ -215,7 +216,10 @@ function parseHoldings(data: string[][]): Holding[] {
     if (lower.includes("(exit)") || lower.includes("(trim)")) continue;
 
     const gainRaw = gainIdx >= 0 && isValue(row[gainIdx]) ? row[gainIdx]?.trim() : undefined;
-    const roiRaw = roiIdx >= 0 && isValue(row[roiIdx]) ? row[roiIdx]?.trim() : undefined;
+    const roiRaw  = roiIdx >= 0 && isValue(row[roiIdx])  ? row[roiIdx]?.trim()  : undefined;
+    // Sanity-check: gain must contain "$", roi must contain "%"
+    const validGain = gainRaw?.includes("$") ?? false;
+    const validRoi  = roiRaw?.includes("%")  ?? false;
     holdings.push({
       ticker: rawTicker.toUpperCase(),
       blockchain: chainIdx >= 0 ? (row[chainIdx]?.trim() || "") : "",
@@ -224,8 +228,8 @@ function parseHoldings(data: string[][]): Holding[] {
       costBasisEth: costIdx >= 0 && isValue(row[costIdx]) ? parseNumber(row[costIdx]) : 0,
       pctOfPortfolio: isValue(row[pctIdx]) ? parseNumber(row[pctIdx]) : 0,
       investmentDate: dateIdx >= 0 && isValue(row[dateIdx]) ? row[dateIdx]?.trim() || "" : "",
-      ...(gainRaw !== undefined ? { gainUsd: parseNumber(gainRaw) } : {}),
-      ...(roiRaw !== undefined ? { roiUsdPct: parseNumber(roiRaw) } : {}),
+      ...(validGain ? { gainUsd: parseNumber(gainRaw!) } : {}),
+      ...(validRoi  ? { roiUsdPct: parseNumber(roiRaw!) } : {}),
     });
   }
 
