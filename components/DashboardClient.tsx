@@ -7,6 +7,7 @@ import { TopBottomChart } from "@/components/charts/TopBottomChart";
 import { DeploymentScatter } from "@/components/charts/ScatterChart";
 import { SortableLeaderboard } from "@/components/SortableLeaderboard";
 import { RecentBuysFeed } from "@/components/RecentBuysFeed";
+import { EthHoldingsTable } from "@/components/EthHoldingsTable";
 import { SchoolRow } from "@/lib/types";
 import { formatUSD, formatPct } from "@/lib/utils";
 import Link from "next/link";
@@ -192,6 +193,9 @@ export function DashboardClient({
         </div>
         <SortableLeaderboard schools={activeSchools} />
       </div>
+
+      {/* ETH Holdings */}
+      <EthHoldingsTable schools={schools} />
 
       {/* Recent Buys */}
       <RecentBuysFeed schools={schools} />
