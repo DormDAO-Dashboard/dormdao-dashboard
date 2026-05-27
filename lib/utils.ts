@@ -16,10 +16,9 @@ export function formatUSD(value: number, compact = false): string {
     return `${sign}$${abs.toFixed(0)}`;
   }
   const abs = Math.abs(value);
-  let minFrac = 0, maxFrac = 0;
+  let minFrac = 0, maxFrac = 2;
   if (abs < 0.01) { minFrac = 4; maxFrac = 4; }
   else if (abs < 1) { minFrac = 2; maxFrac = 2; }
-  else if (abs < 10) { minFrac = 0; maxFrac = 2; }
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",

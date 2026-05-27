@@ -134,7 +134,7 @@ export function RecentBuysFeed({ schools }: { schools: SchoolRow[] }) {
                 ) : pnl !== null ? (
                   <>
                     <div className={`font-mono font-semibold text-xs ${pnl >= 0 ? "text-primary" : "text-danger"}`}>
-                      {pnl >= 0 ? "+" : ""}{formatUSD(pnl, true)}
+                      {pnl >= 0 ? "+" : ""}{formatUSD(pnl)}
                     </div>
                     {pnlPct !== null && (
                       <div className={`text-xs opacity-70 ${pnlPct >= 0 ? "text-primary" : "text-danger"}`}>

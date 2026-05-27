@@ -124,7 +124,7 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
             <div className="text-xs text-gray-500 mb-1">Most Profitable</div>
             <div className="text-sm font-mono font-bold text-white">${bestPos.ticker}</div>
             <div className="text-primary text-xs font-mono mt-0.5">
-              +{formatUSD(bestPos.pnl, true)}
+              +{formatUSD(bestPos.pnl)}
               {bestPos.pnlPct !== null && ` (+${bestPos.pnlPct.toFixed(0)}%)`}
             </div>
           </div>
@@ -135,7 +135,7 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
             <div className="text-xs text-gray-500 mb-1">Biggest Loss</div>
             <div className="text-sm font-mono font-bold text-white">${worstPos.ticker}</div>
             <div className="text-danger text-xs font-mono mt-0.5">
-              {formatUSD(worstPos.pnl, true)}
+              {formatUSD(worstPos.pnl)}
               {worstPos.pnlPct !== null && ` (${worstPos.pnlPct.toFixed(0)}%)`}
             </div>
           </div>
