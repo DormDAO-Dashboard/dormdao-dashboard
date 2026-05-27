@@ -136,7 +136,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 </td>
                 <td className="px-5 py-3 text-gray-400 text-xs">{h.blockchain || "—"}</td>
                 <td className="px-5 py-3 text-right font-mono text-gray-300">
-                  {h.tokens > 0
+                  {h.tokens !== 0
                     ? h.tokens.toLocaleString(undefined, { maximumFractionDigits: 4 })
                     : "—"}
                 </td>

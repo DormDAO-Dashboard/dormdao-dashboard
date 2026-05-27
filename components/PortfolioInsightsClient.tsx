@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Holding } from "@/lib/types";
 import { formatUSD } from "@/lib/utils";
+import { parseDateMs } from "@/components/RecentBuysFeed";
 
 interface Props {
   holdings: Holding[];
@@ -45,13 +46,18 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
     .filter((h) => h.pctOfPortfolio > 0)
     .sort((a, b) => b.pctOfPortfolio - a.pctOfPortfolio)[0] ?? null;
 
-  const today = new Date();
-  const positionsWithDate = holdings.filter((h) => h.investmentDate);
-  const avgAgeDays = positionsWithDate.length > 0
-    ? positionsWithDate.reduce((s, h) => {
-        const d = new Date(h.investmentDate);
-        return s + (isNaN(d.getTime()) ? 0 : (today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-      }, 0) / positionsWithDate.length
+  const now = Date.now();
+  const validAges = holdings
+    .map((h) => {
+      if (!h.investmentDate) return null;
+      const ms = parseDateMs(h.investmentDate);
+      if (ms <= 0) return null;
+      const age = (now - ms) / (1000 * 60 * 60 * 24);
+      return age >= 0 ? age : null;
+    })
+    .filter((age): age is number => age !== null);
+  const avgAgeDays = validAges.length > 0
+    ? validAges.reduce((s, a) => s + a, 0) / validAges.length
     : null;
 
   // P&L: prefer sheet's Gain(USD), then historical ETH, then current ETH

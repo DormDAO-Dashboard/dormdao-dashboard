@@ -235,7 +235,7 @@ function parseHoldings(data: string[][]): Holding[] {
     const validRoi  = roiRaw?.includes("%")  ?? false;
     holdings.push({
       ticker: rawTicker.toUpperCase(),
-      blockchain: chainIdx >= 0 ? (row[chainIdx]?.trim() || "") : "",
+      blockchain: (chainIdx >= 0 ? row[chainIdx]?.trim() : "") || (rawTicker.toUpperCase() === "ETH" ? "Ethereum" : ""),
       tokens: isValue(row[tokensIdx]) ? parseNumber(row[tokensIdx]) : 0,
       entryFdv: fdvIdx >= 0 && isValue(row[fdvIdx]) ? row[fdvIdx]?.trim() || "" : "",
       costBasisEth: costIdx >= 0 && isValue(row[costIdx]) ? parseNumber(row[costIdx]) : 0,
