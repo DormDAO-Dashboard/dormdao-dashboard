@@ -17,8 +17,26 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const supabaseCheck = createServiceClient();
+    const { data: recent } = await supabaseCheck
+      .from("portfolio_snapshots")
+      .select("captured_at")
+      .order("captured_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (recent) {
+      const ageMs = Date.now() - new Date(recent.captured_at).getTime();
+      if (ageMs < 6 * 60 * 60 * 1000) {
+        return NextResponse.json({
+          skipped: true,
+          reason: `Last snapshot was ${Math.round(ageMs / 60000)} minutes ago — waiting for 6h cooldown`,
+        });
+      }
+    }
+
     const { schools } = await fetchSheetsData();
-    const supabase = createServiceClient();
+    const supabase = supabaseCheck;
 
     // Get the most recent snapshot per school for change detection
     const { data: prevSnapshots } = await supabase
