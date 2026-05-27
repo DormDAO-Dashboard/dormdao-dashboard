@@ -8,7 +8,7 @@ export function SentimentBadge({ sentiment }: { sentiment: Sentiment }) {
         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
         sentiment === "bullish" && "bg-primary/20 text-primary",
         sentiment === "bearish" && "bg-danger/20 text-danger",
-        sentiment === "neutral" && "bg-gray-500/20 text-gray-400 border border-gray-500/30 sentiment-neutral"
+        sentiment === "neutral" && "bg-gray-500/20 text-white border border-gray-500/30 sentiment-neutral"
       )}
     >
       {sentiment === "bullish" && "↑ "}
