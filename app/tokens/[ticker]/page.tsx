@@ -228,18 +228,31 @@ export default function TokenDetailPage() {
       .then((d) => {
         const positions: SchoolPosition[] = [];
         for (const school of d.schools ?? []) {
-          const h = school.holdings?.find((h: { ticker: string }) => h.ticker === tickerUpper);
-          if (h) {
-            positions.push({
-              school: school.name,
-              slug: school.slug,
-              tokens: h.tokens,
-              costBasisEth: h.costBasisEth,
-              pctOfPortfolio: h.pctOfPortfolio,
-              gainUsd: h.gainUsd,
-              roiUsdPct: h.roiUsdPct,
-            });
-          }
+          const matches = (school.holdings ?? []).filter(
+            (h: { ticker: string }) => h.ticker === tickerUpper
+          );
+          if (matches.length === 0) continue;
+          // Aggregate all positions for this ticker at this school
+          const tokens = matches.reduce((s: number, h: { tokens: number }) => s + h.tokens, 0);
+          const costBasisEth = matches.reduce((s: number, h: { costBasisEth: number }) => s + h.costBasisEth, 0);
+          const pctOfPortfolio = matches.reduce((s: number, h: { pctOfPortfolio: number }) => s + h.pctOfPortfolio, 0);
+          const hasGain = matches.some((h: { gainUsd?: number }) => h.gainUsd !== undefined);
+          const gainUsd = hasGain
+            ? matches.reduce((s: number, h: { gainUsd?: number }) => s + (h.gainUsd ?? 0), 0)
+            : undefined;
+          const hasRoi = matches.some((h: { roiUsdPct?: number }) => h.roiUsdPct !== undefined);
+          const roiUsdPct = hasRoi && costBasisEth > 0 && gainUsd !== undefined
+            ? (gainUsd / (costBasisEth * 1)) * 100
+            : matches[0].roiUsdPct;
+          positions.push({
+            school: school.name,
+            slug: school.slug,
+            tokens,
+            costBasisEth,
+            pctOfPortfolio,
+            gainUsd,
+            roiUsdPct,
+          });
         }
         setSchoolPositions(positions.sort((a, b) => b.tokens - a.tokens));
       })
