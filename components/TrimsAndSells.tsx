@@ -13,7 +13,7 @@ interface ChangeRow {
   old_quantity: number | null;
   new_quantity: number | null;
   eth_value: number | null;
-  created_at: string;
+  detected_at: string | null;
 }
 
 function schoolSlug(name: string) {
@@ -140,7 +140,7 @@ export function TrimsAndSells() {
                       -{formatQty(sold)}
                     </td>
                     <td className="px-5 py-3 text-right text-gray-500 text-xs">
-                      {formatDate(c.created_at)}
+                      {c.detected_at ? formatDate(c.detected_at) : "—"}
                     </td>
                   </tr>
                 );

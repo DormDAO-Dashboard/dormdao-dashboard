@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Detect changes by comparing with previous snapshot
+    const detectedAt = new Date().toISOString();
     const changeRows: Array<{
       school_name: string;
       change_type: string;
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
       old_quantity?: number;
       new_quantity?: number;
       eth_value?: number;
+      detected_at: string;
     }> = [];
 
     for (const school of schools) {
@@ -106,6 +108,7 @@ export async function POST(req: NextRequest) {
             token_ticker: ticker,
             new_quantity: h.tokens,
             eth_value: h.costBasisEth,
+            detected_at: detectedAt,
           });
         } else if (h.tokens > prevH.tokens * 1.02) {
           changeRows.push({
@@ -115,6 +118,7 @@ export async function POST(req: NextRequest) {
             old_quantity: prevH.tokens,
             new_quantity: h.tokens,
             eth_value: h.costBasisEth,
+            detected_at: detectedAt,
           });
         } else if (h.tokens < prevH.tokens * 0.98) {
           changeRows.push({
@@ -124,6 +128,7 @@ export async function POST(req: NextRequest) {
             old_quantity: prevH.tokens,
             new_quantity: h.tokens,
             eth_value: h.costBasisEth,
+            detected_at: detectedAt,
           });
         }
       }
@@ -136,6 +141,7 @@ export async function POST(req: NextRequest) {
             change_type: "sell",
             token_ticker: ticker,
             old_quantity: prevH.tokens,
+            detected_at: detectedAt,
           });
         }
       }
