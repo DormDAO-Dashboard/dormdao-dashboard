@@ -5,7 +5,7 @@ import { formatUSD, formatPct } from "@/lib/utils";
 import { getSchoolsData } from "@/lib/cache";
 import { KpiCard, Skeleton } from "@/components/ui/Card";
 import { AddNoteForm } from "@/components/notes/AddNoteForm";
-import { NoteCard } from "@/components/notes/NoteCard";
+import { SchoolNoteList } from "@/components/SchoolNoteList";
 import { HoldingsTableClient } from "@/components/HoldingsTableClient";
 import { PortfolioDonut } from "@/components/charts/PortfolioDonut";
 import { PortfolioInsightsClient } from "@/components/PortfolioInsightsClient";
@@ -146,15 +146,8 @@ async function SchoolContent({ slug }: { slug: string }) {
           defaultSchool={school.name}
           tickers={school.holdings?.map((h) => h.ticker) ?? []}
         />
-        <div className="flex flex-col gap-3 mt-4">
-          {notes.map((note: Parameters<typeof NoteCard>[0]["note"]) => (
-            <NoteCard key={note.id} note={note} />
-          ))}
-          {notes.length === 0 && (
-            <div className="text-center py-8 text-gray-500 text-sm">
-              No research notes yet for {school.name}. Be the first to add one!
-            </div>
-          )}
+        <div className="mt-4">
+          <SchoolNoteList initialNotes={notes} schoolName={school.name} />
         </div>
       </div>
 

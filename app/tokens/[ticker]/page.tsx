@@ -193,6 +193,12 @@ export default function TokenDetailPage() {
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [docsKey, setDocsKey] = useState(0);
+  const [adminSecret, setAdminSecret] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("admin") === "true") setAdminSecret(params.get("secret") ?? "");
+  }, []);
 
   useEffect(() => {
     // Fetch token price + ETH price together so cost basis can be converted to USD
@@ -558,7 +564,12 @@ export default function TokenDetailPage() {
                 </div>
               ))
             : notes.map((note) => (
-                <NoteCard key={note.id} note={note} />
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  adminSecret={adminSecret}
+                  onDelete={(id) => setNotes((prev) => prev.filter((n) => n.id !== id))}
+                />
               ))}
           {!loadingNotes && notes.length === 0 && (
             <div className="text-center py-8 text-gray-500 text-sm">

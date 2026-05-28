@@ -35,6 +35,12 @@ export function ResearchClient({ initialTickers }: { initialTickers: string[] })
   const [page, setPage] = useState(1);
   const [tokenFilter, setTokenFilter] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("");
+  const [adminSecret, setAdminSecret] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("admin") === "true") setAdminSecret(params.get("secret") ?? "");
+  }, []);
 
   const fetchNotes = useCallback(async () => {
     setLoading(true);
@@ -129,6 +135,7 @@ export function ResearchClient({ initialTickers }: { initialTickers: string[] })
               <NoteCard
                 key={note.id}
                 note={note}
+                adminSecret={adminSecret}
                 onDelete={(id) => setNotes((prev) => prev.filter((n) => n.id !== id))}
               />
             ))}

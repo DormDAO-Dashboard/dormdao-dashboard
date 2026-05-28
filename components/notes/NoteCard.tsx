@@ -10,14 +10,16 @@ import Link from "next/link";
 interface NoteCardProps {
   note: ResearchNote;
   currentUserId?: string;
+  adminSecret?: string;
   onDelete?: (id: string) => void;
   onUpvote?: (id: string) => void;
 }
 
-export function NoteCard({ note, currentUserId, onDelete, onUpvote }: NoteCardProps) {
+export function NoteCard({ note, currentUserId, adminSecret, onDelete, onUpvote }: NoteCardProps) {
   const [upvotes, setUpvotes] = useState(note.upvotes);
   const [voted, setVoted] = useState(false);
   const [upvoting, setUpvoting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleUpvote = async () => {
     if (voted || upvoting) return;
@@ -39,15 +41,26 @@ export function NoteCard({ note, currentUserId, onDelete, onUpvote }: NoteCardPr
   };
 
   const handleDelete = async () => {
-    if (!currentUserId) return;
-    if (!confirm("Delete this note?")) return;
-    const res = await fetch(`/api/notes/${note.id}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: currentUserId }),
-    });
-    if (res.ok) onDelete?.(note.id);
+    if (!confirm("Delete this note? This cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      let body: string | undefined;
+      if (adminSecret) {
+        headers["Authorization"] = `Bearer ${adminSecret}`;
+      } else if (currentUserId) {
+        body = JSON.stringify({ user_id: currentUserId });
+      } else {
+        return;
+      }
+      const res = await fetch(`/api/notes/${note.id}`, { method: "DELETE", headers, body });
+      if (res.ok) onDelete?.(note.id);
+    } finally {
+      setDeleting(false);
+    }
   };
+
+  const canDelete = adminSecret || (currentUserId && note.user_id === currentUserId);
 
   return (
     <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-4 flex flex-col gap-3">
@@ -81,10 +94,11 @@ export function NoteCard({ note, currentUserId, onDelete, onUpvote }: NoteCardPr
             <span className="text-xs text-gray-500">{note.school}</span>
           )}
         </div>
-        {currentUserId && note.user_id === currentUserId && (
+        {canDelete && (
           <button
             onClick={handleDelete}
-            className="text-gray-600 hover:text-danger transition-colors p-1"
+            disabled={deleting}
+            className="text-gray-600 hover:text-danger transition-colors p-1 disabled:opacity-40"
             aria-label="Delete note"
           >
             <Trash2 className="w-3.5 h-3.5" />
