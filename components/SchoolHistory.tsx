@@ -14,6 +14,7 @@ interface Snapshot {
   eth_return_pct: number;
   usd_return_pct: number;
   deployed_pct: number;
+  eth_balance: number;
 }
 
 function formatDate(iso: string) {
@@ -79,6 +80,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
     nav: s.nav_usd,
     ethReturn: s.eth_return_pct,
     usdReturn: s.usd_return_pct,
+    ethBalance: s.eth_balance,
   }));
 
   return (
@@ -118,6 +120,30 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
               type="monotone"
               dataKey="ethReturn"
               stroke="#34d399"
+              strokeWidth={2}
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* ETH Balance over time */}
+      <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-5">
+        <h3 className="text-sm font-semibold text-gray-300 mb-4">ETH Balance Over Time</h3>
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={grid} />
+            <XAxis dataKey="date" tick={{ fill: tick, fontSize: 11 }} />
+            <YAxis tick={{ fill: tick, fontSize: 11 }} tickFormatter={(v) => `${Number(v).toFixed(2)} ETH`} />
+            <Tooltip
+              formatter={(v) => [`${Number(v).toFixed(4)} ETH`, "ETH Balance"]}
+              contentStyle={{ background: ttBg, border: `1px solid ${ttBord}`, borderRadius: 8 }}
+              labelStyle={{ color: ttLbl }}
+            />
+            <Line
+              type="monotone"
+              dataKey="ethBalance"
+              stroke="#60a5fa"
               strokeWidth={2}
               dot={false}
             />

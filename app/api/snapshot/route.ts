@@ -166,7 +166,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from("portfolio_snapshots")
-      .select("id, captured_at, school_name, nav_usd, eth_return_pct, usd_return_pct, deployed_pct")
+      .select("id, captured_at, school_name, nav_usd, eth_return_pct, usd_return_pct, deployed_pct, holdings")
       .order("captured_at", { ascending: true });
 
     if (school) {
@@ -176,7 +176,17 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query.limit(200);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    return NextResponse.json({ snapshots: data ?? [] });
+    const snapshots = (data ?? []).map((row) => {
+      const holdings = (row.holdings ?? []) as Array<{ ticker: string; tokens: number }>;
+      const eth_balance = holdings
+        .filter((h) => h.ticker === "ETH")
+        .reduce((s, h) => s + (h.tokens ?? 0), 0);
+      const { holdings: _h, ...rest } = row;
+      void _h;
+      return { ...rest, eth_balance };
+    });
+
+    return NextResponse.json({ snapshots });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: msg }, { status: 500 });
