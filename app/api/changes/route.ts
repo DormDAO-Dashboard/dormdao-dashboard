@@ -11,8 +11,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from("portfolio_changes")
-      .select("id, school_name, change_type, token_ticker, old_quantity, new_quantity, eth_value, created_at")
-      .order("created_at", { ascending: false })
+      .select("id, school_name, change_type, token_ticker, old_quantity, new_quantity, eth_value")
       .limit(200);
 
     if (school) {
