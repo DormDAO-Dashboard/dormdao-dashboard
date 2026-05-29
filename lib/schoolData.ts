@@ -26,10 +26,11 @@ export const SCHOOL_DOMAINS: Record<string, string> = {
   "USC":                "usc.edu",
   "Villanova":          "villanova.edu",
   "St. Andrews":        "st-andrews.ac.uk",
-  "Uva":                "virginia.edu",
-  "Imperial":           "imperial.ac.uk",
-  "Franklindao (Penn)": "upenn.edu",
-  "Vox":                "dartmouth.edu",
+  "Uva":                   "virginia.edu",
+  "Imperial":              "imperial.ac.uk",
+  "Franklindao (Penn)":    "upenn.edu",
+  "Vox (Dartmouth)":       "dartmouth.edu",
+  "Illinois":              "illinois.edu",
 };
 
 // Scraped from each school's blockchain club website
