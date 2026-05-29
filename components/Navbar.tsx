@@ -1,10 +1,13 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Trophy, BookOpen, GraduationCap, BarChart2, Info, Activity, Sun, Moon } from "lucide-react";
+import { Trophy, BookOpen, GraduationCap, BarChart2, Info, Activity, Sun, Moon, User } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { href: "/", label: "Leaderboard", icon: Trophy },
@@ -18,6 +21,16 @@ const NAV_LINKS = [
 export function Navbar() {
   const pathname = usePathname();
   const { theme, toggle } = useTheme();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <nav className="border-b border-gray-800 bg-[#0a0a0a]/95 backdrop-blur sticky top-0 z-50">
@@ -81,11 +94,39 @@ export function Navbar() {
                 : "border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:bg-gray-100"
             )}
           >
-            {theme === "dark"
-              ? <Sun className="w-4 h-4" />
-              : <Moon className="w-4 h-4" />
-            }
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
+
+          {/* User avatar / sign-in */}
+          {user ? (
+            <Link href="/profile" aria-label="Your profile">
+              {user.user_metadata?.avatar_url ? (
+                <Image
+                  src={user.user_metadata.avatar_url as string}
+                  width={30}
+                  height={30}
+                  alt="avatar"
+                  className="rounded-full border border-gray-700 hover:border-primary/60 transition-colors shrink-0"
+                />
+              ) : (
+                <div className="w-[30px] h-[30px] rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 hover:bg-primary/30 transition-colors">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                </div>
+              )}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className={cn(
+                "text-xs font-medium px-3 py-1.5 rounded-md border transition-colors shrink-0",
+                theme === "dark"
+                  ? "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+                  : "border-gray-300 text-gray-500 hover:text-gray-800 hover:border-gray-400"
+              )}
+            >
+              Sign in
+            </Link>
+          )}
 
         </div>
       </div>

@@ -62,6 +62,16 @@ export interface ResearchNote {
   url: string | null;
 }
 
+export interface Profile {
+  id: string;
+  display_name: string | null;
+  school: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  role: string;
+  created_at: string;
+}
+
 export interface DaoStats {
   totalNAV: number;
   avgUsdReturn: number;

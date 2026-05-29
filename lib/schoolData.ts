@@ -1,3 +1,12 @@
+export const SCHOOL_NAMES = [
+  "Berkeley", "Boston College", "Cambridge", "Columbia", "Cornell",
+  "Dartmouth", "Imperial", "Michigan", "NYU", "Oregon",
+  "Penn", "Purdue", "St. Andrews", "Texas", "USC",
+  "UVA", "Vanderbilt", "Villanova", "Waterloo",
+] as const;
+
+export type SchoolName = (typeof SCHOOL_NAMES)[number];
+
 export interface SchoolSocials {
   website?: string;
   twitter?: string;
