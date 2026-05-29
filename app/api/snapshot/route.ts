@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { fetchSheetsData } from "@/lib/sheets";
+import { getSchoolsData } from "@/lib/cache";
 import { Holding } from "@/lib/types";
 
 interface StoredHolding {
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { schools } = await fetchSheetsData();
+    const { schools } = await getSchoolsData();
     const supabase = supabaseCheck;
 
     // Get the most recent snapshot per school for change detection
