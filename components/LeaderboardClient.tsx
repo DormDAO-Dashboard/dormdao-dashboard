@@ -34,12 +34,13 @@ function ReturnCell({ value }: { value: number }) {
   );
 }
 
-function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc }: {
+function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeployed }: {
   schools: SchoolRow[];
   sortKey: SortKey;
   setSortKey: (k: SortKey) => void;
   asc: boolean;
   setAsc: (v: boolean) => void;
+  showDeployed?: boolean;
 }) {
   function toggleSort(key: SortKey) {
     if (sortKey === key) setAsc(!asc);
@@ -67,7 +68,7 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc }: {
             <th className={thCls("nav")} onClick={() => toggleSort("nav")}>NAV {sortKey === "nav" ? (asc ? "↑" : "↓") : ""}</th>
             <th className={thCls("usdReturn")} onClick={() => toggleSort("usdReturn")}>USD Return {sortKey === "usdReturn" ? (asc ? "↑" : "↓") : ""}</th>
             <th className={thCls("ethReturn")} onClick={() => toggleSort("ethReturn")}>ETH Return {sortKey === "ethReturn" ? (asc ? "↑" : "↓") : ""}</th>
-            <th className={thCls("pctDeployed")} onClick={() => toggleSort("pctDeployed")}>% Deployed {sortKey === "pctDeployed" ? (asc ? "↑" : "↓") : ""}</th>
+            {showDeployed && <th className={thCls("pctDeployed")} onClick={() => toggleSort("pctDeployed")}>% Deployed {sortKey === "pctDeployed" ? (asc ? "↑" : "↓") : ""}</th>}
           </tr>
         </thead>
         <tbody>
@@ -90,7 +91,7 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc }: {
                 <td className="px-5 py-3 text-right font-mono text-gray-200">{formatUSD(s.nav, true)}</td>
                 <td className="px-5 py-3 text-right"><ReturnCell value={s.usdReturn} /></td>
                 <td className="px-5 py-3 text-right"><ReturnCell value={s.ethReturn} /></td>
-                <td className="px-5 py-3 text-right font-mono text-gray-400">{formatPct(s.pctDeployed)}</td>
+                {showDeployed && <td className="px-5 py-3 text-right font-mono text-gray-400">{formatPct(s.pctDeployed)}</td>}
               </tr>
             );
           })}
@@ -173,6 +174,7 @@ export function LeaderboardClient({
             setSortKey={setSortKey}
             asc={asc}
             setAsc={setAsc}
+            showDeployed={year === "2025-2026"}
           />
         ) : (
           <div className="py-16 text-center text-gray-500 text-sm">
