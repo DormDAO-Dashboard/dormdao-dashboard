@@ -278,64 +278,57 @@ function parseExitedHoldings(data: string[][]): ExitedHolding[] {
   }
   if (sectionStart === -1) return [];
 
-  // Find the column header row within 5 rows (same "Position" marker as active section)
-  let colHeaderIdx = -1;
+  // posIdx defaults to 1; refine if there's a "Position" header row within 5 rows
+  let posIdx = 1;
+  let dataStart = sectionStart + 1;
   for (let i = sectionStart + 1; i < Math.min(sectionStart + 6, data.length); i++) {
     if (data[i].some((c) => c?.trim() === "Position")) {
-      colHeaderIdx = i;
+      const headers = data[i].map((h) => h?.trim().toLowerCase());
+      const foundPos = headers.findIndex((h) => h === "position");
+      if (foundPos !== -1) posIdx = foundPos;
+      dataStart = i + 1;
       break;
     }
   }
-  if (colHeaderIdx === -1) return [];
-
-  // Use same positional defaults as active section
-  const headers = data[colHeaderIdx].map((h) => h?.trim().toLowerCase());
-  let posIdx = 1;
-  let costIdx = 11;
-  let gainIdx = 16;
-  let roiIdx = 15;
-  let roiEthIdx = 14;
-
-  const foundPos = headers.findIndex((h) => h === "position");
-  if (foundPos !== -1) posIdx = foundPos;
-  const foundCost = headers.findIndex((h) => h.includes("cost basis (eth)") || h.includes("cost basis eth"));
-  if (foundCost !== -1) {
-    costIdx = foundCost;
-    gainIdx = costIdx + 5;
-    roiIdx = costIdx + 4;
-    roiEthIdx = costIdx + 3;
-  }
 
   const results: ExitedHolding[] = [];
-  for (let i = colHeaderIdx + 1; i < data.length; i++) {
+  for (let i = dataStart; i < data.length; i++) {
     const row = data[i];
-    const rawTicker = row[posIdx]?.trim();
-    if (!rawTicker) continue;
-    if (rawTicker === "NFT Positions" || rawTicker.startsWith("Member")) break;
-    if (rawTicker.includes("#") || rawTicker.length > 20) continue;
+    const rawFull = row[posIdx]?.trim();
+    if (!rawFull) continue;
+    if (rawFull === "NFT Positions" || rawFull.startsWith("Member")) break;
+    if (rawFull.includes("#")) continue;
 
-    // Try gainIdx, then gainIdx+1 in case exit date shifts columns by one
-    let gainRaw = isValue(row[gainIdx]) ? row[gainIdx]?.trim() : undefined;
-    if (!gainRaw?.includes("$") && gainIdx + 1 < row.length && isValue(row[gainIdx + 1])) {
-      gainRaw = row[gainIdx + 1]?.trim();
-    }
-    let roiRaw = isValue(row[roiIdx]) ? row[roiIdx]?.trim() : undefined;
-    if (!roiRaw?.includes("%") && roiIdx + 1 < row.length && isValue(row[roiIdx + 1])) {
-      roiRaw = row[roiIdx + 1]?.trim();
-    }
-    let roiEthRaw = isValue(row[roiEthIdx]) ? row[roiEthIdx]?.trim() : undefined;
-    if (!roiEthRaw?.includes("%") && roiEthIdx + 1 < row.length && isValue(row[roiEthIdx + 1])) {
-      roiEthRaw = row[roiEthIdx + 1]?.trim();
-    }
+    // Strip "(exit)" / "(trim)" suffix to get the base ticker
+    const rawTicker = rawFull.replace(/\s*\([^)]*\)\s*$/, "").trim();
+    if (!rawTicker || rawTicker.length > 20) continue;
 
-    if (gainRaw?.includes("$")) {
-      results.push({
-        ticker: rawTicker.toUpperCase(),
-        gainUsd: parseNumber(gainRaw),
-        roiUsdPct: roiRaw?.includes("%") ? parseNumber(roiRaw) : 0,
-        roiEthPct: roiEthRaw?.includes("%") ? parseNumber(roiEthRaw) : 0,
-      });
+    // Find gainUSD: rightmost "$" value in cols 10+ that is NOT an FDV (no M/B/T suffix)
+    let gainRaw: string | undefined;
+    for (let col = row.length - 1; col >= 10; col--) {
+      const v = row[col]?.trim();
+      if (v && isValue(v) && v.includes("$") && !/[MBT]$/.test(v.replace(/[^A-Z]/g, ""))) {
+        gainRaw = v;
+        break;
+      }
     }
+    if (!gainRaw?.includes("$")) continue;
+
+    // Collect all "%" values in cols 10+ — last = ROI USD, second-to-last = ROI ETH
+    const pctVals: string[] = [];
+    for (let col = 10; col < row.length; col++) {
+      const v = row[col]?.trim();
+      if (v && isValue(v) && v.includes("%")) pctVals.push(v);
+    }
+    const roiRaw    = pctVals[pctVals.length - 1];
+    const roiEthRaw = pctVals[pctVals.length - 2];
+
+    results.push({
+      ticker: rawTicker.toUpperCase(),
+      gainUsd: parseNumber(gainRaw),
+      roiUsdPct: roiRaw ? parseNumber(roiRaw) : 0,
+      roiEthPct: roiEthRaw ? parseNumber(roiEthRaw) : 0,
+    });
   }
   return results;
 }
