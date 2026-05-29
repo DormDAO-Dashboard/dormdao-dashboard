@@ -22,12 +22,30 @@ export function Navbar() {
   const pathname = usePathname();
   const { theme, toggle } = useTheme();
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      const u = data.user ?? null;
+      setUser(u);
+      if (u) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", u.id)
+          .single();
+        setProfileAvatar(profile?.avatar_url ?? null);
+      }
+    }
+
+    loadUser();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) setProfileAvatar(null);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -100,13 +118,14 @@ export function Navbar() {
           {/* User avatar / sign-in */}
           {user ? (
             <Link href="/profile" aria-label="Your profile">
-              {user.user_metadata?.avatar_url ? (
+              {(profileAvatar ?? user.user_metadata?.avatar_url) ? (
                 <Image
-                  src={user.user_metadata.avatar_url as string}
+                  src={(profileAvatar ?? user.user_metadata?.avatar_url) as string}
                   width={30}
                   height={30}
                   alt="avatar"
-                  className="rounded-full border border-gray-700 hover:border-primary/60 transition-colors shrink-0"
+                  className="rounded-lg border border-gray-700 hover:border-primary/60 transition-colors shrink-0 object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="w-[30px] h-[30px] rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 hover:bg-primary/30 transition-colors">

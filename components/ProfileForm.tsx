@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { SCHOOL_NAMES } from "@/lib/schoolData";
+import { AvatarPicker } from "@/components/AvatarPicker";
 import { LogOut, Save, User } from "lucide-react";
 
 interface Props {
@@ -19,7 +20,7 @@ interface Props {
 export function ProfileForm({
   userId,
   email,
-  avatarUrl,
+  avatarUrl: initialAvatarUrl,
   initialDisplayName,
   initialSchool,
   initialBio,
@@ -29,6 +30,7 @@ export function ProfileForm({
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [school, setSchool] = useState(initialSchool);
   const [bio, setBio] = useState(initialBio);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export function ProfileForm({
         display_name: displayName.trim(),
         school: school || null,
         bio: bio.trim() || null,
+        avatar_url: avatarUrl,
       });
 
     setSaving(false);
@@ -69,24 +72,26 @@ export function ProfileForm({
 
   return (
     <form onSubmit={handleSave} className="flex flex-col gap-5">
-      {/* Avatar + email */}
+      {/* Avatar */}
       <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5 flex items-center gap-4">
         {avatarUrl ? (
           <Image
             src={avatarUrl}
-            width={52}
-            height={52}
+            width={56}
+            height={56}
             alt="avatar"
-            className="rounded-full shrink-0"
+            className="rounded-xl shrink-0 object-cover"
+            unoptimized
           />
         ) : (
-          <div className="w-[52px] h-[52px] rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0">
-            <User className="w-5 h-5 text-gray-500" />
+          <div className="w-14 h-14 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0">
+            <User className="w-6 h-6 text-gray-500" />
           </div>
         )}
-        <div>
+        <div className="flex flex-col">
           <div className="text-sm font-medium text-white">{email}</div>
           <div className="text-xs text-gray-500 mt-0.5">Signed in with Google</div>
+          <AvatarPicker current={avatarUrl} onSelect={setAvatarUrl} />
         </div>
       </div>
 
