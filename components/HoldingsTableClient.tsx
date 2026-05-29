@@ -96,7 +96,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
             <th className="text-right px-5 py-3">Price</th>
             <th className="text-right px-5 py-3">Value</th>
             <th className="text-right px-5 py-3">P&amp;L (USD)</th>
-            <th className="text-right px-5 py-3">P&amp;L (ETH)</th>
+            <th className="text-right px-5 py-3">ROI (ETH)</th>
             <th className="text-right px-5 py-3">% Port.</th>
             <th className="text-right px-5 py-3">Also held by</th>
             <th className="text-right px-5 py-3">Date</th>
@@ -124,10 +124,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 ? (pnl / costUsd) * 100 : null;
             }
 
-            // ETH P&L: current value in ETH minus cost basis ETH
-            const currentEthValue = currentValue !== null && ethPrice > 0 ? currentValue / ethPrice : null;
-            const ethPnl = currentEthValue !== null && h.costBasisEth > 0 ? currentEthValue - h.costBasisEth : null;
-            const ethPnlPct = ethPnl !== null && h.costBasisEth > 0 ? (ethPnl / h.costBasisEth) * 100 : null;
+            const roiEthPct = h.roiEthPct ?? null;
 
             return (
               <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">
@@ -172,16 +169,9 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                   )}
                 </td>
                 <td className="px-5 py-3 text-right font-mono">
-                  {loading ? (
-                    <span className="text-gray-500">…</span>
-                  ) : ethPnl !== null ? (
-                    <span className={ethPnl >= 0 ? "text-primary" : "text-danger"}>
-                      {ethPnl >= 0 ? "+" : ""}{ethPnl.toFixed(3)} ETH
-                      {ethPnlPct !== null && (
-                        <span className="text-xs ml-1 opacity-70">
-                          ({ethPnlPct >= 0 ? "+" : ""}{ethPnlPct.toFixed(1)}%)
-                        </span>
-                      )}
+                  {roiEthPct !== null ? (
+                    <span className={roiEthPct >= 0 ? "text-primary" : "text-danger"}>
+                      {roiEthPct >= 0 ? "+" : ""}{roiEthPct.toFixed(1)}%
                     </span>
                   ) : (
                     <span className="text-gray-600">—</span>

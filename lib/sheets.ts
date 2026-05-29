@@ -201,6 +201,7 @@ function parseHoldings(data: string[][]): Holding[] {
   let dateIdx = 7;
   let gainIdx = 16;
   let roiIdx = 15;
+  let roiEthIdx = 14;
 
   const foundPos = headers.findIndex((h) => h === "position");
   if (foundPos !== -1) posIdx = foundPos;
@@ -217,6 +218,7 @@ function parseHoldings(data: string[][]): Holding[] {
     costIdx = foundCost;
     gainIdx = costIdx + 5;
     roiIdx  = costIdx + 4;
+    roiEthIdx = costIdx + 3;
   }
   const foundDate = headers.findIndex((h) => h.includes("investment date"));
   if (foundDate !== -1) dateIdx = foundDate;
@@ -239,11 +241,13 @@ function parseHoldings(data: string[][]): Holding[] {
     const lower = rawTicker.toLowerCase();
     if (lower.includes("(exit)") || lower.includes("(trim)")) continue;
 
-    const gainRaw = gainIdx >= 0 && isValue(row[gainIdx]) ? row[gainIdx]?.trim() : undefined;
-    const roiRaw  = roiIdx >= 0 && isValue(row[roiIdx])  ? row[roiIdx]?.trim()  : undefined;
+    const gainRaw   = gainIdx >= 0 && isValue(row[gainIdx])   ? row[gainIdx]?.trim()   : undefined;
+    const roiRaw    = roiIdx >= 0 && isValue(row[roiIdx])     ? row[roiIdx]?.trim()    : undefined;
+    const roiEthRaw = roiEthIdx >= 0 && isValue(row[roiEthIdx]) ? row[roiEthIdx]?.trim() : undefined;
     // Sanity-check: gain must contain "$", roi must contain "%"
-    const validGain = gainRaw?.includes("$") ?? false;
-    const validRoi  = roiRaw?.includes("%")  ?? false;
+    const validGain   = gainRaw?.includes("$")   ?? false;
+    const validRoi    = roiRaw?.includes("%")     ?? false;
+    const validRoiEth = roiEthRaw?.includes("%")  ?? false;
     holdings.push({
       ticker: rawTicker.toUpperCase(),
       blockchain: (chainIdx >= 0 ? row[chainIdx]?.trim() : "") || (rawTicker.toUpperCase() === "ETH" ? "Ethereum" : ""),
@@ -252,8 +256,9 @@ function parseHoldings(data: string[][]): Holding[] {
       costBasisEth: costIdx >= 0 && isValue(row[costIdx]) ? parseNumber(row[costIdx]) : 0,
       pctOfPortfolio: isValue(row[pctIdx]) ? parseNumber(row[pctIdx]) : 0,
       investmentDate: dateIdx >= 0 && isValue(row[dateIdx]) ? row[dateIdx]?.trim() || "" : "",
-      ...(validGain ? { gainUsd: parseNumber(gainRaw!) } : {}),
-      ...(validRoi  ? { roiUsdPct: parseNumber(roiRaw!) } : {}),
+      ...(validGain   ? { gainUsd:    parseNumber(gainRaw!) }   : {}),
+      ...(validRoi    ? { roiUsdPct:  parseNumber(roiRaw!) }    : {}),
+      ...(validRoiEth ? { roiEthPct:  parseNumber(roiEthRaw!) } : {}),
     });
   }
 
