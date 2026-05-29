@@ -13,12 +13,16 @@ export async function GET(req: NextRequest) {
     .select("*")
     .order("document_date", { ascending: false });
 
-  if (school) {
+  const all = searchParams.get("all") === "true";
+
+  if (all) {
+    // no filter — return everything
+  } else if (school) {
     query = query.ilike("school", school);
   } else if (ticker) {
     query = query.ilike("token_ticker", ticker);
   } else {
-    return NextResponse.json({ error: "ticker or school required" }, { status: 400 });
+    return NextResponse.json({ error: "ticker, school, or all required" }, { status: 400 });
   }
 
   const { data, error } = await query;

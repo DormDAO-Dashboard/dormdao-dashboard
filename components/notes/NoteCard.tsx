@@ -1,11 +1,49 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ResearchNote } from "@/lib/types";
 import { SentimentBadge } from "@/components/ui/Badge";
-import { ThumbsUp, Trash2 } from "lucide-react";
+import { ThumbsUp, Trash2, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+
+const ogCache = new Map<string, object>();
+
+function LinkPreviewCard({ url }: { url: string }) {
+  const [data, setData] = useState<{ title?: string; description?: string; siteName?: string; image?: string } | null>(null);
+
+  useEffect(() => {
+    if (ogCache.has(url)) { setData(ogCache.get(url) as typeof data); return; }
+    fetch(`/api/og?url=${encodeURIComponent(url)}`)
+      .then((r) => r.json())
+      .then((d) => { if (d.title || d.description) { ogCache.set(url, d); setData(d); } })
+      .catch(() => {});
+  }, [url]);
+
+  if (!data) return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 break-all">
+      <ExternalLink className="w-3 h-3 shrink-0" />{url}
+    </a>
+  );
+
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="block rounded-lg border border-gray-700 bg-gray-800/60 p-3 hover:border-gray-600 transition-colors">
+      <div className="flex gap-3">
+        {data.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={data.image} alt="" className="w-16 h-12 object-cover rounded shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
+        )}
+        <div className="min-w-0">
+          <div className="text-xs text-gray-500 mb-0.5 flex items-center gap-1">
+            <ExternalLink className="w-3 h-3" />{data.siteName}
+          </div>
+          {data.title && <div className="text-xs font-semibold text-white truncate">{data.title}</div>}
+          {data.description && <div className="text-xs text-gray-400 line-clamp-2 mt-0.5">{data.description}</div>}
+        </div>
+      </div>
+    </a>
+  );
+}
 
 interface NoteCardProps {
   note: ResearchNote;
@@ -106,7 +144,8 @@ export function NoteCard({ note, currentUserId, adminSecret, onDelete, onUpvote 
         )}
       </div>
 
-      <p className="text-sm text-gray-200 leading-relaxed">{note.content}</p>
+      {note.content && <p className="text-sm text-gray-200 leading-relaxed">{note.content}</p>}
+      {note.url && <LinkPreviewCard url={note.url} />}
 
       <div className="flex items-center justify-between">
         <div className="text-xs text-gray-500">

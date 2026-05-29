@@ -27,7 +27,7 @@ const SCHOOLS = [
   "Texas", "Cambridge",
 ];
 
-export function ResearchClient({ initialTickers }: { initialTickers: string[] }) {
+export function ResearchClient({ initialTickers, hideHeader }: { initialTickers: string[]; hideHeader?: boolean }) {
   const [notes, setNotes] = useState<ResearchNote[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -64,12 +64,14 @@ export function ResearchClient({ initialTickers }: { initialTickers: string[] })
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Community Research</h1>
-        <p className="text-gray-400 mt-1">
-          {loading ? "Loading…" : `${total} note${total !== 1 ? "s" : ""} from DormDAO analysts`}
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Community Research</h1>
+        </div>
+      )}
+      <p className="text-gray-400 mb-4 text-sm">
+        {loading ? "Loading…" : `${total} note${total !== 1 ? "s" : ""} from DormDAO analysts`}
+      </p>
       <AddNoteForm onSuccess={fetchNotes} />
 
       <div className="flex flex-col sm:flex-row gap-3 my-6 flex-wrap">

@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sentiment } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toaster";
+import { ExternalLink } from "lucide-react";
 
 const SENTIMENTS: Sentiment[] = ["bullish", "neutral", "bearish"];
 const THESIS_TYPES = ["Fundamental", "Technical", "Macro", "On-chain", "Trend"];
@@ -66,13 +67,37 @@ export function AddNoteForm({
     thesis_type: "",
     price_target: "",
     time_horizon: "",
+    url: "",
   });
+  const [urlPreview, setUrlPreview] = useState<{ title: string; description: string; siteName: string; image: string } | null>(null);
+  const [urlPreviewLoading, setUrlPreviewLoading] = useState(false);
+  const urlDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    const raw = form.url.trim();
+    if (!raw) { setUrlPreview(null); return; }
+    try { new URL(raw); } catch { setUrlPreview(null); return; }
+    if (urlDebounce.current) clearTimeout(urlDebounce.current);
+    urlDebounce.current = setTimeout(async () => {
+      setUrlPreviewLoading(true);
+      try {
+        const res = await fetch(`/api/og?url=${encodeURIComponent(raw)}`);
+        const data = await res.json();
+        if (data.title || data.description) setUrlPreview(data);
+        else setUrlPreview(null);
+      } catch { setUrlPreview(null); }
+      finally { setUrlPreviewLoading(false); }
+    }, 600);
+    return () => { if (urlDebounce.current) clearTimeout(urlDebounce.current); };
+  }, [form.url]);
+
+  const hasUrl = form.url.trim().length > 0;
+  const minChars = hasUrl ? 10 : 100;
   const charCount = form.content.length;
   const valid =
     form.author_name.trim().length > 0 &&
     form.token_ticker.trim().length > 0 &&
-    charCount >= 100 &&
+    charCount >= minChars &&
     charCount <= 2000;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,6 +113,7 @@ export function AddNoteForm({
         body: JSON.stringify({
           ...form,
           price_target: form.price_target ? parseFloat(form.price_target) : null,
+          url: form.url.trim() || null,
           user_id: userId,
         }),
       });
@@ -96,7 +122,8 @@ export function AddNoteForm({
         throw new Error(data.error ?? "Failed to post note");
       }
       toast("Note posted successfully!", "success");
-      setForm((f) => ({ ...f, content: "", sentiment: "neutral", thesis_type: "", price_target: "", time_horizon: "" }));
+      setForm((f) => ({ ...f, content: "", sentiment: "neutral", thesis_type: "", price_target: "", time_horizon: "", url: "" }));
+      setUrlPreview(null);
       setOpen(false);
       setSubmitAttempted(false);
       setSubmitError("");
@@ -238,21 +265,50 @@ export function AddNoteForm({
       </div>
 
       <div>
-        <label className="block text-xs text-gray-400 mb-1">Analysis *</label>
+        <label className="block text-xs text-gray-400 mb-1">Article URL <span className="text-gray-600">(optional — paste a link to share)</span></label>
+        <input
+          type="url"
+          value={form.url}
+          onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+          placeholder="https://..."
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
+        />
+        {urlPreviewLoading && (
+          <p className="text-xs text-gray-500 mt-1">Fetching preview…</p>
+        )}
+        {urlPreview && !urlPreviewLoading && (
+          <div className="mt-2 rounded-lg border border-gray-700 bg-gray-800/60 p-3 flex gap-3">
+            {urlPreview.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={urlPreview.image} alt="" className="w-16 h-12 object-cover rounded shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
+            )}
+            <div className="min-w-0">
+              <div className="text-xs text-gray-500 mb-0.5 flex items-center gap-1">
+                <ExternalLink className="w-3 h-3" />{urlPreview.siteName}
+              </div>
+              {urlPreview.title && <div className="text-xs font-semibold text-white truncate">{urlPreview.title}</div>}
+              {urlPreview.description && <div className="text-xs text-gray-400 line-clamp-2 mt-0.5">{urlPreview.description}</div>}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-xs text-gray-400 mb-1">Analysis {hasUrl ? <span className="text-gray-600">(optional comment)</span> : "*"}</label>
         <textarea
           value={form.content}
           onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-          placeholder="Share your thesis (min 100 chars)..."
+          placeholder={hasUrl ? "Add a comment (optional)…" : "Share your thesis (min 100 chars)..."}
           rows={4}
           className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 resize-none"
         />
         <div className="flex items-start justify-between mt-1">
-          {submitAttempted && charCount < 100 ? (
-            <p className="text-xs text-red-400">At least 100 characters required ({100 - charCount} more needed).</p>
+          {submitAttempted && charCount < minChars ? (
+            <p className="text-xs text-red-400">At least {minChars} characters required ({minChars - charCount} more needed).</p>
           ) : <span />}
           <span className={cn(
             "text-xs",
-            charCount < 100 ? "text-gray-500" : charCount > 2000 ? "text-danger" : "text-gray-400"
+            charCount < minChars ? "text-gray-500" : charCount > 2000 ? "text-danger" : "text-gray-400"
           )}>
             {charCount}/2000
           </span>

@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { author_name, school, token_ticker, sentiment, content, user_id, thesis_type, price_target, time_horizon } = body;
+  const { author_name, school, token_ticker, sentiment, content, user_id, thesis_type, price_target, time_horizon, url } = body;
 
   if (!author_name?.trim()) {
     return NextResponse.json({ error: "Author name required" }, { status: 400 });
@@ -67,9 +67,10 @@ export async function POST(req: NextRequest) {
   if (!token_ticker?.trim()) {
     return NextResponse.json({ error: "Token is required" }, { status: 400 });
   }
-  if (!content || content.trim().length < 100) {
+  const minLen = url?.trim() ? 10 : 100;
+  if (!content || content.trim().length < minLen) {
     return NextResponse.json(
-      { error: "Content must be at least 100 characters" },
+      { error: `Content must be at least ${minLen} characters` },
       { status: 400 }
     );
   }
@@ -98,6 +99,7 @@ export async function POST(req: NextRequest) {
     thesis_type: thesis_type || null,
     price_target: price_target ? Number(price_target) : null,
     time_horizon: time_horizon || null,
+    url: url?.trim() || null,
   };
 
   let { data, error } = await supabase

@@ -1,5 +1,7 @@
 import { getSchoolsData } from "@/lib/cache";
-import { ResearchClient } from "@/components/ResearchClient";
+import { ResearchTabs } from "@/components/ResearchTabs";
+
+export const revalidate = 300;
 
 export default async function ResearchPage() {
   const { schools } = await getSchoolsData();
@@ -8,5 +10,9 @@ export default async function ResearchPage() {
     schools.flatMap((s) => s.holdings?.map((h) => h.ticker) ?? [])
   )].sort();
 
-  return <ResearchClient initialTickers={tickers} />;
+  return (
+    <div className="max-w-7xl mx-auto">
+      <ResearchTabs initialTickers={tickers} />
+    </div>
+  );
 }

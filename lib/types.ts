@@ -51,6 +51,7 @@ export interface ResearchNote {
   thesis_type: string | null;
   price_target: number | null;
   time_horizon: string | null;
+  url: string | null;
 }
 
 export interface DaoStats {
