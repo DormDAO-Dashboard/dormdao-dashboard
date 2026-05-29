@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // Build insert payload — new columns may not exist yet in DB
+  // url column exists — always include it in base payload
   const insertPayload: Record<string, unknown> = {
     author_name: author_name.trim(),
     school: school?.trim() || null,
@@ -88,15 +88,15 @@ export async function POST(req: NextRequest) {
     sentiment,
     content: content.trim(),
     user_id: user_id || null,
+    url: url?.trim() || null,
   };
 
-  // Attempt to include new columns; fall back gracefully if they don't exist
+  // Attempt to include optional columns; fall back gracefully if they don't exist
   const withNewFields = {
     ...insertPayload,
     thesis_type: thesis_type || null,
     price_target: price_target ? Number(price_target) : null,
     time_horizon: time_horizon || null,
-    url: url?.trim() || null,
   };
 
   let { data, error } = await supabase
