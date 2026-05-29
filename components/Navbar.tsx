@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Trophy, BookOpen, GraduationCap, BarChart2, Info, Activity } from "lucide-react";
+import { Trophy, BookOpen, GraduationCap, BarChart2, Info, Activity, Sun, Moon } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { cn } from "@/lib/utils";
 
@@ -70,25 +70,21 @@ export function Navbar() {
             })}
           </div>
 
-          {/* Pill toggle */}
+          {/* Theme toggle */}
           <button
             onClick={toggle}
             aria-label="Toggle theme"
             className={cn(
-              "relative w-11 h-[22px] rounded-full border flex items-center px-[3px] transition-all duration-200 shrink-0",
+              "flex items-center justify-center w-8 h-8 rounded-md border transition-colors duration-200 shrink-0",
               theme === "dark"
-                ? "bg-white/[0.07] border-white/[0.12] hover:bg-white/[0.12]"
-                : "bg-black/[0.07] border-black/[0.12] hover:bg-black/[0.12]"
+                ? "border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600 hover:bg-gray-800"
+                : "border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:bg-gray-100"
             )}
           >
-            <span
-              className={cn(
-                "w-4 h-4 rounded-full shadow transition-transform duration-200",
-                theme === "dark"
-                  ? "translate-x-0 bg-white/50"
-                  : "translate-x-[calc(100%+3px)] bg-gray-700"
-              )}
-            />
+            {theme === "dark"
+              ? <Sun className="w-4 h-4" />
+              : <Moon className="w-4 h-4" />
+            }
           </button>
 
         </div>
