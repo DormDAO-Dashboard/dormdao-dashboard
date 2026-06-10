@@ -67,7 +67,7 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeplo
             <th className="text-left px-5 py-3 text-gray-500">School</th>
             <th className={thCls("nav")} onClick={() => toggleSort("nav")}>NAV {sortKey === "nav" ? (asc ? "↑" : "↓") : ""}</th>
             <th className={thCls("usdReturn")} onClick={() => toggleSort("usdReturn")}>Return (USD) {sortKey === "usdReturn" ? (asc ? "↑" : "↓") : ""}</th>
-            <th className={thCls("ethReturn")} onClick={() => toggleSort("ethReturn")}>ETH Return {sortKey === "ethReturn" ? (asc ? "↑" : "↓") : ""}</th>
+            <th className={thCls("ethReturn")} onClick={() => toggleSort("ethReturn")}>Return (ETH) {sortKey === "ethReturn" ? (asc ? "↑" : "↓") : ""}</th>
             {showDeployed && <th className={thCls("pctDeployed")} onClick={() => toggleSort("pctDeployed")}>% Deployed {sortKey === "pctDeployed" ? (asc ? "↑" : "↓") : ""}</th>}
           </tr>
         </thead>
