@@ -12,7 +12,7 @@ import { SchoolRow } from "@/lib/types";
 import { ADMIN_SECRET } from "@/lib/admin";
 import { formatUSD, formatPct } from "@/lib/utils";
 import Link from "next/link";
-import { ArrowRight, Camera } from "lucide-react";
+import { ArrowRight, Camera, TrendingUp, TrendingDown } from "lucide-react";
 
 function stdDev(values: number[]): number {
   if (values.length < 2) return 0;
@@ -65,6 +65,117 @@ function AdminPanel() {
         {snapping ? "Saving…" : "Capture Snapshot"}
       </button>
       {snapResult && <span className="text-xs text-yellow-300">{snapResult}</span>}
+    </div>
+  );
+}
+
+function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
+  const allHoldings = schools.flatMap(s =>
+    (s.holdings ?? []).map(h => ({ ...h, schoolName: s.name }))
+  );
+
+  // Total active positions across all schools
+  const totalPositions = allHoldings.length;
+
+  // Distinct tickers
+  const uniqueTokenCount = new Set(allHoldings.map(h => h.ticker)).size;
+
+  // Most widely held: count distinct schools per ticker
+  const tokenSchoolsMap: Record<string, Set<string>> = {};
+  for (const s of schools) {
+    for (const h of s.holdings ?? []) {
+      if (!tokenSchoolsMap[h.ticker]) tokenSchoolsMap[h.ticker] = new Set();
+      tokenSchoolsMap[h.ticker].add(s.name);
+    }
+  }
+  const [mostWidelyHeldTicker, mostWidelyHeldCount] = Object.entries(tokenSchoolsMap)
+    .reduce<[string, number]>(
+      (best, [ticker, schoolSet]) => schoolSet.size > best[1] ? [ticker, schoolSet.size] : best,
+      ["—", 0]
+    );
+
+  // Best / Worst position by gainUsd (sheet-provided P&L only)
+  const holdingsWithGain = allHoldings.filter(
+    (h): h is typeof h & { gainUsd: number } => h.gainUsd !== undefined
+  );
+  const bestPos = holdingsWithGain.length > 0
+    ? holdingsWithGain.reduce((b, h) => h.gainUsd > b.gainUsd ? h : b)
+    : null;
+  const worstPos = holdingsWithGain.length > 0
+    ? holdingsWithGain.reduce((w, h) => h.gainUsd < w.gainUsd ? h : w)
+    : null;
+
+  // Position-level win rate (distinct from school-level win rate)
+  const posWinRate = holdingsWithGain.length > 0
+    ? Math.round((holdingsWithGain.filter(h => h.gainUsd > 0).length / holdingsWithGain.length) * 100)
+    : null;
+  const posWinCount = holdingsWithGain.filter(h => h.gainUsd > 0).length;
+
+  const statCard = "rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-4 flex flex-col gap-1";
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-sm font-semibold text-gray-300 mb-3">DAO-Wide Metrics</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+
+        <div className={statCard}>
+          <span className="text-xs text-gray-500">Most Widely Held</span>
+          <span className="text-base font-mono font-bold text-white">${mostWidelyHeldTicker}</span>
+          <span className="text-xs text-gray-600">{mostWidelyHeldCount > 0 ? `${mostWidelyHeldCount} of 17 schools` : "—"}</span>
+        </div>
+
+        <div className={statCard}>
+          <span className="text-xs text-gray-500">Unique Tokens</span>
+          <span className="text-base font-mono font-bold text-white">{uniqueTokenCount}</span>
+          <span className="text-xs text-gray-600">across all portfolios</span>
+        </div>
+
+        <div className={statCard}>
+          <span className="text-xs text-gray-500">Best Position</span>
+          {bestPos ? (
+            <>
+              <span className="text-base font-mono font-bold text-white">${bestPos.ticker}</span>
+              <span className="text-xs font-mono text-primary">+{formatUSD(bestPos.gainUsd)}</span>
+            </>
+          ) : (
+            <span className="text-base font-mono font-bold text-gray-600">—</span>
+          )}
+        </div>
+
+        <div className={statCard}>
+          <span className="text-xs text-gray-500">Worst Position</span>
+          {worstPos && worstPos.gainUsd < 0 ? (
+            <>
+              <span className="text-base font-mono font-bold text-white">${worstPos.ticker}</span>
+              <span className="text-xs font-mono text-danger">{formatUSD(worstPos.gainUsd)}</span>
+            </>
+          ) : (
+            <span className="text-base font-mono font-bold text-gray-600">—</span>
+          )}
+        </div>
+
+        <div className={statCard}>
+          <span className="text-xs text-gray-500">Position Win Rate</span>
+          {posWinRate !== null ? (
+            <>
+              <span className="flex items-center gap-1 text-base font-mono font-bold text-white">
+                <TrendingUp className="w-3.5 h-3.5 text-primary shrink-0" />
+                {posWinRate}%
+              </span>
+              <span className="text-xs text-gray-600">{posWinCount}/{holdingsWithGain.length} positions</span>
+            </>
+          ) : (
+            <span className="text-base font-mono font-bold text-gray-600">—</span>
+          )}
+        </div>
+
+        <div className={statCard}>
+          <span className="text-xs text-gray-500">Total Positions</span>
+          <span className="text-base font-mono font-bold text-white">{totalPositions}</span>
+          <span className="text-xs text-gray-600">active holdings</span>
+        </div>
+
+      </div>
     </div>
   );
 }
@@ -149,6 +260,9 @@ export function DashboardClient({
         />
         <KpiCard label="Avg Deployment" value={formatPct(avgDeployed)} />
       </div>
+
+      {/* DAO-Wide Metrics — current season only */}
+      {period === "2526" && <DaoWideMetrics schools={schools} />}
 
       {/* Analytics row */}
       <div className="grid grid-cols-3 gap-3 mb-8">

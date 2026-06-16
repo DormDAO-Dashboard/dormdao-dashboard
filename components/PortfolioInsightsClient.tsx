@@ -47,7 +47,9 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
     .sort((a, b) => b.pctOfPortfolio - a.pctOfPortfolio)[0] ?? null;
 
   const now = Date.now();
-  const validAges = holdings
+
+  // OLD: all active positions regardless of season (inflated by prior-season carry-overs)
+  const allAges = holdings
     .map((h) => {
       if (!h.investmentDate) return null;
       const ms = parseDateMs(h.investmentDate);
@@ -56,9 +58,33 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
       return age >= 0 ? age : null;
     })
     .filter((age): age is number => age !== null);
+  const oldAvgAge = allAges.length > 0 ? allAges.reduce((s, a) => s + a, 0) / allAges.length : null;
+
+  // NEW: current season only — excludes positions purchased before 2025-07-01
+  const SEASON_START_MS = new Date('2025-07-01').getTime();
+  const validAges = holdings
+    .map((h) => {
+      if (!h.investmentDate) return null;
+      const ms = parseDateMs(h.investmentDate);
+      if (ms <= 0 || ms < SEASON_START_MS) return null;
+      const age = (now - ms) / (1000 * 60 * 60 * 24);
+      return age >= 0 ? age : null;
+    })
+    .filter((age): age is number => age !== null);
   const avgAgeDays = validAges.length > 0
     ? validAges.reduce((s, a) => s + a, 0) / validAges.length
     : null;
+
+  // Debug: open browser console to verify the fix
+  console.log('[PortfolioInsights] Position age debug for', holdings[0]?.ticker ?? 'unknown school');
+  holdings.forEach(h => {
+    if (!h.investmentDate) return;
+    const ms = parseDateMs(h.investmentDate);
+    const age = ms > 0 ? Math.round((now - ms) / (1000 * 60 * 60 * 24)) : null;
+    console.log(`  ${h.ticker}: ${h.investmentDate} → ${age ?? 'unparseable'}d ${ms >= SEASON_START_MS ? '✓' : '(prior season, excluded)'}`);
+  });
+  console.log(`  OLD avg: ${oldAvgAge !== null ? Math.round(oldAvgAge) : 'null'}d (${allAges.length} positions)`);
+  console.log(`  NEW avg: ${avgAgeDays !== null ? Math.round(avgAgeDays) : 'null'}d (${validAges.length} current-season positions)`);
 
   // P&L: prefer sheet's Gain(USD), then historical ETH, then current ETH
   const pnlByHolding = !loading
