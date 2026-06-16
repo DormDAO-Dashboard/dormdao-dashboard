@@ -17,6 +17,7 @@ export interface BuyEntry {
   tokens: number;
   gainUsd?: number;
   roiUsdPct?: number;
+  roiEthPct?: number;
 }
 
 export function parseDateMs(dateStr: string): number {
@@ -46,6 +47,7 @@ export function buildBuysList(schools: SchoolRow[]): BuyEntry[] {
         tokens: h.tokens,
         gainUsd: h.gainUsd,
         roiUsdPct: h.roiUsdPct,
+        roiEthPct: h.roiEthPct,
       });
     }
   }

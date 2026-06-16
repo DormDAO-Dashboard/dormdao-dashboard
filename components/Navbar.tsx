@@ -11,10 +11,10 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { href: "/", label: "Leaderboard", icon: Trophy },
-  { href: "/schools", label: "Schools", icon: GraduationCap },
+  { href: "/schools", label: "Portfolios", icon: GraduationCap },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/activity", label: "Activity", icon: Activity },
-  { href: "/research", label: "Research", icon: BookOpen },
+  { href: "/research", label: "DormDocs", icon: BookOpen },
   { href: "/about", label: "About", icon: Info },
 ];
 

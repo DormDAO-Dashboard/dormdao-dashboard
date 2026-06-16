@@ -32,8 +32,9 @@ function formatQty(n: number | null) {
   return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
 }
 
-// pnlBySchool[schoolName][ticker] = { gainUsd, roiUsdPct }
-type PnlMap = Record<string, Record<string, { gainUsd: number; roiUsdPct: number }>>;
+// pnlBySchool[schoolName][ticker] = { gainUsd, roiUsdPct, roiEthPct }
+type PnlEntry = { gainUsd: number; roiUsdPct: number; roiEthPct: number };
+type PnlMap = Record<string, Record<string, PnlEntry>>;
 
 export function TrimsAndSells() {
   const [changes, setChanges] = useState<ChangeRow[]>([]);
@@ -53,15 +54,14 @@ export function TrimsAndSells() {
         // Build P&L lookup from both active and exited holdings
         const map: PnlMap = {};
         for (const school of sheetsRes.schools ?? []) {
-          const byTicker: Record<string, { gainUsd: number; roiUsdPct: number }> = {};
+          const byTicker: Record<string, PnlEntry> = {};
           for (const h of school.holdings ?? []) {
             if (h.gainUsd !== undefined) {
-              byTicker[h.ticker] = { gainUsd: h.gainUsd, roiUsdPct: h.roiUsdPct ?? 0 };
+              byTicker[h.ticker] = { gainUsd: h.gainUsd, roiUsdPct: h.roiUsdPct ?? 0, roiEthPct: h.roiEthPct ?? 0 } as PnlEntry;
             }
           }
           for (const h of school.exitedHoldings ?? []) {
-            // exited holdings take priority for sell events
-            byTicker[h.ticker] = { gainUsd: h.gainUsd, roiUsdPct: h.roiUsdPct };
+            byTicker[h.ticker] = { gainUsd: h.gainUsd, roiUsdPct: h.roiUsdPct, roiEthPct: h.roiEthPct } as PnlEntry;
           }
           map[school.name] = byTicker;
         }
@@ -120,7 +120,8 @@ export function TrimsAndSells() {
                 <th className="text-right px-5 py-3">After</th>
                 <th className="text-right px-5 py-3">Tokens Sold</th>
                 <th className="text-right px-5 py-3">P&amp;L (USD)</th>
-                <th className="text-right px-5 py-3">ROI</th>
+                <th className="text-right px-5 py-3">ROI (USD)</th>
+                <th className="text-right px-5 py-3">ROI (ETH)</th>
                 <th className="text-right px-5 py-3">Detected</th>
               </tr>
             </thead>
@@ -183,6 +184,15 @@ export function TrimsAndSells() {
                       {pnl !== null && pnl.roiUsdPct !== 0 ? (
                         <span className={pnl.roiUsdPct >= 0 ? "text-primary" : "text-danger"}>
                           {pnl.roiUsdPct >= 0 ? "+" : ""}{pnl.roiUsdPct.toFixed(1)}%
+                        </span>
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-right font-mono text-xs">
+                      {pnl !== null && pnl.roiEthPct !== 0 ? (
+                        <span className={pnl.roiEthPct >= 0 ? "text-primary" : "text-danger"}>
+                          {pnl.roiEthPct >= 0 ? "+" : ""}{pnl.roiEthPct.toFixed(1)}%
                         </span>
                       ) : (
                         <span className="text-gray-600">—</span>

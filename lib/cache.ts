@@ -10,6 +10,10 @@ export interface SchoolsCache {
   sinceInceptionSchools: SchoolRow[];
   schools2425: SchoolRow[];
   schools2324: SchoolRow[];
+  daoReturnEth2526: number | null;
+  daoReturnEthAllTime: number | null;
+  daoReturnEth2425: number | null;
+  daoReturnEth2324: number | null;
   fetchedAt: string;
   totalNAV: number;
   avgUsdReturn: number;
@@ -25,7 +29,7 @@ export interface PricesCache {
 
 export const getSchoolsData = unstable_cache(
   async (): Promise<SchoolsCache> => {
-    const { schools, sinceInceptionSchools, schools2425, schools2324, fetchedAt } = await fetchSheetsData();
+    const { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt } = await fetchSheetsData();
     const len = schools.length || 1;
 
     const totalNAV = schools.reduce((s, x) => s + x.nav, 0);
@@ -41,9 +45,9 @@ export const getSchoolsData = unstable_cache(
       }
     }
 
-    return { schools, sinceInceptionSchools, schools2425, schools2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
+    return { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
   },
-  ["schools-data-v4"],
+  ["schools-data-v22"],
   { revalidate: 300 }
 );
 

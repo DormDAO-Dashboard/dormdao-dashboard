@@ -25,6 +25,7 @@ function tabToDisplayName(tabName: string): string {
 export interface SchoolRowWithHoldings extends SchoolRow {
   holdings: Holding[];
   exitedHoldings: ExitedHolding[];
+  nftHoldings: Holding[];
 }
 
 function parseNumber(raw: string | undefined): number {
@@ -32,6 +33,19 @@ function parseNumber(raw: string | undefined): number {
   const cleaned = raw.replace(/[$,%\s]/g, "").replace(/,/g, "");
   const n = parseFloat(cleaned);
   return isNaN(n) ? 0 : n;
+}
+
+// Like parseNumber but respects K/M/B/T suffixes (e.g. "$8,791M" → 8_791_000_000)
+function parseSuffixedNumber(raw: string | undefined): number {
+  if (!raw) return 0;
+  const t = raw.trim().toUpperCase().replace(/[$,\s]/g, "");
+  const n = parseFloat(t);
+  if (isNaN(n)) return 0;
+  if (t.endsWith("T")) return n * 1e12;
+  if (t.endsWith("B")) return n * 1e9;
+  if (t.endsWith("M")) return n * 1e6;
+  if (t.endsWith("K")) return n * 1e3;
+  return n;
 }
 
 function isValue(s: string | undefined): boolean {
@@ -123,7 +137,7 @@ function parseLeaderboardSection(data: string[][], sectionMarker: string): Leade
     const nav = parseNumber(row[3]);
     const usdReturn = parseNumber(row[4]);
     const ethReturn = parseNumber(row[5]);
-    const avgEntryFdv = parseNumber(row[6]);
+    const avgEntryFdv = parseNumber(row[6]) * 1000;
     const pctDeployed = parseNumber(row[7]);
 
     if (nav === 0) continue;
@@ -138,7 +152,8 @@ function parseLeaderboard(data: string[][]): LeaderboardEntry[] {
 }
 
 function parseSinceInception(data: string[][]): LeaderboardEntry[] {
-  return parseLeaderboardSection(data, "Since Inception");
+  // Use the full header string to avoid matching the summary stats "Since Inception" row
+  return parseLeaderboardSection(data, "Member School Leaderboard (Since Inception)");
 }
 
 function parseHistoricalLeaderboard(data: string[][]): LeaderboardEntry[] {
@@ -267,6 +282,74 @@ function parseHoldings(data: string[][]): Holding[] {
   return holdings;
 }
 
+function parseNftHoldings(data: string[][]): Holding[] {
+  // Find "NFT Positions" section marker (may appear in any column)
+  let sectionStart = -1;
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].some((c) => c?.trim() === "NFT Positions")) {
+      sectionStart = i;
+      break;
+    }
+  }
+  if (sectionStart === -1) return [];
+
+  // Find header row (row with "Position" within next 5 rows)
+  let headerIdx = -1;
+  for (let i = sectionStart + 1; i < Math.min(sectionStart + 5, data.length); i++) {
+    if (data[i].some((c) => c?.trim() === "Position")) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) return [];
+
+  // Fixed column layout (Oregon/Texas NFT section):
+  // col[0]=name, col[3]=qty, col[5]=pct, col[7]=date,
+  // col[9]=chain, col[11]=costETH, col[14]=roiETH%, col[15]=roiUSD%, col[16]=gainUSD
+  const holdings: Holding[] = [];
+  for (let i = headerIdx + 1; i < data.length; i++) {
+    const row = data[i];
+
+    // Check section-end markers BEFORE skipping empty rows (markers often have empty col[0])
+    if (row.some((c) => {
+      const v = c?.trim() ?? "";
+      return v === "Liquid Positions (Exited/Trimmed)" || v === "Liquid Positions";
+    })) break;
+
+    const nftName = row[0]?.trim();
+    if (!nftName) continue;
+    if (nftName.startsWith("Member") || nftName === "Position") break;
+    if (nftName.length > 60) continue;
+
+    const pct    = isValue(row[5])  ? parseNumber(row[5])  : 0;
+    const tokens = isValue(row[3])  ? parseNumber(row[3])  : 0;
+    if (!pct && !tokens) continue;
+
+    const gainRaw   = row[16]?.trim();
+    const roiUsdRaw = row[15]?.trim();
+    const roiEthRaw = row[14]?.trim();
+    const validGain   = !!(gainRaw   && isValue(gainRaw)   && gainRaw.includes("$"));
+    const validRoiUsd = !!(roiUsdRaw && isValue(roiUsdRaw) && roiUsdRaw.includes("%"));
+    const validRoiEth = !!(roiEthRaw && isValue(roiEthRaw) && roiEthRaw.includes("%"));
+
+    const marketValueUsd = isValue(row[4]) ? parseNumber(row[4]) : 0;
+    holdings.push({
+      ticker: nftName.toUpperCase(),
+      blockchain: isValue(row[9]) ? row[9]?.trim() || "" : "",
+      tokens,
+      entryFdv: "",
+      costBasisEth: isValue(row[11]) ? parseNumber(row[11]) : 0,
+      pctOfPortfolio: pct,
+      investmentDate: isValue(row[7]) ? row[7]?.trim() || "" : "",
+      ...(marketValueUsd > 0 ? { marketValueUsd } : {}),
+      ...(validGain   ? { gainUsd:   parseNumber(gainRaw!)   } : {}),
+      ...(validRoiUsd ? { roiUsdPct: parseNumber(roiUsdRaw!) } : {}),
+      ...(validRoiEth ? { roiEthPct: parseNumber(roiEthRaw!) } : {}),
+    });
+  }
+  return holdings;
+}
+
 function parseExitedHoldings(data: string[][]): ExitedHolding[] {
   // Find "Liquid Positions (Exited/Trimmed)" section marker
   let sectionStart = -1;
@@ -278,59 +361,155 @@ function parseExitedHoldings(data: string[][]): ExitedHolding[] {
   }
   if (sectionStart === -1) return [];
 
-  // posIdx defaults to 1; refine if there's a "Position" header row within 5 rows
-  let posIdx = 1;
-  let dataStart = sectionStart + 1;
-  for (let i = sectionStart + 1; i < Math.min(sectionStart + 6, data.length); i++) {
+  // Find header row (a row where any cell is exactly "Position")
+  let headerRowIdx = -1;
+  for (let i = sectionStart + 1; i < Math.min(sectionStart + 8, data.length); i++) {
     if (data[i].some((c) => c?.trim() === "Position")) {
-      const headers = data[i].map((h) => h?.trim().toLowerCase());
-      const foundPos = headers.findIndex((h) => h === "position");
-      if (foundPos !== -1) posIdx = foundPos;
-      dataStart = i + 1;
+      headerRowIdx = i;
       break;
     }
   }
+  if (headerRowIdx === -1) return [];
+
+  // Different school tabs have different column counts and label placements — most
+  // columns have no header text. Use the ticker "Position" column as anchor for the
+  // left table, then pattern-detect right-table values per data row.
+  const headers = data[headerRowIdx].map((h) => h?.trim().toLowerCase() ?? "");
+  const posIdx  = headers.indexOf("position"); // first "Position" = ticker column
+  if (posIdx === -1) return [];
+
+  // Left table is always at fixed offsets from posIdx (consistent across all schools)
+  const tokensSoldIdx = posIdx + 1;
+  const tokenPriceIdx = posIdx + 2;
+  const ethValueIdx   = posIdx + 3;
+  const marketValIdx  = posIdx + 4;
+  // Right-table values begin after the left table; scan from here
+  const scanStart     = posIdx + 5;
+
+  // Date pattern: YYYY/MM/DD, YYYY-MM-DD, or mixed separators
+  const isDate = (v: string) => /^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/.test(v);
+  // FDV pattern: ends with M, B, or T after stripping non-alpha (e.g. "$3,752M")
+  const isFdv  = (v: string) => /[MBT]$/i.test(v.toUpperCase().replace(/[^A-Z]/g, ""));
 
   const results: ExitedHolding[] = [];
-  for (let i = dataStart; i < data.length; i++) {
+  let inNftSubsection = false;
+  for (let i = headerRowIdx + 1; i < data.length; i++) {
     const row = data[i];
     const rawFull = row[posIdx]?.trim();
     if (!rawFull) continue;
-    if (rawFull === "NFT Positions" || rawFull.startsWith("Member")) break;
+    const lowerFull = rawFull.toLowerCase();
+    // Stop at Member leaderboard
+    if (rawFull.startsWith("Member")) break;
+    // NFT subsection section label — skip and flag remaining rows as NFT exits
+    if (lowerFull.startsWith("nft positions")) {
+      inNftSubsection = true;
+      continue;
+    }
+    // Second "Position" header row (within NFT subsection) — skip
+    if (lowerFull === "position") {
+      if (results.length > 0) inNftSubsection = true;
+      continue;
+    }
     if (rawFull.includes("#")) continue;
 
-    // Strip "(exit)" / "(trim)" suffix to get the base ticker
-    const rawTicker = rawFull.replace(/\s*\([^)]*\)\s*$/, "").trim();
-    if (!rawTicker || rawTicker.length > 20) continue;
+    const exitType = lowerFull.includes("(exit)") ? "exit" as const
+                   : lowerFull.includes("(trim)") ? "trim" as const
+                   : "unknown" as const;
+    const ticker = rawFull.replace(/\s*\([^)]*\)\s*$/, "").trim().toUpperCase();
+    if (!ticker || ticker.length > 20) continue;
 
-    // Find gainUSD: rightmost "$" value in cols 10+ that is NOT an FDV (no M/B/T suffix)
-    let gainRaw: string | undefined;
-    for (let col = row.length - 1; col >= 10; col--) {
-      const v = row[col]?.trim();
-      if (v && isValue(v) && v.includes("$") && !/[MBT]$/.test(v.replace(/[^A-Z]/g, ""))) {
-        gainRaw = v;
-        break;
+    // Pattern-detect right-table values by scanning each row independently
+    const dates: number[]   = [];
+    const pcts: number[]    = [];
+    let gainUsdCol           = -1;
+    let exitFdvVal           = "";
+    let blockchain           = "";
+
+    for (let c = scanStart; c < row.length; c++) {
+      const v = row[c]?.trim();
+      if (!v || !isValue(v)) continue;
+
+      if (isDate(v)) {
+        dates.push(c);
+      } else if (v.includes("%")) {
+        pcts.push(c);
+      } else if (v.includes("$")) {
+        if (isFdv(v)) {
+          if (!exitFdvVal) exitFdvVal = v;
+        } else {
+          gainUsdCol = c;
+        }
+      } else if (!blockchain && !/^\d+(\.\d+)?$/.test(v)) {
+        blockchain = v;
       }
     }
-    if (!gainRaw?.includes("$")) continue;
 
-    // Collect all "%" values in cols 10+ — last = ROI USD, second-to-last = ROI ETH
-    const pctVals: string[] = [];
-    for (let col = 10; col < row.length; col++) {
-      const v = row[col]?.trim();
-      if (v && isValue(v) && v.includes("%")) pctVals.push(v);
+    // Cost basis ETH: plain decimal number immediately before the first ROI% column
+    let costBasisEth = 0;
+    if (pcts.length > 0) {
+      for (let c = pcts[0] - 1; c >= scanStart; c--) {
+        const v = row[c]?.trim();
+        if (!v) continue;
+        if (/^\d+(\.\d+)?$/.test(v)) costBasisEth = parseNumber(v);
+        break; // first non-empty cell before roiEth
+      }
     }
-    const roiRaw    = pctVals[pctVals.length - 1];
-    const roiEthRaw = pctVals[pctVals.length - 2];
 
     results.push({
-      ticker: rawTicker.toUpperCase(),
-      gainUsd: parseNumber(gainRaw),
-      roiUsdPct: roiRaw ? parseNumber(roiRaw) : 0,
-      roiEthPct: roiEthRaw ? parseNumber(roiEthRaw) : 0,
+      ticker,
+      exitType,
+      tokensSold:     parseNumber(row[tokensSoldIdx]),
+      tokenPrice:     parseNumber(row[tokenPriceIdx]),
+      ethValue:       parseNumber(row[ethValueIdx]),
+      marketValueUsd: parseNumber(row[marketValIdx]),
+      investmentDate: dates[0] !== undefined ? (row[dates[0]]?.trim() ?? "") : "",
+      exitDate:       dates[1] !== undefined ? (row[dates[1]]?.trim() ?? "") : "",
+      exitFdv:        exitFdvVal,
+      blockchain,
+      costBasisEth,
+      roiEthPct:      pcts.length >= 2 ? parseNumber(row[pcts[pcts.length - 2]]) : (pcts.length === 1 ? parseNumber(row[pcts[0]]) : 0),
+      roiUsdPct:      pcts.length >= 1 ? parseNumber(row[pcts[pcts.length - 1]]) : 0,
+      gainUsd:        gainUsdCol >= 0 ? parseNumber(row[gainUsdCol]) : 0,
+      ...(inNftSubsection ? { isNft: true } : {}),
     });
   }
   return results;
+}
+
+// Collect ALL "Benchmark (ETH) Return" values starting from minCol (to skip noise columns)
+function parseAllBenchmarkReturns(data: string[][], minCol = 0): number[] {
+  const results: number[] = [];
+  for (const row of data) {
+    for (let j = minCol; j < row.length; j++) {
+      const cell = row[j]?.trim().toLowerCase() ?? "";
+      if (cell.includes("benchmark") && cell.includes("eth")) {
+        for (let k = j + 1; k < row.length; k++) {
+          const v = row[k]?.trim();
+          if (v && isValue(v) && v.includes("%")) {
+            results.push(parseNumber(v));
+            break;
+          }
+        }
+      }
+    }
+  }
+  return results;
+}
+
+function parseBenchmarkReturn(data: string[][]): number | null {
+  for (const row of data) {
+    for (let j = 0; j < row.length; j++) {
+      const cell = row[j]?.trim().toLowerCase() ?? "";
+      if (cell.includes("benchmark") && cell.includes("eth")) {
+        for (let k = j + 1; k < row.length; k++) {
+          const v = row[k]?.trim();
+          if (v && isValue(v) && v.includes("%")) return parseNumber(v);
+        }
+        // no value in this row — keep scanning for another Benchmark row
+      }
+    }
+  }
+  return null;
 }
 
 export async function fetchSheetsData(): Promise<{
@@ -338,6 +517,10 @@ export async function fetchSheetsData(): Promise<{
   sinceInceptionSchools: SchoolRow[];
   schools2425: SchoolRow[];
   schools2324: SchoolRow[];
+  daoReturnEth2526: number | null;
+  daoReturnEthAllTime: number | null;
+  daoReturnEth2425: number | null;
+  daoReturnEth2324: number | null;
   fetchedAt: string;
 }> {
   // 1. Fetch leaderboard tabs in parallel
@@ -349,8 +532,30 @@ export async function fetchSheetsData(): Promise<{
   const leaderboardEntries = parseLeaderboard(leaderboardData);
   const sinceInceptionEntries = parseSinceInception(leaderboardData);
 
+  // LEADERBOARD tab benchmark rows: first = current year (2025-2026), second = All-Time (if present)
+  const leaderboardBenchmarks = parseAllBenchmarkReturns(leaderboardData, 0);
+  const daoReturnEth2526 = leaderboardBenchmarks[0] ?? null;
+  const daoReturnEthAllTime = leaderboardBenchmarks[1] ?? null;
+
+  // '24-'25 tab has explicit "Benchmark (ETH) Return" label
+  const daoReturnEth2425 = parseBenchmarkReturn(data2425);       // 59.56%
+
+  // '23-'24 tab has no benchmark label — value is at col[10] of "Invested Capital (ETH)" row
+  let daoReturnEth2324 = parseBenchmarkReturn(data2324);
+  if (daoReturnEth2324 === null) {
+    for (const row of data2324) {
+      if (row[1]?.trim().toLowerCase().includes("invested capital (eth)")) {
+        for (let c = 8; c <= 13; c++) {
+          const v = row[c]?.trim();
+          if (v && isValue(v) && v.includes("%")) { daoReturnEth2324 = parseNumber(v); break; }
+        }
+        if (daoReturnEth2324 !== null) break;
+      }
+    }
+  }
+
   if (leaderboardEntries.length === 0) {
-    return { schools: [], sinceInceptionSchools: [], schools2425: [], schools2324: [], fetchedAt: new Date().toISOString() };
+    return { schools: [], sinceInceptionSchools: [], schools2425: [], schools2324: [], daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt: new Date().toISOString() };
   }
 
   // 2. Fetch holdings for each school in parallel
@@ -359,7 +564,8 @@ export async function fetchSheetsData(): Promise<{
       const tabData = await fetchSchoolTabCsv(entry.name);
       const holdings = parseHoldings(tabData);
       const exitedHoldings = parseExitedHoldings(tabData);
-      return { ...entry, holdings, exitedHoldings };
+      const nftHoldings = parseNftHoldings(tabData);
+      return { ...entry, holdings, exitedHoldings, nftHoldings };
     })
   );
 
@@ -377,6 +583,7 @@ export async function fetchSheetsData(): Promise<{
       pctDeployed: s.pctDeployed,
       holdings: s.holdings,
       exitedHoldings: s.exitedHoldings,
+      nftHoldings: s.nftHoldings,
     };
   });
 
@@ -421,5 +628,5 @@ export async function fetchSheetsData(): Promise<{
   const schools2425 = buildHistoricalRows(data2425);
   const schools2324 = buildHistoricalRows(data2324);
 
-  return { schools, sinceInceptionSchools, schools2425, schools2324, fetchedAt: new Date().toISOString() };
+  return { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt: new Date().toISOString() };
 }

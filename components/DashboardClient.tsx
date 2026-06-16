@@ -69,23 +69,40 @@ function AdminPanel() {
   );
 }
 
+type Period = "2526" | "inception" | "2425" | "2324";
+
+const PERIODS: { key: Period; label: string }[] = [
+  { key: "2526",      label: "2025–2026" },
+  { key: "2425",      label: "2024–2025" },
+  { key: "2324",      label: "2023–2024" },
+  { key: "inception", label: "Since Inception" },
+];
+
 export function DashboardClient({
   schools,
   sinceInceptionSchools,
+  schools2425,
+  schools2324,
   fetchedAt,
 }: {
   schools: SchoolRow[];
   sinceInceptionSchools: SchoolRow[];
+  schools2425: SchoolRow[];
+  schools2324: SchoolRow[];
   fetchedAt: string;
 }) {
-  const [period, setPeriod] = useState<"current" | "inception">("current");
+  const [period, setPeriod] = useState<Period>("2526");
 
-  const activeSchools = period === "current" ? schools : sinceInceptionSchools.length > 0 ? sinceInceptionSchools : schools;
+  const activeSchools =
+    period === "2526"      ? schools :
+    period === "inception" ? (sinceInceptionSchools.length > 0 ? sinceInceptionSchools : schools) :
+    period === "2425"      ? schools2425 :
+                             schools2324;
 
-  const totalNAV = schools.reduce((s, x) => s + x.nav, 0);
+  const totalNAV = activeSchools.reduce((s, x) => s + x.nav, 0);
   const avgUsdReturn = activeSchools.reduce((s, x) => s + x.usdReturn, 0) / (activeSchools.length || 1);
   const avgEthReturn = activeSchools.reduce((s, x) => s + x.ethReturn, 0) / (activeSchools.length || 1);
-  const avgDeployed = schools.reduce((s, x) => s + x.pctDeployed, 0) / (schools.length || 1);
+  const avgDeployed = activeSchools.reduce((s, x) => s + x.pctDeployed, 0) / (activeSchools.length || 1);
 
   const ethReturns = activeSchools.map((s) => s.ethReturn);
   const winRate = ethReturns.length > 0
@@ -101,27 +118,25 @@ export function DashboardClient({
       <AdminPanel />
 
       {/* Period toggle */}
-      {sinceInceptionSchools.length > 0 && (
-        <div className="flex gap-1.5 mb-6">
-          {(["current", "inception"] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                period === p
-                  ? "bg-primary/20 border-primary/50 text-primary"
-                  : "bg-transparent border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
-              }`}
-            >
-              {p === "current" ? "2025–2026" : "Since Inception"}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-1.5 mb-6">
+        {PERIODS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setPeriod(key)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              period === key
+                ? "bg-primary/20 border-primary/50 text-primary"
+                : "bg-transparent border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Total Portfolio NAV" value={formatUSD(totalNAV, true)} />
+        <KpiCard label="Total Portfolio NAV" value={formatUSD(Math.round(totalNAV))} />
         <KpiCard
           label="Avg USD Return"
           value={formatPct(avgUsdReturn)}
@@ -194,11 +209,13 @@ export function DashboardClient({
         <SortableLeaderboard schools={activeSchools} />
       </div>
 
-      {/* ETH Holdings */}
-      <EthHoldingsTable schools={schools} />
-
-      {/* Recent Buys */}
-      <RecentBuysFeed schools={schools} />
+      {/* ETH Holdings + Recent Buys — current year only (require live holdings) */}
+      {period === "2526" && (
+        <>
+          <EthHoldingsTable schools={schools} />
+          <RecentBuysFeed schools={schools} />
+        </>
+      )}
 
       {/* Sync footer */}
       <div className="text-center text-xs text-gray-600 pb-2">

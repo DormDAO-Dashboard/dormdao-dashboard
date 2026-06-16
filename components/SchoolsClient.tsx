@@ -58,8 +58,11 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
                     <h2 className="text-white font-semibold">{s.name}</h2>
                   </div>
                 </div>
-                <div className={`text-sm font-mono font-bold ${s.ethReturn >= 0 ? "text-primary" : "text-danger"}`}>
-                  {formatPct(s.ethReturn)}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-500 font-medium">ETH ROI</span>
+                  <span className={`text-sm font-mono font-bold ${s.ethReturn >= 0 ? "text-primary" : "text-danger"}`}>
+                    {formatPct(s.ethReturn)}
+                  </span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">

@@ -69,6 +69,7 @@ export function AvatarPicker({ current, onSelect }: Props) {
                       fill
                       className="object-cover"
                       sizes="80px"
+                      loading="lazy"
                       unoptimized
                     />
                   </button>

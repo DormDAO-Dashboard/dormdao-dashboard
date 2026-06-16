@@ -9,6 +9,7 @@ export interface Holding {
   gainUsd?: number;
   roiUsdPct?: number;
   roiEthPct?: number;
+  marketValueUsd?: number;
 }
 
 export interface SchoolRow {
@@ -39,9 +40,20 @@ export interface TokenPrice {
 
 export interface ExitedHolding {
   ticker: string;
-  gainUsd: number;
-  roiUsdPct: number;
+  exitType: "exit" | "trim" | "unknown";
+  tokensSold: number;
+  tokenPrice: number;
+  ethValue: number;
+  marketValueUsd: number;
+  investmentDate: string;
+  exitDate: string;
+  exitFdv: string;
+  blockchain: string;
+  costBasisEth: number;
   roiEthPct: number;
+  roiUsdPct: number;
+  gainUsd: number;
+  isNft?: boolean;
 }
 
 export type Sentiment = "bullish" | "bearish" | "neutral";

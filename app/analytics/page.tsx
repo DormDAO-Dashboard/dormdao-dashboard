@@ -4,7 +4,7 @@ import { DashboardClient } from "@/components/DashboardClient";
 export const revalidate = 300;
 
 export default async function AnalyticsPage() {
-  const { schools, sinceInceptionSchools, fetchedAt } = await getSchoolsData();
+  const { schools, sinceInceptionSchools, schools2425, schools2324, fetchedAt } = await getSchoolsData();
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -12,7 +12,13 @@ export default async function AnalyticsPage() {
         <h1 className="text-2xl font-semibold text-white">Analytics</h1>
         <p className="text-gray-500 mt-1 text-sm">Portfolio charts, statistics, and performance breakdown across all 17 DAOs.</p>
       </div>
-      <DashboardClient schools={schools} sinceInceptionSchools={sinceInceptionSchools} fetchedAt={fetchedAt} />
+      <DashboardClient
+        schools={schools}
+        sinceInceptionSchools={sinceInceptionSchools}
+        schools2425={schools2425}
+        schools2324={schools2324}
+        fetchedAt={fetchedAt}
+      />
     </div>
   );
 }

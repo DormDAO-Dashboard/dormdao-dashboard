@@ -8,6 +8,7 @@ import { PortfolioInsightsClient } from "@/components/PortfolioInsightsClient";
 import { SchoolHistory } from "@/components/SchoolHistory";
 import { SchoolMembers } from "@/components/SchoolMembers";
 import { SchoolDocuments } from "@/components/SchoolDocuments";
+import { ExitedHoldingsTable } from "@/components/ExitedHoldingsTable";
 
 const TABS = ["Portfolio", "History", "Members", "Documents"] as const;
 type Tab = (typeof TABS)[number];
@@ -70,12 +71,39 @@ export function SchoolTabs({ school, otherSchools }: Props) {
               <p className="px-5 py-6 text-sm text-gray-500">No holdings data available.</p>
             )}
           </div>
+
+          {(school.nftHoldings?.length ?? 0) > 0 && (
+            <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-800">
+                <h2 className="text-sm font-semibold text-gray-300">
+                  Active NFT Holdings ({school.nftHoldings.length})
+                </h2>
+              </div>
+              <HoldingsTableClient
+                holdings={school.nftHoldings}
+                otherSchools={{}}
+                schoolName={school.name}
+              />
+            </div>
+          )}
         </div>
       )}
 
       {/* History tab */}
       {tab === "History" && (
-        <SchoolHistory schoolName={school.name} />
+        <div className="flex flex-col gap-6">
+          <SchoolHistory schoolName={school.name} />
+          {(school.exitedHoldings?.length ?? 0) > 0 && (
+            <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-800">
+                <h2 className="text-sm font-semibold text-gray-300">
+                  Exited &amp; Trimmed Positions ({school.exitedHoldings.length})
+                </h2>
+              </div>
+              <ExitedHoldingsTable holdings={school.exitedHoldings} />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Members tab */}

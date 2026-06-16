@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { Sentiment } from "@/lib/types";
 
 // IP-based rate limit: 10 notes per hour per IP
@@ -54,16 +54,37 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Auth check
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Sign in to post a note" }, { status: 401 });
+  }
+
+  // Fetch profile for authoritative name + school
+  const service = createServiceClient();
+  const { data: profile } = await service
+    .from("profiles")
+    .select("display_name, school")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.school) {
+    return NextResponse.json({ error: "Set your school on your profile to post a note" }, { status: 403 });
+  }
+
   if (isRateLimited(req)) {
     return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
   }
 
   const body = await req.json();
-  const { author_name, school, token_ticker, sentiment, content, user_id, thesis_type, price_target, time_horizon, url } = body;
+  const { token_ticker, sentiment, content, thesis_type, price_target, time_horizon, url } = body;
 
-  if (!author_name?.trim()) {
-    return NextResponse.json({ error: "Author name required" }, { status: 400 });
-  }
+  // Use profile data — don't trust client-supplied name/school
+  const author_name = profile.display_name || "Anonymous";
+  const school = profile.school;
+  const user_id = user.id;
+
   const minLen = url?.trim() ? 10 : 100;
   if (!content || content.trim().length < minLen) {
     return NextResponse.json(
@@ -77,8 +98,6 @@ export async function POST(req: NextRequest) {
   if (!["bullish", "bearish", "neutral"].includes(sentiment)) {
     return NextResponse.json({ error: "Invalid sentiment" }, { status: 400 });
   }
-
-  const supabase = createServiceClient();
 
   // url column exists — always include it in base payload
   const insertPayload: Record<string, unknown> = {
@@ -99,7 +118,7 @@ export async function POST(req: NextRequest) {
     time_horizon: time_horizon || null,
   };
 
-  let { data, error } = await supabase
+  let { data, error } = await service
     .from("research_notes")
     .insert(withNewFields)
     .select()
@@ -107,7 +126,7 @@ export async function POST(req: NextRequest) {
 
   // If new columns don't exist yet, retry without them
   if (error?.message?.includes("column")) {
-    ({ data, error } = await supabase
+    ({ data, error } = await service
       .from("research_notes")
       .insert(insertPayload)
       .select()

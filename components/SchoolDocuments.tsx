@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { FileText, Download, Upload } from "lucide-react";
-import { ADMIN_SECRET } from "@/lib/admin";
+import { createClient } from "@/lib/supabase/client";
 
 interface SchoolDocument {
   id: string;
@@ -72,7 +73,6 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
 
       const res = await fetch("/api/documents/upload", {
         method: "POST",
-        headers: { Authorization: `Bearer ${ADMIN_SECRET}` },
         body: fd,
       });
       if (!res.ok) {
@@ -140,12 +140,27 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
 export function SchoolDocuments({ schoolName }: { schoolName: string }) {
   const [docs, setDocs] = useState<SchoolDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [canUpload, setCanUpload] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    setIsAdmin(new URLSearchParams(window.location.search).has("admin"));
-  }, []);
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setAuthLoading(false); return; }
+      setIsLoggedIn(true);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("school")
+        .eq("id", user.id)
+        .single();
+      if (profile?.school?.toLowerCase() === schoolName.toLowerCase()) {
+        setCanUpload(true);
+      }
+      setAuthLoading(false);
+    });
+  }, [schoolName]);
 
   useEffect(() => {
     setLoading(true);
@@ -156,8 +171,7 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
       .finally(() => setLoading(false));
   }, [schoolName, refreshKey]);
 
-  if (loading) return null;
-  if (!isAdmin && docs.length === 0) return null;
+  if (loading || authLoading) return null;
 
   return (
     <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-6">
@@ -197,8 +211,18 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
         </ul>
       )}
 
-      {isAdmin && (
+      {canUpload && (
         <UploadForm schoolName={schoolName} onUploaded={() => setRefreshKey((k) => k + 1)} />
+      )}
+
+      {!canUpload && (
+        <div className="border-t border-gray-800 px-5 py-4 text-xs text-gray-600">
+          {!isLoggedIn ? (
+            <><Link href="/login" className="text-primary hover:underline">Sign in</Link> and set your school to upload documents.</>
+          ) : (
+            <>Members of {schoolName} can <Link href="/profile" className="text-primary hover:underline">set their school on their profile</Link> to upload documents.</>
+          )}
+        </div>
       )}
     </div>
   );

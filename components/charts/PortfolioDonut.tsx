@@ -6,7 +6,9 @@ import { formatUSD } from "@/lib/utils";
 
 const COLORS = [
   "#34d399", "#60a5fa", "#f59e0b", "#a78bfa", "#fb7185",
-  "#34d399aa", "#60a5faaa", "#f59e0baa", "#a78bfaaa", "#fb7185aa",
+  "#38bdf8", "#fb923c", "#4ade80", "#e879f9", "#facc15",
+  "#f87171", "#818cf8", "#2dd4bf", "#c084fc", "#fdba74",
+  "#86efac", "#67e8f9", "#fca5a5", "#a5b4fc", "#6ee7b7",
 ];
 
 interface Props {
@@ -25,21 +27,13 @@ export function PortfolioDonut({ holdings, nav }: Props) {
   const withPct = holdings.filter((h) => h.pctOfPortfolio > 0);
   if (withPct.length === 0) return null;
 
-  const THRESHOLD = 4;
-  const main = withPct.filter((h) => h.pctOfPortfolio >= THRESHOLD);
-  const other = withPct.filter((h) => h.pctOfPortfolio < THRESHOLD);
-  const otherTotal = other.reduce((s, h) => s + h.pctOfPortfolio, 0);
-
-  const data = [
-    ...main.map((h) => ({
+  const data = withPct
+    .map((h) => ({
       name: h.ticker,
       value: parseFloat(h.pctOfPortfolio.toFixed(1)),
       usdValue: (h.pctOfPortfolio / 100) * nav,
-    })),
-    ...(otherTotal > 0
-      ? [{ name: "Other", value: parseFloat(otherTotal.toFixed(1)), usdValue: (otherTotal / 100) * nav }]
-      : []),
-  ].sort((a, b) => b.value - a.value);
+    }))
+    .sort((a, b) => b.value - a.value);
 
   return (
     <ResponsiveContainer width="100%" height={220}>
@@ -61,10 +55,9 @@ export function PortfolioDonut({ holdings, nav }: Props) {
           content={({ payload }) => {
             if (!payload?.length) return null;
             const { name, value, usdValue } = payload[0].payload;
-            const ticker = name === "Other" ? "Other" : `$${name}`;
             return (
               <div style={{ background: ttBg, border: `1px solid ${ttBord}` }} className="rounded-lg p-2.5 text-sm">
-                <p style={{ color: light ? "#111827" : "#ffffff" }} className="font-medium">{ticker}</p>
+                <p style={{ color: light ? "#111827" : "#ffffff" }} className="font-medium">${name}</p>
                 <p style={{ color: light ? "#6b7280" : "#d1d5db" }}>{value}% of portfolio</p>
                 {usdValue > 0 && <p className="text-primary">{formatUSD(usdValue, true)}</p>}
               </div>

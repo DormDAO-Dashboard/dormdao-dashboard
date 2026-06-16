@@ -104,7 +104,14 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
         <tbody>
           {holdings.map((h, i) => {
             const price = prices[h.ticker];
-            const currentValue = price && h.tokens > 0 ? price.usd * h.tokens : null;
+            const currentValue = price && h.tokens > 0
+              ? price.usd * h.tokens
+              : h.marketValueUsd ?? null;
+            const pricePerToken = price
+              ? price.usd
+              : h.marketValueUsd && h.tokens > 0
+                ? h.marketValueUsd / h.tokens
+                : null;
             const others = otherSchools[h.ticker] ?? [];
 
             // USD P&L: prefer sheet's pre-computed Gain(USD), then historical ETH, then current ETH
@@ -146,7 +153,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                   {h.costBasisEth > 0 ? `${h.costBasisEth} ETH` : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-300">
-                  {loading ? "…" : price ? formatPrice(price.usd) : "—"}
+                  {loading ? "…" : pricePerToken !== null ? formatPrice(pricePerToken) : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-300">
                   {loading ? "…" : currentValue !== null ? formatUSD(currentValue) : "—"}

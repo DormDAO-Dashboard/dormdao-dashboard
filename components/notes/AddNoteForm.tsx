@@ -1,19 +1,15 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { Sentiment } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toaster";
 import { ExternalLink } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const SENTIMENTS: Sentiment[] = ["bullish", "neutral", "bearish"];
 const THESIS_TYPES = ["Fundamental", "Technical", "Macro", "On-chain", "Trend"];
 const TIME_HORIZONS = ["Short (< 1 month)", "Medium (1–6 months)", "Long (6+ months)"];
-const SCHOOLS = [
-  "Vanderbilt", "Villanova", "Boston College", "Purdue", "Oregon",
-  "Michigan", "Columbia", "USC", "Penn", "Cornell",
-  "St. Andrews", "Waterloo", "NYU", "Berkeley", "Dartmouth",
-  "Texas", "Cambridge",
-];
 
 interface AddNoteFormProps {
   defaultTicker?: string;
@@ -26,10 +22,7 @@ interface AddNoteFormProps {
 
 export function AddNoteForm({
   defaultTicker,
-  defaultSchool,
   tickers: tickersProp,
-  authorName: initialName,
-  userId,
   onSuccess,
 }: AddNoteFormProps) {
   const { toast } = useToast();
@@ -38,6 +31,28 @@ export function AddNoteForm({
   const [submitError, setSubmitError] = useState("");
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [availableTickers, setAvailableTickers] = useState<string[]>(tickersProp ?? []);
+
+  // Auth state
+  const [authLoading, setAuthLoading] = useState(true);
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [profileSchool, setProfileSchool] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setAuthLoading(false); return; }
+      setIsLoggedIn(true);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, school")
+        .eq("id", user.id)
+        .single();
+      setProfileName(profile?.display_name ?? null);
+      setProfileSchool(profile?.school ?? null);
+      setAuthLoading(false);
+    });
+  }, []);
 
   useEffect(() => {
     if (tickersProp) {
@@ -59,8 +74,6 @@ export function AddNoteForm({
   }, [tickersProp]);
 
   const [form, setForm] = useState({
-    author_name: initialName || "",
-    school: defaultSchool || "",
     token_ticker: defaultTicker || "",
     sentiment: "neutral" as Sentiment,
     content: "",
@@ -94,10 +107,7 @@ export function AddNoteForm({
   const hasUrl = form.url.trim().length > 0;
   const minChars = hasUrl ? 10 : 100;
   const charCount = form.content.length;
-  const valid =
-    form.author_name.trim().length > 0 &&
-    charCount >= minChars &&
-    charCount <= 2000;
+  const valid = charCount >= minChars && charCount <= 2000;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +123,6 @@ export function AddNoteForm({
           ...form,
           price_target: form.price_target ? parseFloat(form.price_target) : null,
           url: form.url.trim() || null,
-          user_id: userId,
         }),
       });
       if (!res.ok) {
@@ -137,6 +146,27 @@ export function AddNoteForm({
   };
 
   if (!open) {
+    if (authLoading) {
+      return <div className="w-full py-3 rounded-xl border border-dashed border-gray-800 animate-pulse h-12" />;
+    }
+    if (!isLoggedIn) {
+      return (
+        <div className="w-full py-3 rounded-xl border border-dashed border-gray-700 text-center">
+          <span className="text-sm text-gray-500">
+            <Link href="/login" className="text-primary hover:underline">Sign in</Link> to post a research note
+          </span>
+        </div>
+      );
+    }
+    if (!profileSchool) {
+      return (
+        <div className="w-full py-3 rounded-xl border border-dashed border-gray-700 text-center">
+          <span className="text-sm text-gray-500">
+            <Link href="/profile" className="text-primary hover:underline">Set your school on your profile</Link> to post a research note
+          </span>
+        </div>
+      );
+    }
     return (
       <button
         onClick={() => setOpen(true)}
@@ -152,30 +182,10 @@ export function AddNoteForm({
       onSubmit={handleSubmit}
       className="rounded-xl border border-gray-700 bg-gray-900/80 p-4 flex flex-col gap-3"
     >
-      <h3 className="text-sm font-semibold text-white">New Research Note</h3>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Your Name *</label>
-          <input
-            value={form.author_name}
-            onChange={(e) => setForm((f) => ({ ...f, author_name: e.target.value }))}
-            placeholder="Anonymous"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">School</label>
-          <select
-            value={form.school}
-            onChange={(e) => setForm((f) => ({ ...f, school: e.target.value }))}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
-          >
-            <option value="">— Select school —</option>
-            {SCHOOLS.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-white">New Research Note</h3>
+        <div className="text-xs text-gray-500">
+          Posting as <span className="text-gray-300">{profileName}</span> · <span className="text-gray-300">{profileSchool}</span>
         </div>
       </div>
 

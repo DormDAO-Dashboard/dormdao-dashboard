@@ -16,7 +16,7 @@ function daysAgo(dateMs: number): string {
   return `${days}d ago`;
 }
 
-export function ActivityClient({ schools }: { schools: SchoolRow[] }) {
+export function ActivityClient({ schools, yearStart, yearEnd }: { schools: SchoolRow[]; yearStart?: number; yearEnd?: number }) {
   const allBuys = useMemo(() => buildBuysList(schools), [schools]);
 
   const [prices, setPrices] = useState<Record<string, { usd: number }>>({});
@@ -42,7 +42,7 @@ export function ActivityClient({ schools }: { schools: SchoolRow[] }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const uniqueSchools = useMemo(() => [...new Set(allBuys.map(b => b.school))].sort(), [allBuys]);
-  const uniqueTickers = useMemo(() => [...new Set(allBuys.map(b => b.ticker))].sort(), [allBuys]);
+  const uniqueTickers = useMemo(() => [...new Set(allBuys.map(b => b.ticker))].filter(t => t !== "ETH").sort(), [allBuys]);
 
   const fromMs = dateFrom ? parseDateMs(dateFrom.replace(/-/g, "/")) : 0;
   const toMs = dateTo ? parseDateMs(dateTo.replace(/-/g, "/")) + 86_400_000 : Infinity;
@@ -65,6 +65,9 @@ export function ActivityClient({ schools }: { schools: SchoolRow[] }) {
 
   const filtered = useMemo(() => {
     let result = allBuys.filter(b => {
+      if (b.ticker === "ETH") return false;
+      if (yearStart && b.dateMs < yearStart) return false;
+      if (yearEnd && b.dateMs >= yearEnd) return false;
       if (schoolFilter && b.school !== schoolFilter) return false;
       if (tickerFilter && b.ticker !== tickerFilter) return false;
       if (fromMs > 0 && b.dateMs < fromMs) return false;
@@ -85,7 +88,7 @@ export function ActivityClient({ schools }: { schools: SchoolRow[] }) {
     }
     return result;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allBuys, schoolFilter, tickerFilter, sortBy, fromMs, toMs, loading, prices, ethPrice]);
+  }, [allBuys, schoolFilter, tickerFilter, sortBy, fromMs, toMs, loading, prices, ethPrice, yearStart, yearEnd]);
 
   return (
     <>
@@ -145,11 +148,11 @@ export function ActivityClient({ schools }: { schools: SchoolRow[] }) {
               <tr className="border-b border-gray-800 text-xs text-gray-500">
                 <th className="text-left px-5 py-3">School</th>
                 <th className="text-left px-5 py-3">Token</th>
-                <th className="text-left px-5 py-3">Chain</th>
                 <th className="text-right px-5 py-3">Date</th>
                 <th className="text-right px-5 py-3">Cost (ETH)</th>
                 <th className="text-right px-5 py-3">Current Value</th>
                 <th className="text-right px-5 py-3">P&amp;L</th>
+                <th className="text-right px-5 py-3">ROI (ETH)</th>
               </tr>
             </thead>
             <tbody>
@@ -171,7 +174,6 @@ export function ActivityClient({ schools }: { schools: SchoolRow[] }) {
                         ${buy.ticker}
                       </Link>
                     </td>
-                    <td className="px-5 py-3 text-gray-400 text-xs">{buy.blockchain || "—"}</td>
                     <td className="px-5 py-3 text-right text-gray-400 text-xs">
                       <div>{buy.dateStr}</div>
                       <div className="text-gray-600">{daysAgo(buy.dateMs)}</div>
@@ -191,6 +193,15 @@ export function ActivityClient({ schools }: { schools: SchoolRow[] }) {
                           {pnlPct !== null && (
                             <span className="opacity-70 ml-1">({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)</span>
                           )}
+                        </span>
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-right font-mono text-xs">
+                      {buy.roiEthPct !== undefined && buy.roiEthPct !== 0 ? (
+                        <span className={buy.roiEthPct >= 0 ? "text-primary" : "text-danger"}>
+                          {buy.roiEthPct >= 0 ? "+" : ""}{buy.roiEthPct.toFixed(1)}%
                         </span>
                       ) : (
                         <span className="text-gray-600">—</span>

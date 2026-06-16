@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "lucide-react";
+import { User, ChevronRight } from "lucide-react";
 
 interface Member {
   id: string;
@@ -54,7 +54,11 @@ export function SchoolMembers({ schoolName }: { schoolName: string }) {
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {members.map((m) => (
-        <div key={m.id} className="rounded-lg border border-gray-800 bg-gray-900/30 p-4 flex gap-3">
+        <Link
+          key={m.id}
+          href={`/users/${m.id}`}
+          className="rounded-lg border border-gray-800 bg-gray-900/30 p-4 flex gap-3 hover:border-gray-600 hover:bg-gray-800/40 transition-colors group"
+        >
           {m.avatar_url ? (
             <Image
               src={m.avatar_url}
@@ -69,7 +73,7 @@ export function SchoolMembers({ schoolName }: { schoolName: string }) {
               <User className="w-4 h-4 text-gray-500" />
             </div>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-medium text-sm text-white truncate">{m.display_name}</span>
               {m.role === "admin" && (
@@ -77,6 +81,7 @@ export function SchoolMembers({ schoolName }: { schoolName: string }) {
                   Admin
                 </span>
               )}
+              <ChevronRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-gray-400 ml-auto shrink-0 transition-colors" />
             </div>
             {m.bio ? (
               <p className="text-xs text-gray-400 mt-1 line-clamp-2">{m.bio}</p>
@@ -84,7 +89,7 @@ export function SchoolMembers({ schoolName }: { schoolName: string }) {
               <p className="text-xs text-gray-600 mt-1 italic">No bio yet</p>
             )}
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

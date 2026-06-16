@@ -19,7 +19,7 @@ interface Snapshot {
 
 function formatDate(iso: string) {
   const d = new Date(iso);
-  return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 export function SchoolHistory({ schoolName }: { schoolName: string }) {

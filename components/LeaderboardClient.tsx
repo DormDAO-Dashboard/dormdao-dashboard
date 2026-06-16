@@ -12,6 +12,7 @@ const YEARS = [
   { key: "2025-2026", label: "2025–2026" },
   { key: "2024-2025", label: "2024–2025" },
   { key: "2023-2024", label: "2023–2024" },
+  { key: "all-time", label: "All-Time" },
 ] as const;
 
 type YearKey = (typeof YEARS)[number]["key"];
@@ -120,11 +121,17 @@ export function LeaderboardClient({
     year === "2025-2026" ? schools
     : year === "2024-2025" ? (schools2425.length > 0 ? schools2425 : null)
     : year === "2023-2024" ? (schools2324.length > 0 ? schools2324 : null)
+    : year === "all-time" ? (sinceInceptionSchools.length > 0 ? sinceInceptionSchools : null)
     : null;
 
-  const totalNAV = schools.reduce((s, x) => s + x.nav, 0);
-  const schoolCount = schools.length;
+  const displaySchools = activeSchools ?? schools;
+  const totalNAV = displaySchools.reduce((s, x) => s + x.nav, 0);
+  const schoolCount = displaySchools.length;
 
+  const winRate = schoolCount > 0
+    ? Math.round((displaySchools.filter(s => s.ethReturn > 0).length / schoolCount) * 100)
+    : 0;
+  const winCount = displaySchools.filter(s => s.ethReturn > 0).length;
 
   return (
     <div>
@@ -142,9 +149,8 @@ export function LeaderboardClient({
         <div className="w-px h-8 bg-gray-800" />
         <div className="text-center">
           <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">Win Rate (ETH)</div>
-          <div className="text-2xl font-semibold font-mono text-white">
-            {schoolCount > 0 ? Math.round((schools.filter(s => s.ethReturn > 0).length / schoolCount) * 100) : 0}%
-          </div>
+          <div className="text-2xl font-semibold font-mono text-white">{winRate}%</div>
+          <div className="text-xs text-gray-600 mt-0.5">{winCount}/{schoolCount} positive</div>
         </div>
       </div>
 
