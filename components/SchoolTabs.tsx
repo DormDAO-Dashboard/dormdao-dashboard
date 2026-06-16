@@ -9,6 +9,7 @@ import { SchoolHistory } from "@/components/SchoolHistory";
 import { SchoolMembers } from "@/components/SchoolMembers";
 import { SchoolDocuments } from "@/components/SchoolDocuments";
 import { ExitedHoldingsTable } from "@/components/ExitedHoldingsTable";
+import { SchoolPortfolioStats } from "@/components/SchoolPortfolioStats";
 
 const TABS = ["Portfolio", "History", "Members", "Documents"] as const;
 type Tab = (typeof TABS)[number];
@@ -53,6 +54,14 @@ export function SchoolTabs({ school, otherSchools }: Props) {
               </div>
               <PortfolioInsightsClient holdings={school.holdings ?? []} rank={school.rank} />
             </div>
+          )}
+
+          {(school.holdings?.length ?? 0) > 0 && (
+            <SchoolPortfolioStats
+              holdings={school.holdings!}
+              schoolName={school.name}
+              nav={school.nav}
+            />
           )}
 
           <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
