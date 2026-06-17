@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { SchoolRowWithHoldings } from "@/lib/cache";
 import { HoldingsTableClient } from "@/components/HoldingsTableClient";
 import { PortfolioDonut } from "@/components/charts/PortfolioDonut";
-import { PortfolioInsightsClient } from "@/components/PortfolioInsightsClient";
 import { SchoolHistory } from "@/components/SchoolHistory";
 import { SchoolMembers } from "@/components/SchoolMembers";
 import { SchoolDocuments } from "@/components/SchoolDocuments";
@@ -47,12 +46,9 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {tab === "Portfolio" && (
         <div className="flex flex-col gap-6">
           {(school.holdings?.length ?? 0) > 0 && (
-            <div className="grid lg:grid-cols-2 gap-6">
-              <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
-                <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Concentration</h2>
-                <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
-              </div>
-              <PortfolioInsightsClient holdings={school.holdings ?? []} rank={school.rank} />
+            <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+              <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Concentration</h2>
+              <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
             </div>
           )}
 
@@ -61,6 +57,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
               holdings={school.holdings!}
               schoolName={school.name}
               nav={school.nav}
+              rank={school.rank}
             />
           )}
 

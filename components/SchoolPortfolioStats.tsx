@@ -16,7 +16,10 @@ interface Props {
   holdings: Holding[];
   schoolName: string;
   nav: number;
+  rank: number;
 }
+
+const SEASON_START_MS = new Date("2025-07-01").getTime();
 
 function daysAgo(dateStr: string): string {
   const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
@@ -28,30 +31,28 @@ function daysAgo(dateStr: string): string {
 function TradeTypeBadge({ type }: { type: string }) {
   const t = type.toLowerCase();
   const cls =
-    t === "buy"  ? "bg-primary/20 text-primary" :
-    t === "exit" ? "bg-danger/20 text-danger" :
-    t === "trim" ? "bg-yellow-900/40 text-yellow-400" :
-                   "bg-gray-800 text-gray-400";
+    t === "buy"      ? "bg-primary/20 text-primary" :
+    t === "exit"     ? "bg-danger/20 text-danger" :
+    t === "trim"     ? "bg-yellow-900/40 text-yellow-400" :
+    t === "increase" ? "bg-primary/20 text-primary" :
+    t === "decrease" ? "bg-yellow-900/40 text-yellow-400" :
+    t === "sell"     ? "bg-danger/20 text-danger" :
+                       "bg-gray-800 text-gray-400";
+  const label =
+    t === "increase" ? "add" :
+    t === "decrease" ? "trim" :
+    t === "sell"     ? "exit" :
+    t;
   return (
     <span className={`text-xs font-mono font-medium px-1.5 py-0.5 rounded uppercase ${cls}`}>
-      {type}
+      {label}
     </span>
   );
 }
 
-export function SchoolPortfolioStats({ holdings, schoolName, nav }: Props) {
+export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props) {
   const [recentTrade, setRecentTrade] = useState<RecentTrade | null>(null);
   const [tradeLoading, setTradeLoading] = useState(true);
-
-  // Most recently dated active holding — fallback when portfolio_changes has no data
-  const mostRecentHolding = holdings.length > 0
-    ? holdings
-        .filter(h => h.investmentDate)
-        .reduce<Holding | null>((best, h) => {
-          if (!best) return h;
-          return parseDateMs(h.investmentDate) > parseDateMs(best.investmentDate) ? h : best;
-        }, null)
-    : null;
 
   useEffect(() => {
     const supabase = createClient();
@@ -67,20 +68,58 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav }: Props) {
       });
   }, [schoolName]);
 
-  const withPct = holdings.filter(h => h.pctOfPortfolio > 0);
-  const sortedByPct = [...withPct].sort((a, b) => b.pctOfPortfolio - a.pctOfPortfolio);
-  const largestPos = sortedByPct[0] ?? null;
-  const smallestPos = sortedByPct.at(-1) ?? null;
-
-  const holdingsWithPnl = holdings.filter(h => h.gainUsd !== undefined);
-  const winningCount = holdingsWithPnl.filter(h => (h.gainUsd ?? 0) > 0).length;
-  const losingCount  = holdingsWithPnl.filter(h => (h.gainUsd ?? 0) < 0).length;
-  const winRate = holdingsWithPnl.length > 0
-    ? Math.round((winningCount / holdingsWithPnl.length) * 100)
+  // Avg position age — current season only (pre-season carry-overs excluded)
+  const now = Date.now();
+  const seasonAges = holdings
+    .map((h) => {
+      if (!h.investmentDate) return null;
+      const ms = parseDateMs(h.investmentDate);
+      if (ms <= 0 || ms < SEASON_START_MS) return null;
+      const age = (now - ms) / (1000 * 60 * 60 * 24);
+      return age >= 0 ? age : null;
+    })
+    .filter((a): a is number => a !== null);
+  const avgAgeDays = seasonAges.length > 0
+    ? seasonAges.reduce((s, a) => s + a, 0) / seasonAges.length
     : null;
 
-  const avgPositionSizeUsd = holdings.length > 0
+  // Fallback for Most Recent Position when portfolio_changes is empty
+  const mostRecentHolding = holdings
+    .filter((h) => h.investmentDate)
+    .reduce<Holding | null>((best, h) => {
+      if (!best) return h;
+      return parseDateMs(h.investmentDate) > parseDateMs(best.investmentDate) ? h : best;
+    }, null);
+
+  // Largest / smallest by % of portfolio
+  const withPct = [...holdings]
+    .filter((h) => h.pctOfPortfolio > 0)
+    .sort((a, b) => b.pctOfPortfolio - a.pctOfPortfolio);
+  const largestPos  = withPct[0] ?? null;
+  const smallestPos = withPct.length > 1 ? withPct.at(-1)! : null;
+
+  // Avg position size
+  const avgPositionSizeUsd = holdings.length > 0 && nav > 0
     ? withPct.reduce((s, h) => s + (nav * h.pctOfPortfolio / 100), 0) / holdings.length
+    : null;
+
+  // Win/Loss vs ETH: roiEthPct > 0 = token outperformed ETH = winning
+  const holdingsWithEthRoi = holdings.filter((h) => h.roiEthPct !== undefined);
+  const winningCount = holdingsWithEthRoi.filter((h) => (h.roiEthPct ?? 0) > 0).length;
+  const losingCount  = holdingsWithEthRoi.filter((h) => (h.roiEthPct ?? 0) < 0).length;
+  const winRate = holdingsWithEthRoi.length > 0
+    ? Math.round((winningCount / holdingsWithEthRoi.length) * 100)
+    : null;
+
+  // Best / worst by gainUsd from sheet
+  const holdingsWithGain = holdings.filter((h): h is Holding & { gainUsd: number } =>
+    h.gainUsd !== undefined
+  );
+  const bestPos  = holdingsWithGain.length > 0
+    ? holdingsWithGain.reduce((b, h) => h.gainUsd > b.gainUsd ? h : b)
+    : null;
+  const worstPos = holdingsWithGain.length > 0
+    ? holdingsWithGain.reduce((w, h) => h.gainUsd < w.gainUsd ? h : w)
     : null;
 
   const lbl = "text-xs text-gray-400 mb-1";
@@ -92,6 +131,30 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav }: Props) {
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5">
 
+        {/* Overview */}
+        <div>
+          <div className={lbl}>Positions</div>
+          <div className={val}>{holdings.length}</div>
+          <div className="text-xs text-gray-600 mt-0.5">active holdings</div>
+        </div>
+
+        <div>
+          <div className={lbl}>Rank</div>
+          <div className={`${val} text-primary`}>#{rank}</div>
+          <div className="text-xs text-gray-600 mt-0.5">by ETH performance</div>
+        </div>
+
+        <div>
+          <div className={lbl}>Avg Position Age</div>
+          <div className={val}>
+            {avgAgeDays !== null ? `${Math.round(avgAgeDays)}d` : "—"}
+          </div>
+          <div className="text-xs text-gray-600 mt-0.5">
+            {avgAgeDays !== null ? `~${(avgAgeDays / 30).toFixed(1)} months` : "current season only"}
+          </div>
+        </div>
+
+        {/* Position sizing */}
         <div>
           <div className={lbl}>Largest Position</div>
           <div className={val}>{largestPos ? `$${largestPos.ticker}` : "—"}</div>
@@ -102,38 +165,10 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav }: Props) {
 
         <div>
           <div className={lbl}>Smallest Position</div>
-          <div className={val}>{smallestPos && smallestPos !== largestPos ? `$${smallestPos.ticker}` : "—"}</div>
-          {smallestPos && smallestPos !== largestPos && (
+          <div className={val}>{smallestPos ? `$${smallestPos.ticker}` : "—"}</div>
+          {smallestPos && (
             <div className="text-xs text-gray-600 mt-0.5">{smallestPos.pctOfPortfolio.toFixed(1)}% of NAV</div>
           )}
-        </div>
-
-        <div>
-          <div className={lbl}>Win Rate</div>
-          <div className={`${val} ${winRate === null ? "" : winRate >= 50 ? "text-primary" : "text-danger"}`}>
-            {winRate !== null ? `${winRate}%` : "—"}
-          </div>
-          <div className="text-xs text-gray-600 mt-0.5">
-            {holdingsWithPnl.length > 0
-              ? `${winningCount}/${holdingsWithPnl.length} positions`
-              : "no P&L data"}
-          </div>
-        </div>
-
-        <div>
-          <div className={lbl}>Winning Positions</div>
-          <div className={`${val} ${holdingsWithPnl.length > 0 && winningCount > 0 ? "text-primary" : ""}`}>
-            {holdingsWithPnl.length > 0 ? winningCount : "—"}
-          </div>
-          <div className="text-xs text-gray-600 mt-0.5">currently in profit</div>
-        </div>
-
-        <div>
-          <div className={lbl}>Losing Positions</div>
-          <div className={`${val} ${holdingsWithPnl.length > 0 && losingCount > 0 ? "text-danger" : ""}`}>
-            {holdingsWithPnl.length > 0 ? losingCount : "—"}
-          </div>
-          <div className="text-xs text-gray-600 mt-0.5">currently at a loss</div>
         </div>
 
         <div>
@@ -146,6 +181,59 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav }: Props) {
           <div className="text-xs text-gray-600 mt-0.5">avg USD per holding</div>
         </div>
 
+        {/* Win/Loss vs ETH */}
+        <div>
+          <div className={lbl}>Win Rate vs ETH</div>
+          <div className={`${val} ${winRate === null ? "" : winRate >= 50 ? "text-primary" : "text-danger"}`}>
+            {winRate !== null ? `${winRate}%` : "—"}
+          </div>
+          <div className="text-xs text-gray-600 mt-0.5">
+            {holdingsWithEthRoi.length > 0
+              ? `${winningCount}/${holdingsWithEthRoi.length} beat ETH`
+              : "no ETH ROI data"}
+          </div>
+        </div>
+
+        <div>
+          <div className={lbl}>Beating ETH</div>
+          <div className={`${val} ${winningCount > 0 ? "text-primary" : ""}`}>
+            {holdingsWithEthRoi.length > 0 ? winningCount : "—"}
+          </div>
+          <div className="text-xs text-gray-600 mt-0.5">outperforming ETH</div>
+        </div>
+
+        <div>
+          <div className={lbl}>Lagging ETH</div>
+          <div className={`${val} ${losingCount > 0 ? "text-danger" : ""}`}>
+            {holdingsWithEthRoi.length > 0 ? losingCount : "—"}
+          </div>
+          <div className="text-xs text-gray-600 mt-0.5">underperforming ETH</div>
+        </div>
+
+        {/* Best / worst (only when sheet has gainUsd) */}
+        {bestPos && (
+          <div>
+            <div className={lbl}>Best Position</div>
+            <div className={val}>${bestPos.ticker}</div>
+            <div className="text-xs text-primary mt-0.5">
+              +{formatUSD(bestPos.gainUsd)}
+              {bestPos.roiUsdPct !== undefined && ` (+${bestPos.roiUsdPct.toFixed(0)}%)`}
+            </div>
+          </div>
+        )}
+
+        {worstPos && worstPos.gainUsd < 0 && (
+          <div>
+            <div className={lbl}>Worst Position</div>
+            <div className={val}>${worstPos.ticker}</div>
+            <div className="text-xs text-danger mt-0.5">
+              {formatUSD(worstPos.gainUsd)}
+              {worstPos.roiUsdPct !== undefined && ` (${worstPos.roiUsdPct.toFixed(0)}%)`}
+            </div>
+          </div>
+        )}
+
+        {/* Most recent position — full width */}
         <div className="col-span-2 md:col-span-3 border-t border-gray-800/60 pt-4">
           <div className={lbl}>Most Recent Position</div>
           {tradeLoading ? (
