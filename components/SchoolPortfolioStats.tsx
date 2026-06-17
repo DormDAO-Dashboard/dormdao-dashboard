@@ -103,8 +103,8 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
     ? withPct.reduce((s, h) => s + (nav * h.pctOfPortfolio / 100), 0) / holdings.length
     : null;
 
-  // Win/Loss vs ETH: roiEthPct > 0 = token outperformed ETH = winning
-  const holdingsWithEthRoi = holdings.filter((h) => h.roiEthPct !== undefined);
+  // Win/Loss vs ETH: roiEthPct > 0 = token outperformed ETH = winning; exclude ETH itself
+  const holdingsWithEthRoi = holdings.filter((h) => h.ticker !== "ETH" && h.roiEthPct !== undefined);
   const winningCount = holdingsWithEthRoi.filter((h) => (h.roiEthPct ?? 0) > 0).length;
   const losingCount  = holdingsWithEthRoi.filter((h) => (h.roiEthPct ?? 0) < 0).length;
   const winRate = holdingsWithEthRoi.length > 0
