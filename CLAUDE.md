@@ -13,12 +13,29 @@ GitHub: https://github.com/clunacrypto/dormdao-dashboard
 - CoinGecko API for live prices
 - Vercel deployment
 
+## Pages
+- / — Leaderboard (seasonal tabs)
+- /analytics — Analytics dashboard (KPI cards, charts, ETH holdings, recent buys)
+- /schools — Schools grid
+- /schools/[slug] — School detail (Portfolio/History/Members/Documents/Forum tabs)
+- /tokens — Token index
+- /tokens/[ticker] — Token detail + research notes + forum discussions + fund documents
+- /activity — Activity feed (All Activity / Position Entries / Trims & Exits / NFT Activity)
+- /research — DormDocs research notes
+- /news — DAO Headlines community feed
+- /forum — DAO Forum (thread list + /forum/[id] thread detail)
+- /login — Google OAuth
+- /profile — User profile
+- /users/[id] — Public profile
+- /about — Static info
+
 ## Project structure
 - app/ — Next.js pages and API routes
-- app/api/ — all API routes (sheets, prices, notes, snapshot, documents)
+- app/api/ — all API routes (sheets, prices, notes, snapshot, documents, news, forum)
 - components/ — shared React components
-- lib/ — utility functions (sheets parser, supabase client, price fetcher)
+- lib/ — utility functions (sheets parser, supabase client, price fetcher, forum types)
 - public/ — static assets including school logos
+- scripts/ — Node.js utility scripts (upload-pitches.js for bulk PDF upload)
 
 ## Data flow
 1. Portfolio data: Google Sheets CSV → /api/sheets → parsed server-side → cached 5min
@@ -26,6 +43,8 @@ GitHub: https://github.com/clunacrypto/dormdao-dashboard
 3. Research notes: Supabase postgres → /api/notes
 4. Daily snapshots: cron-job.org → POST /api/snapshot → portfolio_snapshots table
 5. Fund documents: Supabase Storage (token-documents bucket) → /api/documents
+6. News posts: Supabase postgres → /api/news (rate limited, auth required to post)
+7. Forum threads/replies: Supabase postgres → /api/forum/threads (auth required to post)
 
 ## Supabase tables
 - research_notes (id, author_name, school, token_ticker, sentiment, content, upvotes, thesis_type, price_target, time_horizon)
@@ -33,6 +52,11 @@ GitHub: https://github.com/clunacrypto/dormdao-dashboard
 - portfolio_snapshots (id, captured_at, school_name, nav_usd, eth_return_pct, usd_return_pct, deployed_pct, holdings)
 - portfolio_changes (id, detected_at, school_name, change_type, token_ticker, token_name, old_quantity, new_quantity, eth_value)
 - token_documents (id, token_ticker, title, school, document_date, file_url, document_type, created_at)
+- profiles (id, display_name, school, avatar_url)
+- news_posts (id, created_at, title, content, school, category, url, user_id, author_name)
+- forum_threads (id, created_at, title, content, school, user_id, author_name, category, token_ticker, upvotes, reply_count, is_pinned)
+- forum_replies (id, created_at, thread_id, content, school, user_id, author_name, upvotes)
+- forum_thread_votes (id, thread_id, user_id)
 
 ## Environment variables
 NEXT_PUBLIC_SUPABASE_URL
@@ -43,9 +67,6 @@ CRON_SECRET
 
 ## Known issues to fix
 1. ETH rows on school detail pages show "—" for Chain, Tokens, Cost
-2. Avg Position Age showing 453 days (should be ~180 days)
-3. Top & Bottom 3 chart negative labels overlap bars on mobile
-4. Light mode text visibility issues in some areas
 
 ## Coding conventions
 - Use TypeScript strictly, no `any` types
