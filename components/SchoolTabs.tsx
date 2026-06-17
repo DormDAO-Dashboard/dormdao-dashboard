@@ -98,7 +98,6 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {/* History tab */}
       {tab === "History" && (
         <div className="flex flex-col gap-6">
-          <SchoolHistory schoolName={school.name} />
           {(school.exitedHoldings?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800">
@@ -109,6 +108,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
               <ExitedHoldingsTable holdings={school.exitedHoldings} />
             </div>
           )}
+          <SchoolHistory schoolName={school.name} />
         </div>
       )}
 
