@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Holding } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 import { formatUSD } from "@/lib/utils";
+import { parseDateMs } from "@/components/RecentBuysFeed";
 
 interface RecentTrade {
   detected_at: string;
@@ -41,6 +42,16 @@ function TradeTypeBadge({ type }: { type: string }) {
 export function SchoolPortfolioStats({ holdings, schoolName, nav }: Props) {
   const [recentTrade, setRecentTrade] = useState<RecentTrade | null>(null);
   const [tradeLoading, setTradeLoading] = useState(true);
+
+  // Most recently dated active holding — fallback when portfolio_changes has no data
+  const mostRecentHolding = holdings.length > 0
+    ? holdings
+        .filter(h => h.investmentDate)
+        .reduce<Holding | null>((best, h) => {
+          if (!best) return h;
+          return parseDateMs(h.investmentDate) > parseDateMs(best.investmentDate) ? h : best;
+        }, null)
+    : null;
 
   useEffect(() => {
     const supabase = createClient();
@@ -136,7 +147,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav }: Props) {
         </div>
 
         <div className="col-span-2 md:col-span-3 border-t border-gray-800/60 pt-4">
-          <div className={lbl}>Most Recent Trade</div>
+          <div className={lbl}>Most Recent Position</div>
           {tradeLoading ? (
             <div className="text-sm text-gray-600 mt-1">Loading…</div>
           ) : recentTrade ? (
@@ -146,8 +157,17 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav }: Props) {
               <span className="text-gray-700">·</span>
               <span className="text-xs text-gray-500">{daysAgo(recentTrade.detected_at)}</span>
             </div>
+          ) : mostRecentHolding ? (
+            <div className="flex items-center gap-2 mt-1">
+              <TradeTypeBadge type="buy" />
+              <span className="font-mono text-sm text-white">${mostRecentHolding.ticker}</span>
+              <span className="text-gray-700">·</span>
+              <span className="text-xs text-gray-500">
+                {mostRecentHolding.investmentDate.replace(/\//g, "-")}
+              </span>
+            </div>
           ) : (
-            <div className="text-sm text-gray-600 mt-1">No trades recorded</div>
+            <div className="text-sm text-gray-600 mt-1">No data available</div>
           )}
         </div>
 
