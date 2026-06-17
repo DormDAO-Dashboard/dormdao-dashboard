@@ -9,8 +9,9 @@ import { SchoolMembers } from "@/components/SchoolMembers";
 import { SchoolDocuments } from "@/components/SchoolDocuments";
 import { ExitedHoldingsTable } from "@/components/ExitedHoldingsTable";
 import { SchoolPortfolioStats } from "@/components/SchoolPortfolioStats";
+import { ForumClient } from "@/components/ForumClient";
 
-const TABS = ["Portfolio", "History", "Members", "Documents"] as const;
+const TABS = ["Portfolio", "History", "Members", "Documents", "Forum"] as const;
 type Tab = (typeof TABS)[number];
 
 interface Props {
@@ -120,6 +121,11 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {/* Documents tab */}
       {tab === "Documents" && (
         <SchoolDocuments schoolName={school.name} />
+      )}
+
+      {/* Forum tab */}
+      {tab === "Forum" && (
+        <ForumClient school={school.name} />
       )}
     </>
   );

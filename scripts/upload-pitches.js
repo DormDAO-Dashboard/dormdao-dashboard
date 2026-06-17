@@ -26,21 +26,57 @@ function parseSchool(schoolFolder) {
 }
 
 function parseTokenFolder(tokenFolder) {
-  // e.g. "Oregon_ Hyperliquid, $HYPE (11.15.2024)"
-  const tickerMatch = tokenFolder.match(/\$([A-Z0-9]+)/i);
-  const ticker = tickerMatch ? tickerMatch[1].toUpperCase() : null;
-
-  // Token name: after "_ " and before ", $"
-  const nameMatch = tokenFolder.match(/_\s+(.+?),\s*\$/);
-  const tokenName = nameMatch ? nameMatch[1].trim() : null;
-
-  // Date: "(MM.DD.YYYY)"
-  const dateMatch = tokenFolder.match(/\((\d{2})\.(\d{2})\.(\d{4})\)/);
+  // Date: "(MM.DD.YYYY)" or "(M.D.YYYY)"
+  const dateMatch = tokenFolder.match(/\((\d{1,2})\.(\d{1,2})\.(\d{4})\)/);
   const docDate = dateMatch
-    ? `${dateMatch[3]}-${dateMatch[1]}-${dateMatch[2]}`
+    ? `${dateMatch[3]}-${String(dateMatch[1]).padStart(2, "0")}-${String(dateMatch[2]).padStart(2, "0")}`
     : null;
 
+  // 1. Standard: $TICKER — e.g. "Oregon_ Hyperliquid, $HYPE (11.15.2024)"
+  const dollarMatch = tokenFolder.match(/\$([A-Z0-9]+)/i);
+  if (dollarMatch) {
+    const ticker = dollarMatch[1].toUpperCase();
+    const nameMatch = tokenFolder.match(/_\s+(.+?),\s*\$/);
+    const tokenName = nameMatch ? nameMatch[1].trim() : null;
+    return { ticker, tokenName, docDate };
+  }
+
+  // Strip date parenthetical for remaining parsing
+  const withoutDate = tokenFolder.replace(/\s*\(\d{1,2}\.\d{1,2}\.\d{4}\)/, "").trim();
+
+  // 2. Comma fallback: "Name, TICKER" where ticker is the last word after the last comma
+  //    Handles: "Lifinity, LFNTY", "Friend.tech, KEYS", "IX Swap, IXS", "Balance DAO, BAI"
+  const lastCommaIdx = withoutDate.lastIndexOf(",");
+  if (lastCommaIdx !== -1) {
+    const afterComma = withoutDate.slice(lastCommaIdx + 1).trim();
+    // Take the last whitespace-separated token, strip non-alphanumeric chars
+    const candidate = afterComma.split(/\s+/).pop()?.replace(/[^A-Z0-9]/gi, "").toUpperCase() ?? "";
+    if (candidate.length >= 2 && candidate.length <= 12 && /^[A-Z]/.test(candidate)) {
+      const nameMatch = withoutDate.match(/_\s+(.+?),/);
+      const tokenName = nameMatch ? nameMatch[1].trim() : null;
+      return { ticker: candidate, tokenName, docDate };
+    }
+  }
+
+  // 3. Derive ticker from first meaningful word of the token name
+  //    Handles NFTs and compound names: "Hyperliquid Vault Strategy", "Milady & DMT", "Imaginary Ones (NFT)"
+  const namePart = withoutDate
+    .replace(/^[^_]+_\s*/, "")       // strip "School_ " prefix
+    .replace(/^\[[^\]]+\]\s*/, "")   // strip "[Sell] " etc.
+    .replace(/\(.*?\)/g, "")         // strip (NFT), (Moonbirds & LilNouns)
+    .replace(/,.*$/, "")             // strip trailing ", ..." after name
+    .trim();
+  const firstWord = namePart.split(/[\s&.]+/)[0]?.replace(/[^A-Z0-9]/gi, "").toUpperCase() ?? "";
+  const ticker = firstWord.length >= 2 ? firstWord.slice(0, 10) : null;
+  const tokenName = namePart || null;
+
   return { ticker, tokenName, docDate };
+}
+
+function docTypeLabel(type) {
+  if (type === "pitch_deck") return "Pitch Deck";
+  if (type === "exec_summary") return "Executive Summary";
+  return "Fund Report";
 }
 
 function getDocType(filename) {
@@ -119,7 +155,7 @@ async function main() {
     const [schoolFolder, tokenFolder, filename] = parts;
 
     const school = parseSchool(schoolFolder);
-    const { ticker, docDate } = parseTokenFolder(tokenFolder);
+    const { ticker, tokenName, docDate } = parseTokenFolder(tokenFolder);
     const docType = getDocType(filename);
 
     if (!ticker) {
@@ -128,9 +164,13 @@ async function main() {
       continue;
     }
 
-    // Storage path uses safe chars for folder names
+    // Storage path: sanitize school + filename (keep .pdf extension intact)
     const safeSchool = school.replace(/[^a-zA-Z0-9_-]/g, "_");
-    const storagePath = `${safeSchool}/${ticker}/${filename}`;
+    const safeFilename = filename
+      .replace(/\.pdf$/i, "")
+      .replace(/[^a-zA-Z0-9_\-. ]/g, "_")
+      .trim() + ".pdf";
+    const storagePath = `${safeSchool}/${ticker}/${safeFilename}`;
 
     // Public URL is deterministic — compute before upload
     const { data: { publicUrl } } = supabase.storage
@@ -171,7 +211,7 @@ async function main() {
     // Insert DB row
     const { error: insertError } = await supabase.from("token_documents").insert({
       token_ticker: ticker,
-      title: filename.replace(/\.pdf$/i, ""),
+      title: tokenName ? `${tokenName} — ${docTypeLabel(docType)}` : filename.replace(/\.pdf$/i, ""),
       school,
       document_date: docDate,
       file_url: publicUrl,

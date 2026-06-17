@@ -9,6 +9,7 @@ import { AddNoteForm } from "@/components/notes/AddNoteForm";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { PriceLineChart } from "@/components/charts/PriceLineChart";
 import { FundDocuments } from "@/components/FundDocuments";
+import { ForumClient } from "@/components/ForumClient";
 import { ResearchNote } from "@/lib/types";
 import { ArrowLeft, TrendingUp, TrendingDown, Upload } from "lucide-react";
 import { ADMIN_SECRET } from "@/lib/admin";
@@ -597,6 +598,11 @@ export default function TokenDetailPage() {
 
       {/* Fund Documents */}
       <FundDocuments ticker={tickerUpper} refreshKey={docsKey} />
+
+      {/* Forum Discussions */}
+      <div className="mt-8">
+        <ForumClient ticker={tickerUpper} />
+      </div>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Trophy, BookOpen, GraduationCap, BarChart2, Info, Activity, Sun, Moon, User, Newspaper } from "lucide-react";
+import { Trophy, BookOpen, GraduationCap, BarChart2, Info, Activity, Sun, Moon, User, Newspaper, MessagesSquare } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ const NAV_LINKS = [
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/research", label: "DormDocs", icon: BookOpen },
   { href: "/news", label: "News", icon: Newspaper },
+  { href: "/forum", label: "Forum", icon: MessagesSquare },
   { href: "/about", label: "About", icon: Info },
 ];
 
