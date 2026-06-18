@@ -208,7 +208,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* ── Top Bar (desktop only) ──────────────────────────────── */}
       <header
         style={{ left: pinned ? 200 : 64 }}
-        className="hidden md:flex fixed top-0 right-0 z-30 h-[52px] items-center gap-4 px-5 border-b border-gray-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur transition-all duration-200 relative"
+        className="hidden md:flex fixed top-0 right-0 z-30 h-[52px] items-center gap-4 px-5 border-b border-gray-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur transition-all duration-200"
       >
         <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 shrink-0">
           {deriveTitle(pathname)}
@@ -233,10 +233,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* ── Content area ───────────────────────────────────────── */}
       <div className={cn(
-        "transition-all duration-200 md:pt-[52px] pb-20 md:pb-0",
+        "w-full overflow-x-hidden transition-all duration-200 md:pt-[52px] pb-20 md:pb-0",
         pinned ? "md:ml-[200px]" : "md:ml-16"
       )}>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 overflow-x-hidden">
           {children}
         </main>
       </div>
