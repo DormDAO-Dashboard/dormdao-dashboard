@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"], display: "swap" });
-import { Navbar } from "@/components/Navbar";
+import { AppShell } from "@/components/AppShell";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/Toaster";
+
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: "DormDAO Portfolio Dashboard",
@@ -17,15 +17,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        {/* Run before first paint so returning light-mode users see no flash */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme')||'dark';document.documentElement.className=t;}catch(e){document.documentElement.className='dark';}})();` }} />
         <link
           rel="icon"
@@ -34,10 +29,9 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} min-h-screen bg-[#0a0a0a] text-gray-100 antialiased`}>
         <ThemeProvider>
-          <Navbar />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <AppShell>
             {children}
-          </main>
+          </AppShell>
           <Toaster />
         </ThemeProvider>
       </body>
