@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
 } from "recharts";
 import { formatUSD } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,13 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.prices)) {
-          setData(d.prices.map(([time, price]: [number, number]) => ({ time, price })));
+          const raw = d.prices.map(([time, price]: [number, number]) => ({ time, price }));
+          // Keep last data point per calendar date to eliminate duplicate x-axis labels
+          const dayMap = new Map<string, { time: number; price: number }>();
+          for (const pt of raw) {
+            dayMap.set(new Date(pt.time).toDateString(), pt);
+          }
+          setData(Array.from(dayMap.values()));
         }
       })
       .catch(() => {})
@@ -45,6 +51,11 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
   }, [geckoId, days]);
 
   const color = positive !== false ? "#1D9E75" : "#E24B4A";
+
+  function xInterval(len: number): number {
+    const divisor = days === "7" ? 7 : days === "30" ? 8 : 9;
+    return Math.max(1, Math.floor(len / divisor));
+  }
 
   function yTickFormatter(v: number): string {
     if (data.length < 2) return formatUSD(v, true);
@@ -83,14 +94,20 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={light ? "#f3f4f6" : "#ffffff0a"}
+              vertical={false}
+            />
             <XAxis
               dataKey="time"
               tickFormatter={(t) =>
                 new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" })
               }
               tick={{ fill: tick, fontSize: 10 }}
-              interval="preserveStartEnd"
-              tickCount={5}
+              interval={xInterval(data.length)}
+              axisLine={false}
+              tickLine={false}
             />
             <YAxis
               tick={{ fill: tick, fontSize: 10 }}
