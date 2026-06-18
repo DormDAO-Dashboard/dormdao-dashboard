@@ -76,6 +76,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: 'Antikor Display', sans-serif;
+}
+
 /* Search dropdown fade-in */
 @keyframes search-in {
   from { opacity: 0; transform: translateY(-6px); }
