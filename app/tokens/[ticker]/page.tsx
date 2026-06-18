@@ -2,17 +2,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { formatUSD, formatPrice, formatPct, cn } from "@/lib/utils";
+import { formatUSD, formatPrice, formatPct } from "@/lib/utils";
 import { TOKEN_META } from "@/lib/tokens";
 import { Skeleton } from "@/components/ui/Card";
-import { AddNoteForm } from "@/components/notes/AddNoteForm";
-import { NoteCard } from "@/components/notes/NoteCard";
 import { PriceLineChart } from "@/components/charts/PriceLineChart";
 import { FundDocuments } from "@/components/FundDocuments";
 import { ForumClient } from "@/components/ForumClient";
-import { ResearchNote } from "@/lib/types";
 import { ArrowLeft, TrendingUp, TrendingDown, Upload } from "lucide-react";
-import { CompareModal } from "@/components/notes/CompareModal";
 import { ADMIN_SECRET } from "@/lib/admin";
 
 const BASE = "https://classic.artemis.ai/asset/";
@@ -188,17 +184,12 @@ export default function TokenDetailPage() {
   const [price, setPrice] = useState<{ usd: number; usd_24h_change: number } | null>(null);
   const [ethPrice, setEthPrice] = useState(0);
   const [coinDetail, setCoinDetail] = useState<CoinDetail | null>(null);
-  const [notes, setNotes] = useState<ResearchNote[]>([]);
   const [schoolPositions, setSchoolPositions] = useState<SchoolPosition[]>([]);
   const [loadingPrice, setLoadingPrice] = useState(true);
-  const [loadingNotes, setLoadingNotes] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [docsKey, setDocsKey] = useState(0);
   const [adminSecret, setAdminSecret] = useState<string | undefined>(undefined);
-  const [compareMode, setCompareMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).has("admin")) setAdminSecret(ADMIN_SECRET);
@@ -213,11 +204,6 @@ export default function TokenDetailPage() {
         setEthPrice(d.prices?.ETH?.usd ?? 0);
       })
       .finally(() => setLoadingPrice(false));
-
-    fetch(`/api/notes?token=${tickerUpper}`)
-      .then((r) => r.json())
-      .then((d) => setNotes(d.notes ?? []))
-      .finally(() => setLoadingNotes(false));
 
     if (meta?.geckoId) {
       fetch(`/api/coin-detail?id=${meta.geckoId}`)
@@ -563,131 +549,6 @@ export default function TokenDetailPage() {
           </div>
         )}
       </div>
-
-      {/* Research notes */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-300">Research Notes for ${tickerUpper}</h2>
-          {notes.length >= 2 && (
-            <button
-              onClick={() => { setCompareMode((m) => !m); setSelectedIds(new Set()); }}
-              className={cn(
-                "text-xs px-3 py-1.5 rounded-lg border transition-colors",
-                compareMode
-                  ? "bg-primary/20 border-primary/50 text-primary"
-                  : "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
-              )}
-            >
-              {compareMode ? "Exit Compare" : "Compare"}
-            </button>
-          )}
-        </div>
-        <AddNoteForm
-          defaultTicker={tickerUpper}
-          onSuccess={() => {
-            fetch(`/api/notes?token=${tickerUpper}`)
-              .then((r) => r.json())
-              .then((d) => setNotes(d.notes ?? []));
-          }}
-        />
-        <div className="flex flex-col gap-3 mt-4">
-          {loadingNotes
-            ? [...Array(3)].map((_, i) => (
-                <div key={i} className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
-                  <Skeleton className="h-4 w-24 mb-3" />
-                  <Skeleton className="h-12 w-full mb-3" />
-                  <Skeleton className="h-3 w-32" />
-                </div>
-              ))
-            : notes.map((note) => {
-                const isSelected = selectedIds.has(note.id);
-                const isDisabled = compareMode && !isSelected && selectedIds.size >= 3;
-                return (
-                  <div
-                    key={note.id}
-                    className={cn(
-                      "relative",
-                      compareMode && isSelected && "ring-2 ring-primary/50 rounded-lg",
-                      compareMode && isDisabled && "opacity-40"
-                    )}
-                  >
-                    {compareMode && (
-                      <>
-                        <div
-                          className={cn(
-                            "absolute inset-0 z-10 rounded-lg",
-                            isDisabled ? "cursor-not-allowed" : "cursor-pointer"
-                          )}
-                          onClick={
-                            !isDisabled
-                              ? () => {
-                                  setSelectedIds((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(note.id)) next.delete(note.id);
-                                    else if (next.size < 3) next.add(note.id);
-                                    return next;
-                                  });
-                                }
-                              : undefined
-                          }
-                        />
-                        <div className="absolute top-3 left-3 z-20 pointer-events-none">
-                          <div className={cn(
-                            "w-4 h-4 rounded border-2 flex items-center justify-center",
-                            isSelected ? "bg-primary border-primary" : "border-gray-500 bg-gray-900/80"
-                          )}>
-                            {isSelected && (
-                              <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 10 8">
-                                <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    <NoteCard
-                      note={note}
-                      adminSecret={adminSecret}
-                      onDelete={(id) => setNotes((prev) => prev.filter((n) => n.id !== id))}
-                    />
-                  </div>
-                );
-              })}
-          {!loadingNotes && notes.length === 0 && (
-            <div className="text-center py-8 text-gray-500 text-sm">
-              No research notes for ${tickerUpper} yet. Be the first!
-            </div>
-          )}
-        </div>
-      </div>
-
-      {compareMode && selectedIds.size >= 2 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-gray-900/95 border-t border-gray-800 backdrop-blur-sm">
-          <span className="text-sm text-gray-300">{selectedIds.size} notes selected</span>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => { setSelectedIds(new Set()); setCompareMode(false); }}
-              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => setShowCompare(true)}
-              className="px-4 py-2 text-xs font-medium text-black bg-primary rounded-lg hover:bg-primary/90 transition-colors"
-            >
-              Compare Notes
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showCompare && (
-        <CompareModal
-          notes={notes.filter((n) => selectedIds.has(n.id))}
-          priceMap={price ? { [tickerUpper]: price.usd } : {}}
-          onClose={() => setShowCompare(false)}
-        />
-      )}
 
       {/* Fund Documents */}
       <FundDocuments ticker={tickerUpper} refreshKey={docsKey} />
