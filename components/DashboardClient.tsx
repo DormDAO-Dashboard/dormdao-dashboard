@@ -116,7 +116,7 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
   return (
     <div className="mb-8">
       <h2 className="text-sm font-semibold text-gray-300 mb-3">DAO-Wide Metrics</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
 
         <div className={statCard}>
           <span className="text-xs text-gray-500">Most Widely Held</span>
@@ -229,12 +229,12 @@ export function DashboardClient({
       <AdminPanel />
 
       {/* Period toggle */}
-      <div className="flex flex-wrap gap-1.5 mb-6">
+      <div className="flex overflow-x-auto gap-1.5 mb-6 pb-1 scrollbar-hide">
         {PERIODS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setPeriod(key)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               period === key
                 ? "bg-primary/20 border-primary/50 text-primary"
                 : "bg-transparent border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
@@ -265,18 +265,18 @@ export function DashboardClient({
       {period === "2526" && <DaoWideMetrics schools={schools} />}
 
       {/* Analytics row */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
+      <div className="flex overflow-x-auto gap-3 mb-8 scrollbar-hide md:grid md:grid-cols-3">
+        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
           <span className="text-xs text-gray-500 mb-1">Win Rate</span>
           <span className="text-lg font-mono font-bold text-white">{winRate}%</span>
           <span className="text-xs text-gray-600 mt-0.5">{ethReturns.filter((r) => r > 0).length}/{ethReturns.length} schools positive</span>
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
+        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
           <span className="text-xs text-gray-500 mb-1">Sharpe Ratio</span>
           <span className={`text-lg font-mono font-bold ${typeof sharpe === "string" || parseFloat(sharpe) >= 1 ? "text-primary" : parseFloat(sharpe) >= 0 ? "text-white" : "text-danger"}`}>{sharpe}</span>
           <span className="text-xs text-gray-600 mt-0.5">ETH return / std dev</span>
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
+        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
           <span className="text-xs text-gray-500 mb-1">Schools</span>
           <span className="text-lg font-mono font-bold text-white">{activeSchools.length}</span>
           <span className="text-xs text-gray-600 mt-0.5">active portfolios</span>

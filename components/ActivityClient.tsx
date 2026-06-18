@@ -148,10 +148,10 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
               <tr className="border-b border-gray-800 text-xs text-gray-500">
                 <th className="text-left px-5 py-3">School</th>
                 <th className="text-left px-5 py-3">Token</th>
-                <th className="text-right px-5 py-3">Date</th>
-                <th className="text-right px-5 py-3">Cost (ETH)</th>
-                <th className="text-right px-5 py-3">Current Value</th>
-                <th className="text-right px-5 py-3">P&amp;L</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">Date</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">Cost (ETH)</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">Current Value</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">P&amp;L</th>
                 <th className="text-right px-5 py-3">ROI (ETH)</th>
               </tr>
             </thead>
@@ -166,7 +166,10 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                     <td className="px-5 py-3">
                       <Link href={`/schools/${buy.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                         <SchoolLogo name={buy.school} size={20} />
-                        <span className="text-gray-300 text-xs">{buy.school}</span>
+                        <div>
+                          <div className="text-gray-300 text-xs">{buy.school}</div>
+                          <div className="text-[10px] text-gray-600 md:hidden mt-0.5">{buy.dateStr}</div>
+                        </div>
                       </Link>
                     </td>
                     <td className="px-5 py-3">
@@ -174,17 +177,17 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                         ${buy.ticker}
                       </Link>
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-400 text-xs">
+                    <td className="px-5 py-3 text-right text-gray-400 text-xs hidden md:table-cell">
                       <div>{buy.dateStr}</div>
                       <div className="text-gray-600">{daysAgo(buy.dateMs)}</div>
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-300 text-xs">
+                    <td className="px-5 py-3 text-right font-mono text-gray-300 text-xs hidden md:table-cell">
                       {buy.costBasisEth > 0 ? `${buy.costBasisEth} ETH` : "—"}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-300 text-xs">
+                    <td className="px-5 py-3 text-right font-mono text-gray-300 text-xs hidden md:table-cell">
                       {loading ? "…" : currentValue !== null ? formatUSD(currentValue) : "—"}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-xs">
+                    <td className="px-5 py-3 text-right font-mono text-xs hidden md:table-cell">
                       {loading ? (
                         <span className="text-gray-600">…</span>
                       ) : pnl !== null ? (

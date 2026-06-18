@@ -60,16 +60,23 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeplo
   );
 
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
+      <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-gray-900/80 to-transparent md:hidden z-10" />
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-800 text-xs">
             <th className="text-left px-5 py-3 text-gray-500 w-16">Rank</th>
             <th className="text-left px-5 py-3 text-gray-500">School</th>
             <th className={thCls("nav")} onClick={() => toggleSort("nav")}>NAV {sortKey === "nav" ? (asc ? "↑" : "↓") : ""}</th>
-            <th className={thCls("usdReturn")} onClick={() => toggleSort("usdReturn")}>Return (USD) {sortKey === "usdReturn" ? (asc ? "↑" : "↓") : ""}</th>
-            <th className={thCls("ethReturn")} onClick={() => toggleSort("ethReturn")}>Return (ETH) {sortKey === "ethReturn" ? (asc ? "↑" : "↓") : ""}</th>
-            {showDeployed && <th className={thCls("pctDeployed")} onClick={() => toggleSort("pctDeployed")}>% Deployed {sortKey === "pctDeployed" ? (asc ? "↑" : "↓") : ""}</th>}
+            <th className={cn(thCls("usdReturn"), "hidden md:table-cell")} onClick={() => toggleSort("usdReturn")}>
+              Return (USD){sortKey === "usdReturn" ? (asc ? " ↑" : " ↓") : ""}
+            </th>
+            <th className={thCls("ethReturn")} onClick={() => toggleSort("ethReturn")}>
+              <span className="md:hidden">ETH Ret</span>
+              <span className="hidden md:inline">Return (ETH)</span>
+              {sortKey === "ethReturn" ? (asc ? " ↑" : " ↓") : ""}
+            </th>
+            {showDeployed && <th className={cn(thCls("pctDeployed"), "hidden md:table-cell")} onClick={() => toggleSort("pctDeployed")}>% Deployed {sortKey === "pctDeployed" ? (asc ? "↑" : "↓") : ""}</th>}
           </tr>
         </thead>
         <tbody>
@@ -90,9 +97,9 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeplo
                   </Link>
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-200">{formatUSD(s.nav, true)}</td>
-                <td className="px-5 py-3 text-right"><ReturnCell value={s.usdReturn} /></td>
+                <td className="px-5 py-3 text-right hidden md:table-cell"><ReturnCell value={s.usdReturn} /></td>
                 <td className="px-5 py-3 text-right"><ReturnCell value={s.ethReturn} /></td>
-                {showDeployed && <td className="px-5 py-3 text-right font-mono text-gray-400">{formatPct(s.pctDeployed)}</td>}
+                {showDeployed && <td className="px-5 py-3 text-right font-mono text-gray-400 hidden md:table-cell">{formatPct(s.pctDeployed)}</td>}
               </tr>
             );
           })}
@@ -136,26 +143,42 @@ export function LeaderboardClient({
   return (
     <div>
       {/* Summary strip */}
-      <div className="flex items-center justify-center gap-12 mb-10 px-1">
-        <div className="text-center">
+      <div className="flex items-center justify-center overflow-x-auto scrollbar-hide gap-6 md:gap-12 mb-10 px-1">
+        <div className="text-center shrink-0">
           <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">Total DAO NAV</div>
           <div className="text-2xl font-semibold font-mono text-white">{formatUSD(totalNAV)}</div>
         </div>
-        <div className="w-px h-8 bg-gray-800" />
-        <div className="text-center">
+        <div className="w-px h-8 bg-gray-800 shrink-0" />
+        <div className="text-center shrink-0">
           <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">Active Schools</div>
           <div className="text-2xl font-semibold font-mono text-white">{schoolCount}</div>
         </div>
-        <div className="w-px h-8 bg-gray-800" />
-        <div className="text-center">
-          <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">Win Rate (ETH)</div>
+        <div className="w-px h-8 bg-gray-800 shrink-0" />
+        <div className="text-center shrink-0">
+          <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">
+            Win Rate<span className="hidden md:inline"> (ETH)</span>
+          </div>
           <div className="text-2xl font-semibold font-mono text-white">{winRate}%</div>
           <div className="text-xs text-gray-600 mt-0.5">{winCount}/{schoolCount} positive</div>
+          <div className="text-[10px] text-gray-700 md:hidden">ETH</div>
         </div>
       </div>
 
-      {/* Year tabs */}
-      <div className="flex gap-0 mb-0 border-b border-gray-800">
+      {/* Year selector — mobile dropdown */}
+      <div className="md:hidden mb-4">
+        <select
+          value={year}
+          onChange={(e) => { setYear(e.target.value as YearKey); setSortKey("rank"); setAsc(true); }}
+          className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50"
+        >
+          {YEARS.map((y) => (
+            <option key={y.key} value={y.key}>{y.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Year tabs — desktop */}
+      <div className="hidden md:flex gap-0 mb-0 border-b border-gray-800">
         {YEARS.map((y) => (
           <button
             key={y.key}

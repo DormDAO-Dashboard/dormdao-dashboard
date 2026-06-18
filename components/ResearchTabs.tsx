@@ -41,6 +41,13 @@ function formatDocMonth(dateStr: string | null): string {
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+function docTypeBadgeClass(type: string): string {
+  if (type === "pitch_deck") return "bg-blue-500/15 text-blue-400 border border-blue-500/30";
+  if (type === "report") return "bg-green-500/15 text-green-400 border border-green-500/30";
+  if (type === "thesis") return "bg-purple-500/15 text-purple-400 border border-purple-500/30";
+  return "bg-gray-800 text-gray-400 border border-gray-700";
+}
+
 function DocumentCard({ doc }: { doc: SchoolDocument }) {
   return (
     <a
@@ -55,9 +62,15 @@ function DocumentCard({ doc }: { doc: SchoolDocument }) {
         </h3>
         <ExternalLink className="w-3.5 h-3.5 text-gray-600 group-hover:text-gray-400 shrink-0 mt-0.5 transition-colors" />
       </div>
-      <p className="text-xs text-gray-400 mb-1">
-        {doc.school ?? "—"} • {formatDocType(doc.document_type)}
-      </p>
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className={cn(
+          "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
+          docTypeBadgeClass(doc.document_type)
+        )}>
+          {formatDocType(doc.document_type)}
+        </span>
+      </div>
+      <p className="text-xs text-gray-400 mb-1">{doc.school ?? "—"}</p>
       {doc.token_ticker && !/^school$/i.test(doc.token_ticker) && (
         <p className="text-xs text-gray-500 mb-1 font-mono">${doc.token_ticker}</p>
       )}
@@ -116,7 +129,7 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
         <select
           value={schoolFilter}
           onChange={(e) => setSchoolFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 min-w-[140px]"
+          className="w-full sm:w-auto bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 sm:min-w-[140px]"
         >
           <option value="">All Schools</option>
           {schoolsWithDocs.map((s) => (
@@ -126,7 +139,7 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 min-w-[150px]"
+          className="w-full sm:w-auto bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 sm:min-w-[150px]"
         >
           {DOC_TYPE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -135,10 +148,10 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
         <button
           onClick={() => { setCompareMode((m) => !m); setSelectedDocs([]); }}
           className={cn(
-            "shrink-0 text-xs px-3 py-2.5 rounded-lg border transition-colors whitespace-nowrap",
+            "w-full sm:w-auto shrink-0 text-xs px-3 py-2.5 rounded-lg border transition-colors whitespace-nowrap",
             compareMode
               ? "bg-primary/20 border-primary/50 text-primary"
-              : "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 bg-gray-900"
+              : "border-primary/50 text-primary bg-transparent sm:border-gray-700 sm:text-gray-400 sm:hover:text-white sm:hover:border-gray-600 sm:bg-gray-900"
           )}
         >
           {compareMode ? "Exit Compare" : "Compare Docs"}

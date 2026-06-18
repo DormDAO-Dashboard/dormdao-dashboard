@@ -404,13 +404,13 @@ export function ForumClient({ school, ticker }: Props) {
 
       {!isEmbedded && (
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div className="flex flex-wrap gap-1">
+          <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
             {CATEGORY_TABS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setCategory(key)}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                  "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                   category === key
                     ? "bg-primary/20 border-primary/50 text-primary"
                     : "bg-transparent border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
@@ -420,13 +420,13 @@ export function ForumClient({ school, ticker }: Props) {
               </button>
             ))}
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
             {SORT_TABS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setSort(key)}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                  "shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                   sort === key
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-transparent border-gray-700 text-gray-500 hover:text-gray-300"

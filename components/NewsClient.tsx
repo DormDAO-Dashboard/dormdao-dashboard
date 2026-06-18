@@ -367,13 +367,13 @@ export function NewsClient() {
           </select>
         )}
 
-        <div className="flex flex-wrap gap-1">
+        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
           {CATEGORIES.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setCategoryFilter(key)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 categoryFilter === key
                   ? "bg-primary/20 border-primary/50 text-primary"
                   : "bg-transparent border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"

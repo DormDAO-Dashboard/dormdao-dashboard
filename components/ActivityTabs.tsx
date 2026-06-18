@@ -518,10 +518,10 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                 <th className="text-left px-5 py-3">School</th>
                 <th className="text-left px-5 py-3">Token</th>
                 <th className="text-left px-5 py-3">Type</th>
-                <th className="text-right px-5 py-3">Date</th>
-                <th className="text-right px-5 py-3">Cost (ETH)</th>
-                <th className="text-right px-5 py-3">Gain (USD)</th>
-                <th className="text-right px-5 py-3">ROI (ETH)</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">Date</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">Cost (ETH)</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">Gain (USD)</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">ROI (ETH)</th>
               </tr>
             </thead>
             <tbody>
@@ -530,18 +530,21 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                   <td className="px-5 py-3">
                     <Link href={`/schools/${r.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                       <SchoolLogo name={r.schoolName} size={20} />
-                      <span className="text-gray-300 text-xs">{r.schoolName}</span>
+                      <div>
+                        <div className="text-gray-300 text-xs">{r.schoolName}</div>
+                        <div className="text-[10px] text-gray-600 md:hidden mt-0.5">{r.date || "—"}</div>
+                      </div>
                     </Link>
                   </td>
                   <td className="px-5 py-3 font-mono font-semibold text-white">${r.ticker}</td>
                   <td className="px-5 py-3">
                     <ActionBadge type={r.actionType} isNft={r.isNft} />
                   </td>
-                  <td className="px-5 py-3 text-right text-gray-500 text-xs">{r.date || "—"}</td>
-                  <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs">
+                  <td className="px-5 py-3 text-right text-gray-500 text-xs hidden md:table-cell">{r.date || "—"}</td>
+                  <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs hidden md:table-cell">
                     {r.costBasisEth > 0 ? `${r.costBasisEth.toFixed(3)} ETH` : "—"}
                   </td>
-                  <td className="px-5 py-3 text-right font-mono text-xs">
+                  <td className="px-5 py-3 text-right font-mono text-xs hidden md:table-cell">
                     {r.gainUsd !== undefined && r.gainUsd !== 0 ? (
                       <span className={up(r.gainUsd) ? "text-primary" : "text-danger"}>
                         {up(r.gainUsd) ? "+" : ""}
@@ -551,7 +554,7 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                       </span>
                     ) : <span className="text-gray-700">—</span>}
                   </td>
-                  <td className="px-5 py-3 text-right font-mono text-xs">
+                  <td className="px-5 py-3 text-right font-mono text-xs hidden md:table-cell">
                     {r.roiEthPct !== undefined && r.roiEthPct !== 0 ? (
                       <span className={up(r.roiEthPct) ? "text-primary" : "text-danger"}>
                         {up(r.roiEthPct) ? "+" : ""}{r.roiEthPct.toFixed(1)}%
@@ -577,13 +580,13 @@ export function ActivityTabs({ schools }: { schools: SchoolRowWithHoldings[] }) 
   return (
     <>
       {/* Year tabs */}
-      <div className="flex gap-1.5 mb-4">
+      <div className="flex overflow-x-auto gap-1.5 mb-4 pb-1 scrollbar-hide">
         {YEAR_TABS.map((y) => (
           <button
             key={y.key}
             onClick={() => setYear(y.key)}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+              "shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
               year === y.key
                 ? "bg-primary/20 border-primary/50 text-primary"
                 : "bg-transparent border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
@@ -595,13 +598,13 @@ export function ActivityTabs({ schools }: { schools: SchoolRowWithHoldings[] }) 
       </div>
 
       {/* Action tabs */}
-      <div className="flex gap-1.5 mb-6 border-b border-gray-800 pb-0">
+      <div className="flex overflow-x-auto gap-1.5 mb-6 border-b border-gray-800 pb-0 scrollbar-hide">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={cn(
-              "px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
+              "shrink-0 whitespace-nowrap px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
               tab === t.key
                 ? "border-primary text-white font-medium"
                 : "border-transparent text-gray-500 hover:text-gray-300 font-normal"
