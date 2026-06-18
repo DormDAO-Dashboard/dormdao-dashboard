@@ -208,14 +208,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* ── Top Bar (desktop only) ──────────────────────────────── */}
       <header
         style={{ left: pinned ? 200 : 64 }}
-        className="hidden md:flex fixed top-0 right-0 z-30 h-[52px] items-center gap-4 px-5 border-b border-gray-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur transition-all duration-200"
+        className="hidden md:flex fixed top-0 right-0 z-30 h-[52px] items-center gap-4 px-5 border-b border-gray-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur transition-all duration-200 relative"
       >
         <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 shrink-0">
           {deriveTitle(pathname)}
         </span>
-        <div className="flex-1" />
-        <GlobalSearch />
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="absolute left-1/2 -translate-x-1/2 w-[440px] max-w-[calc(100%-240px)]">
+          <GlobalSearch />
+        </div>
+        <div className="ml-auto flex items-center gap-1 shrink-0">
           <button title="Notifications (coming soon)"
             className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             <Bell className="w-4 h-4" />

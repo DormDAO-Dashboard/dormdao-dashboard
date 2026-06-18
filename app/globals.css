@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Search dropdown fade-in */
+@keyframes search-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-search-in { animation: search-in 150ms ease-out forwards; }
+
 /* Skeleton shimmer */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
@@ -106,7 +113,7 @@ html.light .border-gray-500\/30 { border-color: rgba(107, 114, 128, 0.45); }
 html.light .sentiment-neutral { color: #374151; }
 
 /* --- Form controls --- */
-html.light input,
+html.light input:not([data-search-input]),
 html.light select,
 html.light textarea {
   background-color: #ffffff !important;
