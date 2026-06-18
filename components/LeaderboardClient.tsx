@@ -60,18 +60,17 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeplo
   );
 
   return (
-    <div className="relative overflow-x-auto">
-      <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-gray-900/80 to-transparent md:hidden z-10" />
+    <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-800 text-xs">
-            <th className="text-left px-5 py-3 text-gray-500 w-16">Rank</th>
-            <th className="text-left px-5 py-3 text-gray-500">School</th>
-            <th className={thCls("nav")} onClick={() => toggleSort("nav")}>NAV {sortKey === "nav" ? (asc ? "↑" : "↓") : ""}</th>
+            <th className="text-left px-3 md:px-5 py-3 text-gray-500 w-12 md:w-16">Rank</th>
+            <th className="text-left px-2 md:px-5 py-3 text-gray-500">School</th>
+            <th className={cn(thCls("nav"), "hidden md:table-cell")} onClick={() => toggleSort("nav")}>NAV {sortKey === "nav" ? (asc ? "↑" : "↓") : ""}</th>
             <th className={cn(thCls("usdReturn"), "hidden md:table-cell")} onClick={() => toggleSort("usdReturn")}>
               Return (USD){sortKey === "usdReturn" ? (asc ? " ↑" : " ↓") : ""}
             </th>
-            <th className={thCls("ethReturn")} onClick={() => toggleSort("ethReturn")}>
+            <th className={cn(thCls("ethReturn"), "px-3 md:px-5")} onClick={() => toggleSort("ethReturn")}>
               <span className="md:hidden">ETH Ret</span>
               <span className="hidden md:inline">Return (ETH)</span>
               {sortKey === "ethReturn" ? (asc ? " ↑" : " ↓") : ""}
@@ -87,18 +86,21 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeplo
                 "border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors",
                 s.rank === 1 && sortKey === "rank" ? "bg-yellow-500/5" : ""
               )}>
-                <td className="px-5 py-3">
+                <td className="px-3 md:px-5 py-3">
                   <RankBadge rank={displayRank} />
                 </td>
-                <td className="px-5 py-3">
-                  <Link href={`/schools/${s.slug}`} className="flex items-center gap-3 hover:text-primary transition-colors group">
-                    <SchoolLogo name={s.name} size={28} />
-                    <span className="font-semibold text-white group-hover:text-primary">{s.name}</span>
+                <td className="px-2 md:px-5 py-3">
+                  <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 md:gap-3 hover:text-primary transition-colors group">
+                    <SchoolLogo name={s.name} size={26} />
+                    <div>
+                      <div className="font-semibold text-white group-hover:text-primary leading-tight">{s.name}</div>
+                      <div className="text-[11px] font-mono text-gray-500 mt-0.5 md:hidden">{formatUSD(s.nav, true)}</div>
+                    </div>
                   </Link>
                 </td>
-                <td className="px-5 py-3 text-right font-mono text-gray-200">{formatUSD(s.nav, true)}</td>
+                <td className="px-5 py-3 text-right font-mono text-gray-200 hidden md:table-cell">{formatUSD(s.nav, true)}</td>
                 <td className="px-5 py-3 text-right hidden md:table-cell"><ReturnCell value={s.usdReturn} /></td>
-                <td className="px-5 py-3 text-right"><ReturnCell value={s.ethReturn} /></td>
+                <td className="px-3 md:px-5 py-3 text-right"><ReturnCell value={s.ethReturn} /></td>
                 {showDeployed && <td className="px-5 py-3 text-right font-mono text-gray-400 hidden md:table-cell">{formatPct(s.pctDeployed)}</td>}
               </tr>
             );
