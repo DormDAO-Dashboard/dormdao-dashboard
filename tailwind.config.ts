@@ -15,7 +15,7 @@ const config: Config = {
         "primary-dark": "#1D9E75",
       },
       fontFamily: {
-        sans: ["Antikor Display", "sans-serif"],
+        sans: ["Antikor Text", "sans-serif"],
         mono: ["Antikor Mono", "monospace"],
       },
     },

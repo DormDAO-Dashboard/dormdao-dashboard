@@ -1,35 +1,35 @@
-/* ── Antikor Display ─────────────────────────────────────────── */
+/* ── Antikor Text ─────────────────────────────────────────────── */
 @font-face {
-  font-family: 'Antikor Display';
-  src: url('/fonts/Taner Ardali - Antikor Display Regular.ttf') format('truetype');
+  font-family: 'Antikor Text';
+  src: url('/fonts/Taner Ardali - Antikor Text Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Antikor Display';
-  src: url('/fonts/Taner Ardali - Antikor Display Medium.ttf') format('truetype');
+  font-family: 'Antikor Text';
+  src: url('/fonts/Taner Ardali - Antikor Text Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Antikor Display';
-  src: url('/fonts/Taner Ardali - Antikor Display SemiBold.ttf') format('truetype');
+  font-family: 'Antikor Text';
+  src: url('/fonts/Taner Ardali - Antikor Text SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Antikor Display';
-  src: url('/fonts/Taner Ardali - Antikor Display Bold.ttf') format('truetype');
+  font-family: 'Antikor Text';
+  src: url('/fonts/Taner Ardali - Antikor Text Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Antikor Display';
-  src: url('/fonts/Taner Ardali - Antikor Display ExtraBold.ttf') format('truetype');
+  font-family: 'Antikor Text';
+  src: url('/fonts/Taner Ardali - Antikor Text ExtraBold.ttf') format('truetype');
   font-weight: 800;
   font-style: normal;
   font-display: swap;
@@ -77,7 +77,7 @@
 @tailwind utilities;
 
 body {
-  font-family: 'Antikor Display', sans-serif !important;
+  font-family: 'Antikor Text', sans-serif !important;
 }
 
 /* Search dropdown fade-in */
