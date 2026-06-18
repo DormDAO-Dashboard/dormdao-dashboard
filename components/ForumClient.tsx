@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -43,11 +44,15 @@ function ThreadCard({
   onUpvote: (id: string) => void;
   isUpvoted: boolean;
 }) {
+  const router = useRouter();
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5 hover:border-gray-700 transition-colors">
+    <Link
+      href={`/forum/${thread.id}`}
+      className="block rounded-lg border border-gray-800 bg-gray-900/30 p-5 hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+    >
       <div className="flex items-start gap-3">
         <button
-          onClick={(e) => { e.preventDefault(); onUpvote(thread.id); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onUpvote(thread.id); }}
           className={cn(
             "flex flex-col items-center gap-0.5 pt-0.5 shrink-0 transition-colors",
             isUpvoted ? "text-primary" : "text-gray-600 hover:text-gray-400"
@@ -62,21 +67,18 @@ function ThreadCard({
             {thread.is_pinned && <Pin className="w-3 h-3 text-yellow-500 shrink-0" />}
             <CategoryBadge category={thread.category} />
             {thread.token_ticker && (
-              <Link
-                href={`/tokens/${thread.token_ticker}`}
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/tokens/${thread.token_ticker}`); }}
                 className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-gray-800 text-gray-300 border border-gray-700 hover:border-primary/40 hover:text-primary transition-colors"
               >
                 ${thread.token_ticker}
-              </Link>
+              </button>
             )}
           </div>
 
-          <Link href={`/forum/${thread.id}`}>
-            <h3 className="font-semibold text-white text-sm leading-snug mb-1 hover:text-primary transition-colors">
-              {thread.title}
-            </h3>
-          </Link>
+          <h3 className="font-semibold text-white text-sm leading-snug mb-1 group-hover:text-primary transition-colors">
+            {thread.title}
+          </h3>
 
           {thread.content && (
             <p className="text-gray-400 text-xs leading-relaxed line-clamp-2 mb-3">{thread.content}</p>
@@ -89,17 +91,14 @@ function ThreadCard({
               {thread.author_name && <span className="text-xs text-gray-600">· {thread.author_name}</span>}
               <span className="text-xs text-gray-700">· {timeAgo(thread.created_at)}</span>
             </div>
-            <Link
-              href={`/forum/${thread.id}`}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors shrink-0"
-            >
+            <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
               <MessageSquare className="w-3.5 h-3.5" />
               <span>{thread.reply_count}</span>
-            </Link>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
