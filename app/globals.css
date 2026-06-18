@@ -77,7 +77,7 @@
 @tailwind utilities;
 
 body {
-  font-family: 'Antikor Display', sans-serif;
+  font-family: 'Antikor Display', sans-serif !important;
 }
 
 /* Search dropdown fade-in */
