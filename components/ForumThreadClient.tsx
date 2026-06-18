@@ -4,7 +4,8 @@ import Link from "next/link";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ChevronUp, MessageSquare, Pin } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ChevronUp, MessageSquare, Pin, Trash2 } from "lucide-react";
 import { ForumThread, ForumReply, CATEGORY_STYLES, CATEGORY_LABELS, timeAgo } from "@/lib/forum";
 import type { User } from "@supabase/supabase-js";
 
@@ -25,6 +26,7 @@ function ReplyCard({ reply }: { reply: ForumReply }) {
 }
 
 export function ForumThreadClient({ threadId }: { threadId: string }) {
+  const router = useRouter();
   const [thread, setThread] = useState<ForumThread | null>(null);
   const [replies, setReplies] = useState<ForumReply[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [replyError, setReplyError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -63,6 +66,17 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
       setUpvoted(wasUpvoted);
       setThread(t => t ? { ...t, upvotes: t.upvotes + (wasUpvoted ? 1 : -1) } : t);
     });
+  }
+
+  async function handleDelete() {
+    if (!window.confirm("Delete this thread? This cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/forum/threads/${threadId}`, { method: "DELETE" });
+      if (res.ok) router.push("/forum");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   async function handleReply(e: React.FormEvent) {
@@ -166,6 +180,16 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
               <ChevronUp className="w-4 h-4" />
               {thread.upvotes}
             </button>
+            {user && thread.user_id === user.id && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                title="Delete thread"
+                className="flex items-center gap-1 text-xs text-gray-600 hover:text-red-500 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>

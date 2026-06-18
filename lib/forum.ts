@@ -4,6 +4,7 @@ export interface ForumThread {
   title: string;
   content: string | null;
   school: string;
+  user_id: string | null;
   author_name: string | null;
   category: string;
   token_ticker: string | null;
