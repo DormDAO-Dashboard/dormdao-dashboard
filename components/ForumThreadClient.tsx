@@ -6,7 +6,145 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, ChevronUp, MessageSquare, Pin } from "lucide-react";
 import { ForumThread, ForumReply, CATEGORY_STYLES, CATEGORY_LABELS, timeAgo } from "@/lib/forum";
+import { NoteCard } from "@/components/notes/NoteCard";
+import { CompareModal } from "@/components/notes/CompareModal";
+import { ResearchNote } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
+
+function ThreadNotes({ ticker }: { ticker: string }) {
+  const [notes, setNotes] = useState<ResearchNote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [priceMap, setPriceMap] = useState<Record<string, number>>({});
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showCompare, setShowCompare] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/notes?token=${ticker}`).then((r) => r.json()),
+      fetch(`/api/prices?tickers=${ticker}`).then((r) => r.json()),
+    ])
+      .then(([nd, pd]) => {
+        setNotes(nd.notes ?? []);
+        if (pd.prices?.[ticker]?.usd != null) setPriceMap({ [ticker]: pd.prices[ticker].usd });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [ticker]);
+
+  if (loading) {
+    return (
+      <div className="mt-8 animate-pulse space-y-3">
+        {[...Array(2)].map((_, i) => (
+          <div key={i} className="h-20 rounded-lg bg-gray-900/30 border border-gray-800" />
+        ))}
+      </div>
+    );
+  }
+
+  if (notes.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold text-gray-300">Research Notes — ${ticker}</h2>
+        {notes.length >= 2 && (
+          <button
+            onClick={() => { setCompareMode((m) => !m); setSelectedIds(new Set()); }}
+            className={cn(
+              "text-xs px-3 py-1.5 rounded-lg border transition-colors",
+              compareMode
+                ? "bg-primary/20 border-primary/50 text-primary"
+                : "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+            )}
+          >
+            {compareMode ? "Exit Compare" : "Compare"}
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col gap-3">
+        {notes.map((note) => {
+          const isSelected = selectedIds.has(note.id);
+          const isDisabled = compareMode && !isSelected && selectedIds.size >= 3;
+          return (
+            <div
+              key={note.id}
+              className={cn(
+                "relative",
+                compareMode && isSelected && "ring-2 ring-primary/50 rounded-lg",
+                compareMode && isDisabled && "opacity-40"
+              )}
+            >
+              {compareMode && (
+                <>
+                  <div
+                    className={cn(
+                      "absolute inset-0 z-10 rounded-lg",
+                      isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+                    )}
+                    onClick={
+                      !isDisabled
+                        ? () => {
+                            setSelectedIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(note.id)) next.delete(note.id);
+                              else if (next.size < 3) next.add(note.id);
+                              return next;
+                            });
+                          }
+                        : undefined
+                    }
+                  />
+                  <div className="absolute top-3 left-3 z-20 pointer-events-none">
+                    <div className={cn(
+                      "w-4 h-4 rounded border-2 flex items-center justify-center",
+                      isSelected ? "bg-primary border-primary" : "border-gray-500 bg-gray-900/80"
+                    )}>
+                      {isSelected && (
+                        <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 10 8">
+                          <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+              <NoteCard note={note} />
+            </div>
+          );
+        })}
+      </div>
+
+      {compareMode && selectedIds.size >= 2 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-gray-900/95 border-t border-gray-800 backdrop-blur-sm">
+          <span className="text-sm text-gray-300">{selectedIds.size} notes selected</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { setSelectedIds(new Set()); setCompareMode(false); }}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setShowCompare(true)}
+              className="px-4 py-2 text-xs font-medium text-black bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Compare Notes
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showCompare && (
+        <CompareModal
+          notes={notes.filter((n) => selectedIds.has(n.id))}
+          priceMap={priceMap}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
+    </div>
+  );
+}
 
 function ReplyCard({ reply }: { reply: ForumReply }) {
   return (
@@ -214,6 +352,8 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
           <Link href="/login" className="text-primary hover:underline">Sign in</Link> to reply
         </div>
       )}
+
+      {thread.token_ticker && <ThreadNotes ticker={thread.token_ticker} />}
     </div>
   );
 }

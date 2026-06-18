@@ -22,6 +22,17 @@ function isRateLimited(req: NextRequest): boolean {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
+
+  const ids = searchParams.get("ids");
+  if (ids) {
+    const idList = ids.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3);
+    if (idList.length === 0) return NextResponse.json({ notes: [] });
+    const supabase = createServiceClient();
+    const { data, error } = await supabase.from("research_notes").select("*").in("id", idList);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ notes: data ?? [] });
+  }
+
   const sentiment = searchParams.get("sentiment") as Sentiment | null;
   const token = searchParams.get("token");
   const school = searchParams.get("school");

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { formatUSD, formatPrice, formatPct } from "@/lib/utils";
+import { formatUSD, formatPrice, formatPct, cn } from "@/lib/utils";
 import { TOKEN_META } from "@/lib/tokens";
 import { Skeleton } from "@/components/ui/Card";
 import { AddNoteForm } from "@/components/notes/AddNoteForm";
@@ -12,6 +12,7 @@ import { FundDocuments } from "@/components/FundDocuments";
 import { ForumClient } from "@/components/ForumClient";
 import { ResearchNote } from "@/lib/types";
 import { ArrowLeft, TrendingUp, TrendingDown, Upload } from "lucide-react";
+import { CompareModal } from "@/components/notes/CompareModal";
 import { ADMIN_SECRET } from "@/lib/admin";
 
 const BASE = "https://classic.artemis.ai/asset/";
@@ -195,6 +196,9 @@ export default function TokenDetailPage() {
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [docsKey, setDocsKey] = useState(0);
   const [adminSecret, setAdminSecret] = useState<string | undefined>(undefined);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).has("admin")) setAdminSecret(ADMIN_SECRET);
@@ -562,7 +566,22 @@ export default function TokenDetailPage() {
 
       {/* Research notes */}
       <div className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-300 mb-4">Research Notes for ${tickerUpper}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-300">Research Notes for ${tickerUpper}</h2>
+          {notes.length >= 2 && (
+            <button
+              onClick={() => { setCompareMode((m) => !m); setSelectedIds(new Set()); }}
+              className={cn(
+                "text-xs px-3 py-1.5 rounded-lg border transition-colors",
+                compareMode
+                  ? "bg-primary/20 border-primary/50 text-primary"
+                  : "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+              )}
+            >
+              {compareMode ? "Exit Compare" : "Compare"}
+            </button>
+          )}
+        </div>
         <AddNoteForm
           defaultTicker={tickerUpper}
           onSuccess={() => {
@@ -580,14 +599,60 @@ export default function TokenDetailPage() {
                   <Skeleton className="h-3 w-32" />
                 </div>
               ))
-            : notes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  adminSecret={adminSecret}
-                  onDelete={(id) => setNotes((prev) => prev.filter((n) => n.id !== id))}
-                />
-              ))}
+            : notes.map((note) => {
+                const isSelected = selectedIds.has(note.id);
+                const isDisabled = compareMode && !isSelected && selectedIds.size >= 3;
+                return (
+                  <div
+                    key={note.id}
+                    className={cn(
+                      "relative",
+                      compareMode && isSelected && "ring-2 ring-primary/50 rounded-lg",
+                      compareMode && isDisabled && "opacity-40"
+                    )}
+                  >
+                    {compareMode && (
+                      <>
+                        <div
+                          className={cn(
+                            "absolute inset-0 z-10 rounded-lg",
+                            isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+                          )}
+                          onClick={
+                            !isDisabled
+                              ? () => {
+                                  setSelectedIds((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(note.id)) next.delete(note.id);
+                                    else if (next.size < 3) next.add(note.id);
+                                    return next;
+                                  });
+                                }
+                              : undefined
+                          }
+                        />
+                        <div className="absolute top-3 left-3 z-20 pointer-events-none">
+                          <div className={cn(
+                            "w-4 h-4 rounded border-2 flex items-center justify-center",
+                            isSelected ? "bg-primary border-primary" : "border-gray-500 bg-gray-900/80"
+                          )}>
+                            {isSelected && (
+                              <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 10 8">
+                                <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <NoteCard
+                      note={note}
+                      adminSecret={adminSecret}
+                      onDelete={(id) => setNotes((prev) => prev.filter((n) => n.id !== id))}
+                    />
+                  </div>
+                );
+              })}
           {!loadingNotes && notes.length === 0 && (
             <div className="text-center py-8 text-gray-500 text-sm">
               No research notes for ${tickerUpper} yet. Be the first!
@@ -595,6 +660,34 @@ export default function TokenDetailPage() {
           )}
         </div>
       </div>
+
+      {compareMode && selectedIds.size >= 2 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-gray-900/95 border-t border-gray-800 backdrop-blur-sm">
+          <span className="text-sm text-gray-300">{selectedIds.size} notes selected</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { setSelectedIds(new Set()); setCompareMode(false); }}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setShowCompare(true)}
+              className="px-4 py-2 text-xs font-medium text-black bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Compare Notes
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showCompare && (
+        <CompareModal
+          notes={notes.filter((n) => selectedIds.has(n.id))}
+          priceMap={price ? { [tickerUpper]: price.usd } : {}}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
 
       {/* Fund Documents */}
       <FundDocuments ticker={tickerUpper} refreshKey={docsKey} />
