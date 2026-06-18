@@ -132,38 +132,9 @@ export function LeaderboardClient({
     : null;
 
   const displaySchools = activeSchools ?? schools;
-  const totalNAV = displaySchools.reduce((s, x) => s + x.nav, 0);
-  const schoolCount = displaySchools.length;
-
-  const winRate = schoolCount > 0
-    ? Math.round((displaySchools.filter(s => s.ethReturn > 0).length / schoolCount) * 100)
-    : 0;
-  const winCount = displaySchools.filter(s => s.ethReturn > 0).length;
 
   return (
     <div>
-      {/* Summary strip */}
-      <div className="flex items-center justify-center overflow-x-auto scrollbar-hide gap-6 md:gap-12 mb-10 px-1">
-        <div className="text-center shrink-0">
-          <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">Total DAO NAV</div>
-          <div className="text-2xl font-semibold font-mono text-white">{formatUSD(totalNAV)}</div>
-        </div>
-        <div className="w-px h-8 bg-gray-800 shrink-0" />
-        <div className="text-center shrink-0">
-          <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">Active Schools</div>
-          <div className="text-2xl font-semibold font-mono text-white">{schoolCount}</div>
-        </div>
-        <div className="w-px h-8 bg-gray-800 shrink-0" />
-        <div className="text-center shrink-0">
-          <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">
-            Win Rate<span className="hidden md:inline"> (ETH)</span>
-          </div>
-          <div className="text-2xl font-semibold font-mono text-white">{winRate}%</div>
-          <div className="text-xs text-gray-600 mt-0.5">{winCount}/{schoolCount} positive</div>
-          <div className="text-[10px] text-gray-700 md:hidden">ETH</div>
-        </div>
-      </div>
-
       {/* Year selector — mobile dropdown */}
       <div className="md:hidden mb-4">
         <select
