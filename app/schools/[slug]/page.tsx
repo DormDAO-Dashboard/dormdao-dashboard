@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { formatUSD, formatPct } from "@/lib/utils";
+import { formatNav, formatPct } from "@/lib/utils";
 import { getSchoolsData } from "@/lib/cache";
 import { KpiCard, Skeleton } from "@/components/ui/Card";
 import { SchoolTabs } from "@/components/SchoolTabs";
@@ -57,12 +57,12 @@ async function SchoolContent({ slug }: { slug: string }) {
 
   return (
     <>
-      <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors">
+      <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Schools
       </Link>
 
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-4">
         <SchoolLogo name={school.name} size={48} />
         <div>
           <div className="text-xs font-mono text-gray-500 mb-1">Rank #{school.rank}</div>
@@ -73,8 +73,8 @@ async function SchoolContent({ slug }: { slug: string }) {
       <SocialLinks name={school.name} />
 
       {/* KPI cards — always visible above tabs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KpiCard label="NAV" value={formatUSD(school.nav)} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <KpiCard label="NAV" value={formatNav(school.nav)} />
         <KpiCard
           label="USD Return"
           value={formatPct(school.usdReturn)}

@@ -49,6 +49,14 @@ export function formatETH(value: number): string {
   return `${sign}${value.toFixed(4)} ETH`;
 }
 
+export function formatNav(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 export function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }

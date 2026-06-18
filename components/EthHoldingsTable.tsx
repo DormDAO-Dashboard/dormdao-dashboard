@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { SchoolRow } from "@/lib/types";
-import { formatUSD } from "@/lib/utils";
+import { formatNav } from "@/lib/utils";
 import Link from "next/link";
 
 interface EthRow {
@@ -77,7 +77,7 @@ export function EthHoldingsTable({ schools }: { schools: SchoolRow[] }) {
                   {row.ethTokens.toFixed(4)} ETH
                 </td>
                 <td className={`px-5 py-3 text-right font-mono ${valueColor}`}>
-                  {ethPrice !== null ? formatUSD(row.usdValue) : "—"}
+                  {ethPrice !== null ? formatNav(row.usdValue) : "—"}
                 </td>
               </tr>
             );

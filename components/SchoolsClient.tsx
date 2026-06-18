@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { SchoolRow } from "@/lib/types";
-import { formatUSD, formatPct } from "@/lib/utils";
+import { formatNav, formatUSD, formatPct } from "@/lib/utils";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { Search } from "lucide-react";
 
@@ -24,7 +24,7 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
@@ -46,10 +46,10 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
         </select>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.map((s) => (
           <Link key={s.slug} href={`/schools/${s.slug}`}>
-            <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5 hover:border-primary/40 hover:bg-gray-800/30 transition-all cursor-pointer h-full">
+            <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4 hover:border-primary/40 hover:bg-gray-800/30 transition-all cursor-pointer h-full">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <SchoolLogo name={s.name} size={32} />
@@ -68,7 +68,7 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <div className="text-gray-500">NAV</div>
-                  <div className="font-mono text-gray-200">{formatUSD(s.nav, true)}</div>
+                  <div className="font-mono text-gray-200">{formatNav(s.nav)}</div>
                 </div>
                 <div>
                   <div className="text-gray-500">USD Return</div>

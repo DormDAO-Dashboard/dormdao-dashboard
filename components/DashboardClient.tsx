@@ -10,7 +10,7 @@ import { RecentBuysFeed } from "@/components/RecentBuysFeed";
 import { EthHoldingsTable } from "@/components/EthHoldingsTable";
 import { SchoolRow } from "@/lib/types";
 import { ADMIN_SECRET } from "@/lib/admin";
-import { formatUSD, formatPct } from "@/lib/utils";
+import { formatNav, formatUSD, formatPct } from "@/lib/utils";
 import Link from "next/link";
 import { ArrowRight, Camera, TrendingUp, TrendingDown } from "lucide-react";
 
@@ -114,7 +114,7 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
   const statCard = "rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-4 flex flex-col gap-1";
 
   return (
-    <div className="mb-8">
+    <div className="mb-5">
       <h2 className="text-sm font-semibold text-gray-300 mb-3">DAO-Wide Metrics</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
 
@@ -229,7 +229,7 @@ export function DashboardClient({
       <AdminPanel />
 
       {/* Period toggle */}
-      <div className="flex overflow-x-auto gap-1.5 mb-6 pb-1 scrollbar-hide">
+      <div className="flex overflow-x-auto gap-1.5 mb-4 pb-1 scrollbar-hide">
         {PERIODS.map(({ key, label }) => (
           <button
             key={key}
@@ -246,8 +246,8 @@ export function DashboardClient({
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Total Portfolio NAV" value={formatUSD(Math.round(totalNAV))} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <KpiCard label="Total Portfolio NAV" value={formatNav(totalNAV)} />
         <KpiCard
           label="Avg USD Return"
           value={formatPct(avgUsdReturn)}
@@ -265,7 +265,7 @@ export function DashboardClient({
       {period === "2526" && <DaoWideMetrics schools={schools} />}
 
       {/* Analytics row */}
-      <div className="flex overflow-x-auto gap-3 mb-8 scrollbar-hide md:grid md:grid-cols-3">
+      <div className="flex overflow-x-auto gap-3 mb-5 scrollbar-hide md:grid md:grid-cols-3">
         <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
           <span className="text-xs text-gray-500 mb-1">Win Rate</span>
           <span className="text-lg font-mono font-bold text-white">{winRate}%</span>
@@ -284,31 +284,31 @@ export function DashboardClient({
       </div>
 
       {/* Charts row 1 */}
-      <div className="grid lg:grid-cols-2 gap-6 mb-8">
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
-          <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio NAV by School (Ranked)</h2>
+      <div className="grid lg:grid-cols-2 gap-5 mb-5">
+        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Portfolio NAV by School (Ranked)</h2>
           <NavBarChart schools={activeSchools} />
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
-          <h2 className="text-sm font-semibold text-gray-300 mb-4">ETH Return — All Schools</h2>
+        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">ETH Return — All Schools</h2>
           <EthReturnChart schools={activeSchools} />
         </div>
       </div>
 
       {/* Charts row 2 */}
-      <div className="grid lg:grid-cols-2 gap-6 mb-8">
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
-          <h2 className="text-sm font-semibold text-gray-300 mb-4">Top &amp; Bottom 3 — ETH Return</h2>
+      <div className="grid lg:grid-cols-2 gap-5 mb-5">
+        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Top &amp; Bottom 3 — ETH Return</h2>
           <TopBottomChart schools={activeSchools} />
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
-          <h2 className="text-sm font-semibold text-gray-300 mb-4">Deployment % vs. NAV</h2>
+        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Deployment % vs. NAV</h2>
           <DeploymentScatter schools={activeSchools} />
         </div>
       </div>
 
       {/* Leaderboard */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-6">
+      <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-4">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-300">
             School Leaderboard — All {activeSchools.length}

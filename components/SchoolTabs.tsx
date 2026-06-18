@@ -25,7 +25,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
   return (
     <>
       {/* Tab bar */}
-      <div className="flex gap-0 border-b border-gray-800 mb-6">
+      <div className="flex gap-0 border-b border-gray-800 mb-4">
         {TABS.map((t) => (
           <button
             key={t}
@@ -45,7 +45,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
 
       {/* Portfolio tab */}
       {tab === "Portfolio" && (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {(school.holdings?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
               <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Concentration</h2>
@@ -98,7 +98,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
 
       {/* History tab */}
       {tab === "History" && (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {(school.exitedHoldings?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800">
