@@ -21,7 +21,6 @@ GitHub: https://github.com/clunacrypto/dormdao-dashboard
 - /tokens — Token index
 - /tokens/[ticker] — Token detail + research notes + forum discussions + fund documents
 - /activity — Activity feed (All Activity / Position Entries / Trims & Exits / NFT Activity)
-- /research — DormDocs research notes
 - /news — DAO Headlines community feed
 - /forum — DAO Forum (thread list + /forum/[id] thread detail)
 - /login — Google OAuth
