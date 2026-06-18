@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation";
 import {
   Trophy, GraduationCap, BarChart2, DollarSign, Activity,
   Newspaper, MessagesSquare, BookOpen, Info, Sun, Moon, User,
-  Bell, ChevronRight, MoreHorizontal, X,
+  ChevronRight, MoreHorizontal, X,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { BellButton } from "@/components/BellButton";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -217,10 +218,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <GlobalSearch />
         </div>
         <div className="ml-auto flex items-center gap-1 shrink-0">
-          <button title="Notifications (coming soon)"
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
-            <Bell className="w-4 h-4" />
-          </button>
+          <BellButton isLoggedIn={!!user} />
           <button onClick={toggle} aria-label="Toggle theme"
             className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-700/60 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
             {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}

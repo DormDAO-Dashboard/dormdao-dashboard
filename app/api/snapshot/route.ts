@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getSchoolsData } from "@/lib/cache";
 import { Holding } from "@/lib/types";
+import { sendPushNotifications } from "@/lib/push";
 
 interface StoredHolding {
   ticker: string;
@@ -113,6 +114,22 @@ export async function POST(req: NextRequest) {
 
       if (changeRows.length > 0) {
         await supabase.from("portfolio_changes").insert(changeRows);
+
+        for (const change of changeRows) {
+          const isBuy = change.change_type === "buy" || change.change_type === "increase";
+          const isSell = change.change_type === "sell" || change.change_type === "decrease";
+          if (!isBuy && !isSell) continue;
+          await sendPushNotifications({
+            type: isBuy ? "buy" : "sell",
+            title: isBuy
+              ? `🟢 ${change.school_name} bought ${change.token_ticker}`
+              : `🔴 ${change.school_name} trimmed ${change.token_ticker}`,
+            body: isBuy
+              ? `New position opened by ${change.school_name}`
+              : `Position reduced by ${change.school_name}`,
+            url: "https://dormdao-dashboard.vercel.app/activity",
+          }).catch(console.error);
+        }
       }
     } catch (err) {
       console.error("[snapshot] unexpected error:", err);

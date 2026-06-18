@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppShell } from "@/components/AppShell";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/Toaster";
+import { PushNotificationManager } from "@/components/PushNotificationManager";
 
 export const metadata: Metadata = {
   title: "DormDAO Portfolio Dashboard",
@@ -26,10 +27,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-[#0a0a0a] text-gray-100 antialiased overflow-x-hidden font-sans">
         <ThemeProvider>
-          <AppShell>
-            {children}
-          </AppShell>
-          <Toaster />
+          <PushNotificationManager>
+            <AppShell>
+              {children}
+            </AppShell>
+            <Toaster />
+          </PushNotificationManager>
         </ThemeProvider>
       </body>
     </html>
