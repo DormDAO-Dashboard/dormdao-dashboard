@@ -1,15 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { cn } from "@/lib/utils";
-import { ResearchClient } from "@/components/ResearchClient";
 import { FileText, Search, ExternalLink } from "lucide-react";
-
-const TABS = [
-  { key: "documents", label: "School Documents" },
-  { key: "community", label: "Community Notes" },
-] as const;
-
-type TabKey = (typeof TABS)[number]["key"];
 
 interface SchoolDocument {
   id: string;
@@ -168,11 +159,8 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
 }
 
 export function ResearchTabs({ initialTickers }: { initialTickers: string[] }) {
-  const [tab, setTab] = useState<TabKey>("documents");
-
   return (
     <div>
-      {/* DormDocs header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">
           <FileText className="w-7 h-7 text-primary" />
@@ -180,27 +168,7 @@ export function ResearchTabs({ initialTickers }: { initialTickers: string[] }) {
         </div>
         <p className="text-gray-500 text-sm ml-10">Investment pitches and research from the DormDAO ecosystem</p>
       </div>
-
-      {/* Tabs */}
-      <div className="flex gap-0 mb-8 border-b border-gray-800">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={cn(
-              "px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
-              tab === t.key
-                ? "border-primary text-white font-medium"
-                : "border-transparent text-gray-500 hover:text-gray-300 font-normal"
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "documents" && <DormDocsGrid initialTickers={initialTickers} />}
-      {tab === "community" && <ResearchClient initialTickers={initialTickers} hideHeader />}
+      <DormDocsGrid initialTickers={initialTickers} />
     </div>
   );
 }
