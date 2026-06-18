@@ -107,17 +107,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (avatarSrc) {
       return (
         <Image src={avatarSrc} width={size} height={size} alt="avatar"
-          className="rounded-lg border border-gray-700 object-cover hover:border-primary/60 transition-colors"
+          className="rounded-lg border border-gray-300 dark:border-gray-700 object-cover hover:border-primary/60 transition-colors"
           unoptimized />
       );
     }
     return (
       <div style={{ width: size, height: size }}
-        className="rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center hover:border-gray-600 transition-colors">
-        <User className="w-3.5 h-3.5 text-gray-400" />
+        className="rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 flex items-center justify-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
+        <User className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
       </div>
     );
   }
+
+  // Shared class fragments
+  const sidebarItem = "flex items-center gap-3 w-full px-2 py-2.5 rounded-lg transition-colors text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]";
+  const labelFade   = cn("text-sm whitespace-nowrap transition-all duration-150", expanded ? "opacity-100" : "opacity-0 pointer-events-none");
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-gray-100">
@@ -127,15 +131,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{ width: sidebarPx }}
-        className="hidden md:flex fixed inset-y-0 left-0 z-40 flex-col bg-[#0f0f0f] border-r border-white/[0.08] overflow-hidden transition-all duration-200"
+        className="hidden md:flex fixed inset-y-0 left-0 z-40 flex-col bg-white dark:bg-[#0f0f0f] border-r border-gray-200 dark:border-white/[0.08] overflow-hidden transition-all duration-200"
       >
         {/* Logo */}
-        <div className="flex items-center h-[52px] px-4 shrink-0 border-b border-white/[0.05] overflow-hidden">
+        <div className="flex items-center h-[52px] px-4 shrink-0 border-b border-gray-100 dark:border-white/[0.05] overflow-hidden">
           <Link href="/" className="flex items-center gap-3 min-w-0">
-            <Image src="/logo.jpg" width={28} height={28} alt="DormDAO"
-              className="rounded-md shrink-0" />
+            <Image src="/logo.jpg" width={28} height={28} alt="DormDAO" className="rounded-md shrink-0" />
             <span className={cn(
-              "font-semibold text-white text-sm whitespace-nowrap transition-all duration-150",
+              "font-semibold text-gray-900 dark:text-white text-sm whitespace-nowrap transition-all duration-150",
               expanded ? "opacity-100" : "opacity-0 pointer-events-none"
             )}>
               DormDAO
@@ -152,7 +155,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
                 active
                   ? "bg-primary/10 text-primary"
-                  : "text-gray-500 hover:text-gray-100 hover:bg-white/[0.06]"
+                  : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
               )}>
                 {active && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
@@ -170,44 +173,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Bottom controls */}
-        <div className="shrink-0 border-t border-white/[0.05] p-2 space-y-0.5">
-          <button onClick={toggle}
-            className="flex items-center gap-3 w-full px-2 py-2.5 rounded-lg text-gray-500 hover:text-gray-100 hover:bg-white/[0.06] transition-colors">
+        <div className="shrink-0 border-t border-gray-100 dark:border-white/[0.05] p-2 space-y-0.5">
+          <button onClick={toggle} className={sidebarItem}>
             {theme === "dark"
               ? <Sun className="w-5 h-5 shrink-0" />
               : <Moon className="w-5 h-5 shrink-0" />}
-            <span className={cn(
-              "text-sm whitespace-nowrap transition-all duration-150",
-              expanded ? "opacity-100" : "opacity-0 pointer-events-none"
-            )}>
+            <span className={labelFade}>
               {theme === "dark" ? "Light mode" : "Dark mode"}
             </span>
           </button>
 
-          <button onClick={togglePin}
-            className="flex items-center gap-3 w-full px-2 py-2.5 rounded-lg text-gray-500 hover:text-gray-100 hover:bg-white/[0.06] transition-colors">
+          <button onClick={togglePin} className={sidebarItem}>
             <ChevronRight className={cn(
               "w-5 h-5 shrink-0 transition-transform duration-200",
               pinned ? "rotate-180" : ""
             )} />
-            <span className={cn(
-              "text-sm whitespace-nowrap transition-all duration-150",
-              expanded ? "opacity-100" : "opacity-0 pointer-events-none"
-            )}>
+            <span className={labelFade}>
               {pinned ? "Collapse" : "Pin open"}
             </span>
           </button>
 
-          <Link href={user ? "/profile" : "/login"}
-            className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-gray-500 hover:text-gray-100 hover:bg-white/[0.06] transition-colors">
+          <Link href={user ? "/profile" : "/login"} className={cn(sidebarItem, "w-auto")}>
             {avatarSrc
               ? <Image src={avatarSrc} width={20} height={20} alt="avatar"
-                  className="rounded-md border border-gray-700 object-cover shrink-0" unoptimized />
+                  className="rounded-md border border-gray-300 dark:border-gray-700 object-cover shrink-0" unoptimized />
               : <User className="w-5 h-5 shrink-0" />}
-            <span className={cn(
-              "text-sm whitespace-nowrap transition-all duration-150",
-              expanded ? "opacity-100" : "opacity-0 pointer-events-none"
-            )}>
+            <span className={labelFade}>
               {user ? "Profile" : "Sign in"}
             </span>
           </Link>
@@ -217,20 +208,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* ── Top Bar (desktop only) ──────────────────────────────── */}
       <header
         style={{ left: pinned ? 200 : 64 }}
-        className="hidden md:flex fixed top-0 right-0 z-30 h-[52px] items-center gap-4 px-5 border-b border-white/[0.08] bg-[#0a0a0a]/95 backdrop-blur transition-all duration-200"
+        className="hidden md:flex fixed top-0 right-0 z-30 h-[52px] items-center gap-4 px-5 border-b border-gray-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur transition-all duration-200"
       >
-        <span className="text-sm font-semibold text-gray-200 shrink-0">
+        <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 shrink-0">
           {deriveTitle(pathname)}
         </span>
         <div className="flex-1" />
         <GlobalSearch />
         <div className="flex items-center gap-1 shrink-0">
           <button title="Notifications (coming soon)"
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-gray-200 hover:bg-white/[0.06] transition-colors">
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             <Bell className="w-4 h-4" />
           </button>
           <button onClick={toggle} aria-label="Toggle theme"
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-700/60 text-gray-400 hover:text-gray-200 hover:border-gray-600 transition-colors">
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-700/60 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
             {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
           <Link href={user ? "/profile" : "/login"} className="ml-1">
@@ -240,9 +231,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Content area ───────────────────────────────────────── */}
-      {/* md:ml-16 clears the 64px collapsed sidebar always.
-          When pinned, md:ml-[200px] shifts content to match expanded sidebar.
-          Both class strings are literal so Tailwind JIT includes them. */}
       <div className={cn(
         "transition-all duration-200 md:pt-[52px] pb-20 md:pb-0",
         pinned ? "md:ml-[200px]" : "md:ml-16"
@@ -253,20 +241,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ── Mobile Bottom Tab Bar ──────────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0f0f0f] border-t border-white/[0.08] flex items-center justify-around h-16">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-[#0f0f0f] border-t border-gray-200 dark:border-white/[0.08] flex items-center justify-around h-16">
         {PRIMARY_LINKS.map(({ href, icon: Icon }) => {
           const active = matchesRoute(href, pathname);
           return (
             <Link key={href} href={href} className={cn(
               "flex items-center justify-center min-w-[48px] min-h-[48px] rounded-xl transition-colors",
-              active ? "text-primary" : "text-gray-500 hover:text-gray-300"
+              active ? "text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
             )}>
               <Icon className="w-5 h-5" />
             </Link>
           );
         })}
         <button onClick={() => setShowMore(true)}
-          className="flex items-center justify-center min-w-[48px] min-h-[48px] rounded-xl text-gray-500 hover:text-gray-300 transition-colors">
+          className="flex items-center justify-center min-w-[48px] min-h-[48px] rounded-xl text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
           <MoreHorizontal className="w-5 h-5" />
         </button>
       </nav>
@@ -276,11 +264,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="md:hidden">
           <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowMore(false)} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#111] border-t border-gray-800 rounded-t-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-              <span className="text-sm font-semibold text-gray-300">More</span>
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-gray-800 rounded-t-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">More</span>
               <button onClick={() => setShowMore(false)}
-                className="text-gray-500 hover:text-white transition-colors">
+                className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -291,7 +279,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Link key={href} href={href} onClick={() => setShowMore(false)}
                     className={cn(
                       "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
-                      active ? "text-primary bg-primary/10" : "text-gray-300 hover:bg-gray-800/60"
+                      active
+                        ? "text-primary bg-primary/10"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
                     )}>
                     <Icon className="w-5 h-5 shrink-0" />
                     <span className="text-sm font-medium">{label}</span>
@@ -299,9 +289,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 );
               })}
               <div className="flex items-center justify-between px-4 py-3.5">
-                <span className="text-sm text-gray-300 font-medium">Theme</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Theme</span>
                 <button onClick={toggle}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 transition-colors">
+                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
                   {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
               </div>
