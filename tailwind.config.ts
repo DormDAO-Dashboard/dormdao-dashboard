@@ -15,8 +15,8 @@ const config: Config = {
         "primary-dark": "#1D9E75",
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
-        mono: ["JetBrains Mono", "Menlo", "monospace"],
+        sans: ["Antikor Display", "sans-serif"],
+        mono: ["Antikor Mono", "monospace"],
       },
     },
   },
