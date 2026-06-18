@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { FileText, Search, ExternalLink } from "lucide-react";
+import { DocCompareModal } from "@/components/DocCompareModal";
+import { cn } from "@/lib/utils";
 
 interface SchoolDocument {
   id: string;
@@ -70,6 +72,9 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
   const [search, setSearch] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedDocs, setSelectedDocs] = useState<SchoolDocument[]>([]);
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     fetch("/api/documents?all=true")
@@ -97,7 +102,7 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
   return (
     <div>
       {/* Filter row */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+      <div className="flex flex-col sm:flex-row gap-3 mb-8 items-start sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
           <input
@@ -127,6 +132,17 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+        <button
+          onClick={() => { setCompareMode((m) => !m); setSelectedDocs([]); }}
+          className={cn(
+            "shrink-0 text-xs px-3 py-2.5 rounded-lg border transition-colors whitespace-nowrap",
+            compareMode
+              ? "bg-primary/20 border-primary/50 text-primary"
+              : "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 bg-gray-900"
+          )}
+        >
+          {compareMode ? "Exit Compare" : "Compare Docs"}
+        </button>
       </div>
 
       {/* Card grid */}
@@ -143,9 +159,55 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-            {filtered.map((doc) => (
-              <DocumentCard key={doc.id} doc={doc} />
-            ))}
+            {filtered.map((doc) => {
+              const isSelected = selectedDocs.some((d) => d.id === doc.id);
+              const isDisabled = compareMode && !isSelected && selectedDocs.length >= 2;
+              return (
+                <div
+                  key={doc.id}
+                  className={cn(
+                    "relative",
+                    compareMode && isSelected && "ring-2 ring-primary/50 rounded-xl",
+                    compareMode && isDisabled && "opacity-40"
+                  )}
+                >
+                  {compareMode && (
+                    <>
+                      <div
+                        className={cn(
+                          "absolute inset-0 z-10 rounded-xl",
+                          isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+                        )}
+                        onClick={
+                          !isDisabled
+                            ? () => {
+                                setSelectedDocs((prev) =>
+                                  isSelected
+                                    ? prev.filter((d) => d.id !== doc.id)
+                                    : [...prev, doc]
+                                );
+                              }
+                            : undefined
+                        }
+                      />
+                      <div className="absolute top-3 left-3 z-20 pointer-events-none">
+                        <div className={cn(
+                          "w-4 h-4 rounded border-2 flex items-center justify-center",
+                          isSelected ? "bg-primary border-primary" : "border-gray-500 bg-gray-900/80"
+                        )}>
+                          {isSelected && (
+                            <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 10 8">
+                              <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <DocumentCard doc={doc} />
+                </div>
+              );
+            })}
           </div>
           <div className="flex justify-center">
             <div className="rounded-xl border border-gray-800 bg-gray-900/30 px-8 py-4 text-sm text-gray-500">
@@ -153,6 +215,33 @@ function DormDocsGrid({ initialTickers }: { initialTickers: string[] }) {
             </div>
           </div>
         </>
+      )}
+
+      {compareMode && selectedDocs.length === 2 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-gray-900/95 border-t border-gray-800 backdrop-blur-sm">
+          <span className="text-sm text-gray-300">2 documents selected</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { setSelectedDocs([]); setCompareMode(false); }}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setShowCompare(true)}
+              className="px-4 py-2 text-xs font-medium text-black bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Compare Documents
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showCompare && (
+        <DocCompareModal
+          docs={selectedDocs}
+          onClose={() => setShowCompare(false)}
+        />
       )}
     </div>
   );
