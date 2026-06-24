@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getSchoolsData } from "@/lib/cache";
 import { Holding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
+import { sendEmailNotifications } from "@/lib/email";
 
 interface StoredHolding {
   ticker: string;
@@ -119,8 +120,9 @@ export async function POST(req: NextRequest) {
           const isBuy = change.change_type === "buy" || change.change_type === "increase";
           const isSell = change.change_type === "sell" || change.change_type === "decrease";
           if (!isBuy && !isSell) continue;
-          await sendPushNotifications({
-            type: isBuy ? "buy" : "sell",
+          const tradeType: "buy" | "sell" = isBuy ? "buy" : "sell";
+          const tradePayload = {
+            type: tradeType,
             title: isBuy
               ? `🟢 ${change.school_name} bought ${change.token_ticker}`
               : `🔴 ${change.school_name} trimmed ${change.token_ticker}`,
@@ -128,7 +130,9 @@ export async function POST(req: NextRequest) {
               ? `New position opened by ${change.school_name}`
               : `Position reduced by ${change.school_name}`,
             url: "https://dormdao-dashboard.vercel.app/activity",
-          }).catch(console.error);
+          };
+          await sendPushNotifications(tradePayload).catch(console.error);
+          await sendEmailNotifications(tradePayload).catch(console.error);
         }
       }
     } catch (err) {

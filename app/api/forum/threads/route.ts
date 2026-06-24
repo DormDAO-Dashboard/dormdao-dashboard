@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { sendPushNotifications } from "@/lib/push";
+import { sendEmailNotifications } from "@/lib/email";
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 5;
@@ -117,12 +118,14 @@ export async function POST(req: NextRequest) {
 
   const thread = data;
   after(async () => {
-    await sendPushNotifications({
-      type: "forum",
+    const forumPayload = {
+      type: "forum" as const,
       title: `💬 New thread: ${thread.title}`,
       body: `${thread.school} posted in ${thread.category}`,
       url: `https://dormdao-dashboard.vercel.app/forum/${thread.id}`,
-    }).catch(console.error);
+    };
+    await sendPushNotifications(forumPayload).catch(console.error);
+    await sendEmailNotifications(forumPayload).catch(console.error);
   });
 
   return NextResponse.json({ thread }, { status: 201 });

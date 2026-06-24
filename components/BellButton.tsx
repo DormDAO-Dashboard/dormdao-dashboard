@@ -1,7 +1,8 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, Mail } from "lucide-react";
 import { usePush } from "@/components/PushNotificationManager";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_PREFS = { trades: true, forum: true, news: false };
@@ -23,9 +24,27 @@ export function BellButton({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { isSupported, isSubscribed, isLoading, subscribe, unsubscribe } = usePush();
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setPrefs(loadPrefs()); }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      supabase
+        .from("profiles")
+        .select("email_notifications")
+        .eq("id", data.user.id)
+        .single()
+        .then(({ data: profile }) => {
+          setEmailEnabled(profile?.email_notifications ?? false);
+        });
+    });
+  }, [isLoggedIn]);
 
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
@@ -39,6 +58,23 @@ export function BellButton({ isLoggedIn }: { isLoggedIn: boolean }) {
     const next = { ...prefs, [key]: !prefs[key] };
     setPrefs(next);
     savePrefs(next);
+  }
+
+  async function toggleEmail() {
+    setEmailLoading(true);
+    const next = !emailEnabled;
+    setEmailEnabled(next);
+    try {
+      await fetch("/api/notifications/email", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+    } catch {
+      setEmailEnabled(!next);
+    } finally {
+      setEmailLoading(false);
+    }
   }
 
   if (!isLoggedIn) {
@@ -123,6 +159,22 @@ export function BellButton({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <span className="text-xs text-gray-700 dark:text-gray-300">{label}</span>
               </button>
             ))}
+          </div>
+          <div className="border-t border-gray-100 dark:border-gray-800 pt-3 mb-3">
+            <button
+              onClick={toggleEmail}
+              disabled={emailLoading}
+              className="flex items-center gap-2.5 w-full text-left"
+            >
+              <div className={cn(
+                "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                emailEnabled ? "bg-primary border-primary" : "border-gray-300 dark:border-gray-600"
+              )}>
+                {emailEnabled && <Check className="w-2.5 h-2.5 text-black" />}
+              </div>
+              <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <span className="text-xs text-gray-700 dark:text-gray-300">Email alerts</span>
+            </button>
           </div>
           <button
             onClick={async () => { await unsubscribe(); setOpen(false); }}
