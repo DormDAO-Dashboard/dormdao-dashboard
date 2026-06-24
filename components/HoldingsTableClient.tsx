@@ -3,7 +3,9 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Holding } from "@/lib/types";
 import { formatUSD, formatPrice } from "@/lib/utils";
-import { ExternalLink, Download } from "lucide-react";
+import { ExternalLink, Download, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+
+type SortKey = "chain" | "tokens" | "costEth" | "price" | "value" | "pnl" | "roiEth" | "pctPort" | "date";
 
 function exportCsv(holdings: Holding[], prices: Record<string, { usd: number }>, ethPrice: number, schoolName: string) {
   const headers = ["Token", "Chain", "Tokens", "Cost (ETH)", "Price (USD)", "Value (USD)", "% Portfolio", "Investment Date"];
@@ -44,6 +46,13 @@ function abbrev(name: string) {
   return ABBREV[name] ?? name.slice(0, 3).toUpperCase();
 }
 
+function SortIcon({ col, sortKey, asc }: { col: SortKey; sortKey: SortKey; asc: boolean }) {
+  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-600 inline ml-1" />;
+  return asc
+    ? <ChevronUp className="w-3 h-3 text-primary inline ml-1" />
+    : <ChevronDown className="w-3 h-3 text-primary inline ml-1" />;
+}
+
 interface HoldingsTableClientProps {
   holdings: Holding[];
   otherSchools: Record<string, string[]>;
@@ -53,9 +62,10 @@ interface HoldingsTableClientProps {
 export function HoldingsTableClient({ holdings, otherSchools, schoolName = "school" }: HoldingsTableClientProps) {
   const [prices, setPrices] = useState<Record<string, { usd: number }>>({});
   const [ethPrice, setEthPrice] = useState(0);
-  // date string → historical ETH price USD
   const [historicalEth, setHistoricalEth] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("value");
+  const [asc, setAsc] = useState(false);
 
   const fetchPrices = useCallback(() => {
     const tickers = Array.from(new Set(holdings.map((h) => h.ticker).concat("ETH"))).join(",");
@@ -70,7 +80,6 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
 
   useEffect(() => { fetchPrices(); }, [fetchPrices]);
 
-  // Fetch historical ETH prices for holdings that lack gainUsd from the sheet
   useEffect(() => {
     const datesNeeded = Array.from(new Set(
       holdings
@@ -84,25 +93,94 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
       .catch(() => {});
   }, [holdings]);
 
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setAsc((v) => !v);
+    else {
+      setSortKey(key);
+      setAsc(key === "chain" || key === "date");
+    }
+  }
+
+  function getSortValue(h: Holding): number | string | null {
+    const price = prices[h.ticker];
+    const currentValue = price && h.tokens > 0
+      ? price.usd * h.tokens
+      : h.marketValueUsd ?? null;
+
+    switch (sortKey) {
+      case "chain": return h.blockchain || "";
+      case "tokens": return h.tokens > 0 ? h.tokens : null;
+      case "costEth": return h.costBasisEth > 0 ? h.costBasisEth : null;
+      case "price": {
+        if (price) return price.usd;
+        return h.marketValueUsd && h.tokens > 0 ? h.marketValueUsd / h.tokens : null;
+      }
+      case "value": return currentValue;
+      case "pnl": {
+        if (h.gainUsd !== undefined) return h.gainUsd;
+        const ethAtPurchase = historicalEth[h.investmentDate] || ethPrice;
+        const costUsd = ethAtPurchase > 0 && h.costBasisEth > 0
+          ? h.costBasisEth * ethAtPurchase : null;
+        return currentValue !== null && costUsd !== null ? currentValue - costUsd : null;
+      }
+      case "roiEth": return h.roiEthPct ?? null;
+      case "pctPort": return h.pctOfPortfolio > 0 ? h.pctOfPortfolio : null;
+      case "date": return h.investmentDate || "";
+    }
+  }
+
+  const sortedHoldings = [...holdings].sort((a, b) => {
+    const aVal = getSortValue(a);
+    const bVal = getSortValue(b);
+    if (aVal === null && bVal === null) return 0;
+    if (aVal === null) return 1;
+    if (bVal === null) return -1;
+    const mult = asc ? 1 : -1;
+    if (typeof aVal === "string" && typeof bVal === "string") {
+      return aVal.localeCompare(bVal) * mult;
+    }
+    return ((aVal as number) - (bVal as number)) * mult;
+  });
+
+  const thClass = "px-5 py-3 cursor-pointer select-none hover:text-gray-300 transition-colors";
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-800 text-xs text-gray-500">
             <th className="text-left px-5 py-3">Token</th>
-            <th className="text-left px-5 py-3">Chain</th>
-            <th className="text-right px-5 py-3">Tokens</th>
-            <th className="text-right px-5 py-3">Cost (ETH)</th>
-            <th className="text-right px-5 py-3">Price</th>
-            <th className="text-right px-5 py-3">Value</th>
-            <th className="text-right px-5 py-3">P&amp;L (USD)</th>
-            <th className="text-right px-5 py-3">ROI (ETH)</th>
-            <th className="text-right px-5 py-3">% Port.</th>
-            <th className="text-right px-5 py-3">Date</th>
+            <th className={`text-left ${thClass}`} onClick={() => toggleSort("chain")}>
+              Chain <SortIcon col="chain" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("tokens")}>
+              Tokens <SortIcon col="tokens" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("costEth")}>
+              Cost (ETH) <SortIcon col="costEth" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("price")}>
+              Price <SortIcon col="price" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("value")}>
+              Value <SortIcon col="value" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("pnl")}>
+              P&amp;L (USD) <SortIcon col="pnl" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("roiEth")}>
+              ROI (ETH) <SortIcon col="roiEth" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("pctPort")}>
+              % Port. <SortIcon col="pctPort" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("date")}>
+              Date <SortIcon col="date" sortKey={sortKey} asc={asc} />
+            </th>
           </tr>
         </thead>
         <tbody>
-          {holdings.map((h, i) => {
+          {sortedHoldings.map((h, i) => {
             const price = prices[h.ticker];
             const currentValue = price && h.tokens > 0
               ? price.usd * h.tokens
@@ -114,7 +192,6 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 : null;
             const others = otherSchools[h.ticker] ?? [];
 
-            // USD P&L: prefer sheet's pre-computed Gain(USD), then historical ETH, then current ETH
             let pnl: number | null = null;
             let pnlPct: number | null = null;
 
