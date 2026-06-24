@@ -30,7 +30,7 @@ function ReturnCell({ value }: { value: number }) {
   return (
     <div className={cn("flex items-center justify-end gap-1 font-mono", up ? "text-primary" : "text-danger")}>
       {up ? <TrendingUp className="w-3 h-3 shrink-0" /> : <TrendingDown className="w-3 h-3 shrink-0" />}
-      {formatPct(value)}
+      {formatPct(value, false)}
     </div>
   );
 }
@@ -101,7 +101,7 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeplo
                 <td className="px-5 py-2 text-right font-mono text-gray-200 hidden md:table-cell">{formatNav(s.nav)}</td>
                 <td className="px-5 py-2 text-right hidden md:table-cell"><ReturnCell value={s.usdReturn} /></td>
                 <td className="px-3 md:px-5 py-2 text-right"><ReturnCell value={s.ethReturn} /></td>
-                {showDeployed && <td className="px-5 py-2 text-right font-mono text-gray-400 hidden md:table-cell">{formatPct(s.pctDeployed)}</td>}
+                {showDeployed && <td className="px-5 py-2 text-right font-mono text-gray-400 hidden md:table-cell">{formatPct(s.pctDeployed, false)}</td>}
               </tr>
             );
           })}
@@ -123,8 +123,8 @@ export function LeaderboardClient({
   schools2324: SchoolRow[];
 }) {
   const [year, setYear] = useState<YearKey>("2025-2026");
-  const [sortKey, setSortKey] = useState<SortKey>("rank");
-  const [asc, setAsc] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("ethReturn");
+  const [asc, setAsc] = useState(false);
 
   const activeSchools =
     year === "2025-2026" ? schools
