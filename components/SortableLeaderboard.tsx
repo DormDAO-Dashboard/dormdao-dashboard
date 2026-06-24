@@ -76,7 +76,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
                 {formatPct(s.usdReturn, false)}
               </td>
               <td className={`px-5 py-3 text-right font-mono ${s.ethReturn >= 0 ? "text-primary" : "text-danger"}`}>
-                {formatPct(s.ethReturn)}
+                {formatPct(s.ethReturn, false)}
               </td>
               <td className="px-5 py-3 text-right font-mono text-gray-400">
                 {formatPct(s.pctDeployed, false)}
