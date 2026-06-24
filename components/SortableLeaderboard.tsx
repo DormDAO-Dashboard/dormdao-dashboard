@@ -44,7 +44,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
               NAV <SortIcon col="nav" sortKey={sortKey} asc={asc} />
             </th>
             <th className={`text-right ${thClass}`} onClick={() => toggleSort("usdReturn")}>
-              USD Return <SortIcon col="usdReturn" sortKey={sortKey} asc={asc} />
+              Return (USD) <SortIcon col="usdReturn" sortKey={sortKey} asc={asc} />
             </th>
             <th className={`text-right ${thClass}`} onClick={() => toggleSort("ethReturn")}>
               ETH Return <SortIcon col="ethReturn" sortKey={sortKey} asc={asc} />
@@ -73,13 +73,13 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
                 {formatUSD(s.nav, true)}
               </td>
               <td className={`px-5 py-3 text-right font-mono ${s.usdReturn >= 0 ? "text-primary" : "text-danger"}`}>
-                {formatPct(s.usdReturn)}
+                {formatPct(s.usdReturn, false)}
               </td>
               <td className={`px-5 py-3 text-right font-mono ${s.ethReturn >= 0 ? "text-primary" : "text-danger"}`}>
                 {formatPct(s.ethReturn)}
               </td>
               <td className="px-5 py-3 text-right font-mono text-gray-400">
-                {formatPct(s.pctDeployed)}
+                {formatPct(s.pctDeployed, false)}
               </td>
             </tr>
           ))}

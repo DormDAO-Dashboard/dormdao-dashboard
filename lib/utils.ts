@@ -39,8 +39,8 @@ export function formatPrice(value: number): string {
   }).format(value);
 }
 
-export function formatPct(value: number): string {
-  const sign = value > 0 ? "+" : "";
+export function formatPct(value: number, showSign = true): string {
+  const sign = showSign && value > 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;
 }
 
