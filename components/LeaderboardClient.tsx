@@ -341,8 +341,8 @@ export function LeaderboardClient({
                   className={cn(
                     "text-[10px] px-2 py-0.5 rounded transition-colors font-medium",
                     season === s.key
-                      ? "bg-yellow-500/20 text-yellow-300 ring-1 ring-yellow-500/30"
-                      : "text-gray-600 hover:text-gray-300 hover:bg-gray-800/40"
+                      ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 ring-1 ring-yellow-500/30"
+                      : "text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-800/40"
                   )}
                 >
                   {s.tab}
