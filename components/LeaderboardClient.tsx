@@ -23,8 +23,8 @@ type SideSortKey = "rank" | "usdReturn" | "ethReturn";
 type QtSortKey = "name" | "quarterlyUsd" | "quarterlyEth";
 
 function SortIconNeutral({ col, sortKey, asc, yellow }: { col: string; sortKey: string; asc: boolean; yellow?: boolean }) {
-  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-600 inline ml-0.5 shrink-0" />;
-  const cls = yellow ? "text-yellow-400" : "text-primary";
+  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-400 dark:text-gray-600 inline ml-0.5 shrink-0" />;
+  const cls = yellow ? "text-yellow-600 dark:text-yellow-400" : "text-primary";
   return asc
     ? <ChevronUp className={`w-3 h-3 ${cls} inline ml-0.5 shrink-0`} />
     : <ChevronDown className={`w-3 h-3 ${cls} inline ml-0.5 shrink-0`} />;
@@ -56,11 +56,11 @@ function Panel({
       "flex flex-col overflow-hidden rounded-lg",
       highlight
         ? "border border-yellow-500/50 bg-yellow-500/[0.02]"
-        : "border border-gray-800 bg-gray-900/20"
+        : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/20"
     )}>
       <div className={cn(
         "shrink-0 px-3 py-2 border-b",
-        highlight ? "border-yellow-500/30 bg-yellow-500/[0.04]" : "border-gray-800"
+        highlight ? "border-yellow-500/30 bg-yellow-500/[0.04]" : "border-gray-200 dark:border-gray-800"
       )}>
         {header}
       </div>
@@ -89,12 +89,12 @@ function QuarterlyTable({ schools }: { schools: SchoolRow[] }) {
     return ((a.quarterlyEthReturn ?? 0) - (b.quarterlyEthReturn ?? 0)) * mult;
   });
 
-  const th = "px-2 py-1.5 cursor-pointer select-none hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
+  const th = "px-2 py-1.5 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
 
   return (
     <table className="w-full text-xs">
-      <thead className="sticky top-0 bg-gray-900/95 backdrop-blur-sm">
-        <tr className="border-b border-gray-800">
+      <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
+        <tr className="border-b border-gray-200 dark:border-gray-800">
           <th className={cn(th, "text-left")} onClick={() => toggle("name")}>
             School <SortIconNeutral col="name" sortKey={sortKey} asc={asc} />
           </th>
@@ -108,22 +108,22 @@ function QuarterlyTable({ schools }: { schools: SchoolRow[] }) {
       </thead>
       <tbody>
         {sorted.map(s => (
-          <tr key={s.slug} className="border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors">
+          <tr key={s.slug} className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors">
             <td className="px-2 py-1.5">
               <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                 <SchoolLogo name={s.name} size={15} />
-                <span className="text-[11px] text-white truncate">{s.name}</span>
+                <span className="text-[11px] text-gray-900 dark:text-white truncate">{s.name}</span>
               </Link>
             </td>
             <td className="px-2 py-1.5 text-right">
               {(s.quarterlyUsdReturn ?? 0) !== 0
                 ? <ReturnCell value={s.quarterlyUsdReturn!} />
-                : <span className="text-gray-600 font-mono">—</span>}
+                : <span className="text-gray-400 dark:text-gray-600 font-mono">—</span>}
             </td>
             <td className="px-2 py-1.5 text-right">
               {(s.quarterlyEthReturn ?? 0) !== 0
                 ? <ReturnCell value={s.quarterlyEthReturn!} />
-                : <span className="text-gray-600 font-mono">—</span>}
+                : <span className="text-gray-400 dark:text-gray-600 font-mono">—</span>}
             </td>
           </tr>
         ))}
@@ -150,14 +150,14 @@ function SeasonTable({ schools }: { schools: SchoolRow[] }) {
   });
 
   const th = (key: MainSortKey, extra = "") => cn(
-    "px-2 py-1.5 cursor-pointer select-none hover:text-gray-200 transition-colors text-[10px] uppercase tracking-wide",
-    sortKey === key ? "text-yellow-400" : "text-gray-500",
+    "px-2 py-1.5 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-[10px] uppercase tracking-wide",
+    sortKey === key ? "text-yellow-600 dark:text-yellow-400" : "text-gray-500",
     extra
   );
 
   return (
     <table className="w-full text-xs">
-      <thead className="sticky top-0 bg-[#0d0d06]/95 backdrop-blur-sm">
+      <thead className="sticky top-0 bg-[#fdfbf0]/95 dark:bg-[#0d0d06]/95 backdrop-blur-sm">
         <tr className="border-b border-yellow-500/20">
           <th className={th("rank", "text-left w-7")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} yellow />
@@ -181,18 +181,18 @@ function SeasonTable({ schools }: { schools: SchoolRow[] }) {
         {sorted.map((s, i) => {
           const displayRank = sortKey === "rank" ? s.rank : i + 1;
           return (
-            <tr key={s.slug} className="border-b border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors">
-              <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
+            <tr key={s.slug} className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors">
+              <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
               <td className="px-2 py-1.5">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={17} />
-                  <span className="text-[11px] text-white font-medium">{s.name}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white font-medium">{s.name}</span>
                 </Link>
               </td>
-              <td className="px-2 py-1.5 text-right font-mono text-gray-300 text-[11px] tabular-nums">{formatNav(s.nav)}</td>
+              <td className="px-2 py-1.5 text-right font-mono text-gray-700 dark:text-gray-300 text-[11px] tabular-nums">{formatNav(s.nav)}</td>
               <td className="px-2 py-1.5 text-right"><ReturnCell value={s.usdReturn} /></td>
               <td className="px-2 py-1.5 text-right"><ReturnCell value={s.ethReturn} /></td>
-              <td className="px-2 py-1.5 text-right font-mono text-gray-400 text-[11px] tabular-nums">
+              <td className="px-2 py-1.5 text-right font-mono text-gray-600 dark:text-gray-400 text-[11px] tabular-nums">
                 {s.pctDeployed > 0 ? formatPct(s.pctDeployed, false) : "—"}
               </td>
             </tr>
@@ -220,12 +220,12 @@ function AllTimeTable({ schools }: { schools: SchoolRow[] }) {
     return ((a[sortKey] as number) - (b[sortKey] as number)) * mult;
   });
 
-  const th = "px-2 py-1.5 cursor-pointer select-none hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
+  const th = "px-2 py-1.5 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
 
   return (
     <table className="w-full text-xs">
-      <thead className="sticky top-0 bg-gray-900/95 backdrop-blur-sm">
-        <tr className="border-b border-gray-800">
+      <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
+        <tr className="border-b border-gray-200 dark:border-gray-800">
           <th className={cn(th, "text-left w-7")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} />
           </th>
@@ -242,12 +242,12 @@ function AllTimeTable({ schools }: { schools: SchoolRow[] }) {
         {sorted.map((s, i) => {
           const displayRank = sortKey === "rank" ? s.rank : i + 1;
           return (
-            <tr key={s.slug} className="border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors">
-              <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
+            <tr key={s.slug} className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors">
+              <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
               <td className="px-2 py-1.5">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-white truncate">{s.name}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white truncate">{s.name}</span>
                 </Link>
               </td>
               <td className="px-2 py-1.5 text-right"><ReturnCell value={s.usdReturn} /></td>
@@ -288,16 +288,15 @@ export function LeaderboardClient({
   const syncLabel = syncedAgo < 1 ? "just now" : `${syncedAgo}m ago`;
 
   return (
-    // Fill available viewport: subtract top header (52px) + main py-10 (5rem = 80px)
     <div className="flex flex-col h-[calc(100dvh-52px-5rem)]">
 
       {/* Compact header row */}
       <div className="shrink-0 flex items-center justify-between mb-2">
         <div>
-          <h1 className="text-base font-semibold text-white leading-tight">Leaderboard</h1>
+          <h1 className="text-base font-semibold text-gray-900 dark:text-white leading-tight">Leaderboard</h1>
           <p className="text-[11px] text-gray-500">University DAO performance rankings across all seasons.</p>
         </div>
-        <div className="text-[10px] text-gray-600 text-right">
+        <div className="text-[10px] text-gray-500 dark:text-gray-600 text-right">
           <span>Synced {syncLabel}</span>
           {" · "}
           <button
@@ -316,7 +315,7 @@ export function LeaderboardClient({
         <Panel
           header={
             <>
-              <div className="text-xs font-semibold text-white">Quarterly</div>
+              <div className="text-xs font-semibold text-gray-900 dark:text-white">Quarterly</div>
               <div className="text-[10px] text-gray-500 mt-0.5">Current quarter performance</div>
             </>
           }
@@ -329,7 +328,7 @@ export function LeaderboardClient({
           {/* Panel header */}
           <div className="shrink-0 px-3 pt-2.5 pb-2 border-b border-yellow-500/30 bg-yellow-500/[0.04]">
             <div className="flex items-baseline gap-2">
-              <span className="text-xs font-bold text-yellow-300">{activeSeason.label}</span>
+              <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">{activeSeason.label}</span>
               <span className="text-[10px] text-yellow-600">{activeSeason.period}</span>
             </div>
             {/* Season tabs */}
@@ -341,8 +340,8 @@ export function LeaderboardClient({
                   className={cn(
                     "text-[10px] px-2 py-0.5 rounded transition-colors font-medium",
                     season === s.key
-                      ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 ring-1 ring-yellow-500/30"
-                      : "text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-800/40"
+                      ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 ring-1 ring-yellow-500/30"
+                      : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/60 dark:hover:bg-gray-800/40"
                   )}
                 >
                   {s.tab}
@@ -355,7 +354,7 @@ export function LeaderboardClient({
             {activeSchools.length > 0 ? (
               <SeasonTable schools={activeSchools} />
             ) : (
-              <div className="py-16 text-center text-gray-600 text-xs">
+              <div className="py-16 text-center text-gray-500 dark:text-gray-600 text-xs">
                 Historical data for {activeSeason.label} coming soon.
               </div>
             )}
@@ -366,7 +365,7 @@ export function LeaderboardClient({
         <Panel
           header={
             <>
-              <div className="text-xs font-semibold text-white">All-Time</div>
+              <div className="text-xs font-semibold text-gray-900 dark:text-white">All-Time</div>
               <div className="text-[10px] text-gray-500 mt-0.5">Since inception</div>
             </>
           }
@@ -374,7 +373,7 @@ export function LeaderboardClient({
           {sinceInceptionSchools.length > 0 ? (
             <AllTimeTable schools={sinceInceptionSchools} />
           ) : (
-            <div className="py-16 text-center text-gray-600 text-xs">No data</div>
+            <div className="py-16 text-center text-gray-500 dark:text-gray-600 text-xs">No data</div>
           )}
         </Panel>
 
