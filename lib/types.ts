@@ -21,6 +21,8 @@ export interface SchoolRow {
   ethReturn: number;
   avgEntryFdv: number;
   pctDeployed: number;
+  quarterlyUsdReturn?: number;
+  quarterlyEthReturn?: number;
   holdings?: Holding[];
 }
 

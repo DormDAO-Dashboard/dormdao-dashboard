@@ -47,7 +47,7 @@ export const getSchoolsData = unstable_cache(
 
     return { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
   },
-  ["schools-data-v22"],
+  ["schools-data-v23"],
   { revalidate: 300 }
 );
 

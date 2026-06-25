@@ -565,7 +565,10 @@ export async function fetchSheetsData(): Promise<{
       const holdings = parseHoldings(tabData);
       const exitedHoldings = parseExitedHoldings(tabData);
       const nftHoldings = parseNftHoldings(tabData);
-      return { ...entry, holdings, exitedHoldings, nftHoldings };
+      // M20 = quarterly return USD, M22 = quarterly return ETH (row index 0-based, col M = index 12)
+      const quarterlyUsdReturn = isValue(tabData[19]?.[12]) ? parseNumber(tabData[19][12]) : 0;
+      const quarterlyEthReturn = isValue(tabData[21]?.[12]) ? parseNumber(tabData[21][12]) : 0;
+      return { ...entry, holdings, exitedHoldings, nftHoldings, quarterlyUsdReturn, quarterlyEthReturn };
     })
   );
 
@@ -581,6 +584,8 @@ export async function fetchSheetsData(): Promise<{
       ethReturn: s.ethReturn,
       avgEntryFdv: s.avgEntryFdv,
       pctDeployed: s.pctDeployed,
+      quarterlyUsdReturn: s.quarterlyUsdReturn,
+      quarterlyEthReturn: s.quarterlyEthReturn,
       holdings: s.holdings,
       exitedHoldings: s.exitedHoldings,
       nftHoldings: s.nftHoldings,

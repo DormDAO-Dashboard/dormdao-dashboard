@@ -4,47 +4,142 @@ import Link from "next/link";
 import { SchoolRow } from "@/lib/types";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { formatNav, formatPct, cn } from "@/lib/utils";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-type SortKey = "rank" | "nav" | "usdReturn" | "ethReturn" | "pctDeployed";
+// ─── Season config ────────────────────────────────────────────────────────────
 
-const YEARS = [
-  { key: "2025-2026", label: "2025–2026" },
-  { key: "2024-2025", label: "2024–2025" },
-  { key: "2023-2024", label: "2023–2024" },
-  { key: "all-time", label: "All-Time" },
-] as const;
+type Season = "2025-2026" | "2024-2025" | "2023-2024";
 
-type YearKey = (typeof YEARS)[number]["key"];
+const SEASONS: { key: Season; tab: string; label: string; period: string }[] = [
+  { key: "2025-2026", tab: "25–26", label: "Current Season", period: "Oct 2025 – Sep 2026" },
+  { key: "2024-2025", tab: "24–25", label: "2024–2025 Season", period: "Oct 2024 – Sep 2025" },
+  { key: "2023-2024", tab: "23–24", label: "2023–2024 Season", period: "Oct 2023 – Sep 2024" },
+];
 
-function RankBadge({ rank }: { rank: number }) {
-  const base = "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0";
-  if (rank === 1) return <div className={cn(base, "bg-yellow-500/20 text-yellow-400 ring-1 ring-yellow-500/40")}>{rank}</div>;
-  if (rank === 2) return <div className={cn(base, "bg-gray-400/20 text-gray-300 ring-1 ring-gray-400/40")}>{rank}</div>;
-  if (rank === 3) return <div className={cn(base, "bg-orange-600/20 text-orange-400 ring-1 ring-orange-500/40")}>{rank}</div>;
-  return <div className={cn(base, "bg-gray-800 text-gray-500 text-xs")}>{rank}</div>;
+// ─── Sort helpers ─────────────────────────────────────────────────────────────
+
+type MainSortKey = "rank" | "nav" | "usdReturn" | "ethReturn" | "pctDeployed";
+type SideSortKey = "rank" | "usdReturn" | "ethReturn";
+type QtSortKey = "name" | "quarterlyUsd" | "quarterlyEth";
+
+function SortIconNeutral({ col, sortKey, asc, yellow }: { col: string; sortKey: string; asc: boolean; yellow?: boolean }) {
+  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-600 inline ml-0.5 shrink-0" />;
+  const cls = yellow ? "text-yellow-400" : "text-primary";
+  return asc
+    ? <ChevronUp className={`w-3 h-3 ${cls} inline ml-0.5 shrink-0`} />
+    : <ChevronDown className={`w-3 h-3 ${cls} inline ml-0.5 shrink-0`} />;
 }
 
+// ─── Shared cell ──────────────────────────────────────────────────────────────
+
 function ReturnCell({ value }: { value: number }) {
-  const up = value >= 0;
   return (
-    <div className={cn("flex items-center justify-end gap-1 font-mono", up ? "text-primary" : "text-danger")}>
-      {up ? <TrendingUp className="w-3 h-3 shrink-0" /> : <TrendingDown className="w-3 h-3 shrink-0" />}
+    <span className={cn("font-mono tabular-nums", value >= 0 ? "text-primary" : "text-danger")}>
       {formatPct(value, false)}
+    </span>
+  );
+}
+
+// ─── Panel wrapper ────────────────────────────────────────────────────────────
+
+function Panel({
+  children,
+  header,
+  highlight,
+}: {
+  children: React.ReactNode;
+  header: React.ReactNode;
+  highlight?: boolean;
+}) {
+  return (
+    <div className={cn(
+      "flex flex-col overflow-hidden rounded-lg",
+      highlight
+        ? "border border-yellow-500/50 bg-yellow-500/[0.02]"
+        : "border border-gray-800 bg-gray-900/20"
+    )}>
+      <div className={cn(
+        "shrink-0 px-3 py-2 border-b",
+        highlight ? "border-yellow-500/30 bg-yellow-500/[0.04]" : "border-gray-800"
+      )}>
+        {header}
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {children}
+      </div>
     </div>
   );
 }
 
-function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeployed }: {
-  schools: SchoolRow[];
-  sortKey: SortKey;
-  setSortKey: (k: SortKey) => void;
-  asc: boolean;
-  setAsc: (v: boolean) => void;
-  showDeployed?: boolean;
-}) {
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) setAsc(!asc);
+// ─── Quarterly table (left panel) ────────────────────────────────────────────
+
+function QuarterlyTable({ schools }: { schools: SchoolRow[] }) {
+  const [sortKey, setSortKey] = useState<QtSortKey>("quarterlyEth");
+  const [asc, setAsc] = useState(false);
+
+  function toggle(key: QtSortKey) {
+    if (sortKey === key) setAsc(v => !v);
+    else { setSortKey(key); setAsc(key === "name"); }
+  }
+
+  const sorted = [...schools].sort((a, b) => {
+    const mult = asc ? 1 : -1;
+    if (sortKey === "name") return a.name.localeCompare(b.name) * mult;
+    if (sortKey === "quarterlyUsd") return ((a.quarterlyUsdReturn ?? 0) - (b.quarterlyUsdReturn ?? 0)) * mult;
+    return ((a.quarterlyEthReturn ?? 0) - (b.quarterlyEthReturn ?? 0)) * mult;
+  });
+
+  const th = "px-2 py-1.5 cursor-pointer select-none hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
+
+  return (
+    <table className="w-full text-xs">
+      <thead className="sticky top-0 bg-gray-900/95 backdrop-blur-sm">
+        <tr className="border-b border-gray-800">
+          <th className={cn(th, "text-left")} onClick={() => toggle("name")}>
+            School <SortIconNeutral col="name" sortKey={sortKey} asc={asc} />
+          </th>
+          <th className={cn(th, "text-right")} onClick={() => toggle("quarterlyUsd")}>
+            USD <SortIconNeutral col="quarterlyUsd" sortKey={sortKey} asc={asc} />
+          </th>
+          <th className={cn(th, "text-right")} onClick={() => toggle("quarterlyEth")}>
+            ETH <SortIconNeutral col="quarterlyEth" sortKey={sortKey} asc={asc} />
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map(s => (
+          <tr key={s.slug} className="border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors">
+            <td className="px-2 py-1.5">
+              <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                <SchoolLogo name={s.name} size={15} />
+                <span className="text-[11px] text-white truncate">{s.name}</span>
+              </Link>
+            </td>
+            <td className="px-2 py-1.5 text-right">
+              {(s.quarterlyUsdReturn ?? 0) !== 0
+                ? <ReturnCell value={s.quarterlyUsdReturn!} />
+                : <span className="text-gray-600 font-mono">—</span>}
+            </td>
+            <td className="px-2 py-1.5 text-right">
+              {(s.quarterlyEthReturn ?? 0) !== 0
+                ? <ReturnCell value={s.quarterlyEthReturn!} />
+                : <span className="text-gray-600 font-mono">—</span>}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+// ─── Season table (middle panel) ─────────────────────────────────────────────
+
+function SeasonTable({ schools }: { schools: SchoolRow[] }) {
+  const [sortKey, setSortKey] = useState<MainSortKey>("ethReturn");
+  const [asc, setAsc] = useState(false);
+
+  function toggle(key: MainSortKey) {
+    if (sortKey === key) setAsc(v => !v);
     else { setSortKey(key); setAsc(key === "rank"); }
   }
 
@@ -54,136 +149,235 @@ function LeaderboardTable({ schools, sortKey, setSortKey, asc, setAsc, showDeplo
     return ((a[sortKey] as number) - (b[sortKey] as number)) * mult;
   });
 
-  const thCls = (key: SortKey) => cn(
-    "px-5 py-3 text-right cursor-pointer select-none hover:text-gray-200 transition-colors",
-    sortKey === key ? "text-primary" : "text-gray-500"
+  const th = (key: MainSortKey, extra = "") => cn(
+    "px-2 py-1.5 cursor-pointer select-none hover:text-gray-200 transition-colors text-[10px] uppercase tracking-wide",
+    sortKey === key ? "text-yellow-400" : "text-gray-500",
+    extra
   );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-800 text-xs">
-            <th className="text-left px-3 md:px-5 py-2 text-gray-500 w-12 md:w-16">Rank</th>
-            <th className="text-left px-2 md:px-5 py-2 text-gray-500">School</th>
-            <th className={cn(thCls("nav"), "hidden md:table-cell")} onClick={() => toggleSort("nav")}>NAV {sortKey === "nav" ? (asc ? "↑" : "↓") : ""}</th>
-            <th className={cn(thCls("usdReturn"), "hidden md:table-cell")} onClick={() => toggleSort("usdReturn")}>
-              Return (USD){sortKey === "usdReturn" ? (asc ? " ↑" : " ↓") : ""}
-            </th>
-            <th className={cn(thCls("ethReturn"), "px-3 md:px-5")} onClick={() => toggleSort("ethReturn")}>
-              <span className="md:hidden">ETH Ret</span>
-              <span className="hidden md:inline">Return (ETH)</span>
-              {sortKey === "ethReturn" ? (asc ? " ↑" : " ↓") : ""}
-            </th>
-            {showDeployed && <th className={cn(thCls("pctDeployed"), "hidden md:table-cell")} onClick={() => toggleSort("pctDeployed")}>% Deployed {sortKey === "pctDeployed" ? (asc ? "↑" : "↓") : ""}</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((s, i) => {
-            const displayRank = sortKey === "rank" ? s.rank : i + 1;
-            return (
-              <tr key={s.slug} className={cn(
-                "border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors",
-                s.rank === 1 && sortKey === "rank" ? "bg-yellow-500/5" : ""
-              )}>
-                <td className="px-3 md:px-5 py-2">
-                  <RankBadge rank={displayRank} />
-                </td>
-                <td className="px-2 md:px-5 py-2">
-                  <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 md:gap-3 hover:text-primary transition-colors group">
-                    <SchoolLogo name={s.name} size={26} />
-                    <div>
-                      <div className="font-semibold text-white group-hover:text-primary leading-tight">{s.name}</div>
-                      <div className="text-[11px] font-mono text-gray-500 mt-0.5 md:hidden">{formatNav(s.nav)}</div>
-                    </div>
-                  </Link>
-                </td>
-                <td className="px-5 py-2 text-right font-mono text-gray-200 hidden md:table-cell">{formatNav(s.nav)}</td>
-                <td className="px-5 py-2 text-right hidden md:table-cell"><ReturnCell value={s.usdReturn} /></td>
-                <td className="px-3 md:px-5 py-2 text-right"><ReturnCell value={s.ethReturn} /></td>
-                {showDeployed && <td className="px-5 py-2 text-right font-mono text-gray-400 hidden md:table-cell">{formatPct(s.pctDeployed, false)}</td>}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <table className="w-full text-xs">
+      <thead className="sticky top-0 bg-[#0d0d06]/95 backdrop-blur-sm">
+        <tr className="border-b border-yellow-500/20">
+          <th className={th("rank", "text-left w-7")} onClick={() => toggle("rank")}>
+            # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} yellow />
+          </th>
+          <th className="px-2 py-1.5 text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
+          <th className={th("nav", "text-right")} onClick={() => toggle("nav")}>
+            NAV <SortIconNeutral col="nav" sortKey={sortKey} asc={asc} yellow />
+          </th>
+          <th className={th("usdReturn", "text-right")} onClick={() => toggle("usdReturn")}>
+            Return (USD) <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
+          </th>
+          <th className={th("ethReturn", "text-right")} onClick={() => toggle("ethReturn")}>
+            Return (ETH) <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
+          </th>
+          <th className={th("pctDeployed", "text-right")} onClick={() => toggle("pctDeployed")}>
+            % Deployed <SortIconNeutral col="pctDeployed" sortKey={sortKey} asc={asc} yellow />
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map((s, i) => {
+          const displayRank = sortKey === "rank" ? s.rank : i + 1;
+          return (
+            <tr key={s.slug} className="border-b border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors">
+              <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
+              <td className="px-2 py-1.5">
+                <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                  <SchoolLogo name={s.name} size={17} />
+                  <span className="text-[11px] text-white font-medium">{s.name}</span>
+                </Link>
+              </td>
+              <td className="px-2 py-1.5 text-right font-mono text-gray-300 text-[11px] tabular-nums">{formatNav(s.nav)}</td>
+              <td className="px-2 py-1.5 text-right"><ReturnCell value={s.usdReturn} /></td>
+              <td className="px-2 py-1.5 text-right"><ReturnCell value={s.ethReturn} /></td>
+              <td className="px-2 py-1.5 text-right font-mono text-gray-400 text-[11px] tabular-nums">
+                {s.pctDeployed > 0 ? formatPct(s.pctDeployed, false) : "—"}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
+
+// ─── All-Time table (right panel) ────────────────────────────────────────────
+
+function AllTimeTable({ schools }: { schools: SchoolRow[] }) {
+  const [sortKey, setSortKey] = useState<SideSortKey>("ethReturn");
+  const [asc, setAsc] = useState(false);
+
+  function toggle(key: SideSortKey) {
+    if (sortKey === key) setAsc(v => !v);
+    else { setSortKey(key); setAsc(key === "rank"); }
+  }
+
+  const sorted = [...schools].sort((a, b) => {
+    const mult = asc ? 1 : -1;
+    if (sortKey === "rank") return (a.rank - b.rank) * mult;
+    return ((a[sortKey] as number) - (b[sortKey] as number)) * mult;
+  });
+
+  const th = "px-2 py-1.5 cursor-pointer select-none hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
+
+  return (
+    <table className="w-full text-xs">
+      <thead className="sticky top-0 bg-gray-900/95 backdrop-blur-sm">
+        <tr className="border-b border-gray-800">
+          <th className={cn(th, "text-left w-7")} onClick={() => toggle("rank")}>
+            # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} />
+          </th>
+          <th className="px-2 py-1.5 text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
+          <th className={cn(th, "text-right")} onClick={() => toggle("usdReturn")}>
+            USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
+          </th>
+          <th className={cn(th, "text-right")} onClick={() => toggle("ethReturn")}>
+            ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} />
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map((s, i) => {
+          const displayRank = sortKey === "rank" ? s.rank : i + 1;
+          return (
+            <tr key={s.slug} className="border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors">
+              <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
+              <td className="px-2 py-1.5">
+                <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                  <SchoolLogo name={s.name} size={15} />
+                  <span className="text-[11px] text-white truncate">{s.name}</span>
+                </Link>
+              </td>
+              <td className="px-2 py-1.5 text-right"><ReturnCell value={s.usdReturn} /></td>
+              <td className="px-2 py-1.5 text-right"><ReturnCell value={s.ethReturn} /></td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+// ─── Main export ──────────────────────────────────────────────────────────────
 
 export function LeaderboardClient({
   schools,
   sinceInceptionSchools,
   schools2425,
   schools2324,
+  fetchedAt,
 }: {
   schools: SchoolRow[];
   sinceInceptionSchools: SchoolRow[];
   schools2425: SchoolRow[];
   schools2324: SchoolRow[];
+  fetchedAt: string;
 }) {
-  const [year, setYear] = useState<YearKey>("2025-2026");
-  const [sortKey, setSortKey] = useState<SortKey>("ethReturn");
-  const [asc, setAsc] = useState(false);
+  const [season, setSeason] = useState<Season>("2025-2026");
 
   const activeSchools =
-    year === "2025-2026" ? schools
-    : year === "2024-2025" ? (schools2425.length > 0 ? schools2425 : null)
-    : year === "2023-2024" ? (schools2324.length > 0 ? schools2324 : null)
-    : year === "all-time" ? (sinceInceptionSchools.length > 0 ? sinceInceptionSchools : null)
-    : null;
+    season === "2025-2026" ? schools
+    : season === "2024-2025" ? (schools2425.length > 0 ? schools2425 : [])
+    : (schools2324.length > 0 ? schools2324 : []);
 
-  const displaySchools = activeSchools ?? schools;
+  const activeSeason = SEASONS.find(s => s.key === season)!;
+
+  const syncedAgo = Math.round((Date.now() - new Date(fetchedAt).getTime()) / 60000);
+  const syncLabel = syncedAgo < 1 ? "just now" : `${syncedAgo}m ago`;
 
   return (
-    <div>
-      {/* Year selector — mobile dropdown */}
-      <div className="md:hidden mb-4">
-        <select
-          value={year}
-          onChange={(e) => { setYear(e.target.value as YearKey); setSortKey("rank"); setAsc(true); }}
-          className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50"
-        >
-          {YEARS.map((y) => (
-            <option key={y.key} value={y.key}>{y.label}</option>
-          ))}
-        </select>
-      </div>
+    // Fill available viewport: subtract top header (52px) + main py-10 (5rem = 80px)
+    <div className="flex flex-col h-[calc(100dvh-52px-5rem)]">
 
-      {/* Year tabs — desktop */}
-      <div className="hidden md:flex gap-0 mb-0 border-b border-gray-800">
-        {YEARS.map((y) => (
+      {/* Compact header row */}
+      <div className="shrink-0 flex items-center justify-between mb-2">
+        <div>
+          <h1 className="text-base font-semibold text-white leading-tight">Leaderboard</h1>
+          <p className="text-[11px] text-gray-500">University DAO performance rankings across all seasons.</p>
+        </div>
+        <div className="text-[10px] text-gray-600 text-right">
+          <span>Synced {syncLabel}</span>
+          {" · "}
           <button
-            key={y.key}
-            onClick={() => { setYear(y.key); setSortKey("rank"); setAsc(true); }}
-            className={cn(
-              "px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
-              year === y.key
-                ? "border-primary text-white font-medium"
-                : "border-transparent text-gray-500 hover:text-gray-300 font-normal"
-            )}
+            onClick={async () => { await fetch("/api/revalidate", { method: "POST" }); window.location.reload(); }}
+            className="text-primary hover:underline"
           >
-            {y.label}
+            Refresh
           </button>
-        ))}
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-b-lg border border-t-0 border-gray-800 bg-gray-900/30 overflow-hidden">
-        {activeSchools !== null ? (
-          <LeaderboardTable
-            schools={activeSchools}
-            sortKey={sortKey}
-            setSortKey={setSortKey}
-            asc={asc}
-            setAsc={setAsc}
-            showDeployed={year === "2025-2026"}
-          />
-        ) : (
-          <div className="py-16 text-center text-gray-500 text-sm">
-            Historical data for {YEARS.find(y => y.key === year)?.label} coming soon.
+      {/* Three-panel layout */}
+      <div className="flex-1 min-h-0 flex gap-2.5">
+
+        {/* ── Left: Quarterly ──────────────────────────────── */}
+        <Panel
+          header={
+            <>
+              <div className="text-xs font-semibold text-white">Quarterly</div>
+              <div className="text-[10px] text-gray-500 mt-0.5">Current quarter performance</div>
+            </>
+          }
+        >
+          <QuarterlyTable schools={schools} />
+        </Panel>
+
+        {/* ── Middle: Current Season ────────────────────────── */}
+        <div className="flex-1 min-w-0 flex flex-col border border-yellow-500/50 rounded-lg overflow-hidden bg-yellow-500/[0.02]">
+          {/* Panel header */}
+          <div className="shrink-0 px-3 pt-2.5 pb-2 border-b border-yellow-500/30 bg-yellow-500/[0.04]">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs font-bold text-yellow-300">{activeSeason.label}</span>
+              <span className="text-[10px] text-yellow-600">{activeSeason.period}</span>
+            </div>
+            {/* Season tabs */}
+            <div className="flex gap-1 mt-1.5">
+              {SEASONS.map(s => (
+                <button
+                  key={s.key}
+                  onClick={() => setSeason(s.key)}
+                  className={cn(
+                    "text-[10px] px-2 py-0.5 rounded transition-colors font-medium",
+                    season === s.key
+                      ? "bg-yellow-500/20 text-yellow-300 ring-1 ring-yellow-500/30"
+                      : "text-gray-600 hover:text-gray-300 hover:bg-gray-800/40"
+                  )}
+                >
+                  {s.tab}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+          {/* Table */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {activeSchools.length > 0 ? (
+              <SeasonTable schools={activeSchools} />
+            ) : (
+              <div className="py-16 text-center text-gray-600 text-xs">
+                Historical data for {activeSeason.label} coming soon.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Right: All-Time ───────────────────────────────── */}
+        <Panel
+          header={
+            <>
+              <div className="text-xs font-semibold text-white">All-Time</div>
+              <div className="text-[10px] text-gray-500 mt-0.5">Since inception</div>
+            </>
+          }
+        >
+          {sinceInceptionSchools.length > 0 ? (
+            <AllTimeTable schools={sinceInceptionSchools} />
+          ) : (
+            <div className="py-16 text-center text-gray-600 text-xs">No data</div>
+          )}
+        </Panel>
+
       </div>
     </div>
   );
