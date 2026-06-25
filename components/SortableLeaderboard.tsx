@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { SchoolRow } from "@/lib/types";
-import { formatUSD, formatPct } from "@/lib/utils";
+import { formatNav, formatUSD, formatPct } from "@/lib/utils";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 type SortKey = "rank" | "nav" | "usdReturn" | "ethReturn" | "pctDeployed";
@@ -70,7 +70,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
                 </Link>
               </td>
               <td className="px-5 py-3 text-right font-mono text-gray-200">
-                {formatUSD(s.nav, true)}
+                {formatNav(s.nav)}
               </td>
               <td className={`px-5 py-3 text-right font-mono ${s.usdReturn >= 0 ? "text-primary" : "text-danger"}`}>
                 {formatPct(s.usdReturn, false)}
