@@ -153,19 +153,19 @@ function SeasonTable({ schools }: { schools: SchoolRow[] }) {
   });
 
   const th = (key: MainSortKey, extra = "") => cn(
-    "px-2 py-1.5 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-[10px] uppercase tracking-wide",
+    "px-2 py-1.5 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-[10px] uppercase tracking-wide",
     sortKey === key ? "text-yellow-600 dark:text-yellow-400" : "text-gray-500",
     extra
   );
 
   return (
     <table className="w-full text-xs">
-      <thead className="sticky top-0 bg-[#fdfbf0]/95 dark:bg-[#0d0d06]/95 backdrop-blur-sm">
-        <tr className="border-b border-yellow-500/20">
+      <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
+        <tr className="border-b border-gray-200 dark:border-gray-800">
           <th className={th("rank", "text-left w-7")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className="px-2 py-1.5 text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
+          <th className="px-2 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
           <th className={th("nav", "text-right")} onClick={() => toggle("nav")}>
             NAV <SortIconNeutral col="nav" sortKey={sortKey} asc={asc} yellow />
           </th>
