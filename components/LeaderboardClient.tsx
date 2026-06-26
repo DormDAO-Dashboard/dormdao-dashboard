@@ -334,7 +334,10 @@ export function LeaderboardClient({
           className="flex-1 min-w-0"
           header={
             <>
-              <div className="text-xs font-bold text-yellow-700 dark:text-yellow-300">{activeSeason.label}</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">{activeSeason.label}</span>
+                <span className="text-[10px] text-yellow-600/80 dark:text-yellow-500/70">{activeSeason.period}</span>
+              </div>
               <div className="flex gap-2 mt-0.5">
                 {SEASONS.map(s => (
                   <button
