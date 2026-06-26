@@ -190,7 +190,7 @@ function SeasonTable({ schools }: { schools: SchoolRow[] }) {
               <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
               <td className="px-2 py-1.5">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
-                  <SchoolLogo name={s.name} size={17} />
+                  <SchoolLogo name={s.name} size={15} />
                   <span className="text-[11px] text-gray-900 dark:text-white font-medium">{s.name}</span>
                 </Link>
               </td>
