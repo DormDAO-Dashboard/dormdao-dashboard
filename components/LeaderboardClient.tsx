@@ -301,34 +301,15 @@ export function LeaderboardClient({
           <h1 className="text-base font-semibold text-gray-900 dark:text-white leading-tight">Leaderboard</h1>
           <p className="text-[11px] text-gray-500">University DAO performance rankings across all seasons.</p>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Season tabs moved here so all three panel headers stay the same height */}
-          <div className="flex gap-1">
-            {SEASONS.map(s => (
-              <button
-                key={s.key}
-                onClick={() => setSeason(s.key)}
-                className={cn(
-                  "text-[10px] px-2 py-0.5 rounded transition-colors font-medium",
-                  season === s.key
-                    ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 ring-1 ring-yellow-500/30"
-                    : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/60 dark:hover:bg-gray-800/40"
-                )}
-              >
-                {s.tab}
-              </button>
-            ))}
-          </div>
-          <div className="text-[10px] text-gray-500 dark:text-gray-600">
-            <span>Synced {syncLabel}</span>
-            {" · "}
-            <button
-              onClick={async () => { await fetch("/api/revalidate", { method: "POST" }); window.location.reload(); }}
-              className="text-primary hover:underline"
-            >
-              Refresh
-            </button>
-          </div>
+        <div className="text-[10px] text-gray-500 dark:text-gray-600 text-right">
+          <span>Synced {syncLabel}</span>
+          {" · "}
+          <button
+            onClick={async () => { await fetch("/api/revalidate", { method: "POST" }); window.location.reload(); }}
+            className="text-primary hover:underline"
+          >
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -354,7 +335,22 @@ export function LeaderboardClient({
           header={
             <>
               <div className="text-xs font-bold text-yellow-700 dark:text-yellow-300">{activeSeason.label}</div>
-              <div className="text-[10px] text-yellow-600 mt-0.5">{activeSeason.period}</div>
+              <div className="flex gap-2 mt-0.5">
+                {SEASONS.map(s => (
+                  <button
+                    key={s.key}
+                    onClick={() => setSeason(s.key)}
+                    className={cn(
+                      "text-[10px] font-medium transition-colors",
+                      season === s.key
+                        ? "text-yellow-700 dark:text-yellow-300"
+                        : "text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    )}
+                  >
+                    {s.tab}
+                  </button>
+                ))}
+              </div>
             </>
           }
         >
