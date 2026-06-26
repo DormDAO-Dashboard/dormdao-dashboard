@@ -46,17 +46,20 @@ function Panel({
   children,
   header,
   highlight,
+  className,
 }: {
   children: React.ReactNode;
   header: React.ReactNode;
   highlight?: boolean;
+  className?: string;
 }) {
   return (
     <div className={cn(
       "flex flex-col overflow-hidden rounded-lg",
       highlight
         ? "border border-yellow-500/50 bg-yellow-500/[0.02]"
-        : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/20"
+        : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/20",
+      className
     )}>
       <div className={cn(
         "shrink-0 px-3 py-2 border-b",
@@ -296,15 +299,34 @@ export function LeaderboardClient({
           <h1 className="text-base font-semibold text-gray-900 dark:text-white leading-tight">Leaderboard</h1>
           <p className="text-[11px] text-gray-500">University DAO performance rankings across all seasons.</p>
         </div>
-        <div className="text-[10px] text-gray-500 dark:text-gray-600 text-right">
-          <span>Synced {syncLabel}</span>
-          {" · "}
-          <button
-            onClick={async () => { await fetch("/api/revalidate", { method: "POST" }); window.location.reload(); }}
-            className="text-primary hover:underline"
-          >
-            Refresh
-          </button>
+        <div className="flex items-center gap-3">
+          {/* Season tabs moved here so all three panel headers stay the same height */}
+          <div className="flex gap-1">
+            {SEASONS.map(s => (
+              <button
+                key={s.key}
+                onClick={() => setSeason(s.key)}
+                className={cn(
+                  "text-[10px] px-2 py-0.5 rounded transition-colors font-medium",
+                  season === s.key
+                    ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 ring-1 ring-yellow-500/30"
+                    : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/60 dark:hover:bg-gray-800/40"
+                )}
+              >
+                {s.tab}
+              </button>
+            ))}
+          </div>
+          <div className="text-[10px] text-gray-500 dark:text-gray-600">
+            <span>Synced {syncLabel}</span>
+            {" · "}
+            <button
+              onClick={async () => { await fetch("/api/revalidate", { method: "POST" }); window.location.reload(); }}
+              className="text-primary hover:underline"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
@@ -324,42 +346,24 @@ export function LeaderboardClient({
         </Panel>
 
         {/* ── Middle: Current Season ────────────────────────── */}
-        <div className="flex-1 min-w-0 flex flex-col border border-yellow-500/50 rounded-lg overflow-hidden bg-yellow-500/[0.02]">
-          {/* Panel header */}
-          <div className="shrink-0 px-3 pt-2.5 pb-2 border-b border-yellow-500/30 bg-yellow-500/[0.04]">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">{activeSeason.label}</span>
-              <span className="text-[10px] text-yellow-600">{activeSeason.period}</span>
+        <Panel
+          highlight
+          className="flex-1 min-w-0"
+          header={
+            <>
+              <div className="text-xs font-bold text-yellow-700 dark:text-yellow-300">{activeSeason.label}</div>
+              <div className="text-[10px] text-yellow-600 mt-0.5">{activeSeason.period}</div>
+            </>
+          }
+        >
+          {activeSchools.length > 0 ? (
+            <SeasonTable schools={activeSchools} />
+          ) : (
+            <div className="py-16 text-center text-gray-500 dark:text-gray-600 text-xs">
+              Historical data for {activeSeason.label} coming soon.
             </div>
-            {/* Season tabs */}
-            <div className="flex gap-1 mt-1.5">
-              {SEASONS.map(s => (
-                <button
-                  key={s.key}
-                  onClick={() => setSeason(s.key)}
-                  className={cn(
-                    "text-[10px] px-2 py-0.5 rounded transition-colors font-medium",
-                    season === s.key
-                      ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 ring-1 ring-yellow-500/30"
-                      : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/60 dark:hover:bg-gray-800/40"
-                  )}
-                >
-                  {s.tab}
-                </button>
-              ))}
-            </div>
-          </div>
-          {/* Table */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            {activeSchools.length > 0 ? (
-              <SeasonTable schools={activeSchools} />
-            ) : (
-              <div className="py-16 text-center text-gray-500 dark:text-gray-600 text-xs">
-                Historical data for {activeSeason.label} coming soon.
-              </div>
-            )}
-          </div>
-        </div>
+          )}
+        </Panel>
 
         {/* ── Right: All-Time ───────────────────────────────── */}
         <Panel
