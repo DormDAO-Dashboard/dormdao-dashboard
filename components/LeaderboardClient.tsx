@@ -92,12 +92,13 @@ function QuarterlyTable({ schools }: { schools: SchoolRow[] }) {
     return ((a.quarterlyEthReturn ?? 0) - (b.quarterlyEthReturn ?? 0)) * mult;
   });
 
-  const th = "px-2 py-1.5 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
+  const th = "px-2 py-1.5 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
 
   return (
     <table className="w-full text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
+          <th className="px-2 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500 w-7">#</th>
           <th className={cn(th, "text-left")} onClick={() => toggle("name")}>
             School <SortIconNeutral col="name" sortKey={sortKey} asc={asc} />
           </th>
@@ -110,8 +111,9 @@ function QuarterlyTable({ schools }: { schools: SchoolRow[] }) {
         </tr>
       </thead>
       <tbody>
-        {sorted.map(s => (
+        {sorted.map((s, i) => (
           <tr key={s.slug} className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors">
+            <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{i + 1}</td>
             <td className="px-2 py-1.5">
               <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                 <SchoolLogo name={s.name} size={15} />
@@ -223,7 +225,7 @@ function AllTimeTable({ schools }: { schools: SchoolRow[] }) {
     return ((a[sortKey] as number) - (b[sortKey] as number)) * mult;
   });
 
-  const th = "px-2 py-1.5 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
+  const th = "px-2 py-1.5 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
 
   return (
     <table className="w-full text-xs">
@@ -232,7 +234,7 @@ function AllTimeTable({ schools }: { schools: SchoolRow[] }) {
           <th className={cn(th, "text-left w-7")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} />
           </th>
-          <th className="px-2 py-1.5 text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
+          <th className="px-2 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
           <th className={cn(th, "text-right")} onClick={() => toggle("usdReturn")}>
             USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
           </th>
