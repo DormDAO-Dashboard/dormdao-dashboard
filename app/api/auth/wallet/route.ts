@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recoverMessageAddress } from "viem";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getAdminConfig, isAdminUser } from "@/lib/admin-config";
 
 export async function POST(request: NextRequest) {
   let body: { address?: string; signature?: string; nonce?: string };
@@ -39,23 +40,34 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createServiceClient();
+  const admin    = getAdminConfig();
+  const adminMatch = isAdminUser(undefined, address);
 
-  // Synthetic email used to create the Supabase auth account for this wallet
+  // Synthetic email for the Supabase auth account tied to this wallet
   const walletEmail = `wallet-${address.toLowerCase()}@wallet.dormdao.io`;
 
-  // Create user if they don't exist (ignore error if already exists)
-  const { error: createError } = await supabase.auth.admin.createUser({
+  // Create user if they don't exist
+  const { data: created, error: createError } = await supabase.auth.admin.createUser({
     email: walletEmail,
     email_confirm: true,
-    user_metadata: {
-      wallet_address: address,
-      login_method: "wallet",
-    },
+    user_metadata: { wallet_address: address, login_method: "wallet" },
   });
 
-  // If error is not "already registered", something unexpected happened
   if (createError && !createError.message.toLowerCase().includes("already registered")) {
     return NextResponse.json({ error: "Failed to create account" }, { status: 500 });
+  }
+
+  // For admin wallets, auto-populate their profile with the registered admin name
+  // so the profile page shows their real name instead of a wallet address.
+  const userId = created?.user?.id;
+  if (adminMatch && userId) {
+    await supabase.from("profiles").upsert({
+      id: userId,
+      display_name: admin.name,
+      school: null,
+      bio: null,
+      avatar_url: null,
+    }, { onConflict: "id", ignoreDuplicates: true });
   }
 
   // Generate a magic-link token server-side — no email is sent

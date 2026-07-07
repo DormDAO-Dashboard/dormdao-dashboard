@@ -1,51 +1,21 @@
 import { redirect } from "next/navigation";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { getAdminConfig, isAdminUser } from "@/lib/admin-config";
 
 export const metadata = { title: "Admin — DormDAO" };
 
-interface AdminMember {
-  id: string;
-  name: string;
-  voting_units: number;
-  email: string | null;
-  wallet_address: string | null;
-  created_at: string;
-}
-
-async function getAdminMembers(): Promise<AdminMember[]> {
-  const serviceClient = createServiceClient();
-  const { data } = await serviceClient
-    .from("admin_members")
-    .select("*")
-    .order("created_at", { ascending: true });
-  return (data as AdminMember[]) ?? [];
-}
-
 export default async function AdminPage() {
-  // Server-side auth + admin check
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  const email = user.email;
-  const walletAddress = user.user_metadata?.wallet_address as string | undefined;
+  const email  = user.email;
+  const wallet = user.user_metadata?.wallet_address as string | undefined;
 
-  const serviceClient = createServiceClient();
-  const filters: string[] = [];
-  if (email) filters.push(`email.eq.${email}`);
-  if (walletAddress) filters.push(`wallet_address.ilike.${walletAddress}`);
+  if (!isAdminUser(email, wallet)) redirect("/");
 
-  const { data: adminRecord } = await serviceClient
-    .from("admin_members")
-    .select("id")
-    .or(filters.join(","))
-    .limit(1)
-    .maybeSingle();
-
-  if (!adminRecord) redirect("/");
-
-  const members = await getAdminMembers();
+  const admin = getAdminConfig();
 
   return (
     <div>
@@ -60,7 +30,7 @@ export default async function AdminPage() {
         <div className="px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-200">
             Admin Members
-            <span className="ml-2 text-xs text-gray-500 font-normal">{members.length} total</span>
+            <span className="ml-2 text-xs text-gray-500 font-normal">1 total</span>
           </h2>
         </div>
 
@@ -75,25 +45,16 @@ export default async function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {members.map((m) => (
-                <tr key={m.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                  <td className="px-5 py-3 font-medium text-white">{m.name}</td>
-                  <td className="px-5 py-3 text-right font-mono text-primary">{m.voting_units}</td>
-                  <td className="px-5 py-3 text-gray-400">{m.email ?? "—"}</td>
-                  <td className="px-5 py-3 font-mono text-gray-400 text-xs">
-                    {m.wallet_address
-                      ? `${m.wallet_address.slice(0, 6)}…${m.wallet_address.slice(-4)}`
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
-              {members.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
-                    No admin members found.
-                  </td>
-                </tr>
-              )}
+              <tr className="border-b border-gray-800/50">
+                <td className="px-5 py-3 font-medium text-white">{admin.name}</td>
+                <td className="px-5 py-3 text-right font-mono text-primary">{admin.votingUnits}</td>
+                <td className="px-5 py-3 text-gray-400">{admin.email || "—"}</td>
+                <td className="px-5 py-3 font-mono text-gray-400 text-xs">
+                  {admin.wallet
+                    ? `${admin.wallet.slice(0, 6)}…${admin.wallet.slice(-4)}`
+                    : "—"}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
