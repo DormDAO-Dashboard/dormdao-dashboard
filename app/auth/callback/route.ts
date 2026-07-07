@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isRegisteredUser } from "@/lib/access-control";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -10,16 +11,22 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Check if this user has completed their profile (set a display name)
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Gate: only registered admins/members can sign in
+        const allowed = await isRegisteredUser(user.email, undefined);
+        if (!allowed) {
+          await supabase.auth.signOut();
+          return NextResponse.redirect(`${origin}/login?error=not_member`);
+        }
+
+        // New user or incomplete profile → profile setup
         const { data: profile } = await supabase
           .from("profiles")
           .select("display_name, school")
           .eq("id", user.id)
           .single();
 
-        // New user or incomplete profile → send to profile setup
         if (!profile?.display_name) {
           return NextResponse.redirect(`${origin}/profile?setup=1`);
         }

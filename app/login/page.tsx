@@ -18,7 +18,13 @@ export default function LoginPage() {
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletError, setWalletError] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  const hasError = searchParams.get("error");
+  const errorCode = searchParams.get("error");
+  const errorMsg =
+    errorCode === "not_member"
+      ? "Your account is not registered. Contact a DormDAO admin to get access."
+      : errorCode
+      ? "Something went wrong. Please try again."
+      : null;
 
   async function signInWithGoogle() {
     setGoogleLoading(true);
@@ -99,9 +105,9 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-6 flex flex-col gap-3">
-          {(hasError || walletError) && (
+          {(errorMsg || walletError) && (
             <div className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md px-3 py-2">
-              {walletError ?? "Something went wrong. Please try again."}
+              {walletError ?? errorMsg}
             </div>
           )}
 

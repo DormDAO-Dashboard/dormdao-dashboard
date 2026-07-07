@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { recoverMessageAddress } from "viem";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getAdminConfig, isAdminUser } from "@/lib/admin-config";
+import { isRegisteredUser } from "@/lib/access-control";
 
 export async function POST(request: NextRequest) {
   let body: { address?: string; signature?: string; nonce?: string };
@@ -39,8 +40,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Signature address mismatch" }, { status: 400 });
   }
 
-  const supabase = createServiceClient();
-  const admin    = getAdminConfig();
+  // Gate: only registered admins/members may sign in
+  const allowed = await isRegisteredUser(undefined, address);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Your wallet is not registered. Please contact a DormDAO admin." },
+      { status: 403 },
+    );
+  }
+
+  const supabase   = createServiceClient();
+  const admin      = getAdminConfig();
   const adminMatch = isAdminUser(undefined, address);
 
   // Synthetic email for the Supabase auth account tied to this wallet
