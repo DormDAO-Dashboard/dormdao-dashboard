@@ -565,9 +565,11 @@ export async function fetchSheetsData(): Promise<{
       const holdings = parseHoldings(tabData);
       const exitedHoldings = parseExitedHoldings(tabData);
       const nftHoldings = parseNftHoldings(tabData);
-      // M20 = quarterly return USD, M22 = quarterly return ETH (row index 0-based, col M = index 12)
-      const quarterlyUsdReturn = isValue(tabData[19]?.[12]) ? parseNumber(tabData[19][12]) : 0;
-      const quarterlyEthReturn = isValue(tabData[21]?.[12]) ? parseNumber(tabData[21][12]) : 0;
+      // gviz skips leading blank/logo rows, so relative CSV index is stable across all school tabs.
+      // Index 10 = "Average Entry FDV" row (left) / "Sub DAO Return – Quarterly" (right, col M).
+      // Index 11 = "Annualized IRR" row (left) / "Benchmark (ETH) Return – Quarterly" (right, col M).
+      const quarterlyUsdReturn = isValue(tabData[10]?.[12]) ? parseNumber(tabData[10][12]) : 0;
+      const quarterlyEthReturn = isValue(tabData[11]?.[12]) ? parseNumber(tabData[11][12]) : 0;
       return { ...entry, holdings, exitedHoldings, nftHoldings, quarterlyUsdReturn, quarterlyEthReturn };
     })
   );
