@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Trophy, GraduationCap, BarChart2, DollarSign, Activity,
   Newspaper, MessagesSquare, BookOpen, Info, Sun, Moon, User,
-  ChevronRight, MoreHorizontal, X,
+  ChevronRight, MoreHorizontal, X, ShieldCheck,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
@@ -39,6 +39,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/about":     "About",
   "/profile":   "Profile",
   "/login":     "Sign In",
+  "/admin":     "Admin",
 };
 
 function deriveTitle(pathname: string): string {
@@ -65,6 +66,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const [user, setUser]           = useState<SupabaseUser | null>(null);
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin]     = useState(false);
   const [pinned, setPinned]       = useState(false);
   const [hovered, setHovered]     = useState(false);
   const [showMore, setShowMore]   = useState(false);
@@ -85,12 +87,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setAvatarSrc(
           p?.avatar_url ?? (u.user_metadata?.avatar_url as string | undefined) ?? null
         );
+        // Check admin status server-side
+        try {
+          const res = await fetch("/api/admin/check");
+          const json = await res.json() as { isAdmin: boolean };
+          setIsAdmin(json.isAdmin ?? false);
+        } catch {
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
       }
     }
     load();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
-      if (!session?.user) setAvatarSrc(null);
+      if (!session?.user) {
+        setAvatarSrc(null);
+        setIsAdmin(false);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -171,6 +186,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+
+          {isAdmin && (() => {
+            const active = matchesRoute("/admin", pathname);
+            return (
+              <Link href="/admin" className={cn(
+                "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
+                active
+                  ? "bg-primary/10 text-primary"
+                  : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+              )}>
+                {active && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                )}
+                <ShieldCheck className="w-5 h-5 shrink-0" />
+                <span className={cn(
+                  "text-sm font-medium whitespace-nowrap transition-all duration-150",
+                  expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                )}>
+                  Admin
+                </span>
+              </Link>
+            );
+          })()}
         </nav>
 
         {/* Bottom controls */}
@@ -287,6 +325,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
+              {isAdmin && (
+                <Link href="/admin" onClick={() => setShowMore(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
+                    matchesRoute("/admin", pathname)
+                      ? "text-primary bg-primary/10"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                  )}>
+                  <ShieldCheck className="w-5 h-5 shrink-0" />
+                  <span className="text-sm font-medium">Admin</span>
+                </Link>
+              )}
               <div className="flex items-center justify-between px-4 py-3.5">
                 <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Theme</span>
                 <button onClick={toggle}
