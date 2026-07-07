@@ -11,7 +11,7 @@ export function getAdminConfig(): AdminMember {
   return {
     name:         process.env.ADMIN_NAME         ?? "Jack Schlosser",
     email:        process.env.ADMIN_EMAIL         ?? "jack@dormdao.io",
-    wallet:      (process.env.ADMIN_WALLET        ?? "0x8a6e5f901dd621648f41a5f40c5dec322be9cfaa").toLowerCase(),
+    wallet:      (process.env.ADMIN_WALLET        ?? "0xF83c27D8770C7fe03ce2BB4D82A11C509e93FB23").toLowerCase(),
     votingUnits:  parseInt(process.env.ADMIN_VOTING_UNITS ?? "10", 10),
   };
 }
