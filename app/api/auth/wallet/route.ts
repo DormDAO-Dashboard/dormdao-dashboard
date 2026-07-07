@@ -18,13 +18,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Verify nonce timestamp is recent (within 10 minutes)
+  // Verify nonce is recent (within 10 minutes)
   const nonceTime = parseInt(nonce.split("-")[0], 10);
   if (isNaN(nonceTime) || Date.now() - nonceTime > 10 * 60 * 1000) {
-    return NextResponse.json({ error: "Nonce expired or invalid" }, { status: 400 });
+    return NextResponse.json({ error: "Nonce expired — please try again." }, { status: 400 });
   }
 
-  // Verify the signature recovers to the claimed address
+  // Recover the signer address from the signature
   const message = `Sign in to DormDAO Dashboard\n\nNonce: ${nonce}`;
   let recoveredAddress: string;
   try {
@@ -33,18 +33,18 @@ export async function POST(request: NextRequest) {
       signature: signature as `0x${string}`,
     });
   } catch {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
   if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
-    return NextResponse.json({ error: "Signature address mismatch" }, { status: 400 });
+    return NextResponse.json({ error: "Signature address mismatch." }, { status: 400 });
   }
 
   // Gate: only registered admins/members may sign in
   const allowed = await isRegisteredUser(undefined, address);
   if (!allowed) {
     return NextResponse.json(
-      { error: "Your wallet is not registered. Please contact a DormDAO admin." },
+      { error: "Wallet not registered. Contact a DormDAO admin to get access." },
       { status: 403 },
     );
   }
@@ -53,31 +53,25 @@ export async function POST(request: NextRequest) {
   const admin      = getAdminConfig();
   const adminMatch = isAdminUser(undefined, address);
 
-  // Synthetic email for the Supabase auth account tied to this wallet
+  // Synthetic email used to anchor this wallet to a Supabase auth account
   const walletEmail = `wallet-${address.toLowerCase()}@wallet.dormdao.io`;
 
-  // Create user if they don't exist
-  const { data: created, error: createError } = await supabase.auth.admin.createUser({
+  // Attempt to create the Supabase user — ignore all errors (user may already exist,
+  // or Supabase may reject for project-specific reasons). generateLink works for
+  // both new and existing users so we proceed regardless.
+  const { data: createdData } = await supabase.auth.admin.createUser({
     email: walletEmail,
     email_confirm: true,
     user_metadata: { wallet_address: address, login_method: "wallet" },
   });
 
-  if (createError && !createError.message.toLowerCase().includes("already registered")) {
-    return NextResponse.json({ error: "Failed to create account" }, { status: 500 });
-  }
-
-  // For admin wallets, auto-populate their profile with the registered admin name
-  // so the profile page shows their real name instead of a wallet address.
-  const userId = created?.user?.id;
-  if (adminMatch && userId) {
-    await supabase.from("profiles").upsert({
-      id: userId,
-      display_name: admin.name,
-      school: null,
-      bio: null,
-      avatar_url: null,
-    }, { onConflict: "id", ignoreDuplicates: true });
+  // For new admin wallet logins, seed the profile with the registered name
+  const newUserId = createdData?.user?.id;
+  if (adminMatch && newUserId) {
+    await supabase.from("profiles").upsert(
+      { id: newUserId, display_name: admin.name, school: null, bio: null, avatar_url: null },
+      { onConflict: "id", ignoreDuplicates: true },
+    );
   }
 
   // Generate a magic-link token server-side — no email is sent
@@ -87,7 +81,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (linkError || !linkData?.properties?.hashed_token) {
-    return NextResponse.json({ error: "Failed to create session token" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Wallet is registered but session creation failed — please try again." },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ token_hash: linkData.properties.hashed_token });

@@ -9,10 +9,10 @@ export interface AdminMember {
 // This module must only be imported in server components / API routes.
 export function getAdminConfig(): AdminMember {
   return {
-    name:         process.env.ADMIN_NAME         ?? "Jack Schlosser",
-    email:        process.env.ADMIN_EMAIL         ?? "jack@dormdao.io",
-    wallet:      (process.env.ADMIN_WALLET        ?? "0xF83c27D8770C7fe03ce2BB4D82A11C509e93FB23").toLowerCase(),
-    votingUnits:  parseInt(process.env.ADMIN_VOTING_UNITS ?? "10", 10),
+    name:        process.env.ADMIN_NAME         ?? "Jack Schlosser",
+    email:       process.env.ADMIN_EMAIL         ?? "jack@dormdao.io",
+    wallet:      process.env.ADMIN_WALLET        ?? "0xF83c27D8770C7fe03ce2BB4D82A11C509e93FB23",
+    votingUnits: parseInt(process.env.ADMIN_VOTING_UNITS ?? "10", 10),
   };
 }
 
