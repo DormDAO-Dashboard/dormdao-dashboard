@@ -14,6 +14,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { BellButton } from "@/components/BellButton";
+import { SchoolLogo } from "@/components/SchoolLogo";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -293,6 +294,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {user ? "Profile" : "Sign in"}
             </span>
           </Link>
+
+          {user && userSchool && (
+            <Link
+              href={`/schools/${slugify(userSchool)}`}
+              className={cn(sidebarItem, "w-auto")}
+            >
+              <SchoolLogo name={userSchool} size={16} />
+              <span className={cn(
+                "text-xs text-gray-400 whitespace-nowrap transition-all duration-150",
+                expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+              )}>
+                {userSchool}
+              </span>
+            </Link>
+          )}
         </div>
       </aside>
 

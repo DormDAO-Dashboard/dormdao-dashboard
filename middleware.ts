@@ -1,6 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const SCHOOL_OK_COOKIE = "ddo-school-ok";
+const ONE_YEAR = 60 * 60 * 24 * 365;
+
+function isExempt(pathname: string): boolean {
+  if (pathname === "/profile" || pathname === "/login") return true;
+  if (pathname.startsWith("/auth/")) return true;
+  if (pathname.startsWith("/api/")) return true;
+  if (pathname.startsWith("/_next/")) return true;
+  return false;
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -23,8 +34,35 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session so it doesn't expire mid-visit
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user && !isExempt(request.nextUrl.pathname)) {
+    // Fast path: cache cookie confirms school is set
+    if (request.cookies.get(SCHOOL_OK_COOKIE)?.value === "1") {
+      return supabaseResponse;
+    }
+
+    // Slow path: check DB (runs once until cookie is stamped)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("school")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.school) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/profile";
+      url.search = "?setup=1";
+      return NextResponse.redirect(url);
+    }
+
+    // Stamp cache cookie so next request skips the DB call
+    supabaseResponse.cookies.set(SCHOOL_OK_COOKIE, "1", {
+      path: "/",
+      maxAge: ONE_YEAR,
+      sameSite: "lax",
+    });
+  }
 
   return supabaseResponse;
 }

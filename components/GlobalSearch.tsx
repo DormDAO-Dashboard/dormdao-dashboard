@@ -6,7 +6,9 @@ import {
   Clock, ArrowRight, Trophy, BarChart2, Activity, Newspaper,
   MessagesSquare, BookOpen,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, slugify } from "@/lib/utils";
+import { getSchoolColors } from "@/lib/schoolColors";
+import { createClient } from "@/lib/supabase/client";
 import { SchoolLogo } from "@/components/SchoolLogo";
 
 // ── Static data ───────────────────────────────────────────────────────────────
@@ -239,12 +241,23 @@ export function GlobalSearch() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const [loading, setLoading]     = useState(false);
   const [recentNav, setRecentNav] = useState<RecentItem[]>([]);
+  const [userSchool, setUserSchool] = useState<{ name: string; slug: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router   = useRouter();
   const dq       = useDebounce(query, 300);
 
   useEffect(() => {
     try { setRecentNav(JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]")); } catch {}
+  }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: p } = await supabase
+        .from("profiles").select("school").eq("id", data.user.id).single();
+      if (p?.school) setUserSchool({ name: p.school, slug: slugify(p.school) });
+    });
   }, []);
 
   useEffect(() => {
@@ -408,6 +421,32 @@ export function GlobalSearch() {
           {/* ── Idle: recent + quick links ── */}
           {showIdle && (
             <div className="py-2">
+              {userSchool && (() => {
+                const colors = getSchoolColors(userSchool.slug);
+                return (
+                  <>
+                    <div className="px-3 pt-2 pb-1">
+                      <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 dark:text-gray-500">Your School</span>
+                    </div>
+                    <button
+                      onMouseDown={(e) => { e.preventDefault(); router.push(`/schools/${userSchool.slug}`); close(); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 mx-1 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors text-left"
+                      style={{ width: "calc(100% - 8px)", borderLeft: `3px solid ${colors.primary}` }}
+                    >
+                      <div className="w-7 h-7 rounded-full overflow-hidden shrink-0">
+                        <SchoolLogo name={userSchool.name} size={28} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{userSchool.name}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500">Your school</div>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    </button>
+                    <SectionDivider />
+                  </>
+                );
+              })()}
+
               {recentNav.length > 0 && (
                 <>
                   <div className="px-3 pt-2 pb-1">
@@ -464,6 +503,32 @@ export function GlobalSearch() {
           {/* ── Results ── */}
           {hasQuery && !loading && hasResults && (
             <div className="py-2">
+              {userSchool && userSchool.name.toLowerCase().includes(dq.toLowerCase()) && (() => {
+                const colors = getSchoolColors(userSchool.slug);
+                return (
+                  <>
+                    <div className="px-3 pt-2 pb-1">
+                      <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 dark:text-gray-500">Your School</span>
+                    </div>
+                    <button
+                      onMouseDown={(e) => { e.preventDefault(); router.push(`/schools/${userSchool.slug}`); close(); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 mx-1 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors text-left"
+                      style={{ width: "calc(100% - 8px)", borderLeft: `3px solid ${colors.primary}` }}
+                    >
+                      <div className="w-7 h-7 rounded-full overflow-hidden shrink-0">
+                        <SchoolLogo name={userSchool.name} size={28} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{userSchool.name}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500">Your school</div>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    </button>
+                    <SectionDivider />
+                  </>
+                );
+              })()}
+
               {grouped.tokens.length > 0 && (
                 <>
                   <CategoryHeader label="Tokens" seeAllHref="/tokens" onClose={close} />

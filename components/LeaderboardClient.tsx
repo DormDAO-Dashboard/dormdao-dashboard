@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SchoolRow } from "@/lib/types";
 import { SchoolLogo } from "@/components/SchoolLogo";
-import { formatNav, formatPct, cn } from "@/lib/utils";
+import { formatNav, formatPct, cn, slugify } from "@/lib/utils";
+import { getSchoolColors } from "@/lib/schoolColors";
+import { createClient } from "@/lib/supabase/client";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 // ─── Season config ────────────────────────────────────────────────────────────
@@ -74,9 +76,19 @@ function Panel({
   );
 }
 
+// ─── "You" badge ─────────────────────────────────────────────────────────────
+
+function YouBadge() {
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-primary/20 text-primary border border-primary/30 leading-none ml-1 shrink-0">
+      You
+    </span>
+  );
+}
+
 // ─── Quarterly table (left panel) ────────────────────────────────────────────
 
-function QuarterlyTable({ schools }: { schools: SchoolRow[] }) {
+function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: string | null }) {
   const [sortKey, setSortKey] = useState<QtSortKey>("quarterlyEth");
   const [asc, setAsc] = useState(false);
 
@@ -111,27 +123,35 @@ function QuarterlyTable({ schools }: { schools: SchoolRow[] }) {
         </tr>
       </thead>
       <tbody>
-        {sorted.map((s, i) => (
-          <tr key={s.slug} className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors">
-            <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{i + 1}</td>
-            <td className="px-2 py-1.5">
-              <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
-                <SchoolLogo name={s.name} size={15} />
-                <span className="text-[11px] text-gray-900 dark:text-white truncate">{s.name}</span>
-              </Link>
-            </td>
-            <td className="px-2 py-1.5 text-right">
-              {(s.quarterlyUsdReturn ?? 0) !== 0
-                ? <ReturnCell value={s.quarterlyUsdReturn!} />
-                : <span className="text-gray-400 dark:text-gray-600 font-mono">—</span>}
-            </td>
-            <td className="px-2 py-1.5 text-right">
-              {(s.quarterlyEthReturn ?? 0) !== 0
-                ? <ReturnCell value={s.quarterlyEthReturn!} />
-                : <span className="text-gray-400 dark:text-gray-600 font-mono">—</span>}
-            </td>
-          </tr>
-        ))}
+        {sorted.map((s, i) => {
+          const isYou = userSlug === s.slug;
+          const youColor = isYou ? getSchoolColors(s.slug).primary : undefined;
+          return (
+            <tr key={s.slug}
+              className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
+              style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
+            >
+              <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{i + 1}</td>
+              <td className="px-2 py-1.5">
+                <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                  <SchoolLogo name={s.name} size={15} />
+                  <span className="text-[11px] text-gray-900 dark:text-white truncate">{s.name}</span>
+                  {isYou && <YouBadge />}
+                </Link>
+              </td>
+              <td className="px-2 py-1.5 text-right">
+                {(s.quarterlyUsdReturn ?? 0) !== 0
+                  ? <ReturnCell value={s.quarterlyUsdReturn!} />
+                  : <span className="text-gray-400 dark:text-gray-600 font-mono">—</span>}
+              </td>
+              <td className="px-2 py-1.5 text-right">
+                {(s.quarterlyEthReturn ?? 0) !== 0
+                  ? <ReturnCell value={s.quarterlyEthReturn!} />
+                  : <span className="text-gray-400 dark:text-gray-600 font-mono">—</span>}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -139,7 +159,7 @@ function QuarterlyTable({ schools }: { schools: SchoolRow[] }) {
 
 // ─── Season table (middle panel) ─────────────────────────────────────────────
 
-function SeasonTable({ schools }: { schools: SchoolRow[] }) {
+function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: string | null }) {
   const [sortKey, setSortKey] = useState<MainSortKey>("ethReturn");
   const [asc, setAsc] = useState(false);
 
@@ -185,13 +205,19 @@ function SeasonTable({ schools }: { schools: SchoolRow[] }) {
       <tbody>
         {sorted.map((s, i) => {
           const displayRank = sortKey === "rank" ? s.rank : i + 1;
+          const isYou = userSlug === s.slug;
+          const youColor = isYou ? getSchoolColors(s.slug).primary : undefined;
           return (
-            <tr key={s.slug} className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors">
+            <tr key={s.slug}
+              className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors"
+              style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
+            >
               <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
               <td className="px-2 py-1.5">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
                   <span className="text-[11px] text-gray-900 dark:text-white font-medium">{s.name}</span>
+                  {isYou && <YouBadge />}
                 </Link>
               </td>
               <td className="px-2 py-1.5 text-right font-mono text-gray-700 dark:text-gray-300 text-[11px] tabular-nums">{formatNav(s.nav)}</td>
@@ -210,7 +236,7 @@ function SeasonTable({ schools }: { schools: SchoolRow[] }) {
 
 // ─── All-Time table (right panel) ────────────────────────────────────────────
 
-function AllTimeTable({ schools }: { schools: SchoolRow[] }) {
+function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: string | null }) {
   const [sortKey, setSortKey] = useState<SideSortKey>("ethReturn");
   const [asc, setAsc] = useState(false);
 
@@ -246,13 +272,19 @@ function AllTimeTable({ schools }: { schools: SchoolRow[] }) {
       <tbody>
         {sorted.map((s, i) => {
           const displayRank = sortKey === "rank" ? s.rank : i + 1;
+          const isYou = userSlug === s.slug;
+          const youColor = isYou ? getSchoolColors(s.slug).primary : undefined;
           return (
-            <tr key={s.slug} className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors">
+            <tr key={s.slug}
+              className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
+              style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
+            >
               <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
               <td className="px-2 py-1.5">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
                   <span className="text-[11px] text-gray-900 dark:text-white truncate">{s.name}</span>
+                  {isYou && <YouBadge />}
                 </Link>
               </td>
               <td className="px-2 py-1.5 text-right"><ReturnCell value={s.usdReturn} /></td>
@@ -281,6 +313,17 @@ export function LeaderboardClient({
   fetchedAt: string;
 }) {
   const [season, setSeason] = useState<Season>("2025-2026");
+  const [userSlug, setUserSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: p } = await supabase
+        .from("profiles").select("school").eq("id", data.user.id).single();
+      if (p?.school) setUserSlug(slugify(p.school));
+    });
+  }, []);
 
   const activeSchools =
     season === "2025-2026" ? schools
@@ -325,7 +368,7 @@ export function LeaderboardClient({
             </>
           }
         >
-          <QuarterlyTable schools={schools} />
+          <QuarterlyTable schools={schools} userSlug={userSlug} />
         </Panel>
 
         {/* ── Middle: Current Season ────────────────────────── */}
@@ -358,7 +401,7 @@ export function LeaderboardClient({
           }
         >
           {activeSchools.length > 0 ? (
-            <SeasonTable schools={activeSchools} />
+            <SeasonTable schools={activeSchools} userSlug={userSlug} />
           ) : (
             <div className="py-16 text-center text-gray-500 dark:text-gray-600 text-xs">
               Historical data for {activeSeason.label} coming soon.
@@ -376,7 +419,7 @@ export function LeaderboardClient({
           }
         >
           {sinceInceptionSchools.length > 0 ? (
-            <AllTimeTable schools={sinceInceptionSchools} />
+            <AllTimeTable schools={sinceInceptionSchools} userSlug={userSlug} />
           ) : (
             <div className="py-16 text-center text-gray-500 dark:text-gray-600 text-xs">No data</div>
           )}

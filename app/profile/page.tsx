@@ -21,27 +21,38 @@ export default async function ProfilePage({
   const { setup } = await searchParams;
   const isSetup = setup === "1";
 
-  return (
-    <div className="max-w-lg mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-white">
-          {isSetup ? "Complete your profile" : "Your profile"}
-        </h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          {isSetup
-            ? "Tell the DormDAO community who you are before continuing."
-            : "Update your display name, school affiliation, and bio."}
-        </p>
-      </div>
-
+  if (isSetup) {
+    return (
       <ProfileForm
         userId={user.id}
         email={user.email ?? ""}
         avatarUrl={profile?.avatar_url ?? user.user_metadata?.avatar_url ?? null}
-        initialDisplayName={profile?.display_name ?? user.user_metadata?.full_name ?? ""}
+        initialDisplayName={profile?.display_name ?? (user.user_metadata?.full_name as string | undefined) ?? ""}
         initialSchool={profile?.school ?? ""}
         initialBio={profile?.bio ?? ""}
-        isSetup={isSetup}
+        initialGraduationYear={(profile as { graduation_year?: number | null })?.graduation_year ?? null}
+        initialMajor={(profile as { major?: string | null })?.major ?? ""}
+        isSetup
+      />
+    );
+  }
+
+  return (
+    <div className="max-w-lg mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Your profile</h1>
+        <p className="text-gray-500 mt-1 text-sm">Update your display name, school, and bio.</p>
+      </div>
+      <ProfileForm
+        userId={user.id}
+        email={user.email ?? ""}
+        avatarUrl={profile?.avatar_url ?? user.user_metadata?.avatar_url ?? null}
+        initialDisplayName={profile?.display_name ?? (user.user_metadata?.full_name as string | undefined) ?? ""}
+        initialSchool={profile?.school ?? ""}
+        initialBio={profile?.bio ?? ""}
+        initialGraduationYear={(profile as { graduation_year?: number | null })?.graduation_year ?? null}
+        initialMajor={(profile as { major?: string | null })?.major ?? ""}
+        isSetup={false}
       />
     </div>
   );
