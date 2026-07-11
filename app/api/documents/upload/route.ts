@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getDefaultVisibility } from "@/lib/documents";
 
 export async function POST(req: NextRequest) {
   // Auth: must be signed in with a school matching the uploaded document's school
@@ -34,12 +35,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "You can only upload documents for your own school" }, { status: 403 });
     }
 
+    // Video type: store URL directly, no Storage upload
+    if (documentType === "video") {
+      const videoUrl = formData.get("video_url") as string | null;
+      if (!videoUrl || !title) {
+        return NextResponse.json({ error: "video_url and title are required" }, { status: 400 });
+      }
+      const { data, error: dbError } = await service
+        .from("token_documents")
+        .insert({
+          token_ticker: ticker,
+          title: title.trim(),
+          school: school?.trim() || null,
+          document_date: documentDate || null,
+          file_url: videoUrl.trim(),
+          document_type: "video",
+          visibility: "school",
+        })
+        .select()
+        .single();
+      if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
+      return NextResponse.json({ document: data }, { status: 201 });
+    }
+
     if (!file || !title) {
       return NextResponse.json({ error: "file and title are required" }, { status: 400 });
     }
 
     // Upload to Supabase Storage
-    const ext = file.name.split(".").pop() ?? "pdf";
     const storagePath = `${ticker}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const bytes = await file.arrayBuffer();
 
@@ -69,6 +92,7 @@ export async function POST(req: NextRequest) {
         document_date: documentDate || null,
         file_url: urlData.publicUrl,
         document_type: documentType,
+        visibility: getDefaultVisibility(documentType),
       })
       .select()
       .single();

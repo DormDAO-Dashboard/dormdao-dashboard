@@ -9,7 +9,7 @@ export interface SchoolDocument {
   title: string;
   school: string | null;
   document_date: string | null;
-  file_url: string;
+  file_url: string | null;
   document_type: string;
 }
 
@@ -59,7 +59,7 @@ export function DocCompareModal({ docs, onClose }: Props) {
                 </p>
               </div>
               <a
-                href={doc.file_url}
+                href={doc.file_url ?? ""}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-white transition-colors shrink-0"
@@ -69,7 +69,7 @@ export function DocCompareModal({ docs, onClose }: Props) {
               </a>
             </div>
             <iframe
-              src={doc.file_url}
+              src={doc.file_url ?? ""}
               className="flex-1 w-full border-0"
               title={doc.title}
             />

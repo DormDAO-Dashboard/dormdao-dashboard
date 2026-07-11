@@ -1,18 +1,10 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { FileText, ExternalLink, Search } from "lucide-react";
+import { FileText, ExternalLink, Search, Lock, Play } from "lucide-react";
 import { DocCompareModal } from "@/components/DocCompareModal";
+import { VideoModal } from "@/components/VideoModal";
+import { getLockReason, type TokenDocument } from "@/lib/documents";
 import { cn } from "@/lib/utils";
-
-interface SchoolDocument {
-  id: string;
-  token_ticker: string;
-  title: string;
-  school: string | null;
-  document_date: string | null;
-  file_url: string;
-  document_type: string;
-}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -21,6 +13,7 @@ const TYPE_TABS = [
   { label: "Pitch Decks",    value: "pitch_deck" },
   { label: "Exec Summaries", value: "exec_summary" },
   { label: "Fund Reports",   value: "report" },
+  { label: "Videos",         value: "video" },
 ] as const;
 
 type SortOption = "newest" | "oldest" | "school" | "token";
@@ -39,6 +32,7 @@ function formatDocType(type: string): string {
   if (type === "exec_summary") return "Exec Summary";
   if (type === "report")       return "Fund Report";
   if (type === "thesis")       return "Investment Thesis";
+  if (type === "video")        return "Video";
   return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
@@ -56,6 +50,8 @@ function docTypeBadgeClass(type: string): string {
     return "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-500/30";
   if (type === "thesis")
     return "bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30";
+  if (type === "video")
+    return "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30";
   return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700";
 }
 
@@ -81,8 +77,54 @@ function Pill({ active, onClick, children }: {
   );
 }
 
+function LockedDocumentCard({ doc }: { doc: TokenDocument }) {
+  const reason = getLockReason(doc.visibility, doc.school);
+  return (
+    <div className="flex flex-col rounded-xl border border-gray-200/60 dark:border-gray-800/60 bg-gray-50/50 dark:bg-gray-900/30 p-3.5 opacity-60 h-full">
+      <div className="flex items-start justify-between gap-1.5 mb-2">
+        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 leading-snug line-clamp-2">
+          {doc.title}
+        </h3>
+        <Lock className="w-3 h-3 text-gray-400 dark:text-gray-600 shrink-0 mt-0.5" />
+      </div>
+      <span className={cn(
+        "inline-flex items-center self-start px-1.5 py-0.5 rounded text-[10px] font-medium mb-1.5",
+        docTypeBadgeClass(doc.document_type)
+      )}>
+        {formatDocType(doc.document_type)}
+      </span>
+      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{doc.school ?? "—"}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-600 mt-auto pt-2">{reason}</p>
+    </div>
+  );
+}
+
+function VideoDocumentCard({ doc, onPlay }: { doc: TokenDocument; onPlay: () => void }) {
+  return (
+    <button
+      onClick={onPlay}
+      className="group flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-3.5 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-all cursor-pointer h-full text-left w-full"
+    >
+      <div className="flex items-start justify-between gap-1.5 mb-2">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2">
+          {doc.title}
+        </h3>
+        <Play className="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-gray-600 dark:group-hover:text-gray-400 shrink-0 mt-0.5 transition-colors" />
+      </div>
+      <span className={cn(
+        "inline-flex items-center self-start px-1.5 py-0.5 rounded text-[10px] font-medium mb-1.5",
+        docTypeBadgeClass(doc.document_type)
+      )}>
+        {formatDocType(doc.document_type)}
+      </span>
+      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{doc.school ?? "—"}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-600 mt-auto pt-2">{formatDocMonth(doc.document_date)}</p>
+    </button>
+  );
+}
+
 function DocumentCard({ doc, compareMode, selected, onToggle, disabled }: {
-  doc: SchoolDocument;
+  doc: TokenDocument;
   compareMode: boolean;
   selected: boolean;
   onToggle: () => void;
@@ -117,7 +159,7 @@ function DocumentCard({ doc, compareMode, selected, onToggle, disabled }: {
         </>
       )}
       <a
-        href={doc.file_url}
+        href={doc.file_url!}
         target="_blank"
         rel="noopener noreferrer"
         className="group flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-3.5 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-all cursor-pointer h-full"
@@ -147,7 +189,7 @@ function DocumentCard({ doc, compareMode, selected, onToggle, disabled }: {
 // ── DormDocsGrid ──────────────────────────────────────────────────────────────
 
 function DormDocsGrid() {
-  const [docs, setDocs] = useState<SchoolDocument[]>([]);
+  const [docs, setDocs] = useState<TokenDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("");
@@ -155,8 +197,9 @@ function DormDocsGrid() {
   const [tokenSearch, setTokenSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
   const [compareMode, setCompareMode] = useState(false);
-  const [selectedDocs, setSelectedDocs] = useState<SchoolDocument[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<TokenDocument[]>([]);
   const [showCompare, setShowCompare] = useState(false);
+  const [playingDoc, setPlayingDoc] = useState<TokenDocument | null>(null);
 
   useEffect(() => {
     fetch("/api/documents?all=true")
@@ -193,7 +236,7 @@ function DormDocsGrid() {
     });
   }, [docs, typeFilter, schoolFilter, yearFilter, tokenSearch, sort]);
 
-  function toggleDoc(doc: SchoolDocument) {
+  function toggleDoc(doc: TokenDocument) {
     setSelectedDocs((prev) =>
       prev.some((d) => d.id === doc.id) ? prev.filter((d) => d.id !== doc.id) : [...prev, doc]
     );
@@ -221,7 +264,6 @@ function DormDocsGrid() {
 
       {/* Secondary filters */}
       <div className="flex flex-col gap-2 mb-4">
-        {/* School pills */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
           <Pill active={schoolFilter === ""} onClick={() => setSchoolFilter("")}>All Schools</Pill>
           {schools.map((s) => (
@@ -229,7 +271,6 @@ function DormDocsGrid() {
           ))}
         </div>
 
-        {/* Year pills + token search + sort + compare */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
             <Pill active={yearFilter === ""} onClick={() => setYearFilter("")}>All Years</Pill>
@@ -293,6 +334,12 @@ function DormDocsGrid() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filtered.map((doc) => {
+            if (doc.locked) {
+              return <LockedDocumentCard key={doc.id} doc={doc} />;
+            }
+            if (doc.document_type === "video" && doc.file_url) {
+              return <VideoDocumentCard key={doc.id} doc={doc} onPlay={() => setPlayingDoc(doc)} />;
+            }
             const isSelected = selectedDocs.some((d) => d.id === doc.id);
             const isDisabled = compareMode && !isSelected && selectedDocs.length >= 2;
             return (
@@ -332,6 +379,14 @@ function DormDocsGrid() {
 
       {showCompare && (
         <DocCompareModal docs={selectedDocs} onClose={() => setShowCompare(false)} />
+      )}
+
+      {playingDoc?.file_url && (
+        <VideoModal
+          url={playingDoc.file_url}
+          title={playingDoc.title}
+          onClose={() => setPlayingDoc(null)}
+        />
       )}
     </div>
   );
