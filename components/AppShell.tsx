@@ -196,23 +196,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
 
-              if (href === "/forum" && user) {
+              if (href === "/schools" && user) {
                 const voteLink = (
                   <Link key="vote" href={voteHref}
                     className={cn(
-                      "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
+                      "relative flex items-center gap-3 pl-7 pr-2 py-2 rounded-lg transition-colors",
                       voteActive
                         ? "bg-opacity-10"
-                        : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                        : "text-gray-500 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
                     )}
                     style={voteActive ? { backgroundColor: `${voteColor}18`, color: voteColor } : {}}
                   >
                     {voteActive && voteColor && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ backgroundColor: voteColor }} />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full" style={{ backgroundColor: voteColor }} />
                     )}
-                    <Scale className="w-5 h-5 shrink-0" />
+                    <Scale className="w-4 h-4 shrink-0" />
                     <span className={cn(
-                      "text-sm font-medium whitespace-nowrap transition-all duration-150",
+                      "text-xs font-medium whitespace-nowrap transition-all duration-150",
                       expanded ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}>
                       {voteLabel}
