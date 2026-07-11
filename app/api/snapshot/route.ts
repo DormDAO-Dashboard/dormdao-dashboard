@@ -135,6 +135,23 @@ export async function POST(req: NextRequest) {
           await sendEmailNotifications(tradePayload).catch(console.error);
         }
       }
+      // Auto-resolve proposals whose voting deadline has passed
+      const { data: expiredProposals } = await supabase
+        .from("proposals")
+        .select("id, yes_votes, no_votes")
+        .eq("status", "active")
+        .lt("voting_deadline", new Date().toISOString());
+
+      if (expiredProposals && expiredProposals.length > 0) {
+        for (const proposal of expiredProposals) {
+          const resolvedStatus = proposal.yes_votes > proposal.no_votes ? "passed" : "rejected";
+          await supabase
+            .from("proposals")
+            .update({ status: resolvedStatus })
+            .eq("id", proposal.id);
+        }
+        console.log(`[snapshot] resolved ${expiredProposals.length} expired proposals`);
+      }
     } catch (err) {
       console.error("[snapshot] unexpected error:", err);
     }

@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation";
 import {
   Trophy, GraduationCap, BarChart2, DollarSign, Activity,
   Newspaper, MessagesSquare, BookOpen, Info, Sun, Moon, User,
-  ChevronRight, MoreHorizontal, X, ShieldCheck,
+  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck,
 } from "lucide-react";
+import { slugify } from "@/lib/utils";
+import { getSchoolColors } from "@/lib/schoolColors";
 import { useTheme } from "@/components/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { GlobalSearch } from "@/components/GlobalSearch";
@@ -64,12 +66,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname          = usePathname();
   const { theme, toggle } = useTheme();
 
-  const [user, setUser]           = useState<SupabaseUser | null>(null);
-  const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin]     = useState(false);
-  const [pinned, setPinned]       = useState(false);
-  const [hovered, setHovered]     = useState(false);
-  const [showMore, setShowMore]   = useState(false);
+  const [user, setUser]             = useState<SupabaseUser | null>(null);
+  const [avatarSrc, setAvatarSrc]   = useState<string | null>(null);
+  const [userSchool, setUserSchool] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin]       = useState(false);
+  const [pinned, setPinned]         = useState(false);
+  const [hovered, setHovered]       = useState(false);
+  const [showMore, setShowMore]     = useState(false);
 
   useEffect(() => {
     try { setPinned(localStorage.getItem("sidebar-pinned") === "true"); } catch {}
@@ -83,11 +86,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setUser(u);
       if (u) {
         const { data: p } = await supabase
-          .from("profiles").select("avatar_url").eq("id", u.id).single();
+          .from("profiles").select("avatar_url, school").eq("id", u.id).single();
         setAvatarSrc(
           p?.avatar_url ?? (u.user_metadata?.avatar_url as string | undefined) ?? null
         );
-        // Check admin status server-side
+        setUserSchool((p?.school as string | null) ?? null);
         try {
           const res = await fetch("/api/admin/check");
           const json = await res.json() as { isAdmin: boolean };
@@ -104,6 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (!session?.user) {
         setAvatarSrc(null);
+        setUserSchool(null);
         setIsAdmin(false);
       }
     });
@@ -135,7 +139,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Shared class fragments
   const sidebarItem = "flex items-center gap-3 w-full px-2 py-2.5 rounded-lg transition-colors text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]";
   const labelFade   = cn("text-sm whitespace-nowrap transition-all duration-150", expanded ? "opacity-100" : "opacity-0 pointer-events-none");
 
@@ -164,50 +167,88 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-          {NAV_LINKS.map(({ href, label, icon: Icon }) => {
-            const active = matchesRoute(href, pathname);
-            return (
-              <Link key={href} href={href} className={cn(
-                "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
-                active
-                  ? "bg-primary/10 text-primary"
-                  : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
-              )}>
-                {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
-                )}
-                <Icon className="w-5 h-5 shrink-0" />
-                <span className={cn(
-                  "text-sm font-medium whitespace-nowrap transition-all duration-150",
-                  expanded ? "opacity-100" : "opacity-0 pointer-events-none"
-                )}>
-                  {label}
-                </span>
-              </Link>
-            );
-          })}
+          {(() => {
+            const userSchoolSlug = userSchool ? slugify(userSchool) : null;
+            const voteHref   = userSchoolSlug ? `/schools/${userSchoolSlug}/vote` : "/profile";
+            const voteLabel  = userSchoolSlug ? `${userSchool} Vote` : "Set School";
+            const voteActive = userSchoolSlug ? matchesRoute(`/schools/${userSchoolSlug}/vote`, pathname) : false;
+            const voteColor  = userSchoolSlug ? getSchoolColors(userSchoolSlug).primary : undefined;
 
-          {isAdmin && (() => {
-            const active = matchesRoute("/admin", pathname);
-            return (
-              <Link href="/admin" className={cn(
-                "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
-                active
-                  ? "bg-primary/10 text-primary"
-                  : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
-              )}>
-                {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
-                )}
-                <ShieldCheck className="w-5 h-5 shrink-0" />
-                <span className={cn(
-                  "text-sm font-medium whitespace-nowrap transition-all duration-150",
-                  expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+            const navItems = NAV_LINKS.flatMap(({ href, label, icon: Icon }) => {
+              const active = matchesRoute(href, pathname);
+              const link = (
+                <Link key={href} href={href} className={cn(
+                  "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
+                  active
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
                 )}>
-                  Admin
-                </span>
-              </Link>
-            );
+                  {active && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                  )}
+                  <Icon className="w-5 h-5 shrink-0" />
+                  <span className={cn(
+                    "text-sm font-medium whitespace-nowrap transition-all duration-150",
+                    expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                  )}>
+                    {label}
+                  </span>
+                </Link>
+              );
+
+              if (href === "/forum" && user) {
+                const voteLink = (
+                  <Link key="vote" href={voteHref}
+                    className={cn(
+                      "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
+                      voteActive
+                        ? "bg-opacity-10"
+                        : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                    )}
+                    style={voteActive ? { backgroundColor: `${voteColor}18`, color: voteColor } : {}}
+                  >
+                    {voteActive && voteColor && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ backgroundColor: voteColor }} />
+                    )}
+                    <Scale className="w-5 h-5 shrink-0" />
+                    <span className={cn(
+                      "text-sm font-medium whitespace-nowrap transition-all duration-150",
+                      expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                    )}>
+                      {voteLabel}
+                    </span>
+                  </Link>
+                );
+                return [link, voteLink];
+              }
+
+              return [link];
+            });
+
+            if (isAdmin) {
+              const adminActive = matchesRoute("/admin", pathname);
+              navItems.push(
+                <Link key="admin" href="/admin" className={cn(
+                  "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
+                  adminActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                )}>
+                  {adminActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                  )}
+                  <ShieldCheck className="w-5 h-5 shrink-0" />
+                  <span className={cn(
+                    "text-sm font-medium whitespace-nowrap transition-all duration-150",
+                    expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                  )}>
+                    Admin
+                  </span>
+                </Link>
+              );
+            }
+
+            return navItems;
           })()}
         </nav>
 
@@ -310,6 +351,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
             <div className="px-3 py-3">
+              {user && (() => {
+                const userSchoolSlug = userSchool ? slugify(userSchool) : null;
+                const voteHref   = userSchoolSlug ? `/schools/${userSchoolSlug}/vote` : "/profile";
+                const voteLabel  = userSchoolSlug ? `${userSchool} Vote` : "Set School";
+                const voteActive = userSchoolSlug ? matchesRoute(`/schools/${userSchoolSlug}/vote`, pathname) : false;
+                const voteColor  = userSchoolSlug ? getSchoolColors(userSchoolSlug).primary : undefined;
+                return (
+                  <Link href={voteHref} onClick={() => setShowMore(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
+                      voteActive ? "bg-opacity-10" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                    )}
+                    style={voteActive ? { backgroundColor: `${voteColor}18`, color: voteColor } : {}}
+                  >
+                    <Scale className="w-5 h-5 shrink-0" />
+                    <span className="text-sm font-medium">{voteLabel}</span>
+                  </Link>
+                );
+              })()}
               {MORE_LINKS.map(({ href, label, icon: Icon }) => {
                 const active = matchesRoute(href, pathname);
                 return (

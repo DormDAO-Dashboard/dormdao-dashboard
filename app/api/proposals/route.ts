@@ -1,0 +1,130 @@
+import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { slugify } from "@/lib/utils";
+import { sendPushNotifications } from "@/lib/push";
+import { sendEmailNotifications } from "@/lib/email";
+import type { Proposal } from "@/lib/proposals";
+
+export async function GET(req: NextRequest) {
+  const school = req.nextUrl.searchParams.get("school");
+  if (!school) {
+    return NextResponse.json({ error: "school param required" }, { status: 400 });
+  }
+
+  const service = createServiceClient();
+
+  const { data: proposals, error } = await service
+    .from("proposals")
+    .select("*")
+    .eq("school", school)
+    .order("created_at", { ascending: false });
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const rows = (proposals ?? []) as Proposal[];
+
+  // Overlay user's own votes if authenticated
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && rows.length > 0) {
+      const ids = rows.map((p) => p.id);
+      const { data: votes } = await service
+        .from("proposal_votes")
+        .select("proposal_id, vote")
+        .eq("user_id", user.id)
+        .in("proposal_id", ids);
+
+      if (votes) {
+        const voteMap: Record<string, "yes" | "no"> = {};
+        for (const v of votes) voteMap[v.proposal_id] = v.vote;
+        return NextResponse.json({
+          proposals: rows.map((p) => ({ ...p, user_vote: voteMap[p.id] ?? null })),
+        });
+      }
+    }
+  } catch {
+    // Auth check is best-effort; return proposals without vote overlay
+  }
+
+  return NextResponse.json({ proposals: rows });
+}
+
+export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Sign in to submit a proposal" }, { status: 401 });
+
+  const service = createServiceClient();
+  const { data: profile } = await service
+    .from("profiles")
+    .select("display_name, school")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.school) {
+    return NextResponse.json({ error: "Set your school on your profile before submitting" }, { status: 403 });
+  }
+
+  const body = await req.json() as {
+    school?: string;
+    token_ticker?: string;
+    token_name?: string;
+    title?: string;
+    description?: string;
+    recommended_size_eth?: number;
+    price_target?: number;
+    voting_deadline?: string;
+  };
+
+  const { school, token_ticker, token_name, title, description, recommended_size_eth, price_target, voting_deadline } = body;
+
+  if (!school) return NextResponse.json({ error: "school is required" }, { status: 400 });
+  if (slugify(profile.school) !== school) {
+    return NextResponse.json({ error: "You can only submit proposals for your own school" }, { status: 403 });
+  }
+  if (!token_ticker?.trim()) return NextResponse.json({ error: "token_ticker is required" }, { status: 400 });
+  if (!token_name?.trim()) return NextResponse.json({ error: "token_name is required" }, { status: 400 });
+  if (!title?.trim()) return NextResponse.json({ error: "title is required" }, { status: 400 });
+  if (!description?.trim()) return NextResponse.json({ error: "description is required" }, { status: 400 });
+  if (!voting_deadline) return NextResponse.json({ error: "voting_deadline is required" }, { status: 400 });
+
+  const deadline = new Date(voting_deadline);
+  if (isNaN(deadline.getTime()) || deadline <= new Date()) {
+    return NextResponse.json({ error: "voting_deadline must be a future date" }, { status: 400 });
+  }
+
+  const { data: proposal, error } = await service
+    .from("proposals")
+    .insert({
+      school,
+      token_ticker: token_ticker.trim().toUpperCase(),
+      token_name: token_name.trim(),
+      title: title.trim(),
+      description: description.trim(),
+      proposed_by: user.id,
+      proposed_by_name: profile.display_name || "Anonymous",
+      recommended_size_eth: recommended_size_eth ?? null,
+      price_target: price_target ?? null,
+      voting_deadline: deadline.toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const created = proposal as Proposal;
+  after(async () => {
+    const payload = {
+      type: "vote" as const,
+      title: `🗳️ New proposal: ${created.token_ticker}`,
+      body: `${profile.school} is voting on ${created.token_name}. Cast your vote.`,
+      url: `https://dormdao-dashboard.vercel.app/schools/${school}/vote`,
+    };
+    await sendPushNotifications(payload).catch(console.error);
+    await sendEmailNotifications(payload).catch(console.error);
+  });
+
+  return NextResponse.json({ proposal: created }, { status: 201 });
+}

@@ -2,7 +2,7 @@ import webpush from "web-push";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export interface PushPayload {
-  type: "buy" | "sell" | "forum";
+  type: "buy" | "sell" | "forum" | "vote";
   title: string;
   body: string;
   url: string;
