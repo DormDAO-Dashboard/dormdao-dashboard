@@ -70,9 +70,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [avatarSrc, setAvatarSrc]   = useState<string | null>(null);
   const [userSchool, setUserSchool] = useState<string | null>(null);
   const [isAdmin, setIsAdmin]       = useState(false);
-  const [pinned, setPinned]         = useState(false);
-  const [hovered, setHovered]       = useState(false);
-  const [showMore, setShowMore]     = useState(false);
+  const [pinned, setPinned]             = useState(false);
+  const [hovered, setHovered]           = useState(false);
+  const [showMore, setShowMore]         = useState(false);
+  const [schoolsHovered, setSchoolsHovered] = useState(false);
 
   useEffect(() => {
     try { setPinned(localStorage.getItem("sidebar-pinned") === "true"); } catch {}
@@ -197,6 +198,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               );
 
               if (href === "/schools" && user) {
+                const schoolsActive = matchesRoute("/schools", pathname);
+                const showVote = schoolsHovered || schoolsActive;
                 const voteLink = (
                   <Link key="vote" href={voteHref}
                     className={cn(
@@ -219,7 +222,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </span>
                   </Link>
                 );
-                return [link, voteLink];
+                return [
+                  <div key="/schools-group"
+                    onMouseEnter={() => setSchoolsHovered(true)}
+                    onMouseLeave={() => setSchoolsHovered(false)}
+                  >
+                    {link}
+                    {showVote && voteLink}
+                  </div>
+                ];
               }
 
               return [link];
