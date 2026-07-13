@@ -201,6 +201,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               if (href === "/schools" && user) {
                 const schoolsActive = matchesRoute("/schools", pathname);
                 const showVote = schoolsHovered || schoolsActive;
+
+                const membersHref = userSchoolSlug ? `/schools/${userSchoolSlug}` : "/schools";
+                const membersActive = userSchoolSlug
+                  ? pathname === `/schools/${userSchoolSlug}` || (pathname.startsWith(`/schools/${userSchoolSlug}`) && !pathname.endsWith("/vote"))
+                  : false;
+                const membersLink = (
+                  <Link key="members" href={membersHref}
+                    className={cn(
+                      "relative flex items-center gap-3 pl-7 pr-2 py-2 rounded-lg transition-colors",
+                      membersActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-500 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                    )}
+                  >
+                    {membersActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-primary rounded-r-full" />
+                    )}
+                    <Users className="w-4 h-4 shrink-0" />
+                    <span className={cn(
+                      "text-xs font-medium whitespace-nowrap transition-all duration-150",
+                      expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                    )}>
+                      Members
+                    </span>
+                  </Link>
+                );
+
                 const voteLink = (
                   <Link key="vote" href={voteHref}
                     className={cn(
@@ -229,6 +256,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     onMouseLeave={() => setSchoolsHovered(false)}
                   >
                     {link}
+                    {showVote && membersLink}
                     {showVote && voteLink}
                   </div>
                 ];
