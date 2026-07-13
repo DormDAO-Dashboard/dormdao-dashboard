@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SchoolRowWithHoldings } from "@/lib/cache";
 import { HoldingsTableClient } from "@/components/HoldingsTableClient";
@@ -21,7 +22,9 @@ interface Props {
 }
 
 export function SchoolTabs({ school, otherSchools }: Props) {
-  const [tab, setTab] = useState<Tab>("Portfolio");
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") as Tab;
+  const [tab, setTab] = useState<Tab>(TABS.includes(initialTab) ? initialTab : "Portfolio");
   const [membersCount, setMembersCount] = useState<number | null>(null);
 
   return (

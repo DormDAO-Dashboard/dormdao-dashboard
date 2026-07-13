@@ -202,7 +202,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 const schoolsActive = matchesRoute("/schools", pathname);
                 const showVote = schoolsHovered || schoolsActive;
 
-                const membersHref = userSchoolSlug ? `/schools/${userSchoolSlug}` : "/schools";
+                const membersHref = userSchoolSlug ? `/schools/${userSchoolSlug}?tab=Members` : "/schools";
                 const membersActive = userSchoolSlug
                   ? pathname === `/schools/${userSchoolSlug}` || (pathname.startsWith(`/schools/${userSchoolSlug}`) && !pathname.endsWith("/vote"))
                   : false;
