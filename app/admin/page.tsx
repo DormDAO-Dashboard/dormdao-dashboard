@@ -29,16 +29,16 @@ export default async function AdminPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Admin</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Admin</h1>
         <p className="text-gray-500 mt-1 text-sm">
           Manage DormDAO admin members and registered members.
         </p>
       </div>
 
       {/* Admin members (hardcoded from config) */}
-      <div className="rounded-xl border border-gray-800 bg-[#111] overflow-hidden">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-200">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
             Admins
             <span className="ml-2 text-xs text-gray-500 font-normal">1 total</span>
           </h2>
@@ -46,7 +46,7 @@ export default async function AdminPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800 text-xs text-gray-500">
+              <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
                 <th className="text-left px-5 py-3">Name</th>
                 <th className="text-right px-5 py-3">Voting Units</th>
                 <th className="text-left px-5 py-3">Email</th>
@@ -54,8 +54,8 @@ export default async function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-gray-800/50">
-                <td className="px-5 py-3 font-medium text-white">{admin.name}</td>
+              <tr className="border-b border-gray-200/80 dark:border-gray-800/50">
+                <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{admin.name}</td>
                 <td className="px-5 py-3 text-right font-mono text-primary">{admin.votingUnits}</td>
                 <td className="px-5 py-3 text-gray-400">{admin.email || "—"}</td>
                 <td className="px-5 py-3 font-mono text-gray-400 text-xs">
@@ -71,9 +71,9 @@ export default async function AdminPage() {
       <AdminMembersSection initialMembers={initialMembers} />
 
       {/* Recent failed logins */}
-      <div className="rounded-xl border border-gray-800 bg-[#111] overflow-hidden">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-200">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
             Recent Failed Logins
             <span className="ml-2 text-xs text-gray-500 font-normal">last 10</span>
           </h2>
@@ -81,7 +81,7 @@ export default async function AdminPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800 text-xs text-gray-500">
+              <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
                 <th className="text-left px-5 py-3">Time</th>
                 <th className="text-left px-5 py-3">Email / Wallet</th>
                 <th className="text-left px-5 py-3">Reason</th>
@@ -89,7 +89,7 @@ export default async function AdminPage() {
             </thead>
             <tbody>
               {(recentFailedLogins ?? []).map((row) => (
-                <tr key={row.id} className="border-b border-gray-800/50">
+                <tr key={row.id} className="border-b border-gray-200/80 dark:border-gray-800/50">
                   <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
                     {new Date(row.created_at as string).toLocaleString()}
                   </td>

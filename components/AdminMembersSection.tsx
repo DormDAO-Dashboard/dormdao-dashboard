@@ -154,10 +154,10 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
   }
 
   return (
-    <div className="rounded-xl border border-gray-800 bg-[#111] overflow-hidden">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-200">
+      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
           Members
           <span className="ml-2 text-xs text-gray-500 font-normal">{members.length} total</span>
         </h2>
@@ -351,7 +351,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-800 text-xs text-gray-500">
+            <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
               <th className="text-left px-5 py-3">Name</th>
               <th className="text-left px-5 py-3">School</th>
               <th className="text-right px-5 py-3">Voting Units</th>
@@ -362,8 +362,8 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
           </thead>
           <tbody>
             {members.map((m) => (
-              <tr key={m.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                <td className="px-5 py-3 font-medium text-white">{m.name}</td>
+              <tr key={m.id} className="border-b border-gray-200 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
+                <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{m.name}</td>
                 <td className="px-5 py-3">
                   {m.school ? (
                     <div className="flex items-center gap-1.5">
@@ -395,7 +395,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
             ))}
             {members.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-gray-600 text-sm">
+                <td colSpan={6} className="px-5 py-8 text-center text-gray-400 dark:text-gray-600 text-sm">
                   No members yet — click <span className="text-gray-400">Add Members</span> to register the first one.
                 </td>
               </tr>
