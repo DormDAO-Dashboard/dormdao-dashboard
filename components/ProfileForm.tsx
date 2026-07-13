@@ -4,10 +4,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
-import { SCHOOL_NAMES } from "@/lib/schoolData";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { SchoolLogo } from "@/components/SchoolLogo";
-import { LogOut, Save, User, Pencil, X, Wallet, AlertTriangle } from "lucide-react";
+import { LogOut, Save, User, Pencil, X, Wallet, Lock } from "lucide-react";
 
 const SCHOOL_OK_COOKIE = "ddo-school-ok";
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -39,62 +38,6 @@ function parseIdentity(email: string) {
   return { method: "google" as const, label: email };
 }
 
-// ── Change School Modal ────────────────────────────────────────────────────────
-
-function ChangeSchoolModal({
-  currentSchool,
-  onConfirm,
-  onClose,
-}: {
-  currentSchool: string;
-  onConfirm: (school: string) => void;
-  onClose: () => void;
-}) {
-  const [school, setSchool] = useState(currentSchool);
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-xl border border-gray-700 bg-[#111] shadow-2xl p-6">
-        <div className="flex items-start gap-3 mb-4">
-          <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-          <div>
-            <h3 className="text-sm font-semibold text-white">Change School</h3>
-            <p className="text-xs text-gray-400 mt-1">
-              Changing your school will affect your voting access and content attribution. Are you sure?
-            </p>
-          </div>
-        </div>
-        <select
-          value={school}
-          onChange={(e) => setSchool(e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 mb-4"
-        >
-          <option value="">— Select your school —</option>
-          {SCHOOL_NAMES.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => school && onConfirm(school)}
-            disabled={!school || school === currentSchool}
-            className="flex-1 py-2 text-sm font-medium bg-primary/20 border border-primary/40 text-primary rounded-lg hover:bg-primary/30 transition-colors disabled:opacity-40"
-          >
-            Confirm Change
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-sm border border-gray-700 text-gray-400 rounded-lg hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Setup (onboarding) card ────────────────────────────────────────────────────
 
 function SetupCard({
@@ -117,7 +60,6 @@ function SetupCard({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!school) { setError("Please select your school to continue."); return; }
     if (!displayName.trim()) { setError("Display name is required."); return; }
     setSaving(true);
     setError(null);
@@ -148,26 +90,18 @@ function SetupCard({
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Step 1 — Which DormDAO chapter are you part of? <span className="text-red-400">*</span>
-              </label>
-              <select
-                value={school}
-                onChange={(e) => { setSchool(e.target.value); setError(null); }}
-                required
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-primary/50"
-              >
-                <option value="">— Select your school —</option>
-                {SCHOOL_NAMES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
+            {school && (
+              <div className="flex items-center gap-2 bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2.5">
+                <SchoolLogo name={school} size={18} />
+                <span className="text-sm text-white font-medium">{school}</span>
+                <Lock className="w-3.5 h-3.5 text-gray-500 ml-auto shrink-0" />
+                <span className="text-xs text-gray-500">Assigned by DormDAO admin</span>
+              </div>
+            )}
 
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Step 2 — What should we call you? <span className="text-red-400">*</span>
+                Step 1 — What should we call you? <span className="text-red-400">*</span>
               </label>
               <input
                 value={displayName}
@@ -181,7 +115,7 @@ function SetupCard({
 
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Step 3 — Pick an avatar <span className="text-gray-600 normal-case font-normal">(optional)</span>
+                Step 2 — Pick an avatar <span className="text-gray-600 normal-case font-normal">(optional)</span>
               </label>
               <div className="flex items-center gap-4">
                 {avatarUrl ? (
@@ -212,7 +146,7 @@ function SetupCard({
 
             <button
               type="submit"
-              disabled={saving || !school || !displayName.trim()}
+              disabled={saving || !displayName.trim()}
               className="w-full py-3 rounded-lg bg-primary text-black font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {saving ? "Setting up…" : "Get Started"}
@@ -293,9 +227,8 @@ function NormalProfile({
   );
   const [major, setMajor]                       = useState(initialMajor);
   const [avatarUrl, setAvatarUrl]               = useState<string | null>(initialAvatarUrl);
-  const [saving, setSaving]                     = useState(false);
-  const [error, setError]                       = useState<string | null>(null);
-  const [showChangeSchool, setShowChangeSchool] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError]   = useState<string | null>(null);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -324,14 +257,6 @@ function NormalProfile({
     }
   }
 
-  async function handleConfirmChangeSchool(newSchool: string) {
-    setShowChangeSchool(false);
-    const supabase = createClient();
-    await supabase.from("profiles").upsert({ id: userId, school: newSchool });
-    stampSchoolCookie();
-    router.push(`/schools/${slugify(newSchool)}/vote`);
-  }
-
   function handleCancel() {
     setDisplayName(initialDisplayName);
     setSchool(initialSchool);
@@ -354,13 +279,6 @@ function NormalProfile({
   if (!editing) {
     return (
       <>
-        {showChangeSchool && (
-          <ChangeSchoolModal
-            currentSchool={school}
-            onConfirm={handleConfirmChangeSchool}
-            onClose={() => setShowChangeSchool(false)}
-          />
-        )}
         <div className="flex flex-col gap-5">
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 flex items-center gap-4">
             {avatarUrl ? (
@@ -376,15 +294,11 @@ function NormalProfile({
                 {displayName || <span className="text-gray-400 italic">No display name set</span>}
               </div>
               {school && (
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-1.5 mt-1">
                   <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-2.5 py-0.5">
                     <SchoolLogo name={school} size={14} />
                     <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">{school}</span>
                   </div>
-                  <button onClick={() => setShowChangeSchool(true)}
-                    className="text-xs text-gray-400 hover:text-primary transition-colors">
-                    Change
-                  </button>
                 </div>
               )}
               <div className="flex items-center gap-1.5 mt-1.5">
@@ -433,13 +347,6 @@ function NormalProfile({
   // ── Edit mode ──────────────────────────────────────────────────
   return (
     <>
-      {showChangeSchool && (
-        <ChangeSchoolModal
-          currentSchool={school}
-          onConfirm={handleConfirmChangeSchool}
-          onClose={() => setShowChangeSchool(false)}
-        />
-      )}
       <form onSubmit={handleSave} className="flex flex-col gap-5">
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 flex items-center gap-4">
           {avatarUrl ? (
@@ -475,19 +382,17 @@ function NormalProfile({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">School</label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5">
               {school ? (
-                <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5">
+                <>
                   <SchoolLogo name={school} size={16} />
                   <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{school}</span>
-                </div>
+                </>
               ) : (
-                <span className="text-sm text-gray-400 italic">No school set</span>
+                <span className="text-sm text-gray-400 italic">No school assigned</span>
               )}
-              <button type="button" onClick={() => setShowChangeSchool(true)}
-                className="text-xs text-primary hover:text-primary/80 transition-colors">
-                Change school
-              </button>
+              <Lock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 ml-auto shrink-0" />
+              <span className="text-xs text-gray-400 dark:text-gray-500">Assigned by admin</span>
             </div>
           </div>
 

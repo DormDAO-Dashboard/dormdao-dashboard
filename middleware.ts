@@ -42,7 +42,9 @@ export async function middleware(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // Slow path: check DB (runs once until cookie is stamped)
+    // Slow path: check DB (runs once until cookie is stamped).
+    // School is pre-assigned by admin and stamped at auth callback / wallet
+    // login — so this redirect fires only for legacy accounts or missed upserts.
     const { data: profile } = await supabase
       .from("profiles")
       .select("school")

@@ -16,10 +16,20 @@ export function getAdminConfig(): AdminMember {
   };
 }
 
-/** Returns true if the provided email or wallet belongs to the registered admin. */
+/** Returns the full set of admin emails (primary + ADMIN_EMAILS list). */
+function getAdminEmails(): string[] {
+  const primary = (process.env.ADMIN_EMAIL ?? "jack@dormdao.io").toLowerCase();
+  const extra = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return [primary, ...extra];
+}
+
+/** Returns true if the provided email or wallet belongs to any registered admin. */
 export function isAdminUser(email: string | undefined, wallet: string | undefined): boolean {
   const cfg = getAdminConfig();
-  if (email  && cfg.email  && email.toLowerCase()  === cfg.email.toLowerCase())  return true;
+  if (email && getAdminEmails().includes(email.toLowerCase())) return true;
   if (wallet && cfg.wallet && wallet.toLowerCase() === cfg.wallet.toLowerCase()) return true;
   return false;
 }

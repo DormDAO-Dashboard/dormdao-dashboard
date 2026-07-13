@@ -20,7 +20,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const errorCode = searchParams.get("error");
   const errorMsg =
-    errorCode === "not_member"
+    errorCode === "not_member" || errorCode === "not_registered"
       ? "Your account is not registered. Contact a DormDAO admin to get access."
       : errorCode
       ? "Something went wrong. Please try again."
@@ -154,6 +154,9 @@ export default function LoginPage() {
 
           <p className="text-xs text-gray-600 text-center">
             By signing in you agree to use this for DormDAO community purposes only.
+          </p>
+          <p className="text-xs text-gray-600 text-center">
+            DormDAO is invitation-only. Access is granted by your school&apos;s admin.
           </p>
         </div>
       </div>

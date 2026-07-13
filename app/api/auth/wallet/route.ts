@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { recoverMessageAddress } from "viem";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getAdminConfig, isAdminUser } from "@/lib/admin-config";
-import { isRegisteredUser } from "@/lib/access-control";
+import { isRegisteredUser, getMemberForUser } from "@/lib/access-control";
+import { logLoginAttempt } from "@/lib/login-attempts";
 
 export async function POST(request: NextRequest) {
   let body: { address?: string; signature?: string; nonce?: string };
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
   // Gate: only registered admins/members may sign in
   const allowed = await isRegisteredUser(undefined, address);
   if (!allowed) {
+    await logLoginAttempt({ walletAddress: address, reason: "not_registered" });
     return NextResponse.json(
       { error: "Wallet not registered. Contact a DormDAO admin to get access." },
       { status: 403 },
@@ -52,6 +54,9 @@ export async function POST(request: NextRequest) {
   const supabase   = createServiceClient();
   const admin      = getAdminConfig();
   const adminMatch = isAdminUser(undefined, address);
+
+  // Look up the member record to get their pre-assigned school
+  const member = adminMatch ? null : await getMemberForUser(undefined, address);
 
   // Synthetic email used to anchor this wallet to a Supabase auth account
   const walletEmail = `wallet-${address.toLowerCase()}@wallet.dormdao.io`;
@@ -87,5 +92,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return NextResponse.json({ token_hash: linkData.properties.hashed_token });
+  // Stamp the member's pre-assigned school onto their profile
+  const userId = newUserId ?? linkData.user?.id;
+  if (member?.school && userId) {
+    await supabase
+      .from("profiles")
+      .upsert({ id: userId, school: member.school }, { onConflict: "id" });
+  }
+
+  const res = NextResponse.json({ token_hash: linkData.properties.hashed_token });
+  if (member?.school && userId) {
+    res.cookies.set("ddo-school-ok", "1", { path: "/", httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 30 });
+  }
+  return res;
 }

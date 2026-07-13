@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   if (!await requireAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json() as {
-    members: Array<{ name: string; votingUnits: number; email: string; walletAddress: string }>;
+    members: Array<{ name: string; votingUnits: number; email: string; walletAddress: string; school?: string | null }>;
   };
 
   if (!Array.isArray(body.members) || body.members.length === 0) {
@@ -32,10 +32,11 @@ export async function POST(req: NextRequest) {
   const errors: string[] = [];
 
   for (const m of body.members) {
-    const name    = m.name?.trim();
-    const email   = m.email?.trim().toLowerCase() ?? "";
-    const wallet  = m.walletAddress?.trim().toLowerCase() ?? "";
-    const units   = Number.isFinite(m.votingUnits) ? m.votingUnits : 10;
+    const name   = m.name?.trim();
+    const email  = m.email?.trim().toLowerCase() ?? "";
+    const wallet = m.walletAddress?.trim().toLowerCase() ?? "";
+    const units  = Number.isFinite(m.votingUnits) ? m.votingUnits : 10;
+    const school = m.school?.trim() || null;
 
     if (!name) { errors.push("A row is missing a name — skipped."); continue; }
     if (!email && !wallet) { errors.push(`"${name}" needs at least an email or wallet address.`); continue; }
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
       votingUnits: units,
       email: m.email?.trim() ?? "",
       walletAddress: m.walletAddress?.trim() ?? "",
+      school,
       createdAt: new Date().toISOString(),
     });
   }

@@ -4,6 +4,8 @@ import * as Dialog from "@radix-ui/react-dialog";
 import Papa from "papaparse";
 import { UserPlus, Upload, FilePlus, X, Trash2, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SCHOOL_NAMES } from "@/lib/schoolData";
+import { SchoolLogo } from "@/components/SchoolLogo";
 
 interface Member {
   id: string;
@@ -11,6 +13,7 @@ interface Member {
   votingUnits: number;
   email: string;
   walletAddress: string;
+  school: string | null;
   createdAt: string;
 }
 
@@ -19,6 +22,7 @@ interface MemberDraft {
   votingUnits: number;
   email: string;
   walletAddress: string;
+  school: string | null;
 }
 
 interface CSVRow {
@@ -26,10 +30,11 @@ interface CSVRow {
   units?: string;
   email?: string;
   walletAddress?: string;
+  school?: string;
   [key: string]: string | undefined;
 }
 
-const EMPTY_DRAFT: MemberDraft = { name: "", votingUnits: 10, email: "", walletAddress: "" };
+const EMPTY_DRAFT: MemberDraft = { name: "", votingUnits: 10, email: "", walletAddress: "", school: null };
 
 export function AdminMembersSection({ initialMembers }: { initialMembers: Member[] }) {
   const [members, setMembers]   = useState<Member[]>(initialMembers);
@@ -86,6 +91,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
             votingUnits: parseInt(row.units ?? "10", 10) || 10,
             email: row.email?.trim() ?? "",
             walletAddress: row.walletAddress?.trim() ?? "",
+            school: row.school?.trim() || null,
           });
         });
         setCsvRows(rows);
@@ -236,6 +242,19 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                       className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-xs text-white placeholder-gray-500 font-mono focus:outline-none focus:border-primary/50"
                     />
                   </Field>
+                  <Field label="School *">
+                    <select
+                      value={draft.school ?? ""}
+                      onChange={(e) => setDraft({ ...draft, school: e.target.value || null })}
+                      required
+                      className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50"
+                    >
+                      <option value="">— Select school —</option>
+                      {SCHOOL_NAMES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </Field>
                   {manualErr && <ErrorBanner>{manualErr}</ErrorBanner>}
                 </div>
               )}
@@ -245,7 +264,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 <div className="flex flex-col gap-3">
                   <p className="text-xs text-gray-500">
                     CSV must have headers in row 1:{" "}
-                    <code className="text-gray-300">name, units, email, walletAddress</code>
+                    <code className="text-gray-300">name, units, email, walletAddress, school</code>
                   </p>
                   <label className="flex items-center justify-center gap-2 w-full px-4 py-4 rounded-lg border-2 border-dashed border-gray-700 hover:border-gray-500 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer text-sm">
                     <Upload className="w-4 h-4 shrink-0" />
@@ -268,6 +287,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                             <th className="text-right px-3 py-2">Units</th>
                             <th className="text-left px-3 py-2">Email</th>
                             <th className="text-left px-3 py-2">Wallet</th>
+                            <th className="text-left px-3 py-2">School</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -279,6 +299,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                               <td className="px-3 py-1.5 font-mono text-gray-500">
                                 {r.walletAddress ? `${r.walletAddress.slice(0, 6)}…${r.walletAddress.slice(-4)}` : "—"}
                               </td>
+                              <td className="px-3 py-1.5 text-gray-400">{r.school || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -332,6 +353,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
           <thead>
             <tr className="border-b border-gray-800 text-xs text-gray-500">
               <th className="text-left px-5 py-3">Name</th>
+              <th className="text-left px-5 py-3">School</th>
               <th className="text-right px-5 py-3">Voting Units</th>
               <th className="text-left px-5 py-3">Email</th>
               <th className="text-left px-5 py-3">Wallet</th>
@@ -342,6 +364,16 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
             {members.map((m) => (
               <tr key={m.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
                 <td className="px-5 py-3 font-medium text-white">{m.name}</td>
+                <td className="px-5 py-3">
+                  {m.school ? (
+                    <div className="flex items-center gap-1.5">
+                      <SchoolLogo name={m.school} size={14} />
+                      <span className="text-xs text-gray-300">{m.school}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-600">—</span>
+                  )}
+                </td>
                 <td className="px-5 py-3 text-right font-mono text-primary">{m.votingUnits}</td>
                 <td className="px-5 py-3 text-gray-400">{m.email || "—"}</td>
                 <td className="px-5 py-3 font-mono text-gray-500 text-xs">
@@ -363,7 +395,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
             ))}
             {members.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-gray-600 text-sm">
+                <td colSpan={6} className="px-5 py-8 text-center text-gray-600 text-sm">
                   No members yet — click <span className="text-gray-400">Add Members</span> to register the first one.
                 </td>
               </tr>

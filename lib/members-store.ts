@@ -9,6 +9,7 @@ export interface Member {
   votingUnits: number;
   email: string;
   walletAddress: string;
+  school: string | null;
   createdAt: string;
 }
 
@@ -27,7 +28,9 @@ export async function getMembers(): Promise<Member[]> {
     const { data, error } = await storage.download(FILE);
     if (error || !data) return [];
     const text = await data.text();
-    return JSON.parse(text) as Member[];
+    const raw = JSON.parse(text) as Member[];
+    // Backward compat: existing members without school get null
+    return raw.map((m) => ({ school: null, ...m }));
   } catch {
     return [];
   }
@@ -52,4 +55,24 @@ export async function isRegisteredMember(
     if (wallet && m.walletAddress && m.walletAddress.toLowerCase() === wallet.toLowerCase()) return true;
     return false;
   });
+}
+
+export async function getMemberForUser(
+  email: string | undefined,
+  wallet: string | undefined,
+): Promise<Member | null> {
+  const members = await getMembers();
+  if (email) {
+    const found = members.find(
+      (m) => m.email && m.email.toLowerCase() === email.toLowerCase(),
+    );
+    if (found) return found;
+  }
+  if (wallet) {
+    const found = members.find(
+      (m) => m.walletAddress && m.walletAddress.toLowerCase() === wallet.toLowerCase(),
+    );
+    if (found) return found;
+  }
+  return null;
 }
