@@ -2,10 +2,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { X, ArrowRight } from "lucide-react";
+import { X } from "lucide-react";
 
 // ── Zone config — edit points here to reposition building outlines ───────────
 // All coordinates are in 1920×1080 SVG space (viewBox="0 0 1920 1080")
+// Mapping to screen: screen_x = SVG_x × scale − x_crop; screen_y = SVG_y × scale
+// (scale/crop depend on viewport; buildings stay aligned because SVG uses same transform as img object-cover)
 interface Zone {
   id: string;
   label: string;
@@ -19,8 +21,8 @@ const ZONES: Zone[] = [
   {
     id: "dorm-capital",
     label: "Dorm Capital",
-    // Lillis: upper-left glass/solar building — tightened to actual building edge
-    points: "55,55 585,55 638,108 638,478 522,528 78,528 44,478 44,138",
+    // Lillis: upper-left large glass/solar building (~x 3–38%, y 5–50%)
+    points: "50,50 700,50 755,96 755,528 638,542 50,542 24,492 24,86",
     action: "navigate",
     href: "/analytics",
     description: "The DormDAO investment portfolio dashboard",
@@ -28,30 +30,29 @@ const ZONES: Zone[] = [
   {
     id: "dorm-builders",
     label: "Dorm Builders",
-    // Knight Library: lower-left classical columns — pulled up from road
-    points: "48,542 434,542 468,578 468,806 412,870 48,870 26,830 26,558",
+    // Knight Library: lower-left classical columns building (~x 3–25%, y 52–83%)
+    points: "46,556 474,556 506,592 506,852 450,894 46,894 20,848 20,572",
     action: "modal",
     description: "Tools and resources for building in web3",
   },
   {
     id: "dorm-summit",
     label: "Dorm Summit",
-    // EMU glass dome: center — right edge stops before Arena facade at x≈870
-    points: "735,282 862,264 875,306 870,462 810,478 748,484 703,448 703,298",
+    // EMU: center glass dome building (~x 47–57%, y 30–47%) — moved right from prior estimate
+    points: "958,338 1178,320 1198,360 1194,492 1124,512 964,520 918,474 918,352",
     action: "modal",
     description: "The DormDAO annual summit and events",
   },
   {
     id: "dorm-catalyst",
     label: "Dorm Catalyst",
-    // Matthew Knight Arena: upper-right dome — left starts at x=878 after Summit ends
-    points: "878,28 1462,28 1530,90 1530,450 1462,492 978,462 915,394 915,88",
+    // Matthew Knight Arena: upper-right dome with Oregon O (~x 52–100%, y 2–46%)
+    points: "988,20 1824,20 1904,82 1904,498 1824,516 1000,494 950,442 950,80",
     action: "modal",
     description: "Accelerating the next generation of crypto founders",
   },
 ];
 
-// Particles in SVG coordinate space — spread across the 1920×1080 canvas
 const PARTICLES = [
   { id: 0, cx: 154,  cy: 130, delay: "0s",   dur: "4.2s" },
   { id: 1, cx: 422,  cy: 334, delay: "1.1s", dur: "5.3s" },
@@ -114,7 +115,7 @@ function ComingSoonModal({ zone, onClose }: { zone: Zone; onClose: () => void })
           href="/leaderboard"
           className="flex items-center justify-center gap-2 w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2.5 rounded-lg transition-colors"
         >
-          Enter Dashboard <ArrowRight className="w-4 h-4" />
+          Enter Dashboard
         </Link>
       </div>
     </div>
@@ -160,146 +161,133 @@ export default function MapPage() {
         </p>
         <Link
           href="/leaderboard"
-          className="flex items-center gap-2 bg-green-700 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+          className="bg-green-700 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
         >
-          Enter Dashboard <ArrowRight className="w-4 h-4" />
+          Enter Dashboard
         </Link>
       </div>
 
-      {/* ── Desktop full-screen ────────────────────────────────────────────── */}
-      {/* fixed inset-0 z-[100] sits above AppShell sidebar (z-40) and header (z-30) */}
-      <div className="fixed inset-0 z-[100] hidden md:flex flex-col bg-[#0a0a0a]">
+      {/* ── Desktop: true full-screen, no header bar ───────────────────────── */}
+      <div className="fixed inset-0 z-[100] hidden md:block bg-[#0a0a0a]">
 
-        {/* Top bar */}
-        <header
-          className="relative z-10 flex items-center justify-between px-5 shrink-0 border-b border-white/10"
-          style={{ height: 48, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)" }}
+        {/* Campus image — fills entire viewport */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/campus-map.png"
+          alt="DormDAO Campus"
+          className="absolute inset-0 w-full h-full object-cover object-center select-none"
+          draggable={false}
+        />
+
+        {/* Vignette */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(0,0,0,0.4) 100%)",
+          }}
+        />
+
+        {/* SVG overlay — identical scale/crop as image via xMidYMid slice */}
+        <svg
+          className="absolute inset-0 w-full h-full"
+          viewBox="0 0 1920 1080"
+          preserveAspectRatio="xMidYMid slice"
+          aria-hidden="true"
         >
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl leading-none">🍜</span>
-            <span
-              className="text-white font-semibold text-sm tracking-wide"
-              style={{ fontFamily: "'Antikor Text', sans-serif" }}
-            >
-              Campus Map
-            </span>
-          </div>
-          <Link
-            href="/leaderboard"
-            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white border border-white/20 hover:border-white/40 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            Enter Dashboard <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </header>
+          {/* Ambient particles */}
+          {PARTICLES.map((p) => (
+            <circle
+              key={p.id}
+              cx={p.cx}
+              cy={p.cy}
+              r={3}
+              fill="#C8A84B"
+              style={{
+                animation: `map-particle ${p.dur} ${p.delay} infinite ease-in-out`,
+                pointerEvents: "none",
+              }}
+            />
+          ))}
 
-        {/* Map area */}
-        <div className="relative flex-1 overflow-hidden">
+          {/* Building zones */}
+          {ZONES.map((zone) => {
+            const isHovered = hovered === zone.id;
+            const center = getPolygonCenter(zone.points);
 
-          {/* Campus image — object-cover matches SVG preserveAspectRatio="xMidYMid slice" */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/campus-map.png"
-            alt="DormDAO Campus"
-            className="absolute inset-0 w-full h-full object-cover object-center select-none"
-            draggable={false}
-          />
+            return (
+              <g key={zone.id}>
+                <polygon
+                  points={zone.points}
+                  fill={isHovered ? "rgba(200,168,75,0.15)" : "rgba(0,0,0,0)"}
+                  stroke={isHovered ? "#C8A84B" : "none"}
+                  strokeWidth={2}
+                  style={{
+                    filter: isHovered
+                      ? "drop-shadow(0 0 8px rgba(200,168,75,0.5))"
+                      : "none",
+                    cursor: "pointer",
+                    transition: "fill 200ms ease",
+                  }}
+                  onMouseEnter={() => setHovered(zone.id)}
+                  onMouseLeave={() => setHovered(null)}
+                  onClick={() => handleClick(zone)}
+                />
 
-          {/* Vignette */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: "radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(0,0,0,0.4) 100%)",
-            }}
-          />
-
-          {/* SVG overlay — same scaling as image via xMidYMid slice */}
-          <svg
-            className="absolute inset-0 w-full h-full"
-            viewBox="0 0 1920 1080"
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden="true"
-          >
-            {/* Ambient gold particles */}
-            {PARTICLES.map((p) => (
-              <circle
-                key={p.id}
-                cx={p.cx}
-                cy={p.cy}
-                r={3}
-                fill="#C8A84B"
-                style={{
-                  animation: `map-particle ${p.dur} ${p.delay} infinite ease-in-out`,
-                  pointerEvents: "none",
-                }}
-              />
-            ))}
-
-            {/* Building zones */}
-            {ZONES.map((zone) => {
-              const isHovered = hovered === zone.id;
-              const center = getPolygonCenter(zone.points);
-
-              return (
-                <g key={zone.id}>
-                  <polygon
-                    points={zone.points}
-                    fill={isHovered ? "rgba(200,168,75,0.15)" : "rgba(0,0,0,0)"}
-                    stroke={isHovered ? "#C8A84B" : "none"}
-                    strokeWidth={2}
-                    style={{
-                      filter: isHovered
-                        ? "drop-shadow(0 0 8px rgba(200,168,75,0.5))"
-                        : "none",
-                      cursor: "pointer",
-                      transition: "fill 200ms ease",
-                    }}
-                    onMouseEnter={() => setHovered(zone.id)}
-                    onMouseLeave={() => setHovered(null)}
-                    onClick={() => handleClick(zone)}
-                  />
-
-                  {/* Label banner — foreignObject stays in SVG coordinate space */}
-                  {isHovered && (
-                    <foreignObject
-                      x={center.x - 160}
-                      y={center.y - 130}
-                      width={320}
-                      height={80}
-                      style={{ overflow: "visible", pointerEvents: "none" }}
+                {isHovered && (
+                  <foreignObject
+                    x={center.x - 160}
+                    y={center.y - 130}
+                    width={320}
+                    height={80}
+                    style={{ overflow: "visible", pointerEvents: "none" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        animation: "map-bob 2s ease-in-out infinite",
+                      }}
                     >
                       <div
                         style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          animation: "map-bob 2s ease-in-out infinite",
+                          background: "linear-gradient(135deg, #1a2e1a, #0d1f0d)",
+                          border: "1px solid #C8A84B",
+                          borderRadius: "9999px",
+                          padding: "6px 18px",
+                          fontFamily: "'Antikor Text', sans-serif",
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          color: "white",
+                          whiteSpace: "nowrap",
+                          boxShadow: "0 0 16px rgba(200,168,75,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
+                          animation: "map-label-in 150ms ease-out forwards",
+                          letterSpacing: "0.025em",
                         }}
                       >
-                        <div
-                          style={{
-                            background: "linear-gradient(135deg, #1a2e1a, #0d1f0d)",
-                            border: "1px solid #C8A84B",
-                            borderRadius: "9999px",
-                            padding: "6px 18px",
-                            fontFamily: "'Antikor Text', sans-serif",
-                            fontSize: "14px",
-                            fontWeight: 600,
-                            color: "white",
-                            whiteSpace: "nowrap",
-                            boxShadow: "0 0 16px rgba(200,168,75,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
-                            animation: "map-label-in 150ms ease-out forwards",
-                            letterSpacing: "0.025em",
-                          }}
-                        >
-                          ◆ {zone.label}
-                        </div>
+                        ◆ {zone.label}
                       </div>
-                    </foreignObject>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
-        </div>
+                    </div>
+                  </foreignObject>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Bottom-left ramen logo */}
+        <Link
+          href="/leaderboard"
+          className="absolute bottom-5 left-5 z-10 flex items-center gap-2 group"
+          title="Enter Dashboard"
+        >
+          <span className="text-2xl opacity-75 group-hover:opacity-100 transition-opacity drop-shadow-lg">🍜</span>
+          <span
+            className="text-xs font-semibold text-white/50 group-hover:text-white/80 transition-colors"
+            style={{ fontFamily: "'Antikor Text', sans-serif" }}
+          >
+            DormDAO
+          </span>
+        </Link>
       </div>
 
       {modal && <ComingSoonModal zone={modal} onClose={() => setModal(null)} />}
