@@ -19,7 +19,8 @@ const ZONES: Zone[] = [
   {
     id: "dorm-capital",
     label: "Dorm Capital",
-    points: "150,80 580,80 620,180 620,480 520,520 150,520 100,420 100,160",
+    // Lillis: upper-left glass/solar building — tightened to actual building edge
+    points: "55,55 585,55 638,108 638,478 522,528 78,528 44,478 44,138",
     action: "navigate",
     href: "/analytics",
     description: "The DormDAO investment portfolio dashboard",
@@ -27,21 +28,24 @@ const ZONES: Zone[] = [
   {
     id: "dorm-builders",
     label: "Dorm Builders",
-    points: "80,540 420,540 460,580 460,820 400,860 80,860 40,820 40,580",
+    // Knight Library: lower-left classical columns — pulled up from road
+    points: "48,542 434,542 468,578 468,806 412,870 48,870 26,830 26,558",
     action: "modal",
     description: "Tools and resources for building in web3",
   },
   {
     id: "dorm-summit",
     label: "Dorm Summit",
-    points: "720,280 920,260 980,300 1000,420 940,460 760,480 700,440 700,320",
+    // EMU glass dome: center — right edge stops before Arena facade at x≈870
+    points: "735,282 862,264 875,306 870,462 810,478 748,484 703,448 703,298",
     action: "modal",
     description: "The DormDAO annual summit and events",
   },
   {
     id: "dorm-catalyst",
     label: "Dorm Catalyst",
-    points: "980,40 1440,40 1500,100 1500,440 1440,480 980,460 920,400 920,100",
+    // Matthew Knight Arena: upper-right dome — left starts at x=878 after Summit ends
+    points: "878,28 1462,28 1530,90 1530,450 1462,492 978,462 915,394 915,88",
     action: "modal",
     description: "Accelerating the next generation of crypto founders",
   },
