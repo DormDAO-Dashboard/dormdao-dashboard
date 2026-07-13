@@ -21,12 +21,12 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 const NAV_LINKS = [
   { href: "/",          label: "Leaderboard", icon: Trophy },
   { href: "/schools",   label: "Schools",     icon: GraduationCap },
+  { href: "/members",   label: "Members",     icon: Users },
   { href: "/analytics", label: "Analytics",   icon: BarChart2 },
   { href: "/tokens",    label: "Tokens",      icon: DollarSign },
   { href: "/activity",  label: "Activity",    icon: Activity },
   { href: "/news",      label: "News",        icon: Newspaper },
   { href: "/forum",     label: "Forum",       icon: MessagesSquare },
-  { href: "/members",   label: "Members",     icon: Users },
   { href: "/research",  label: "DormDocs",    icon: BookOpen },
   { href: "/about",     label: "About",       icon: Info },
 ] as const;
