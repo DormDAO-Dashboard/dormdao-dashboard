@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Trophy, GraduationCap, BarChart2, DollarSign, Activity,
   Newspaper, MessagesSquare, BookOpen, Info, Sun, Moon, User,
-  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck,
+  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users,
 } from "lucide-react";
 import { slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { href: "/activity",  label: "Activity",    icon: Activity },
   { href: "/news",      label: "News",        icon: Newspaper },
   { href: "/forum",     label: "Forum",       icon: MessagesSquare },
+  { href: "/members",   label: "Members",     icon: Users },
   { href: "/research",  label: "DormDocs",    icon: BookOpen },
   { href: "/about",     label: "About",       icon: Info },
 ] as const;
@@ -38,6 +39,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/activity":  "Activity",
   "/news":      "DAO Headlines",
   "/forum":     "Forum",
+  "/members":   "Members",
   "/research":  "DormDocs",
   "/about":     "About",
   "/profile":   "Profile",

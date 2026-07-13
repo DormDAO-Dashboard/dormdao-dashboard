@@ -12,7 +12,7 @@ import { SchoolPortfolioStats } from "@/components/SchoolPortfolioStats";
 import { ForumClient } from "@/components/ForumClient";
 import { VotingClient } from "@/components/VotingClient";
 
-const TABS = ["Portfolio", "History", "Members", "Documents", "Forum", "Voting"] as const;
+const TABS = ["Portfolio", "History", "Documents", "Members", "Voting", "Forum"] as const;
 type Tab = (typeof TABS)[number];
 
 interface Props {
@@ -22,6 +22,7 @@ interface Props {
 
 export function SchoolTabs({ school, otherSchools }: Props) {
   const [tab, setTab] = useState<Tab>("Portfolio");
+  const [membersCount, setMembersCount] = useState<number | null>(null);
 
   return (
     <>
@@ -38,8 +39,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
                 : "border-transparent text-gray-500 hover:text-gray-300 font-normal"
             )}
           >
-            {t}
-            {t === "Members" && null}
+            {t === "Members" && membersCount !== null ? `Members (${membersCount})` : t}
           </button>
         ))}
       </div>
@@ -116,7 +116,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
 
       {/* Members tab */}
       {tab === "Members" && (
-        <SchoolMembers schoolName={school.name} />
+        <SchoolMembers schoolName={school.name} onCountLoad={setMembersCount} />
       )}
 
       {/* Documents tab */}
