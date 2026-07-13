@@ -211,7 +211,7 @@ export function ProfileForm({
     <NormalProfile
       userId={userId}
       email={email}
-      initialAvatarUrl={initialAvatarUrl}
+      avatarUrl={initialAvatarUrl}
       initialDisplayName={initialDisplayName}
       initialSchool={initialSchool}
       initialBio={initialBio}
@@ -231,7 +231,7 @@ export function ProfileForm({
 function NormalProfile({
   userId,
   email,
-  initialAvatarUrl,
+  avatarUrl: initialAvatarUrl,
   initialDisplayName,
   initialSchool,
   initialBio,
