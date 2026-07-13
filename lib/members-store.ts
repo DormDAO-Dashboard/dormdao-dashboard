@@ -30,7 +30,7 @@ export async function getMembers(): Promise<Member[]> {
     const text = await data.text();
     const raw = JSON.parse(text) as Member[];
     // Backward compat: existing members without school get null
-    return raw.map((m) => ({ school: null, ...m }));
+    return raw.map((m) => ({ ...m, school: m.school ?? null }));
   } catch {
     return [];
   }
