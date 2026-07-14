@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ResearchNote } from "@/lib/types";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { SentimentBadge } from "@/components/ui/Badge";
 import { ThumbsUp, Trash2, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -129,7 +130,7 @@ export function NoteCard({ note, currentUserId, adminSecret, onDelete, onUpvote 
             </span>
           )}
           {note.school && (
-            <span className="text-xs text-gray-500">{note.school}</span>
+            <span className="text-xs text-gray-500">{schoolDisplayName(note.school)}</span>
           )}
         </div>
         {canDelete && (

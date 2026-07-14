@@ -10,6 +10,7 @@ import { cn, slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
 import { createClient } from "@/lib/supabase/client";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 // ── Static data ───────────────────────────────────────────────────────────────
 
@@ -215,7 +216,7 @@ function ResultRow({
       <ResultIcon result={result} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-gray-900 dark:text-white truncate leading-snug">
-          {result.label}
+          {result.type === "school" ? schoolDisplayName(result.label) : result.label}
         </div>
         {result.subtitle && (
           <div className="text-xs text-gray-400 dark:text-gray-500 truncate leading-snug">
@@ -286,7 +287,7 @@ export function GlobalSearch() {
       .map(t => ({ type: "token", label: t.name, subtitle: `$${t.ticker}`, href: `/tokens/${t.ticker.toLowerCase()}` }));
 
     const schools: SearchResult[] = SCHOOLS
-      .filter(s => s.name.toLowerCase().includes(q))
+      .filter(s => s.name.toLowerCase().includes(q) || schoolDisplayName(s.name).toLowerCase().includes(q))
       .slice(0, 3)
       .map(s => ({ type: "school", label: s.name, href: `/schools/${s.slug}` }));
 
@@ -317,7 +318,7 @@ export function GlobalSearch() {
 
   function saveRecent(r: SearchResult) {
     try {
-      const item: RecentItem = { label: r.label, href: r.href, type: r.type, external: r.external };
+      const item: RecentItem = { label: r.type === "school" ? schoolDisplayName(r.label) : r.label, href: r.href, type: r.type, external: r.external };
       const prev: RecentItem[] = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
       const deduped = prev.filter(x => x.href !== item.href);
       const next = [item, ...deduped].slice(0, MAX_RECENT);
@@ -437,7 +438,7 @@ export function GlobalSearch() {
                         <SchoolLogo name={userSchool.name} size={28} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{userSchool.name}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{schoolDisplayName(userSchool.name)}</div>
                         <div className="text-xs text-gray-400 dark:text-gray-500">Your school</div>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
@@ -503,7 +504,7 @@ export function GlobalSearch() {
           {/* ── Results ── */}
           {hasQuery && !loading && hasResults && (
             <div className="py-2">
-              {userSchool && userSchool.name.toLowerCase().includes(dq.toLowerCase()) && (() => {
+              {userSchool && (userSchool.name.toLowerCase().includes(dq.toLowerCase()) || schoolDisplayName(userSchool.name).toLowerCase().includes(dq.toLowerCase())) && (() => {
                 const colors = getSchoolColors(userSchool.slug);
                 return (
                   <>
@@ -519,7 +520,7 @@ export function GlobalSearch() {
                         <SchoolLogo name={userSchool.name} size={28} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{userSchool.name}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{schoolDisplayName(userSchool.name)}</div>
                         <div className="text-xs text-gray-400 dark:text-gray-500">Your school</div>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />

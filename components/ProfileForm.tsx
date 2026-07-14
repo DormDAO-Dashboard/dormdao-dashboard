@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { LogOut, Save, User, Pencil, X, Wallet, Lock, Eye, EyeOff, ExternalLink } from "lucide-react";
 
 const SCHOOL_OK_COOKIE = "ddo-school-ok";
@@ -111,7 +112,7 @@ function SetupCard({
             {school && (
               <div className="flex items-center gap-2 bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2.5">
                 <SchoolLogo name={school} size={18} />
-                <span className="text-sm text-white font-medium">{school}</span>
+                <span className="text-sm text-white font-medium">{schoolDisplayName(school)}</span>
                 <Lock className="w-3.5 h-3.5 text-gray-500 ml-auto shrink-0" />
                 <span className="text-xs text-gray-500">Assigned by DormDAO admin</span>
               </div>
@@ -356,7 +357,7 @@ function NormalProfile({
               <div className="flex items-center gap-1.5 mt-1">
                 <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-2.5 py-0.5">
                   <SchoolLogo name={school} size={14} />
-                  <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">{school}</span>
+                  <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">{schoolDisplayName(school)}</span>
                 </div>
               </div>
             )}
@@ -473,7 +474,7 @@ function NormalProfile({
           <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5">
             {school ? (
               <><SchoolLogo name={school} size={16} />
-                <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{school}</span></>
+                <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{schoolDisplayName(school)}</span></>
             ) : (
               <span className="text-sm text-gray-400 italic">No school assigned</span>
             )}

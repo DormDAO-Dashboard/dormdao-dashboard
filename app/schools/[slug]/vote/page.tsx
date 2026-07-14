@@ -8,6 +8,7 @@ import { getSchoolColors } from "@/lib/schoolColors";
 import { slugify } from "@/lib/utils";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { VotingClient } from "@/components/VotingClient";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 async function VotingPageContent({ slug }: { slug: string }) {
   const { schools } = await getSchoolsData();
@@ -29,10 +30,10 @@ async function VotingPageContent({ slug }: { slug: string }) {
           🗳️
         </div>
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-          Sign in to access {school.name} voting
+          Sign in to access {schoolDisplayName(school.name)} voting
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm">
-          Investment proposals and voting are available to verified {school.name} members.
+          Investment proposals and voting are available to verified {schoolDisplayName(school.name)} members.
         </p>
         <Link
           href="/login"
@@ -67,7 +68,7 @@ async function VotingPageContent({ slug }: { slug: string }) {
           Members only
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 max-w-sm">
-          This voting page is for {school.name} members only.
+          This voting page is for {schoolDisplayName(school.name)} members only.
         </p>
         {userSchoolSlug && (
           <Link
@@ -87,7 +88,7 @@ async function VotingPageContent({ slug }: { slug: string }) {
         href={`/schools/${slug}`}
         className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-white mb-5 transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to {school.name}
+        <ArrowLeft className="w-4 h-4" /> Back to {schoolDisplayName(school.name)}
       </Link>
 
       <div className="h-1 w-full rounded-full mb-5" style={{ backgroundColor: colors.primary }} />
@@ -96,7 +97,7 @@ async function VotingPageContent({ slug }: { slug: string }) {
         <SchoolLogo name={school.name} size={48} />
         <div>
           <h1 className="text-2xl font-semibold" style={{ color: colors.primary }}>
-            {school.name}
+            {schoolDisplayName(school.name)}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Investment Voting</p>
         </div>

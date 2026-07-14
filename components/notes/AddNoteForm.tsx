@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Sentiment } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { useToast } from "@/components/ui/Toaster";
 import { ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -185,7 +186,7 @@ export function AddNoteForm({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-white">New Research Note</h3>
         <div className="text-xs text-gray-500">
-          Posting as <span className="text-gray-300">{profileName}</span> · <span className="text-gray-300">{profileSchool}</span>
+          Posting as <span className="text-gray-300">{profileName}</span> · <span className="text-gray-300">{schoolDisplayName(profileSchool)}</span>
         </div>
       </div>
 

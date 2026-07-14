@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { ExternalLink } from "lucide-react";
 
 const SCHOOLS = [
@@ -127,7 +128,7 @@ export default function AboutPage() {
             <Link key={slug} href={`/schools/${slug}`}>
               <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4 hover:border-primary/40 hover:bg-gray-800/50 transition-all cursor-pointer flex flex-col items-center gap-2 text-center">
                 <SchoolLogo name={name} size={40} />
-                <span className="text-sm text-white font-medium">{name}</span>
+                <span className="text-sm text-white font-medium">{schoolDisplayName(name)}</span>
               </div>
             </Link>
           ))}

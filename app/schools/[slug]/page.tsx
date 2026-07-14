@@ -7,7 +7,7 @@ import { KpiCard, Skeleton } from "@/components/ui/Card";
 import { SchoolTabs } from "@/components/SchoolTabs";
 import { SyncFooter } from "@/components/SyncFooter";
 import { SchoolLogo } from "@/components/SchoolLogo";
-import { SCHOOL_SOCIALS } from "@/lib/schoolData";
+import { SCHOOL_SOCIALS, schoolDisplayName } from "@/lib/schoolData";
 import { ArrowLeft, Globe, X, Link2, Camera, MessageSquare, Send, Code2 } from "lucide-react";
 
 function SocialLinks({ name }: { name: string }) {
@@ -51,7 +51,7 @@ async function SchoolContent({ slug }: { slug: string }) {
   for (const h of school.holdings ?? []) {
     const others = schools
       .filter((s) => s.slug !== slug && s.holdings?.some((oh) => oh.ticker === h.ticker))
-      .map((s) => s.name);
+      .map((s) => schoolDisplayName(s.name));
     if (others.length > 0) otherSchools[h.ticker] = others;
   }
 
@@ -66,7 +66,7 @@ async function SchoolContent({ slug }: { slug: string }) {
         <SchoolLogo name={school.name} size={48} />
         <div>
           <div className="text-xs font-mono text-gray-500 mb-1">Rank #{school.rank}</div>
-          <h1 className="text-2xl font-semibold text-white">{school.name}</h1>
+          <h1 className="text-2xl font-semibold text-white">{schoolDisplayName(school.name)}</h1>
         </div>
       </div>
 

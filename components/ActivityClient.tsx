@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SchoolRow } from "@/lib/types";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { formatUSD } from "@/lib/utils";
 import { buildBuysList, BuyEntry, parseDateMs } from "@/components/RecentBuysFeed";
 import { Search } from "lucide-react";
@@ -100,7 +101,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
           className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
         >
           <option value="">All Schools</option>
-          {uniqueSchools.map(s => <option key={s} value={s}>{s}</option>)}
+          {uniqueSchools.map(s => <option key={s} value={s}>{schoolDisplayName(s)}</option>)}
         </select>
         <select
           value={tickerFilter}
@@ -167,7 +168,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                       <Link href={`/schools/${buy.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                         <SchoolLogo name={buy.school} size={20} />
                         <div>
-                          <div className="text-gray-300 text-xs">{buy.school}</div>
+                          <div className="text-gray-300 text-xs">{schoolDisplayName(buy.school)}</div>
                           <div className="text-[10px] text-gray-600 md:hidden mt-0.5">{buy.dateStr}</div>
                         </div>
                       </Link>

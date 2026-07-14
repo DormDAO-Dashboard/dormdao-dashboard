@@ -4,6 +4,7 @@ import { Check, Clock, ChevronDown, ChevronUp, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Proposal, deadlineLabel, votePercents, isActive } from "@/lib/proposals";
 import type { SchoolColors } from "@/lib/schoolColors";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 interface Props {
   proposal: Proposal;
@@ -112,7 +113,7 @@ export function ProposalCard({
           </div>
           <div className="flex justify-between items-center mt-1.5">
             <span className="text-xs text-gray-400">
-              {totalVotes} of {memberCount > 0 ? memberCount : "?"} {schoolName} members voted
+              {totalVotes} of {memberCount > 0 ? memberCount : "?"} {schoolDisplayName(schoolName)} members voted
             </span>
             {active && (
               <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -168,7 +169,7 @@ export function ProposalCard({
                   <span className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-white/95 dark:bg-gray-900/95 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
                     <Lock className="w-3 h-3" />
                     {isLoggedIn
-                      ? `Sign in as a ${schoolName} member to vote`
+                      ? `Sign in as a ${schoolDisplayName(schoolName)} member to vote`
                       : "Sign in to vote"}
                   </span>
                 </div>

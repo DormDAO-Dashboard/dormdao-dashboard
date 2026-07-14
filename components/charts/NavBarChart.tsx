@@ -5,7 +5,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/components/ThemeProvider";
 import { SchoolRow } from "@/lib/types";
-import { formatUSD, slugify } from "@/lib/utils";
+import { formatUSD } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { useEffect, useState } from "react";
 
 export function NavBarChart({ schools }: { schools: SchoolRow[] }) {
@@ -27,7 +28,9 @@ export function NavBarChart({ schools }: { schools: SchoolRow[] }) {
   const ttBord = light ? "#e5e7eb" : "#374151";
   const ttLbl  = light ? "#111827" : "#f3f4f6";
 
-  const sorted = [...schools].sort((a, b) => a.rank - b.rank);
+  const sorted = [...schools]
+    .sort((a, b) => a.rank - b.rank)
+    .map((s) => ({ ...s, name: schoolDisplayName(s.name) }));
   const minWidth = 600;
 
   const chart = (
@@ -54,7 +57,7 @@ export function NavBarChart({ schools }: { schools: SchoolRow[] }) {
         fill="#34d399"
         cursor="pointer"
         activeBar={{ fillOpacity: 0.7 }}
-        onClick={(data: any) => router.push(`/schools/${slugify(data.name)}`)}
+        onClick={(data: any) => router.push(`/schools/${data.slug}`)}
       >
         {!isMobile && (
           <LabelList

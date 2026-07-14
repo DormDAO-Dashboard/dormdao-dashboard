@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ActivityClient } from "@/components/ActivityClient";
 import { SchoolRowWithHoldings } from "@/lib/cache";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +73,7 @@ function AllExits({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHoldi
           >
             <option value="">All Schools</option>
             {schoolsInYear.map((name) => (
-              <option key={name} value={name}>{name}</option>
+              <option key={name} value={name}>{schoolDisplayName(name)}</option>
             ))}
           </select>
         )}
@@ -107,7 +108,7 @@ function AllExits({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHoldi
                         className="flex items-center gap-2 hover:text-primary transition-colors"
                       >
                         <SchoolLogo name={h.schoolName} size={20} />
-                        <span className="text-gray-300 text-xs">{h.schoolName}</span>
+                        <span className="text-gray-300 text-xs">{schoolDisplayName(h.schoolName)}</span>
                       </Link>
                     </td>
                     <td className="px-5 py-3">
@@ -237,7 +238,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                     <td className="px-5 py-3">
                       <Link href={`/schools/${h.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                         <SchoolLogo name={h.schoolName} size={20} />
-                        <span className="text-gray-300 text-xs">{h.schoolName}</span>
+                        <span className="text-gray-300 text-xs">{schoolDisplayName(h.schoolName)}</span>
                       </Link>
                     </td>
                     <td className="px-5 py-3 font-mono font-semibold text-white">{h.ticker}</td>
@@ -299,7 +300,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                       <td className="px-5 py-3">
                         <Link href={`/schools/${h.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                           <SchoolLogo name={h.schoolName} size={20} />
-                          <span className="text-gray-300 text-xs">{h.schoolName}</span>
+                          <span className="text-gray-300 text-xs">{schoolDisplayName(h.schoolName)}</span>
                         </Link>
                       </td>
                       <td className="px-5 py-3 font-mono font-semibold text-white">{h.ticker}</td>
@@ -531,7 +532,7 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                     <Link href={`/schools/${r.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                       <SchoolLogo name={r.schoolName} size={20} />
                       <div>
-                        <div className="text-gray-300 text-xs">{r.schoolName}</div>
+                        <div className="text-gray-300 text-xs">{schoolDisplayName(r.schoolName)}</div>
                         <div className="text-[10px] text-gray-600 md:hidden mt-0.5">{r.date || "—"}</div>
                       </div>
                     </Link>

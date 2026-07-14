@@ -4,7 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import Papa from "papaparse";
 import { UserPlus, Upload, FilePlus, X, Trash2, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SCHOOL_NAMES } from "@/lib/schoolData";
+import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { SchoolLogo } from "@/components/SchoolLogo";
 
 interface Member {
@@ -251,7 +251,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                     >
                       <option value="">— Select school —</option>
                       {SCHOOL_NAMES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
+                        <option key={s} value={s}>{schoolDisplayName(s)}</option>
                       ))}
                     </select>
                   </Field>
@@ -299,7 +299,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                               <td className="px-3 py-1.5 font-mono text-gray-500">
                                 {r.walletAddress ? `${r.walletAddress.slice(0, 6)}…${r.walletAddress.slice(-4)}` : "—"}
                               </td>
-                              <td className="px-3 py-1.5 text-gray-400">{r.school || "—"}</td>
+                              <td className="px-3 py-1.5 text-gray-400">{r.school ? schoolDisplayName(r.school) : "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -368,7 +368,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                   {m.school ? (
                     <div className="flex items-center gap-1.5">
                       <SchoolLogo name={m.school} size={14} />
-                      <span className="text-xs text-gray-300">{m.school}</span>
+                      <span className="text-xs text-gray-300">{schoolDisplayName(m.school)}</span>
                     </div>
                   ) : (
                     <span className="text-xs text-gray-600">—</span>

@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/Card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ADMIN_SECRET } from "@/lib/admin";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 const SENTIMENTS: Array<{ label: string; value: string }> = [
   { label: "All", value: "" },
@@ -109,7 +110,7 @@ export function ResearchClient({ initialTickers, hideHeader }: { initialTickers:
           >
             <option value="">All Schools</option>
             {SCHOOLS.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>{schoolDisplayName(s)}</option>
             ))}
           </select>
           <select

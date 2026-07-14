@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SchoolRow } from "@/lib/types";
 import { formatNav, formatUSD, formatPct, slugify } from "@/lib/utils";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { createClient } from "@/lib/supabase/client";
 import { Search } from "lucide-react";
 
@@ -23,7 +24,7 @@ function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
             <SchoolLogo name={s.name} size={32} />
             <div>
               <div className="text-xs font-mono text-gray-500 mb-1">Rank #{s.rank}</div>
-              <h2 className="text-white font-semibold">{s.name}</h2>
+              <h2 className="text-white font-semibold">{schoolDisplayName(s.name)}</h2>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -87,7 +88,10 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
 
   // When not searching, exclude user's school from main list (shown separately at top)
   const filtered = sortedAll.filter((s) => {
-    const matchesQuery = s.name.toLowerCase().includes(query.toLowerCase());
+    const q = query.toLowerCase();
+    const matchesQuery =
+      s.name.toLowerCase().includes(q) ||
+      schoolDisplayName(s.name).toLowerCase().includes(q);
     if (!matchesQuery) return false;
     if (!isSearching && userSlug === s.slug) return false;
     return true;

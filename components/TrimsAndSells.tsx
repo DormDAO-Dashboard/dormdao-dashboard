@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { TOKEN_META } from "@/lib/tokens";
 import { formatUSD } from "@/lib/utils";
 import { TrendingDown } from "lucide-react";
@@ -97,7 +98,7 @@ export function TrimsAndSells() {
             className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
           >
             <option value="">All Schools</option>
-            {uniqueSchools.map(s => <option key={s} value={s}>{s}</option>)}
+            {uniqueSchools.map(s => <option key={s} value={s}>{schoolDisplayName(s)}</option>)}
           </select>
         )}
       </div>
@@ -142,7 +143,7 @@ export function TrimsAndSells() {
                         className="flex items-center gap-2 hover:text-primary transition-colors"
                       >
                         <SchoolLogo name={c.school_name} size={20} />
-                        <span className="text-gray-300 text-xs">{c.school_name}</span>
+                        <span className="text-gray-300 text-xs">{schoolDisplayName(c.school_name)}</span>
                       </Link>
                     </td>
                     <td className="px-5 py-3">

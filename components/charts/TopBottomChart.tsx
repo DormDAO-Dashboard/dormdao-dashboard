@@ -5,7 +5,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/components/ThemeProvider";
 import { SchoolRow } from "@/lib/types";
-import { formatPct, slugify } from "@/lib/utils";
+import { formatPct } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 export function TopBottomChart({ schools }: { schools: SchoolRow[] }) {
   const router = useRouter();
@@ -25,8 +26,8 @@ export function TopBottomChart({ schools }: { schools: SchoolRow[] }) {
   const bottom3 = sorted.slice(-3);
 
   const data = [
-    ...top3.map((s) => ({ name: s.name, value: s.ethReturn })),
-    ...bottom3.map((s) => ({ name: s.name, value: s.ethReturn })),
+    ...top3.map((s) => ({ name: schoolDisplayName(s.name), slug: s.slug, value: s.ethReturn })),
+    ...bottom3.map((s) => ({ name: schoolDisplayName(s.name), slug: s.slug, value: s.ethReturn })),
   ];
 
   return (
@@ -54,7 +55,7 @@ export function TopBottomChart({ schools }: { schools: SchoolRow[] }) {
           radius={[0, 4, 4, 0]}
           cursor="pointer"
           activeBar={{ fillOpacity: 0.7 }}
-          onClick={(data: any) => router.push(`/schools/${slugify(data.name)}`)}
+          onClick={(data: any) => router.push(`/schools/${data.slug}`)}
         >
           {data.map((entry, i) => (
             <Cell key={i} fill={entry.value >= 0 ? "#34d399" : "#f87171"} />

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -15,7 +16,7 @@ function ReplyCard({ reply }: { reply: ForumReply }) {
       <SchoolLogo name={reply.school} size={20} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="text-xs font-medium text-gray-300">{reply.school}</span>
+          <span className="text-xs font-medium text-gray-300">{schoolDisplayName(reply.school)}</span>
           {reply.author_name && <span className="text-xs text-gray-600">· {reply.author_name}</span>}
           <span className="text-xs text-gray-700">· {timeAgo(reply.created_at)}</span>
         </div>
@@ -159,7 +160,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 flex-wrap">
             <SchoolLogo name={thread.school} size={18} />
-            <span className="text-xs text-gray-400 font-medium">{thread.school}</span>
+            <span className="text-xs text-gray-400 font-medium">{schoolDisplayName(thread.school)}</span>
             {thread.author_name && <span className="text-xs text-gray-600">· {thread.author_name}</span>}
             <span className="text-xs text-gray-700">· {timeAgo(thread.created_at)}</span>
           </div>

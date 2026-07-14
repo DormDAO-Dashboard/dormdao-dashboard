@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ExternalLink } from "lucide-react";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 interface MemberRow {
   id: string;
@@ -99,7 +100,7 @@ function MemberCard({ m, schoolName }: { m: FilteredMember; schoolName: string }
           {m.school && (
             <div className="flex items-center gap-1 mt-0.5">
               <SchoolLogo name={m.school} size={12} />
-              <span className="text-xs text-gray-500 truncate">{m.school}</span>
+              <span className="text-xs text-gray-500 truncate">{schoolDisplayName(m.school)}</span>
             </div>
           )}
         </div>

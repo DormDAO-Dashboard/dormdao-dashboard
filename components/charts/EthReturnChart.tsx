@@ -6,7 +6,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/components/ThemeProvider";
 import { SchoolRow } from "@/lib/types";
-import { formatPct, slugify } from "@/lib/utils";
+import { formatPct } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { useEffect, useState } from "react";
 
 export function EthReturnChart({ schools }: { schools: SchoolRow[] }) {
@@ -30,7 +31,9 @@ export function EthReturnChart({ schools }: { schools: SchoolRow[] }) {
   const refStr = light ? "#d1d5db" : "#4b5563";
   const refFil = light ? "#9ca3af" : "#6b7280";
 
-  const sorted = [...schools].sort((a, b) => b.ethReturn - a.ethReturn);
+  const sorted = [...schools]
+    .sort((a, b) => b.ethReturn - a.ethReturn)
+    .map((s) => ({ ...s, name: schoolDisplayName(s.name) }));
   const minWidth = 600;
 
   const chart = (
@@ -62,7 +65,7 @@ export function EthReturnChart({ schools }: { schools: SchoolRow[] }) {
         radius={[4, 4, 0, 0]}
         cursor="pointer"
         activeBar={{ fillOpacity: 0.7 }}
-        onClick={(data: any) => router.push(`/schools/${slugify(data.name)}`)}
+        onClick={(data: any) => router.push(`/schools/${data.slug}`)}
       >
         {sorted.map((s, i) => (
           <Cell key={i} fill={s.ethReturn >= 0 ? "#34d399" : "#f87171"} />

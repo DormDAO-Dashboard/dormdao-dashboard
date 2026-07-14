@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { SchoolRow } from "@/lib/types";
 import { formatNav, formatUSD, formatPct } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 type SortKey = "rank" | "nav" | "usdReturn" | "ethReturn" | "pctDeployed";
@@ -66,7 +67,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
                   href={`/schools/${s.slug}`}
                   className="text-white hover:text-primary font-medium transition-colors"
                 >
-                  {s.name}
+                  {schoolDisplayName(s.name)}
                 </Link>
               </td>
               <td className="px-5 py-3 text-right font-mono text-gray-200">

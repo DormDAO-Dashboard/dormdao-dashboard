@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { slugify, cn } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
 import { type Proposal, isActive } from "@/lib/proposals";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { ProposalCard } from "@/components/ProposalCard";
 import { NewProposalModal } from "@/components/NewProposalModal";
 import type { User } from "@supabase/supabase-js";
@@ -159,7 +160,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
         </div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Members Only</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
-          This voting page is for {schoolName} members only.
+          This voting page is for {schoolDisplayName(schoolName)} members only.
         </p>
       </div>
     );

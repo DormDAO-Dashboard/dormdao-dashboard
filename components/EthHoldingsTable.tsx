@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { SchoolRow } from "@/lib/types";
 import { formatNav } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 import Link from "next/link";
 
 interface EthRow {
@@ -70,7 +71,7 @@ export function EthHoldingsTable({ schools }: { schools: SchoolRow[] }) {
                     href={`/schools/${row.slug}`}
                     className="text-white hover:text-primary transition-colors"
                   >
-                    {row.name}
+                    {schoolDisplayName(row.name)}
                   </Link>
                 </td>
                 <td className={`px-5 py-3 text-right font-mono ${valueColor}`}>

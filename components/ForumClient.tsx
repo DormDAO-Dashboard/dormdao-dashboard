@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { ChevronUp, MessageSquare, MessagesSquare, Pin, Plus, X } from "lucide-react";
@@ -87,7 +88,7 @@ function ThreadCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 flex-wrap">
               <SchoolLogo name={thread.school} size={16} />
-              <span className="text-xs text-gray-400">{thread.school}</span>
+              <span className="text-xs text-gray-400">{schoolDisplayName(thread.school)}</span>
               {thread.author_name && <span className="text-xs text-gray-600">· {thread.author_name}</span>}
               <span className="text-xs text-gray-700">· {timeAgo(thread.created_at)}</span>
             </div>
@@ -173,7 +174,7 @@ function NewThreadModal({ userSchool, displayName, onClose, onSuccess }: NewThre
             <label className="text-xs text-gray-400 mb-1.5 block">School</label>
             <div className="flex items-center gap-2 bg-gray-800/60 rounded-lg px-3 py-2">
               <SchoolLogo name={userSchool} size={16} />
-              <span className="text-sm text-gray-300">{userSchool}</span>
+              <span className="text-sm text-gray-300">{schoolDisplayName(userSchool)}</span>
               <span className="text-xs text-gray-600 ml-auto">as {displayName || "Anonymous"}</span>
             </div>
           </div>

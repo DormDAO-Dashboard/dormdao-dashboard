@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { BellButton } from "@/components/BellButton";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -176,7 +177,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {(() => {
             const userSchoolSlug = userSchool ? slugify(userSchool) : null;
             const voteHref   = userSchoolSlug ? `/schools/${userSchoolSlug}/vote` : "/profile";
-            const voteLabel  = userSchoolSlug ? `${userSchool} Vote` : "Set School";
+            const voteLabel  = userSchoolSlug ? `${schoolDisplayName(userSchool)} Vote` : "Set School";
             const voteActive = userSchoolSlug ? matchesRoute(`/schools/${userSchoolSlug}/vote`, pathname) : false;
             const voteColor  = userSchoolSlug ? getSchoolColors(userSchoolSlug).primary : undefined;
 
@@ -310,7 +311,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 "text-xs text-gray-400 whitespace-nowrap transition-all duration-150",
                 expanded ? "opacity-100" : "opacity-0 pointer-events-none"
               )}>
-                {userSchool}
+                {schoolDisplayName(userSchool)}
               </span>
             </Link>
           )}
@@ -386,7 +387,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {user && (() => {
                 const userSchoolSlug = userSchool ? slugify(userSchool) : null;
                 const voteHref   = userSchoolSlug ? `/schools/${userSchoolSlug}/vote` : "/profile";
-                const voteLabel  = userSchoolSlug ? `${userSchool} Vote` : "Set School";
+                const voteLabel  = userSchoolSlug ? `${schoolDisplayName(userSchool)} Vote` : "Set School";
                 const voteActive = userSchoolSlug ? matchesRoute(`/schools/${userSchoolSlug}/vote`, pathname) : false;
                 const voteColor  = userSchoolSlug ? getSchoolColors(userSchoolSlug).primary : undefined;
                 return (

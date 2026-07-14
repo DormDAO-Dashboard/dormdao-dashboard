@@ -5,6 +5,7 @@ import { FileText, Download, Upload, Lock, Play } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { VideoModal } from "@/components/VideoModal";
 import { getLockReason, type TokenDocument } from "@/lib/documents";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 function formatDocDate(dateStr: string | null): string {
   if (!dateStr) return "";
@@ -124,7 +125,7 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
         )}
       </div>
       {isVideo && (
-        <p className="text-[11px] text-gray-500">Videos are visible to {schoolName} members only.</p>
+        <p className="text-[11px] text-gray-500">Videos are visible to {schoolDisplayName(schoolName)} members only.</p>
       )}
       {error && <p className="text-xs text-red-400">{error}</p>}
       <button
@@ -273,7 +274,7 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
             {!isLoggedIn ? (
               <><Link href="/login" className="text-primary hover:underline">Sign in</Link> and set your school to upload documents.</>
             ) : (
-              <>Members of {schoolName} can <Link href="/profile" className="text-primary hover:underline">set their school on their profile</Link> to upload documents.</>
+              <>Members of {schoolDisplayName(schoolName)} can <Link href="/profile" className="text-primary hover:underline">set their school on their profile</Link> to upload documents.</>
             )}
           </div>
         )}

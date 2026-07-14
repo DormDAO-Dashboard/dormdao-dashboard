@@ -6,6 +6,7 @@ import { VideoModal } from "@/components/VideoModal";
 import Link from "next/link";
 import { slugify } from "@/lib/utils";
 import { getLockReason, type TokenDocument } from "@/lib/documents";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 function formatDocDate(dateStr: string | null): string {
   if (!dateStr) return "";
@@ -71,7 +72,7 @@ export function AllSchoolDocuments() {
             <div className="px-5 py-3 border-b border-gray-800 flex items-center gap-3">
               <SchoolLogo name={school} size={24} />
               <Link href={`/schools/${slugify(school)}`} className="text-sm font-semibold text-white hover:text-primary transition-colors">
-                {school}
+                {schoolDisplayName(school)}
               </Link>
               <span className="text-xs text-gray-600">{schoolDocs.length} document{schoolDocs.length !== 1 ? "s" : ""}</span>
             </div>

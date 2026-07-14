@@ -7,6 +7,36 @@ export const SCHOOL_NAMES = [
 
 export type SchoolName = (typeof SCHOOL_NAMES)[number];
 
+// User-facing display names: each school's blockchain club name.
+// Keys are the internal school identifiers used for data matching, logos,
+// slugs, and lookups — those must NOT change. Only the displayed label changes.
+export const SCHOOL_DISPLAY_NAMES: Record<string, string> = {
+  "Berkeley":       "Blockchain at Berkeley",
+  "Boston College": "BC Blockchain",
+  "Cambridge":      "Cambridge Blockchain Society",
+  "Columbia":       "Blockchain at Columbia",
+  "Cornell":        "Cornell Blockchain",
+  "Dartmouth":      "Voxchain",
+  "Michigan":       "Blockchain at Michigan",
+  "NYU":            "NYU Blockchain & Fintech",
+  "Oregon":         "Oregon Blockchain Group",
+  "Penn":           "FranklinDAO",
+  "Purdue":         "Boiler Blockchain",
+  "St. Andrews":    "St. Andrews Blockchain",
+  "Texas":          "Texas Blockchain",
+  "USC":            "Blockchain at SC",
+  "Vanderbilt":     "Vanderbilt Blockchain",
+  "Villanova":      "Villanova Blockchain",
+  "Waterloo":       "Waterloo Blockchain",
+};
+
+// Returns the blockchain-club display name for a school, falling back to the
+// original name for any school without a mapped club name (e.g. Imperial, UVA).
+export function schoolDisplayName(name: string | null | undefined): string {
+  if (!name) return name ?? "";
+  return SCHOOL_DISPLAY_NAMES[name] ?? name;
+}
+
 export interface SchoolSocials {
   website?: string;
   twitter?: string;

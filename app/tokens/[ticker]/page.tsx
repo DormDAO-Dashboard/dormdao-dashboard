@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { formatUSD, formatPrice, formatPct } from "@/lib/utils";
 import { TOKEN_META } from "@/lib/tokens";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { Skeleton } from "@/components/ui/Card";
 import { PriceLineChart } from "@/components/charts/PriceLineChart";
 import { FundDocuments } from "@/components/FundDocuments";
@@ -449,7 +450,7 @@ export default function TokenDetailPage() {
                         href={`/schools/${pos.slug}`}
                         className="text-white hover:text-primary font-medium transition-colors"
                       >
-                        {pos.school}
+                        {schoolDisplayName(pos.school)}
                       </Link>
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-gray-300">

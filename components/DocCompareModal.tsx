@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { X, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 export interface SchoolDocument {
   id: string;
@@ -55,7 +56,7 @@ export function DocCompareModal({ docs, onClose }: Props) {
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-white truncate">{doc.title}</p>
                 <p className="text-xs text-gray-500">
-                  {doc.school ?? "—"} · {formatDocType(doc.document_type)}
+                  {doc.school ? schoolDisplayName(doc.school) : "—"} · {formatDocType(doc.document_type)}
                 </p>
               </div>
               <a

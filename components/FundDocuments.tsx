@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { FileText, Download, Lock, Play } from "lucide-react";
 import { getLockReason, type TokenDocument } from "@/lib/documents";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { VideoModal } from "@/components/VideoModal";
 
 function formatDocDate(dateStr: string | null): string {
@@ -55,7 +56,7 @@ export function FundDocuments({ ticker, refreshKey = 0 }: { ticker: string; refr
                     <div className="flex items-center flex-wrap gap-2 mt-1">
                       <TypeBadge type={doc.document_type} />
                       {doc.school && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-700/60 text-gray-400">{doc.school}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-700/60 text-gray-400">{schoolDisplayName(doc.school)}</span>
                       )}
                       {doc.document_date && (
                         <span className="text-xs text-gray-600">{formatDocDate(doc.document_date)}</span>
@@ -80,7 +81,7 @@ export function FundDocuments({ ticker, refreshKey = 0 }: { ticker: string; refr
                     <div className="flex items-center flex-wrap gap-2 mt-1">
                       <TypeBadge type={doc.document_type} />
                       {doc.school && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-700/60 text-gray-300">{doc.school}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-700/60 text-gray-300">{schoolDisplayName(doc.school)}</span>
                       )}
                       {doc.document_date && (
                         <span className="text-xs text-gray-500">{formatDocDate(doc.document_date)}</span>
@@ -108,7 +109,7 @@ export function FundDocuments({ ticker, refreshKey = 0 }: { ticker: string; refr
                   <div className="flex items-center flex-wrap gap-2 mt-1">
                     <TypeBadge type={doc.document_type} />
                     {doc.school && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-700/60 text-gray-300">{doc.school}</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-700/60 text-gray-300">{schoolDisplayName(doc.school)}</span>
                     )}
                     {doc.document_date && (
                       <span className="text-xs text-gray-500">{formatDocDate(doc.document_date)}</span>

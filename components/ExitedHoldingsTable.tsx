@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { ExitedHolding } from "@/lib/types";
 import { formatUSD, formatPct, cn } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 function ExitTypeBadge({ type }: { type: ExitedHolding["exitType"] }) {
@@ -73,10 +74,10 @@ export function ExitedHoldingsTable({ holdings, showSchool = false, schoolName, 
                       href={`/schools/${schoolSlug}`}
                       className="text-gray-300 text-xs hover:text-primary transition-colors"
                     >
-                      {schoolName}
+                      {schoolDisplayName(schoolName)}
                     </Link>
                   ) : (
-                    <span className="text-gray-300 text-xs">{schoolName}</span>
+                    <span className="text-gray-300 text-xs">{schoolDisplayName(schoolName)}</span>
                   )}
                 </td>
               )}

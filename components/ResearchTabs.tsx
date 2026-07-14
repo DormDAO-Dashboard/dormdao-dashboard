@@ -5,6 +5,7 @@ import { DocCompareModal } from "@/components/DocCompareModal";
 import { VideoModal } from "@/components/VideoModal";
 import { getLockReason, type TokenDocument } from "@/lib/documents";
 import { cn } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ function LockedDocumentCard({ doc }: { doc: TokenDocument }) {
       )}>
         {formatDocType(doc.document_type)}
       </span>
-      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{doc.school ?? "—"}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
       <p className="text-xs text-gray-400 dark:text-gray-600 mt-auto pt-2">{reason}</p>
     </div>
   );
@@ -117,7 +118,7 @@ function VideoDocumentCard({ doc, onPlay }: { doc: TokenDocument; onPlay: () => 
       )}>
         {formatDocType(doc.document_type)}
       </span>
-      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{doc.school ?? "—"}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
       <p className="text-xs text-gray-400 dark:text-gray-600 mt-auto pt-2">{formatDocMonth(doc.document_date)}</p>
     </button>
   );
@@ -176,7 +177,7 @@ function DocumentCard({ doc, compareMode, selected, onToggle, disabled }: {
         )}>
           {formatDocType(doc.document_type)}
         </span>
-        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{doc.school ?? "—"}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
         {doc.token_ticker && !/^school$/i.test(doc.token_ticker) && (
           <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">${doc.token_ticker}</p>
         )}
@@ -267,7 +268,7 @@ function DormDocsGrid() {
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
           <Pill active={schoolFilter === ""} onClick={() => setSchoolFilter("")}>All Schools</Pill>
           {schools.map((s) => (
-            <Pill key={s} active={schoolFilter === s} onClick={() => setSchoolFilter(s)}>{s}</Pill>
+            <Pill key={s} active={schoolFilter === s} onClick={() => setSchoolFilter(s)}>{schoolDisplayName(s)}</Pill>
           ))}
         </div>
 

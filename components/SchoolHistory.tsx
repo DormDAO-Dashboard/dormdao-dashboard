@@ -5,6 +5,7 @@ import {
 } from "recharts";
 import { useTheme } from "@/components/ThemeProvider";
 import { formatUSD, formatPct } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 interface Snapshot {
   id: string;
@@ -68,7 +69,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
         <div className="text-4xl mb-4">📈</div>
         <h3 className="text-white font-semibold mb-2">Historical data is being collected</h3>
         <p className="text-gray-400 text-sm max-w-sm mx-auto">
-          Portfolio snapshots are captured daily. Check back tomorrow to see NAV and return history for {schoolName}.
+          Portfolio snapshots are captured daily. Check back tomorrow to see NAV and return history for {schoolDisplayName(schoolName)}.
         </p>
         <p className="text-gray-600 text-xs mt-3">{snapshots.length} snapshot{snapshots.length !== 1 ? "s" : ""} collected so far</p>
       </div>

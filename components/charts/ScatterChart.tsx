@@ -6,7 +6,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/components/ThemeProvider";
 import { SchoolRow } from "@/lib/types";
-import { formatUSD, slugify } from "@/lib/utils";
+import { formatUSD } from "@/lib/utils";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 export function DeploymentScatter({ schools }: { schools: SchoolRow[] }) {
   const router = useRouter();
@@ -20,7 +21,7 @@ export function DeploymentScatter({ schools }: { schools: SchoolRow[] }) {
   const ttBord = light ? "#e5e7eb" : "#374151";
   const axLbl  = light ? "#374151" : "#9ca3af";
 
-  const data = schools.map((s) => ({ name: s.name, x: s.pctDeployed, y: s.nav }));
+  const data = schools.map((s) => ({ name: schoolDisplayName(s.name), slug: s.slug, x: s.pctDeployed, y: s.nav }));
 
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -59,7 +60,7 @@ export function DeploymentScatter({ schools }: { schools: SchoolRow[] }) {
           data={data}
           fill="#34d399"
           cursor="pointer"
-          onClick={(point: any) => router.push(`/schools/${slugify(point.name)}`)}
+          onClick={(point: any) => router.push(`/schools/${point.slug}`)}
           onMouseEnter={(point: any) => setHoveredName(point.name)}
           onMouseLeave={() => setHoveredName(null)}
           shape={(props: any) => {

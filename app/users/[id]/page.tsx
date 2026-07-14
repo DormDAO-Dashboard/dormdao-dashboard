@@ -6,6 +6,7 @@ import { ArrowLeft, User, Pencil, Eye, EyeOff, ExternalLink } from "lucide-react
 import { NoteCard } from "@/components/notes/NoteCard";
 import { ResearchNote } from "@/lib/types";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
@@ -118,7 +119,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
               <Link href={`/schools/${slugify(profile.school as string)}`}
                 className="flex items-center gap-1.5 mt-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors w-fit">
                 <SchoolLogo name={profile.school as string} size={14} />
-                {profile.school}
+                {schoolDisplayName(profile.school as string)}
               </Link>
             )}
 

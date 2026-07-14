@@ -5,6 +5,7 @@ import { SchoolRow } from "@/lib/types";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { formatNav, formatPct, cn, slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { createClient } from "@/lib/supabase/client";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
@@ -99,7 +100,7 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
 
   const sorted = [...schools].sort((a, b) => {
     const mult = asc ? 1 : -1;
-    if (sortKey === "name") return a.name.localeCompare(b.name) * mult;
+    if (sortKey === "name") return schoolDisplayName(a.name).localeCompare(schoolDisplayName(b.name)) * mult;
     if (sortKey === "quarterlyUsd") return ((a.quarterlyUsdReturn ?? 0) - (b.quarterlyUsdReturn ?? 0)) * mult;
     return ((a.quarterlyEthReturn ?? 0) - (b.quarterlyEthReturn ?? 0)) * mult;
   });
@@ -135,7 +136,7 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
               <td className="px-2 py-1.5">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white truncate">{s.name}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white truncate">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
@@ -216,7 +217,7 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
               <td className="px-2 py-1.5">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white font-medium">{s.name}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white font-medium">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
@@ -283,7 +284,7 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
               <td className="px-2 py-1.5">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white truncate">{s.name}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white truncate">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>

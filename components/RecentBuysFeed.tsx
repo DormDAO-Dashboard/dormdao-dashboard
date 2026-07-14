@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SchoolRow } from "@/lib/types";
 import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
 import { formatUSD } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
@@ -120,7 +121,7 @@ export function RecentBuysFeed({ schools }: { schools: SchoolRow[] }) {
                   {buy.blockchain && <span className="text-xs text-gray-500">{buy.blockchain}</span>}
                 </div>
                 <div className="text-xs text-gray-500 mt-0.5">
-                  <Link href={`/schools/${buy.schoolSlug}`} className="hover:text-gray-300 transition-colors">{buy.school}</Link>
+                  <Link href={`/schools/${buy.schoolSlug}`} className="hover:text-gray-300 transition-colors">{schoolDisplayName(buy.school)}</Link>
                   {" · "}{daysAgo(buy.dateMs)}
                 </div>
               </div>
