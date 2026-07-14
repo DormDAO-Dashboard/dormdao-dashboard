@@ -122,10 +122,14 @@ function ComingSoonModal({ zone, onClose }: { zone: Zone; onClose: () => void })
   );
 }
 
+// Set true to show polygon outlines + live SVG cursor coords for calibration
+const DEBUG = true;
+
 export default function MapPage() {
   const router = useRouter();
   const [hovered, setHovered] = useState<string | null>(null);
   const [modal, setModal] = useState<Zone | null>(null);
+  const [debugCoords, setDebugCoords] = useState<{ x: number; y: number } | null>(null);
 
   const handleClick = useCallback((zone: Zone) => {
     if (zone.action === "navigate" && zone.href) {
@@ -134,6 +138,15 @@ export default function MapPage() {
       setModal(zone);
     }
   }, [router]);
+
+  const handleSvgMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!DEBUG) return;
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const x = Math.round((e.clientX - rect.left) * (1920 / rect.width));
+    const y = Math.round((e.clientY - rect.top) * (1080 / rect.height));
+    setDebugCoords({ x, y });
+  }, []);
 
   return (
     <>
@@ -193,6 +206,8 @@ export default function MapPage() {
           viewBox="0 0 1920 1080"
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
+          onMouseMove={handleSvgMouseMove}
+          onMouseLeave={() => setDebugCoords(null)}
         >
           {/* Ambient particles */}
           {PARTICLES.map((p) => (
@@ -219,8 +234,8 @@ export default function MapPage() {
                 <polygon
                   points={zone.points}
                   fill={isHovered ? "rgba(200,168,75,0.15)" : "rgba(0,0,0,0)"}
-                  stroke={isHovered ? "#C8A84B" : "none"}
-                  strokeWidth={2}
+                  stroke={isHovered ? "#C8A84B" : DEBUG ? "rgba(255,80,80,0.7)" : "none"}
+                  strokeWidth={isHovered ? 2 : DEBUG ? 1.5 : 0}
                   style={{
                     filter: isHovered
                       ? "drop-shadow(0 0 8px rgba(200,168,75,0.5))"
@@ -273,6 +288,13 @@ export default function MapPage() {
             );
           })}
         </svg>
+
+        {/* Debug coordinate HUD */}
+        {DEBUG && debugCoords && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-black/80 text-white font-mono text-xs px-3 py-1.5 rounded-full pointer-events-none select-none">
+            SVG {debugCoords.x}, {debugCoords.y}
+          </div>
+        )}
 
         {/* Bottom-left ramen logo */}
         <Link
