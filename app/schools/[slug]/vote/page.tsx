@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { getSchoolsData } from "@/lib/cache";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getSchoolColors } from "@/lib/schoolColors";
@@ -9,6 +9,7 @@ import { slugify } from "@/lib/utils";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { VotingClient } from "@/components/VotingClient";
 import { schoolDisplayName } from "@/lib/schoolData";
+import { isAdminUser } from "@/lib/admin-config";
 
 async function VotingPageContent({ slug }: { slug: string }) {
   const { schools } = await getSchoolsData();
@@ -54,8 +55,9 @@ async function VotingPageContent({ slug }: { slug: string }) {
     .single();
 
   const userSchoolSlug = profile?.school ? slugify(profile.school) : null;
+  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
 
-  if (userSchoolSlug !== slug) {
+  if (userSchoolSlug !== slug && !isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div
@@ -101,6 +103,12 @@ async function VotingPageContent({ slug }: { slug: string }) {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Investment Voting</p>
         </div>
+        {isAdmin && userSchoolSlug !== slug && (
+          <span className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Admin view
+          </span>
+        )}
       </div>
 
       <VotingClient slug={slug} schoolName={school.name} pageMode />

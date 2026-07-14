@@ -21,6 +21,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
 
   const [user, setUser] = useState<User | null>(null);
   const [userSchoolSlug, setUserSchoolSlug] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [memberCount, setMemberCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
 
   const isMember = !!user && userSchoolSlug === slug;
   const isLoggedIn = !!user;
+  const canManage = isMember || isAdmin;
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -60,6 +62,16 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
             .eq("id", u.id)
             .single();
           setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+
+          try {
+            const res = await fetch("/api/admin/check");
+            const json = await res.json() as { isAdmin: boolean };
+            setIsAdmin(json.isAdmin ?? false);
+          } catch {
+            setIsAdmin(false);
+          }
+        } else {
+          setIsAdmin(false);
         }
 
         const { count } = await supabase
@@ -80,6 +92,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
       setUser(session?.user ?? null);
       if (!session?.user) {
         setUserSchoolSlug(null);
+        setIsAdmin(false);
       } else {
         const { data: profile } = await supabase
           .from("profiles")
@@ -87,6 +100,13 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
           .eq("id", session.user.id)
           .single();
         setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+        try {
+          const res = await fetch("/api/admin/check");
+          const json = await res.json() as { isAdmin: boolean };
+          setIsAdmin(json.isAdmin ?? false);
+        } catch {
+          setIsAdmin(false);
+        }
       }
       await fetchProposals();
     });
@@ -149,7 +169,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
     );
   }
 
-  if (pageMode && user && !isMember) {
+  if (pageMode && user && !canManage) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div
@@ -187,7 +207,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
           ))}
         </div>
 
-        {isMember && (
+        {canManage && (
           <button
             onClick={() => setShowModal(true)}
             style={{ backgroundColor: colors.primary, color: colors.text }}

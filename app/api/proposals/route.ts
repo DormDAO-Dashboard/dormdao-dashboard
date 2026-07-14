@@ -4,6 +4,8 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import { sendPushNotifications } from "@/lib/push";
 import { sendEmailNotifications } from "@/lib/email";
+import { isAdminUser } from "@/lib/admin-config";
+import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import type { Proposal } from "@/lib/proposals";
 
 export async function GET(req: NextRequest) {
@@ -63,7 +65,9 @@ export async function POST(req: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  if (!profile?.school) {
+  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
+
+  if (!isAdmin && !profile?.school) {
     return NextResponse.json({ error: "Set your school on your profile before submitting" }, { status: 403 });
   }
 
@@ -81,7 +85,7 @@ export async function POST(req: NextRequest) {
   const { school, token_ticker, token_name, title, description, recommended_size_eth, price_target, voting_deadline } = body;
 
   if (!school) return NextResponse.json({ error: "school is required" }, { status: 400 });
-  if (slugify(profile.school) !== school) {
+  if (!isAdmin && slugify(profile?.school ?? "") !== school) {
     return NextResponse.json({ error: "You can only submit proposals for your own school" }, { status: 403 });
   }
   if (!token_ticker?.trim()) return NextResponse.json({ error: "token_ticker is required" }, { status: 400 });
@@ -104,7 +108,7 @@ export async function POST(req: NextRequest) {
       title: title.trim(),
       description: description.trim(),
       proposed_by: user.id,
-      proposed_by_name: profile.display_name || "Anonymous",
+      proposed_by_name: profile?.display_name || "Anonymous",
       recommended_size_eth: recommended_size_eth ?? null,
       price_target: price_target ?? null,
       voting_deadline: deadline.toISOString(),
@@ -115,11 +119,12 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const created = proposal as Proposal;
+  const targetSchoolName = SCHOOL_NAMES.find((name) => slugify(name) === school);
   after(async () => {
     const payload = {
       type: "vote" as const,
       title: `🗳️ New proposal: ${created.token_ticker}`,
-      body: `${profile.school} is voting on ${created.token_name}. Cast your vote.`,
+      body: `${targetSchoolName ? schoolDisplayName(targetSchoolName) : profile?.school ?? "Your school"} is voting on ${created.token_name}. Cast your vote.`,
       url: `https://dormdao-dashboard.vercel.app/schools/${school}/vote`,
     };
     await sendPushNotifications(payload).catch(console.error);
