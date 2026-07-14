@@ -21,8 +21,8 @@ const ZONES: Zone[] = [
   {
     id: "dorm-capital",
     label: "Dorm Capital",
-    // Lillis: upper-left large glass/solar building (~x 3–38%, y 5–50%)
-    points: "50,50 700,50 755,96 755,528 638,542 50,542 24,492 24,86",
+    // Lillis: user-measured corners
+    points: "132,314 311,218 311,150 442,83 509,117 648,43 790,116 790,260 262,519 132,442",
     action: "navigate",
     href: "/analytics",
     description: "The DormDAO investment portfolio dashboard",
