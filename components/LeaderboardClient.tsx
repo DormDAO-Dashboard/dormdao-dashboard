@@ -70,7 +70,7 @@ function Panel({
       )}>
         {header}
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         {children}
       </div>
     </div>
@@ -108,17 +108,17 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
   const th = "px-3 py-1.5 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
 
   return (
-    <table className="w-full text-xs">
+    <table className="w-full table-fixed text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
-          <th className="px-3 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500 w-9">#</th>
-          <th className={cn(th, "text-left")} onClick={() => toggle("name")}>
+          <th className="px-3 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500 w-[12%]">#</th>
+          <th className={cn(th, "text-left w-[54%]")} onClick={() => toggle("name")}>
             School <SortIconNeutral col="name" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right")} onClick={() => toggle("quarterlyUsd")}>
+          <th className={cn(th, "text-right w-[17%]")} onClick={() => toggle("quarterlyUsd")}>
             USD <SortIconNeutral col="quarterlyUsd" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right")} onClick={() => toggle("quarterlyEth")}>
+          <th className={cn(th, "text-right w-[17%]")} onClick={() => toggle("quarterlyEth")}>
             ETH <SortIconNeutral col="quarterlyEth" sortKey={sortKey} asc={asc} />
           </th>
         </tr>
@@ -132,11 +132,11 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
               className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
-              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-9">{i + 1}</td>
-              <td className="px-3 py-1.5">
-                <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px]">{i + 1}</td>
+              <td className="px-3 py-1.5 overflow-hidden">
+                <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white truncate">{schoolDisplayName(s.name)}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white truncate min-w-0">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
@@ -185,20 +185,20 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
     <table className="w-full table-fixed text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
-          <th className={th("rank", "text-left w-9")} onClick={() => toggle("rank")}>
+          <th className={th("rank", "text-left w-[7%]")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className="px-3 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
-          <th className={th("nav", "text-right w-20")} onClick={() => toggle("nav")}>
+          <th className="px-3 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500 w-[40%]">School</th>
+          <th className={th("nav", "text-right w-[14%]")} onClick={() => toggle("nav")}>
             NAV <SortIconNeutral col="nav" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("usdReturn", "text-right w-20")} onClick={() => toggle("usdReturn")}>
+          <th className={th("usdReturn", "text-right w-[13%]")} onClick={() => toggle("usdReturn")}>
             USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("ethReturn", "text-right w-20")} onClick={() => toggle("ethReturn")}>
+          <th className={th("ethReturn", "text-right w-[13%]")} onClick={() => toggle("ethReturn")}>
             ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("pctDeployed", "text-right w-24")} onClick={() => toggle("pctDeployed")}>
+          <th className={th("pctDeployed", "text-right w-[13%]")} onClick={() => toggle("pctDeployed")}>
             Deployed <SortIconNeutral col="pctDeployed" sortKey={sortKey} asc={asc} yellow />
           </th>
         </tr>
@@ -213,7 +213,7 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
               className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors"
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
-              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-9">{displayRank}</td>
+              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px]">{displayRank}</td>
               <td className="px-3 py-1.5 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
@@ -221,10 +221,10 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
                   {isYou && <YouBadge />}
                 </Link>
               </td>
-              <td className="px-3 py-1.5 text-right font-mono text-gray-700 dark:text-gray-300 text-[11px] tabular-nums w-20">{formatNav(s.nav)}</td>
-              <td className="px-3 py-1.5 text-right w-20"><ReturnCell value={s.usdReturn} /></td>
-              <td className="px-3 py-1.5 text-right w-20"><ReturnCell value={s.ethReturn} /></td>
-              <td className="px-3 py-1.5 text-right font-mono text-gray-600 dark:text-gray-400 text-[11px] tabular-nums w-24">
+              <td className="px-3 py-1.5 text-right font-mono text-gray-700 dark:text-gray-300 text-[11px] tabular-nums">{formatNav(s.nav)}</td>
+              <td className="px-3 py-1.5 text-right"><ReturnCell value={s.usdReturn} /></td>
+              <td className="px-3 py-1.5 text-right"><ReturnCell value={s.ethReturn} /></td>
+              <td className="px-3 py-1.5 text-right font-mono text-gray-600 dark:text-gray-400 text-[11px] tabular-nums">
                 {s.pctDeployed > 0 ? formatPct(s.pctDeployed, false) : "—"}
               </td>
             </tr>
@@ -255,17 +255,17 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
   const th = "px-3 py-1.5 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
 
   return (
-    <table className="w-full text-xs">
+    <table className="w-full table-fixed text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
-          <th className={cn(th, "text-left w-9")} onClick={() => toggle("rank")}>
+          <th className={cn(th, "text-left w-[12%]")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} />
           </th>
-          <th className="px-3 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
-          <th className={cn(th, "text-right")} onClick={() => toggle("usdReturn")}>
+          <th className="px-3 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500 w-[54%]">School</th>
+          <th className={cn(th, "text-right w-[17%]")} onClick={() => toggle("usdReturn")}>
             USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right")} onClick={() => toggle("ethReturn")}>
+          <th className={cn(th, "text-right w-[17%]")} onClick={() => toggle("ethReturn")}>
             ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} />
           </th>
         </tr>
@@ -280,11 +280,11 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
               className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
-              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-9">{displayRank}</td>
-              <td className="px-3 py-1.5">
-                <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px]">{displayRank}</td>
+              <td className="px-3 py-1.5 overflow-hidden">
+                <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white truncate">{schoolDisplayName(s.name)}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white truncate min-w-0">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
@@ -358,10 +358,11 @@ export function LeaderboardClient({
       </div>
 
       {/* Three-panel layout */}
-      <div className="flex-1 min-h-0 flex gap-4">
+      <div className="flex-1 min-h-0 grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] gap-4">
 
         {/* ── Left: Quarterly ──────────────────────────────── */}
         <Panel
+          className="min-w-0"
           header={
             <>
               <div className="text-xs font-semibold text-gray-900 dark:text-white">Quarterly</div>
@@ -375,7 +376,7 @@ export function LeaderboardClient({
         {/* ── Middle: Current Season ────────────────────────── */}
         <Panel
           highlight
-          className="flex-1 min-w-0"
+          className="min-w-0"
           header={
             <>
               <div className="flex items-baseline gap-1.5">
@@ -412,6 +413,7 @@ export function LeaderboardClient({
 
         {/* ── Right: All-Time ───────────────────────────────── */}
         <Panel
+          className="min-w-0"
           header={
             <>
               <div className="text-xs font-semibold text-gray-900 dark:text-white">All-Time</div>
