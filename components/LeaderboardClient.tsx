@@ -182,24 +182,24 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
   );
 
   return (
-    <table className="w-full text-xs">
+    <table className="w-full table-fixed text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
           <th className={th("rank", "text-left w-7")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} yellow />
           </th>
           <th className="px-2 py-1.5 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
-          <th className={th("nav", "text-right")} onClick={() => toggle("nav")}>
+          <th className={th("nav", "text-right w-16")} onClick={() => toggle("nav")}>
             NAV <SortIconNeutral col="nav" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("usdReturn", "text-right")} onClick={() => toggle("usdReturn")}>
-            Return (USD) <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
+          <th className={th("usdReturn", "text-right w-14")} onClick={() => toggle("usdReturn")}>
+            USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("ethReturn", "text-right")} onClick={() => toggle("ethReturn")}>
-            Return (ETH) <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
+          <th className={th("ethReturn", "text-right w-14")} onClick={() => toggle("ethReturn")}>
+            ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("pctDeployed", "text-right")} onClick={() => toggle("pctDeployed")}>
-            % Deployed <SortIconNeutral col="pctDeployed" sortKey={sortKey} asc={asc} yellow />
+          <th className={th("pctDeployed", "text-right w-16")} onClick={() => toggle("pctDeployed")}>
+            Deployed <SortIconNeutral col="pctDeployed" sortKey={sortKey} asc={asc} yellow />
           </th>
         </tr>
       </thead>
@@ -214,17 +214,17 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
               <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px] w-7">{displayRank}</td>
-              <td className="px-2 py-1.5">
-                <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+              <td className="px-2 py-1.5 overflow-hidden">
+                <Link href={`/schools/${s.slug}`} className="flex items-center gap-1.5 min-w-0 hover:text-primary transition-colors">
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white font-medium">{schoolDisplayName(s.name)}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white font-medium truncate min-w-0">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
-              <td className="px-2 py-1.5 text-right font-mono text-gray-700 dark:text-gray-300 text-[11px] tabular-nums">{formatNav(s.nav)}</td>
-              <td className="px-2 py-1.5 text-right"><ReturnCell value={s.usdReturn} /></td>
-              <td className="px-2 py-1.5 text-right"><ReturnCell value={s.ethReturn} /></td>
-              <td className="px-2 py-1.5 text-right font-mono text-gray-600 dark:text-gray-400 text-[11px] tabular-nums">
+              <td className="px-2 py-1.5 text-right font-mono text-gray-700 dark:text-gray-300 text-[11px] tabular-nums w-16">{formatNav(s.nav)}</td>
+              <td className="px-2 py-1.5 text-right w-14"><ReturnCell value={s.usdReturn} /></td>
+              <td className="px-2 py-1.5 text-right w-14"><ReturnCell value={s.ethReturn} /></td>
+              <td className="px-2 py-1.5 text-right font-mono text-gray-600 dark:text-gray-400 text-[11px] tabular-nums w-16">
                 {s.pctDeployed > 0 ? formatPct(s.pctDeployed, false) : "—"}
               </td>
             </tr>
