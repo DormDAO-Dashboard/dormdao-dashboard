@@ -256,9 +256,9 @@ function NormalProfile({
   const [graduationYear, setGraduationYear] = useState(initialGraduationYear ? String(initialGraduationYear) : "");
   const [major, setMajor]                   = useState(initialMajor);
   const [avatarUrl, setAvatarUrl]           = useState<string | null>(initialAvatarUrl);
-  const [twitter, setTwitter]               = useState(initialTwitter);
+  const [twitter, setTwitter]               = useState(initialTwitter.replace(/^@+/, ""));
   const [linkedin, setLinkedin]             = useState(initialLinkedin);
-  const [telegram, setTelegram]             = useState(initialTelegram);
+  const [telegram, setTelegram]             = useState(initialTelegram.replace(/^@+/, ""));
   const [discord, setDiscord]               = useState(initialDiscord);
   const [walletAddress, setWalletAddress]   = useState(initialWalletAddress);
   const [isPublic, setIsPublic]             = useState(initialIsPublic);
@@ -314,9 +314,9 @@ function NormalProfile({
     setGraduationYear(initialGraduationYear ? String(initialGraduationYear) : "");
     setMajor(initialMajor);
     setAvatarUrl(initialAvatarUrl);
-    setTwitter(initialTwitter);
+    setTwitter(initialTwitter.replace(/^@+/, ""));
     setLinkedin(initialLinkedin);
-    setTelegram(initialTelegram);
+    setTelegram(initialTelegram.replace(/^@+/, ""));
     setDiscord(initialDiscord);
     setWalletAddress(initialWalletAddress);
     setIsPublic(initialIsPublic);
@@ -511,8 +511,12 @@ function NormalProfile({
 
         <div className="flex flex-col gap-1.5">
           <label className={labelCls}>Twitter / X</label>
-          <input value={twitter} onChange={(e) => setTwitter(e.target.value)}
-            placeholder="@handle" maxLength={60} className={inputCls} />
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-3 pr-1 focus-within:border-primary/50">
+            <span className="text-sm text-gray-400 dark:text-gray-500 select-none">@</span>
+            <input value={twitter} onChange={(e) => setTwitter(e.target.value.replace(/^@+/, ""))}
+              placeholder="yourhandle" maxLength={60}
+              className="flex-1 min-w-0 bg-transparent py-2.5 px-1 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none" />
+          </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -523,8 +527,12 @@ function NormalProfile({
 
         <div className="flex flex-col gap-1.5">
           <label className={labelCls}>Telegram</label>
-          <input value={telegram} onChange={(e) => setTelegram(e.target.value)}
-            placeholder="@handle" maxLength={60} className={inputCls} />
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-3 pr-1 focus-within:border-primary/50">
+            <span className="text-sm text-gray-400 dark:text-gray-500 select-none">@</span>
+            <input value={telegram} onChange={(e) => setTelegram(e.target.value.replace(/^@+/, ""))}
+              placeholder="yourhandle" maxLength={60}
+              className="flex-1 min-w-0 bg-transparent py-2.5 px-1 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none" />
+          </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -532,23 +540,6 @@ function NormalProfile({
           <input value={discord} onChange={(e) => setDiscord(e.target.value)}
             placeholder="username" maxLength={60} className={inputCls} />
           <p className="text-xs text-gray-400 dark:text-gray-600">Discord is never shown publicly.</p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>Wallet Address</label>
-          {identity.method === "metamask" ? (
-            <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5">
-              <Wallet className="w-4 h-4 text-gray-400 shrink-0" />
-              <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                {identity.walletAddress ? `${identity.walletAddress.slice(0, 6)}…${identity.walletAddress.slice(-4)}` : "—"}
-              </span>
-              <Lock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 ml-auto shrink-0" />
-            </div>
-          ) : (
-            <input value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)}
-              placeholder="0x…" maxLength={42} className={`${inputCls} font-mono text-xs`} />
-          )}
-          <p className="text-xs text-gray-400 dark:text-gray-600">Wallet address is never shown publicly.</p>
         </div>
       </div>
 
