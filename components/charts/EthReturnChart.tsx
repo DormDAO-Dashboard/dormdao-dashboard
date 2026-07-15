@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "@/components/ThemeProvider";
 import { SchoolRow } from "@/lib/types";
 import { formatPct } from "@/lib/utils";
-import { schoolDisplayName } from "@/lib/schoolData";
+import { schoolDisplayName, schoolShortName } from "@/lib/schoolData";
 import { useEffect, useState } from "react";
 
 export function EthReturnChart({ schools }: { schools: SchoolRow[] }) {
@@ -33,7 +33,7 @@ export function EthReturnChart({ schools }: { schools: SchoolRow[] }) {
 
   const sorted = [...schools]
     .sort((a, b) => b.ethReturn - a.ethReturn)
-    .map((s) => ({ ...s, name: schoolDisplayName(s.name) }));
+    .map((s) => ({ ...s, displayName: schoolDisplayName(s.name) }));
   const minWidth = 600;
 
   const chart = (
@@ -44,6 +44,7 @@ export function EthReturnChart({ schools }: { schools: SchoolRow[] }) {
         angle={-40}
         textAnchor="end"
         interval={0}
+        tickFormatter={(v) => schoolShortName(v)}
       />
       <YAxis
         tick={{ fill: tick, fontSize: 11 }}
@@ -52,6 +53,7 @@ export function EthReturnChart({ schools }: { schools: SchoolRow[] }) {
       />
       <Tooltip
         formatter={(v) => [formatPct(Number(v)), "ETH Return"]}
+        labelFormatter={(v) => schoolDisplayName(v as string)}
         contentStyle={{ background: ttBg, border: `1px solid ${ttBord}`, borderRadius: 8 }}
         labelStyle={{ color: ttLbl }}
       />

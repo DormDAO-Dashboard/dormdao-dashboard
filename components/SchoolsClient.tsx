@@ -10,6 +10,13 @@ import { Search } from "lucide-react";
 
 type SortKey = "rank" | "nav" | "usdReturn" | "ethReturn";
 
+function RankBadge({ rank }: { rank: number }) {
+  if (rank === 1) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-yellow-400 text-yellow-900">{rank}</span>;
+  if (rank === 2) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-gray-300 text-gray-700">{rank}</span>;
+  if (rank === 3) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-amber-600 text-white">{rank}</span>;
+  return <span className="text-xs font-mono text-gray-500">#{rank}</span>;
+}
+
 function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
   return (
     <Link href={`/schools/${s.slug}`}>
@@ -23,7 +30,7 @@ function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
           <div className="flex items-center gap-3">
             <SchoolLogo name={s.name} size={32} />
             <div>
-              <div className="text-xs font-mono text-gray-500 mb-1">Rank #{s.rank}</div>
+              <div className="mb-1"><RankBadge rank={s.rank} /></div>
               <h2 className="text-white font-semibold">{schoolDisplayName(s.name)}</h2>
             </div>
           </div>

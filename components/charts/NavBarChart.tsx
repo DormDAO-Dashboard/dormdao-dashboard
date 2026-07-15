@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "@/components/ThemeProvider";
 import { SchoolRow } from "@/lib/types";
 import { formatUSD } from "@/lib/utils";
-import { schoolDisplayName } from "@/lib/schoolData";
+import { schoolDisplayName, schoolShortName } from "@/lib/schoolData";
 import { useEffect, useState } from "react";
 
 export function NavBarChart({ schools }: { schools: SchoolRow[] }) {
@@ -29,8 +29,8 @@ export function NavBarChart({ schools }: { schools: SchoolRow[] }) {
   const ttLbl  = light ? "#111827" : "#f3f4f6";
 
   const sorted = [...schools]
-    .sort((a, b) => a.rank - b.rank)
-    .map((s) => ({ ...s, name: schoolDisplayName(s.name) }));
+    .sort((a, b) => b.nav - a.nav)
+    .map((s) => ({ ...s, displayName: schoolDisplayName(s.name) }));
   const minWidth = 600;
 
   const chart = (
@@ -41,6 +41,7 @@ export function NavBarChart({ schools }: { schools: SchoolRow[] }) {
         angle={-40}
         textAnchor="end"
         interval={0}
+        tickFormatter={(v) => schoolShortName(v)}
       />
       <YAxis
         tick={{ fill: tick, fontSize: 11 }}
@@ -48,6 +49,7 @@ export function NavBarChart({ schools }: { schools: SchoolRow[] }) {
       />
       <Tooltip
         formatter={(v) => [formatUSD(Number(v)), "NAV"]}
+        labelFormatter={(v) => schoolDisplayName(v as string)}
         contentStyle={{ background: ttBg, border: `1px solid ${ttBord}`, borderRadius: 8 }}
         labelStyle={{ color: ttLbl }}
       />

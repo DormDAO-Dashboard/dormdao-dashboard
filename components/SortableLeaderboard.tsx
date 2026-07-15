@@ -8,6 +8,13 @@ import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 type SortKey = "rank" | "nav" | "usdReturn" | "ethReturn" | "pctDeployed";
 
+function RankBadge({ rank }: { rank: number }) {
+  if (rank === 1) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-yellow-400 text-yellow-900">{rank}</span>;
+  if (rank === 2) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-gray-300 text-gray-700">{rank}</span>;
+  if (rank === 3) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-amber-600 text-white">{rank}</span>;
+  return <span className="text-gray-400 font-mono">#{rank}</span>;
+}
+
 function SortIcon({ col, sortKey, asc }: { col: SortKey; sortKey: SortKey; asc: boolean }) {
   if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-600 inline ml-1" />;
   return asc
@@ -61,7 +68,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
               key={s.slug}
               className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
             >
-              <td className="px-5 py-3 text-gray-400 font-mono">#{s.rank}</td>
+              <td className="px-5 py-3"><RankBadge rank={s.rank} /></td>
               <td className="px-5 py-3">
                 <Link
                   href={`/schools/${s.slug}`}

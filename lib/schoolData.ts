@@ -37,6 +37,35 @@ export function schoolDisplayName(name: string | null | undefined): string {
   return SCHOOL_DISPLAY_NAMES[name] ?? name;
 }
 
+// Short names for chart X-axis labels (internal key → abbreviated label).
+const SCHOOL_SHORT_NAMES: Record<string, string> = {
+  "Boston College": "BC",
+  "St. Andrews":    "St. A",
+  "Vanderbilt":     "Vandy",
+  "Villanova":      "Nova",
+};
+
+// Returns abbreviated name for chart axes; falls back to the internal key.
+export function schoolShortName(key: string): string {
+  return SCHOOL_SHORT_NAMES[key] ?? key;
+}
+
+// Returns "Since <Month> 1, <Year>" for the current fiscal quarter.
+// Q1=Jan, Q2=Apr, Q3=Jul, Q4=Oct.
+export function getQuarterLabel(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  let qMonth: number;
+  if (month < 3) qMonth = 0;
+  else if (month < 6) qMonth = 3;
+  else if (month < 9) qMonth = 6;
+  else qMonth = 9;
+  const qStart = new Date(year, qMonth, 1);
+  const monthName = qStart.toLocaleString("en-US", { month: "short" });
+  return `Since ${monthName} 1, ${year}`;
+}
+
 export interface SchoolSocials {
   website?: string;
   twitter?: string;

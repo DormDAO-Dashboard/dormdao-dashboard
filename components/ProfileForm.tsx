@@ -262,7 +262,8 @@ function NormalProfile({
   const [discord, setDiscord]               = useState(initialDiscord);
   const [walletAddress, setWalletAddress]   = useState(initialWalletAddress);
   const [isPublic, setIsPublic]             = useState(initialIsPublic);
-  const [publicFields, setPublicFields]     = useState<string[]>(initialPublicFields);
+  const DEFAULT_PUBLIC_FIELDS = ["display_name", "school", "graduation_year", "major", "twitter", "linkedin"];
+  const [publicFields, setPublicFields]     = useState<string[]>(initialPublicFields.length > 0 ? initialPublicFields : DEFAULT_PUBLIC_FIELDS);
   const [saving, setSaving]                 = useState(false);
   const [error, setError]                   = useState<string | null>(null);
 
@@ -574,6 +575,9 @@ function NormalProfile({
         <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
           Fields marked public are visible to anyone who views your profile at{" "}
           <span className="font-mono text-gray-500">dormdao-dashboard.vercel.app/users/[your-id]</span>
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-600">
+          Wallet addresses are never shown publicly regardless of settings.
         </p>
       </div>
 

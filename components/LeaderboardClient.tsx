@@ -5,7 +5,7 @@ import { SchoolRow } from "@/lib/types";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { formatNav, formatPct, cn, slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
-import { schoolDisplayName } from "@/lib/schoolData";
+import { schoolDisplayName, getQuarterLabel } from "@/lib/schoolData";
 import { createClient } from "@/lib/supabase/client";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
@@ -77,6 +77,15 @@ function Panel({
   );
 }
 
+// ─── Rank badge ───────────────────────────────────────────────────────────────
+
+function RankBadge({ rank }: { rank: number }) {
+  if (rank === 1) return <span className="inline-flex w-6 h-6 items-center justify-center text-[10px] font-bold rounded-full bg-yellow-400 text-yellow-900 shrink-0">{rank}</span>;
+  if (rank === 2) return <span className="inline-flex w-6 h-6 items-center justify-center text-[10px] font-bold rounded-full bg-gray-300 text-gray-700 shrink-0">{rank}</span>;
+  if (rank === 3) return <span className="inline-flex w-6 h-6 items-center justify-center text-[10px] font-bold rounded-full bg-amber-600 text-white shrink-0">{rank}</span>;
+  return <span className="font-mono text-[9px] text-gray-400 dark:text-gray-500">{rank}</span>;
+}
+
 // ─── "You" badge ─────────────────────────────────────────────────────────────
 
 function YouBadge() {
@@ -132,11 +141,11 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
               className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
-              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px]">{i + 1}</td>
+              <td className="px-3 py-1.5"><RankBadge rank={i + 1} /></td>
               <td className="px-3 py-1.5 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white truncate min-w-0">{schoolDisplayName(s.name)}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
@@ -213,18 +222,18 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
               className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors"
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
-              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px]">{displayRank}</td>
+              <td className="px-3 py-1.5"><RankBadge rank={displayRank} /></td>
               <td className="px-3 py-1.5 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white font-medium truncate min-w-0">{schoolDisplayName(s.name)}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
-              <td className="px-3 py-1.5 text-right font-mono text-gray-700 dark:text-gray-300 text-[11px] tabular-nums">{formatNav(s.nav)}</td>
+              <td className="px-3 py-1.5 text-right font-mono text-gray-700 dark:text-gray-300 text-[10px] tabular-nums">{formatNav(s.nav)}</td>
               <td className="px-3 py-1.5 text-right"><ReturnCell value={s.usdReturn} /></td>
               <td className="px-3 py-1.5 text-right"><ReturnCell value={s.ethReturn} /></td>
-              <td className="px-3 py-1.5 text-right font-mono text-gray-600 dark:text-gray-400 text-[11px] tabular-nums">
+              <td className="px-3 py-1.5 text-right font-mono text-gray-600 dark:text-gray-400 text-[10px] tabular-nums">
                 {s.pctDeployed > 0 ? formatPct(s.pctDeployed, false) : "—"}
               </td>
             </tr>
@@ -280,11 +289,11 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
               className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
-              <td className="px-3 py-1.5 text-gray-400 dark:text-gray-500 font-mono text-[10px]">{displayRank}</td>
+              <td className="px-3 py-1.5"><RankBadge rank={displayRank} /></td>
               <td className="px-3 py-1.5 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white truncate min-w-0">{schoolDisplayName(s.name)}</span>
+                  <span className="text-[11px] text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
@@ -366,7 +375,7 @@ export function LeaderboardClient({
           header={
             <>
               <div className="text-xs font-semibold text-gray-900 dark:text-white">Quarterly</div>
-              <div className="text-[10px] text-gray-500 mt-0.5">Current quarter performance</div>
+              <div className="text-[10px] text-gray-500 mt-0.5">{getQuarterLabel()}</div>
             </>
           }
         >
