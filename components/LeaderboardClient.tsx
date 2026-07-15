@@ -138,7 +138,12 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
           const youColor = isYou ? getSchoolColors(s.slug).primary : undefined;
           return (
             <tr key={s.slug}
-              className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
+              className={cn(
+                "border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors",
+                i === 0 && "bg-yellow-400/[0.07] dark:bg-yellow-400/[0.05]",
+                i === 1 && "bg-gray-300/20 dark:bg-gray-400/[0.05]",
+                i === 2 && "bg-amber-600/[0.07] dark:bg-amber-600/[0.05]",
+              )}
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
               <td className="px-3 py-1.5"><RankBadge rank={i + 1} /></td>
@@ -219,7 +224,12 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
           const youColor = isYou ? getSchoolColors(s.slug).primary : undefined;
           return (
             <tr key={s.slug}
-              className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors"
+              className={cn(
+                "border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors",
+                displayRank === 1 && "bg-yellow-400/[0.07] dark:bg-yellow-400/[0.05]",
+                displayRank === 2 && "bg-gray-300/20 dark:bg-gray-400/[0.05]",
+                displayRank === 3 && "bg-amber-600/[0.07] dark:bg-amber-600/[0.05]",
+              )}
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
               <td className="px-3 py-1.5"><RankBadge rank={displayRank} /></td>
@@ -286,7 +296,12 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
           const youColor = isYou ? getSchoolColors(s.slug).primary : undefined;
           return (
             <tr key={s.slug}
-              className="border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
+              className={cn(
+                "border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors",
+                displayRank === 1 && "bg-yellow-400/[0.07] dark:bg-yellow-400/[0.05]",
+                displayRank === 2 && "bg-gray-300/20 dark:bg-gray-400/[0.05]",
+                displayRank === 3 && "bg-amber-600/[0.07] dark:bg-amber-600/[0.05]",
+              )}
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
               <td className="px-3 py-1.5"><RankBadge rank={displayRank} /></td>
