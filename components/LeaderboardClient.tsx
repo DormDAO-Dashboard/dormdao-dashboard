@@ -80,9 +80,9 @@ function Panel({
 // ─── Rank badge ───────────────────────────────────────────────────────────────
 
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="inline-flex w-6 h-6 items-center justify-center text-[10px] font-bold rounded-full bg-yellow-400 text-yellow-900 shrink-0">{rank}</span>;
-  if (rank === 2) return <span className="inline-flex w-6 h-6 items-center justify-center text-[10px] font-bold rounded-full bg-gray-300 text-gray-700 shrink-0">{rank}</span>;
-  if (rank === 3) return <span className="inline-flex w-6 h-6 items-center justify-center text-[10px] font-bold rounded-full bg-amber-600 text-white shrink-0">{rank}</span>;
+  if (rank === 1) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-yellow-400 text-yellow-900 shrink-0">{rank}</span>;
+  if (rank === 2) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-gray-300 text-gray-700 shrink-0">{rank}</span>;
+  if (rank === 3) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-amber-600 text-white shrink-0">{rank}</span>;
   return <span className="font-mono text-[9px] text-gray-400 dark:text-gray-500">{rank}</span>;
 }
 
@@ -120,14 +120,14 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
     <table className="w-full table-fixed text-xs" style={{ height: '100%' }}>
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
-          <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500 w-9">#</th>
+          <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500 w-[13%]">#</th>
           <th className={cn(th, "text-left")} onClick={() => toggle("name")}>
             School <SortIconNeutral col="name" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right w-20")} onClick={() => toggle("quarterlyUsd")}>
+          <th className={cn(th, "text-right w-[24%]")} onClick={() => toggle("quarterlyUsd")}>
             USD <SortIconNeutral col="quarterlyUsd" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right w-20")} onClick={() => toggle("quarterlyEth")}>
+          <th className={cn(th, "text-right w-[24%]")} onClick={() => toggle("quarterlyEth")}>
             ETH <SortIconNeutral col="quarterlyEth" sortKey={sortKey} asc={asc} />
           </th>
         </tr>
@@ -146,7 +146,7 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
               )}
               style={{ height: '1px', ...(isYou ? { borderLeft: `3px solid ${youColor}` } : {}) }}
             >
-              <td className="px-3 py-2"><RankBadge rank={i + 1} /></td>
+              <td className="px-2 py-2"><RankBadge rank={i + 1} /></td>
               <td className="px-3 py-2 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
@@ -199,20 +199,20 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
     <table className="w-full table-fixed text-xs" style={{ height: '100%' }}>
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
-          <th className={th("rank", "text-left w-9")} onClick={() => toggle("rank")}>
+          <th className={th("rank", "text-left w-[8%]")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} yellow />
           </th>
           <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
-          <th className={th("nav", "text-right w-20")} onClick={() => toggle("nav")}>
+          <th className={th("nav", "text-right w-[14%]")} onClick={() => toggle("nav")}>
             NAV <SortIconNeutral col="nav" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("usdReturn", "text-right w-20")} onClick={() => toggle("usdReturn")}>
+          <th className={th("usdReturn", "text-right w-[13%]")} onClick={() => toggle("usdReturn")}>
             USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("ethReturn", "text-right w-20")} onClick={() => toggle("ethReturn")}>
+          <th className={th("ethReturn", "text-right w-[13%]")} onClick={() => toggle("ethReturn")}>
             ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("pctDeployed", "text-right w-20")} onClick={() => toggle("pctDeployed")}>
+          <th className={th("pctDeployed", "text-right w-[13%]")} onClick={() => toggle("pctDeployed")}>
             Deployed <SortIconNeutral col="pctDeployed" sortKey={sortKey} asc={asc} yellow />
           </th>
         </tr>
@@ -232,7 +232,7 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
               )}
               style={{ height: '1px', ...(isYou ? { borderLeft: `3px solid ${youColor}` } : {}) }}
             >
-              <td className="px-3 py-2"><RankBadge rank={displayRank} /></td>
+              <td className="px-2 py-2"><RankBadge rank={displayRank} /></td>
               <td className="px-3 py-2 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
@@ -277,14 +277,14 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
     <table className="w-full table-fixed text-xs" style={{ height: '100%' }}>
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
-          <th className={cn(th, "text-left w-9")} onClick={() => toggle("rank")}>
+          <th className={cn(th, "text-left w-[13%]")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} />
           </th>
           <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
-          <th className={cn(th, "text-right w-20")} onClick={() => toggle("usdReturn")}>
+          <th className={cn(th, "text-right w-[22%]")} onClick={() => toggle("usdReturn")}>
             USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right w-20")} onClick={() => toggle("ethReturn")}>
+          <th className={cn(th, "text-right w-[22%]")} onClick={() => toggle("ethReturn")}>
             ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} />
           </th>
         </tr>
@@ -304,7 +304,7 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
               )}
               style={{ height: '1px', ...(isYou ? { borderLeft: `3px solid ${youColor}` } : {}) }}
             >
-              <td className="px-3 py-2"><RankBadge rank={displayRank} /></td>
+              <td className="px-2 py-2"><RankBadge rank={displayRank} /></td>
               <td className="px-3 py-2 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
