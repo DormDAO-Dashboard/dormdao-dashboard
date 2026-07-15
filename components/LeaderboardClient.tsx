@@ -140,9 +140,9 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
             <tr key={s.slug}
               className={cn(
                 "border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors",
-                i === 0 && "bg-yellow-400/[0.07] dark:bg-yellow-400/[0.05]",
-                i === 1 && "bg-gray-300/20 dark:bg-gray-400/[0.05]",
-                i === 2 && "bg-amber-600/[0.07] dark:bg-amber-600/[0.05]",
+                i === 0 && "bg-yellow-400/20 dark:bg-yellow-400/15",
+                i === 1 && "bg-gray-300/30 dark:bg-gray-400/15",
+                i === 2 && "bg-amber-600/20 dark:bg-amber-600/15",
               )}
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
@@ -226,9 +226,9 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
             <tr key={s.slug}
               className={cn(
                 "border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-yellow-500/[0.04] transition-colors",
-                displayRank === 1 && "bg-yellow-400/[0.07] dark:bg-yellow-400/[0.05]",
-                displayRank === 2 && "bg-gray-300/20 dark:bg-gray-400/[0.05]",
-                displayRank === 3 && "bg-amber-600/[0.07] dark:bg-amber-600/[0.05]",
+                displayRank === 1 && "bg-yellow-400/20 dark:bg-yellow-400/15",
+                displayRank === 2 && "bg-gray-300/30 dark:bg-gray-400/15",
+                displayRank === 3 && "bg-amber-600/20 dark:bg-amber-600/15",
               )}
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >
@@ -298,9 +298,9 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
             <tr key={s.slug}
               className={cn(
                 "border-b border-gray-200/80 dark:border-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors",
-                displayRank === 1 && "bg-yellow-400/[0.07] dark:bg-yellow-400/[0.05]",
-                displayRank === 2 && "bg-gray-300/20 dark:bg-gray-400/[0.05]",
-                displayRank === 3 && "bg-amber-600/[0.07] dark:bg-amber-600/[0.05]",
+                displayRank === 1 && "bg-yellow-400/20 dark:bg-yellow-400/15",
+                displayRank === 2 && "bg-gray-300/30 dark:bg-gray-400/15",
+                displayRank === 3 && "bg-amber-600/20 dark:bg-amber-600/15",
               )}
               style={isYou ? { borderLeft: `3px solid ${youColor}` } : {}}
             >

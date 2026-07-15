@@ -66,7 +66,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
           {sorted.map((s, i) => (
             <tr
               key={s.slug}
-              className={`border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors${i === 0 ? " bg-yellow-400/[0.07]" : i === 1 ? " bg-gray-400/[0.06]" : i === 2 ? " bg-amber-600/[0.07]" : ""}`}
+              className={`border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors${i === 0 ? " bg-yellow-400/15" : i === 1 ? " bg-gray-400/15" : i === 2 ? " bg-amber-600/15" : ""}`}
             >
               <td className="px-5 py-3"><RankBadge rank={s.rank} /></td>
               <td className="px-5 py-3">
