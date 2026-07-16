@@ -25,7 +25,7 @@ export async function DELETE(
   if (!isOwner) {
     const { data: profile } = await service
       .from("profiles").select("role, school").eq("id", user.id).single();
-    if (!canModerate(profile ?? {}, post.school ?? "")) {
+    if (!canModerate(profile ?? { role: null, school: null }, post.school ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }
