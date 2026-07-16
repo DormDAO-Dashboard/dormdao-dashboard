@@ -6,6 +6,7 @@ import { sendPushNotifications } from "@/lib/push";
 import { sendEmailNotifications } from "@/lib/email";
 import { isAdminUser } from "@/lib/admin-config";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
+import { TOKEN_META } from "@/lib/tokens";
 import type { Proposal } from "@/lib/proposals";
 
 export async function GET(req: NextRequest) {
@@ -74,24 +75,24 @@ export async function POST(req: NextRequest) {
   const body = await req.json() as {
     school?: string;
     token_ticker?: string;
-    token_name?: string;
     title?: string;
     description?: string;
     recommended_size_eth?: number;
-    price_target?: number;
     voting_deadline?: string;
   };
 
-  const { school, token_ticker, token_name, title, description, recommended_size_eth, price_target, voting_deadline } = body;
+  const { school, token_ticker, title, description, recommended_size_eth, voting_deadline } = body;
 
   if (!school) return NextResponse.json({ error: "school is required" }, { status: 400 });
   if (!isAdmin && slugify(profile?.school ?? "") !== school) {
     return NextResponse.json({ error: "You can only submit proposals for your own school" }, { status: 403 });
   }
   if (!token_ticker?.trim()) return NextResponse.json({ error: "token_ticker is required" }, { status: 400 });
-  if (!token_name?.trim()) return NextResponse.json({ error: "token_name is required" }, { status: 400 });
   if (!title?.trim()) return NextResponse.json({ error: "title is required" }, { status: 400 });
   if (!description?.trim()) return NextResponse.json({ error: "description is required" }, { status: 400 });
+  if (recommended_size_eth === undefined || recommended_size_eth === null || Number.isNaN(recommended_size_eth)) {
+    return NextResponse.json({ error: "recommended_size_eth is required" }, { status: 400 });
+  }
   if (!voting_deadline) return NextResponse.json({ error: "voting_deadline is required" }, { status: 400 });
 
   const deadline = new Date(voting_deadline);
@@ -99,18 +100,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "voting_deadline must be a future date" }, { status: 400 });
   }
 
+  const ticker = token_ticker.trim().toUpperCase();
+  const tokenName = TOKEN_META[ticker]?.name ?? ticker;
+
   const { data: proposal, error } = await service
     .from("proposals")
     .insert({
       school,
-      token_ticker: token_ticker.trim().toUpperCase(),
-      token_name: token_name.trim(),
+      token_ticker: ticker,
+      token_name: tokenName,
       title: title.trim(),
       description: description.trim(),
       proposed_by: user.id,
       proposed_by_name: profile?.display_name || "Anonymous",
-      recommended_size_eth: recommended_size_eth ?? null,
-      price_target: price_target ?? null,
+      recommended_size_eth,
+      price_target: null,
       voting_deadline: deadline.toISOString(),
     })
     .select()

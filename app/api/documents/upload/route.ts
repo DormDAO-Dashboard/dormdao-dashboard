@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getDefaultVisibility } from "@/lib/documents";
+import { isAdminUser } from "@/lib/admin-config";
 
 export async function POST(req: NextRequest) {
   // Auth: must be signed in with a school matching the uploaded document's school
@@ -17,7 +18,9 @@ export async function POST(req: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  if (!profile?.school) {
+  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
+
+  if (!isAdmin && !profile?.school) {
     return NextResponse.json({ error: "Set your school on your profile to upload documents" }, { status: 403 });
   }
 
@@ -31,7 +34,7 @@ export async function POST(req: NextRequest) {
     const documentType = (formData.get("document_type") as string | null) ?? "report";
 
     // Verify the school being uploaded to matches the user's school
-    if (!school || school.trim().toLowerCase() !== profile.school.trim().toLowerCase()) {
+    if (!isAdmin && (!school || school.trim().toLowerCase() !== profile?.school?.trim().toLowerCase())) {
       return NextResponse.json({ error: "You can only upload documents for your own school" }, { status: 403 });
     }
 

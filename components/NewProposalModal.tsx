@@ -1,17 +1,19 @@
 "use client";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Upload, FileText } from "lucide-react";
 import type { SchoolColors } from "@/lib/schoolColors";
 import type { Proposal } from "@/lib/proposals";
 
 interface Props {
   slug: string;
+  schoolName: string;
   colors: SchoolColors;
   onClose: () => void;
-  onCreated: (proposal: Proposal) => void;
+  onCreated: (proposal: Proposal, warning?: string) => void;
 }
 
 const VOTING_PERIOD_HOURS = 36;
+const MAX_PITCH_FILES = 5;
 
 function votingDeadline(): Date {
   const d = new Date();
@@ -29,38 +31,60 @@ function formatDeadline(d: Date): string {
   });
 }
 
-export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
+export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated }: Props) {
   const [ticker, setTicker] = useState("");
-  const [tokenName, setTokenName] = useState("");
   const [title, setTitle] = useState("");
   const [titleManual, setTitleManual] = useState(false);
   const [description, setDescription] = useState("");
   const [sizeEth, setSizeEth] = useState("");
-  const [priceTarget, setPriceTarget] = useState("");
   const [deadline] = useState(votingDeadline);
+  const [pitchFiles, setPitchFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function autoTitle(t: string, n: string): string {
-    if (!t && !n) return "";
-    if (!n) return t ? `Buy $${t}` : "";
-    return t ? `Buy $${t} — ${n}` : n;
+  function autoTitle(t: string): string {
+    return t ? `Buy $${t}` : "";
   }
 
   function handleTickerChange(val: string) {
     const upper = val.toUpperCase().replace(/[^A-Z0-9]/g, "");
     setTicker(upper);
-    if (!titleManual) setTitle(autoTitle(upper, tokenName));
-  }
-
-  function handleTokenNameChange(val: string) {
-    setTokenName(val);
-    if (!titleManual) setTitle(autoTitle(ticker, val));
+    if (!titleManual) setTitle(autoTitle(upper));
   }
 
   function handleTitleChange(val: string) {
     setTitle(val);
     setTitleManual(true);
+  }
+
+  function handleFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (selected.length === 0) return;
+
+    const pdfsOnly = selected.filter(
+      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+    );
+    const rejectedNonPdf = selected.length - pdfsOnly.length;
+
+    setPitchFiles((prev) => {
+      const combined = [...prev, ...pdfsOnly];
+      if (combined.length > MAX_PITCH_FILES) {
+        setFileError(`You can attach up to ${MAX_PITCH_FILES} pitch materials.`);
+        return combined.slice(0, MAX_PITCH_FILES);
+      }
+      setFileError(rejectedNonPdf > 0 ? "Only PDF files are supported." : null);
+      return combined;
+    });
+  }
+
+  function removeFile(index: number) {
+    setPitchFiles((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      if (next.length <= MAX_PITCH_FILES) setFileError(null);
+      return next;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -74,11 +98,9 @@ export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
         body: JSON.stringify({
           school: slug,
           token_ticker: ticker,
-          token_name: tokenName,
           title,
           description,
-          recommended_size_eth: sizeEth ? parseFloat(sizeEth) : undefined,
-          price_target: priceTarget ? parseFloat(priceTarget) : undefined,
+          recommended_size_eth: parseFloat(sizeEth),
           voting_deadline: deadline.toISOString(),
         }),
       });
@@ -87,7 +109,30 @@ export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
         setError(data.error ?? "Failed to submit proposal");
         return;
       }
-      onCreated(data.proposal!);
+
+      const proposal = data.proposal!;
+      let uploadFailures = 0;
+      for (const file of pitchFiles) {
+        try {
+          const form = new FormData();
+          form.append("file", file);
+          form.append("ticker", ticker);
+          form.append("title", file.name.replace(/\.pdf$/i, ""));
+          form.append("school", schoolName);
+          form.append("document_type", "pitch_deck");
+          const uploadRes = await fetch("/api/documents/upload", { method: "POST", body: form });
+          if (!uploadRes.ok) uploadFailures++;
+        } catch {
+          uploadFailures++;
+        }
+      }
+
+      onCreated(
+        proposal,
+        uploadFailures > 0
+          ? `Proposal submitted — ${uploadFailures} pitch material${uploadFailures > 1 ? "s" : ""} failed to upload`
+          : undefined
+      );
     } catch {
       setError("Network error — please try again");
     } finally {
@@ -129,15 +174,16 @@ export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                Token Name <span className="text-red-500">*</span>
+                Recommended Size (ETH) <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
-                value={tokenName}
-                onChange={(e) => handleTokenNameChange(e.target.value)}
-                placeholder="e.g. Hyperliquid"
+                type="number"
+                value={sizeEth}
+                onChange={(e) => setSizeEth(e.target.value)}
+                placeholder="e.g. 4.0"
                 required
-                maxLength={80}
+                min="0"
+                step="0.1"
                 className={inputClass}
               />
             </div>
@@ -173,40 +219,51 @@ export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
             <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/5000</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                Recommended Size (ETH)
-              </label>
-              <input
-                type="number"
-                value={sizeEth}
-                onChange={(e) => setSizeEth(e.target.value)}
-                placeholder="e.g. 4.0"
-                min="0"
-                step="0.1"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                Price Target (USD)
-              </label>
-              <input
-                type="number"
-                value={priceTarget}
-                onChange={(e) => setPriceTarget(e.target.value)}
-                placeholder="e.g. 25.00"
-                min="0"
-                step="0.01"
-                className={inputClass}
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+              Pitch Materials <span className="text-gray-400 normal-case font-normal">(optional, PDF)</span>
+            </label>
+            <label
+              htmlFor="pitch-materials-input"
+              className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 hover:border-primary/40 hover:text-primary cursor-pointer transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              Click to upload PDFs
+            </label>
+            <input
+              id="pitch-materials-input"
+              type="file"
+              accept=".pdf,application/pdf"
+              multiple
+              onChange={handleFilesSelected}
+              className="hidden"
+            />
+            {pitchFiles.length > 0 && (
+              <ul className="mt-2 space-y-1.5">
+                {pitchFiles.map((f, i) => (
+                  <li
+                    key={`${f.name}-${i}`}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="flex-1 min-w-0 truncate text-xs text-gray-700 dark:text-gray-300">{f.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {fileError && <p className="text-xs text-red-500 mt-1.5">{fileError}</p>}
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Voting Period
+              Voting Period <span className="text-gray-400 normal-case font-normal">(Fixed)</span>
             </label>
             <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60">
               <span className="text-sm font-semibold text-gray-900 dark:text-white">

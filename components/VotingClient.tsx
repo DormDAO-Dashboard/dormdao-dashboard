@@ -147,10 +147,10 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
     }
   }
 
-  function handleCreated(proposal: Proposal) {
+  function handleCreated(proposal: Proposal, warning?: string) {
     setProposals((prev) => [proposal, ...prev]);
     setShowModal(false);
-    showToast("Proposal submitted successfully");
+    showToast(warning ?? "Proposal submitted successfully");
   }
 
   const activeProposals = proposals.filter(isActive);
@@ -244,6 +244,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
       {showModal && (
         <NewProposalModal
           slug={slug}
+          schoolName={schoolName}
           colors={colors}
           onClose={() => setShowModal(false)}
           onCreated={handleCreated}
