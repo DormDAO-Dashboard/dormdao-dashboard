@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { X, Upload, FileText } from "lucide-react";
+import { useRef, useState } from "react";
+import { X, Paperclip, Loader2 } from "lucide-react";
 import type { SchoolColors } from "@/lib/schoolColors";
 import type { Proposal } from "@/lib/proposals";
 
@@ -12,8 +12,18 @@ interface Props {
   onCreated: (proposal: Proposal, warning?: string) => void;
 }
 
+interface DocSlot {
+  label: string;
+  type: string;
+}
+
 const VOTING_PERIOD_HOURS = 36;
-const MAX_PITCH_FILES = 5;
+
+const DOC_SLOTS: DocSlot[] = [
+  { label: "Pitch Deck", type: "pitch_deck" },
+  { label: "Executive Summary", type: "exec_summary" },
+  { label: "Fund Report", type: "fund_report" },
+];
 
 function votingDeadline(): Date {
   const d = new Date();
@@ -31,17 +41,34 @@ function formatDeadline(d: Date): string {
   });
 }
 
+async function uploadDoc(file: File, ticker: string, schoolName: string, slot: DocSlot): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("ticker", ticker || "SCHOOL");
+  fd.append("title", `${ticker ? `$${ticker} ` : ""}${slot.label}`);
+  fd.append("school", schoolName);
+  fd.append("document_type", slot.type);
+  fd.append("document_date", new Date().toISOString().slice(0, 10));
+
+  const res = await fetch("/api/documents/upload", { method: "POST", body: fd });
+  const data = await res.json() as { document?: { id: string }; error?: string };
+  if (!res.ok || !data.document?.id) throw new Error(data.error ?? `Failed to upload ${slot.label}`);
+  return data.document.id;
+}
+
 export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated }: Props) {
   const [ticker, setTicker] = useState("");
   const [title, setTitle] = useState("");
   const [titleManual, setTitleManual] = useState(false);
   const [description, setDescription] = useState("");
   const [sizeEth, setSizeEth] = useState("");
+  const [priceTarget, setPriceTarget] = useState("");
   const [deadline] = useState(votingDeadline);
-  const [pitchFiles, setPitchFiles] = useState<File[]>([]);
-  const [fileError, setFileError] = useState<string | null>(null);
+  const [docFiles, setDocFiles] = useState<(File | null)[]>([null, null, null]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const fileRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
   function autoTitle(t: string): string {
     return t ? `Buy $${t}` : "";
@@ -58,31 +85,10 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
     setTitleManual(true);
   }
 
-  function handleFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(e.target.files ?? []);
-    e.target.value = "";
-    if (selected.length === 0) return;
-
-    const pdfsOnly = selected.filter(
-      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
-    );
-    const rejectedNonPdf = selected.length - pdfsOnly.length;
-
-    setPitchFiles((prev) => {
-      const combined = [...prev, ...pdfsOnly];
-      if (combined.length > MAX_PITCH_FILES) {
-        setFileError(`You can attach up to ${MAX_PITCH_FILES} pitch materials.`);
-        return combined.slice(0, MAX_PITCH_FILES);
-      }
-      setFileError(rejectedNonPdf > 0 ? "Only PDF files are supported." : null);
-      return combined;
-    });
-  }
-
-  function removeFile(index: number) {
-    setPitchFiles((prev) => {
-      const next = prev.filter((_, i) => i !== index);
-      if (next.length <= MAX_PITCH_FILES) setFileError(null);
+  function setDoc(idx: number, file: File | null) {
+    setDocFiles((prev) => {
+      const next = [...prev];
+      next[idx] = file;
       return next;
     });
   }
@@ -91,7 +97,18 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+
     try {
+      const documentIds: string[] = [];
+      for (let i = 0; i < DOC_SLOTS.length; i++) {
+        const file = docFiles[i];
+        if (!file) continue;
+        setUploadStatus(`Uploading ${DOC_SLOTS[i].label}…`);
+        const docId = await uploadDoc(file, ticker, schoolName, DOC_SLOTS[i]);
+        documentIds.push(docId);
+      }
+      setUploadStatus(null);
+
       const res = await fetch("/api/proposals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,8 +117,9 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
           token_ticker: ticker,
           title,
           description,
-          recommended_size_eth: parseFloat(sizeEth),
-          voting_deadline: deadline.toISOString(),
+          recommended_size_eth: sizeEth ? parseFloat(sizeEth) : undefined,
+          price_target: priceTarget ? parseFloat(priceTarget) : undefined,
+          document_ids: documentIds.length > 0 ? documentIds : undefined,
         }),
       });
       const data = await res.json() as { proposal?: Proposal; error?: string };
@@ -109,34 +127,12 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
         setError(data.error ?? "Failed to submit proposal");
         return;
       }
-
-      const proposal = data.proposal!;
-      let uploadFailures = 0;
-      for (const file of pitchFiles) {
-        try {
-          const form = new FormData();
-          form.append("file", file);
-          form.append("ticker", ticker);
-          form.append("title", file.name.replace(/\.pdf$/i, ""));
-          form.append("school", schoolName);
-          form.append("document_type", "pitch_deck");
-          const uploadRes = await fetch("/api/documents/upload", { method: "POST", body: form });
-          if (!uploadRes.ok) uploadFailures++;
-        } catch {
-          uploadFailures++;
-        }
-      }
-
-      onCreated(
-        proposal,
-        uploadFailures > 0
-          ? `Proposal submitted — ${uploadFailures} pitch material${uploadFailures > 1 ? "s" : ""} failed to upload`
-          : undefined
-      );
-    } catch {
-      setError("Network error — please try again");
+      onCreated(data.proposal!);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error — please try again");
     } finally {
       setSubmitting(false);
+      setUploadStatus(null);
     }
   }
 
@@ -156,7 +152,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
@@ -174,14 +170,13 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                Recommended Size (ETH) <span className="text-red-500">*</span>
+                Recommended Size (ETH)
               </label>
               <input
                 type="number"
                 value={sizeEth}
                 onChange={(e) => setSizeEth(e.target.value)}
                 placeholder="e.g. 4.0"
-                required
                 min="0"
                 step="0.1"
                 className={inputClass}
@@ -221,59 +216,71 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
 
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Pitch Materials <span className="text-gray-400 normal-case font-normal">(optional, PDF)</span>
-            </label>
-            <label
-              htmlFor="pitch-materials-input"
-              className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 hover:border-primary/40 hover:text-primary cursor-pointer transition-colors"
-            >
-              <Upload className="w-4 h-4" />
-              Click to upload PDFs
+              Price Target (USD)
             </label>
             <input
-              id="pitch-materials-input"
-              type="file"
-              accept=".pdf,application/pdf"
-              multiple
-              onChange={handleFilesSelected}
-              className="hidden"
+              type="number"
+              value={priceTarget}
+              onChange={(e) => setPriceTarget(e.target.value)}
+              placeholder="e.g. 25.00"
+              min="0"
+              step="0.01"
+              className={inputClass}
             />
-            {pitchFiles.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
-                {pitchFiles.map((f, i) => (
-                  <li
-                    key={`${f.name}-${i}`}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                    <span className="flex-1 min-w-0 truncate text-xs text-gray-700 dark:text-gray-300">{f.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeFile(i)}
-                      className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {fileError && <p className="text-xs text-red-500 mt-1.5">{fileError}</p>}
+          </div>
+
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60">
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+              {VOTING_PERIOD_HOURS} Hours
+            </span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Ends {formatDeadline(deadline)}
+            </span>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Voting Period <span className="text-gray-400 normal-case font-normal">(Fixed)</span>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+              Supporting Documents <span className="text-gray-400 font-normal">(optional PDFs)</span>
             </label>
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60">
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                {VOTING_PERIOD_HOURS} Hours
-              </span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Ends {formatDeadline(deadline)}
-              </span>
+            <div className="space-y-2">
+              {DOC_SLOTS.map((slot, i) => (
+                <div key={slot.type} className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:border-primary/50 cursor-pointer transition-colors text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                    <Paperclip className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate min-w-0">
+                      {docFiles[i] ? docFiles[i]!.name : slot.label}
+                    </span>
+                    <input
+                      ref={fileRefs[i]}
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      className="sr-only"
+                      onChange={(e) => setDoc(i, e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                  {docFiles[i] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDoc(i, null);
+                        if (fileRefs[i].current) fileRefs[i].current!.value = "";
+                      }}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
+
+          {uploadStatus && (
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              {uploadStatus}
+            </div>
+          )}
 
           {error && (
             <p className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
@@ -293,9 +300,10 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
               type="submit"
               disabled={submitting}
               style={{ backgroundColor: colors.primary, color: colors.text }}
-              className="flex-1 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
             >
-              {submitting ? "Submitting…" : "Submit Proposal"}
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {submitting ? (uploadStatus ? "Uploading…" : "Submitting…") : "Submit Proposal"}
             </button>
           </div>
         </form>

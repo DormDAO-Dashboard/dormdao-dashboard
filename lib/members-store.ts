@@ -3,6 +3,8 @@ import { createServiceClient } from "./supabase/server";
 const BUCKET = "admin-data";
 const FILE   = "members.json";
 
+export type MemberRole = 'member' | 'club_admin' | 'director' | 'president';
+
 export interface Member {
   id: string;
   name: string;
@@ -10,6 +12,7 @@ export interface Member {
   email: string;
   walletAddress: string;
   school: string | null;
+  role: MemberRole;
   createdAt: string;
 }
 
@@ -30,7 +33,7 @@ export async function getMembers(): Promise<Member[]> {
     const text = await data.text();
     const raw = JSON.parse(text) as Member[];
     // Backward compat: existing members without school get null
-    return raw.map((m) => ({ ...m, school: m.school ?? null }));
+    return raw.map((m) => ({ ...m, school: m.school ?? null, role: m.role ?? 'member' }));
   } catch {
     return [];
   }

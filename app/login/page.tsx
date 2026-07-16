@@ -158,6 +158,10 @@ export default function LoginPage() {
           <p className="text-xs text-gray-600 text-center">
             DormDAO is invitation-only. Access is granted by your school&apos;s admin.
           </p>
+          <p className="text-xs text-gray-500 text-center pt-1">
+            Not registered?{" "}
+            <a href="/join" className="text-primary hover:underline">Request access →</a>
+          </p>
         </div>
       </div>
     </div>

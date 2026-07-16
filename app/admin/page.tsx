@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getAdminConfig, isAdminUser } from "@/lib/admin-config";
 import { getMembers } from "@/lib/members-store";
 import { AdminMembersSection } from "@/components/AdminMembersSection";
+import { SignupRequestsSection } from "@/components/SignupRequestsSection";
 
 export const metadata = { title: "Admin — DormDAO" };
 
@@ -66,6 +67,9 @@ export default async function AdminPage() {
           </table>
         </div>
       </div>
+
+      {/* Signup requests */}
+      <SignupRequestsSection />
 
       {/* Registered members (dynamic, managed by admin) */}
       <AdminMembersSection initialMembers={initialMembers} />

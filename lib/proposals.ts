@@ -8,13 +8,18 @@ export interface Proposal {
   description: string | null;
   proposed_by: string | null;
   proposed_by_name: string | null;
-  status: "active" | "passed" | "rejected" | "expired";
+  status: "active" | "passed" | "rejected" | "expired" | "executed";
   recommended_size_eth: number | null;
   price_target: number | null;
   voting_deadline: string;
   yes_votes: number;
   no_votes: number;
   created_by_admin: boolean;
+  document_ids: string[] | null;
+  execution_tx: string | null;
+  execution_notes: string | null;
+  executed_at: string | null;
+  deadline_warning_sent: boolean;
   user_vote?: "yes" | "no" | null;
 }
 

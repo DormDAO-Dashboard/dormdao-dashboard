@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { canModerate } from "@/lib/auth-utils";
 
 export async function GET(
   _req: NextRequest,
@@ -40,12 +41,20 @@ export async function DELETE(
   const service = createServiceClient();
   const { data: thread } = await service
     .from("forum_threads")
-    .select("user_id")
+    .select("user_id, school")
     .eq("id", id)
     .single();
 
   if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
-  if (thread.user_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const isOwner = thread.user_id === user.id;
+  if (!isOwner) {
+    const { data: profile } = await service
+      .from("profiles").select("role, school").eq("id", user.id).single();
+    if (!canModerate(profile ?? {}, thread.school ?? "")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
 
   const { error } = await service.from("forum_threads").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

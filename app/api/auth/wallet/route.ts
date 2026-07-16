@@ -92,12 +92,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Stamp the member's pre-assigned school onto their profile
+  // Stamp the member's pre-assigned school and role onto their profile
   const userId = newUserId ?? linkData.user?.id;
-  if (member?.school && userId) {
+  if (member && userId) {
     await supabase
       .from("profiles")
-      .upsert({ id: userId, school: member.school }, { onConflict: "id" });
+      .upsert({ id: userId, school: member.school ?? null, role: member.role ?? 'member' }, { onConflict: "id" });
   }
 
   const res = NextResponse.json({ token_hash: linkData.properties.hashed_token });

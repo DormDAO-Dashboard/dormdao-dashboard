@@ -19,8 +19,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!await requireAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const VALID_ROLES = ['member', 'club_admin', 'director', 'president'] as const;
+  type MemberRole = typeof VALID_ROLES[number];
+
   const body = await req.json() as {
-    members: Array<{ name: string; votingUnits: number; email: string; walletAddress: string; school?: string | null }>;
+    members: Array<{ name: string; votingUnits: number; email: string; walletAddress: string; school?: string | null; role?: string }>;
   };
 
   if (!Array.isArray(body.members) || body.members.length === 0) {
@@ -37,6 +40,7 @@ export async function POST(req: NextRequest) {
     const wallet = m.walletAddress?.trim().toLowerCase() ?? "";
     const units  = Number.isFinite(m.votingUnits) ? m.votingUnits : 10;
     const school = m.school?.trim() || null;
+    const role: MemberRole = VALID_ROLES.includes(m.role as MemberRole) ? (m.role as MemberRole) : 'member';
 
     if (!name) { errors.push("A row is missing a name — skipped."); continue; }
     if (!email && !wallet) { errors.push(`"${name}" needs at least an email or wallet address.`); continue; }
@@ -52,6 +56,7 @@ export async function POST(req: NextRequest) {
       email: m.email?.trim() ?? "",
       walletAddress: m.walletAddress?.trim() ?? "",
       school,
+      role,
       createdAt: new Date().toISOString(),
     });
   }

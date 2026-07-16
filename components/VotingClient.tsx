@@ -6,6 +6,7 @@ import { slugify, cn } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
 import { type Proposal, isActive } from "@/lib/proposals";
 import { schoolDisplayName } from "@/lib/schoolData";
+import { isClubLeadership, type MemberRole } from "@/lib/auth-utils";
 import { ProposalCard } from "@/components/ProposalCard";
 import { NewProposalModal } from "@/components/NewProposalModal";
 import type { User } from "@supabase/supabase-js";
@@ -21,6 +22,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
 
   const [user, setUser] = useState<User | null>(null);
   const [userSchoolSlug, setUserSchoolSlug] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<MemberRole | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [memberCount, setMemberCount] = useState(0);
@@ -32,6 +34,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
 
   const isMember = !!user && userSchoolSlug === slug;
   const isLoggedIn = !!user;
+  const isClubLeader = isMember && isClubLeadership({ role: userRole, school: null });
   const canManage = isMember || isAdmin;
 
   const showToast = useCallback((msg: string) => {
@@ -58,10 +61,11 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
         if (u) {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("school")
+            .select("school, role")
             .eq("id", u.id)
             .single();
           setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+          setUserRole((profile?.role as MemberRole) ?? null);
 
           try {
             const res = await fetch("/api/admin/check");
@@ -92,14 +96,16 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
       setUser(session?.user ?? null);
       if (!session?.user) {
         setUserSchoolSlug(null);
+        setUserRole(null);
         setIsAdmin(false);
       } else {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("school")
+          .select("school, role")
           .eq("id", session.user.id)
           .single();
         setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+        setUserRole((profile?.role as MemberRole) ?? null);
         try {
           const res = await fetch("/api/admin/check");
           const json = await res.json() as { isAdmin: boolean };
@@ -151,6 +157,11 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
     setProposals((prev) => [proposal, ...prev]);
     setShowModal(false);
     showToast(warning ?? "Proposal submitted successfully");
+  }
+
+  function handleExecuted() {
+    fetchProposals();
+    showToast("Proposal marked as executed");
   }
 
   const activeProposals = proposals.filter(isActive);
@@ -232,10 +243,12 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
               colors={colors}
               isMember={isMember}
               isLoggedIn={isLoggedIn}
+              isClubLeader={isClubLeader}
               memberCount={memberCount}
               schoolName={schoolName}
               onVote={handleVote}
               votingInProgress={votingFor === proposal.id}
+              onExecuted={handleExecuted}
             />
           ))}
         </div>

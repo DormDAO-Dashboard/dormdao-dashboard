@@ -15,6 +15,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "school param required" }, { status: 400 });
   }
 
+  // Auth gate: only members of that school (or admins) may see proposals
+  let authedUserId: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ proposals: [] });
+
+    const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
+    if (!isAdmin) {
+      const service = createServiceClient();
+      const { data: profile } = await service
+        .from("profiles")
+        .select("school")
+        .eq("id", user.id)
+        .single();
+
+      const userSchoolSlug = profile?.school ? slugify(profile.school) : null;
+      if (userSchoolSlug !== school) {
+        return NextResponse.json({ error: "Access restricted to school members" }, { status: 403 });
+      }
+    }
+    authedUserId = user.id;
+  } catch {
+    return NextResponse.json({ proposals: [] });
+  }
+
   const service = createServiceClient();
 
   const { data: proposals, error } = await service
@@ -27,28 +53,21 @@ export async function GET(req: NextRequest) {
 
   const rows = (proposals ?? []) as Proposal[];
 
-  // Overlay user's own votes if authenticated
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user && rows.length > 0) {
-      const ids = rows.map((p) => p.id);
-      const { data: votes } = await service
-        .from("proposal_votes")
-        .select("proposal_id, vote")
-        .eq("user_id", user.id)
-        .in("proposal_id", ids);
+  if (authedUserId && rows.length > 0) {
+    const ids = rows.map((p) => p.id);
+    const { data: votes } = await service
+      .from("proposal_votes")
+      .select("proposal_id, vote")
+      .eq("user_id", authedUserId)
+      .in("proposal_id", ids);
 
-      if (votes) {
-        const voteMap: Record<string, "yes" | "no"> = {};
-        for (const v of votes) voteMap[v.proposal_id] = v.vote;
-        return NextResponse.json({
-          proposals: rows.map((p) => ({ ...p, user_vote: voteMap[p.id] ?? null })),
-        });
-      }
+    if (votes) {
+      const voteMap: Record<string, "yes" | "no"> = {};
+      for (const v of votes) voteMap[v.proposal_id] = v.vote;
+      return NextResponse.json({
+        proposals: rows.map((p) => ({ ...p, user_vote: voteMap[p.id] ?? null })),
+      });
     }
-  } catch {
-    // Auth check is best-effort; return proposals without vote overlay
   }
 
   return NextResponse.json({ proposals: rows });
@@ -78,10 +97,11 @@ export async function POST(req: NextRequest) {
     title?: string;
     description?: string;
     recommended_size_eth?: number;
-    voting_deadline?: string;
+    price_target?: number;
+    document_ids?: string[];
   };
 
-  const { school, token_ticker, title, description, recommended_size_eth, voting_deadline } = body;
+  const { school, token_ticker, title, description, recommended_size_eth, price_target, document_ids } = body;
 
   if (!school) return NextResponse.json({ error: "school is required" }, { status: 400 });
   if (!isAdmin && slugify(profile?.school ?? "") !== school) {
@@ -90,15 +110,8 @@ export async function POST(req: NextRequest) {
   if (!token_ticker?.trim()) return NextResponse.json({ error: "token_ticker is required" }, { status: 400 });
   if (!title?.trim()) return NextResponse.json({ error: "title is required" }, { status: 400 });
   if (!description?.trim()) return NextResponse.json({ error: "description is required" }, { status: 400 });
-  if (recommended_size_eth === undefined || recommended_size_eth === null || Number.isNaN(recommended_size_eth)) {
-    return NextResponse.json({ error: "recommended_size_eth is required" }, { status: 400 });
-  }
-  if (!voting_deadline) return NextResponse.json({ error: "voting_deadline is required" }, { status: 400 });
-
-  const deadline = new Date(voting_deadline);
-  if (isNaN(deadline.getTime()) || deadline <= new Date()) {
-    return NextResponse.json({ error: "voting_deadline must be a future date" }, { status: 400 });
-  }
+  // Always lock to 36 hours from now — ignore any client-supplied deadline
+  const deadline = new Date(Date.now() + 36 * 60 * 60 * 1000);
 
   const ticker = token_ticker.trim().toUpperCase();
   const tokenName = TOKEN_META[ticker]?.name ?? ticker;
@@ -114,8 +127,9 @@ export async function POST(req: NextRequest) {
       proposed_by: user.id,
       proposed_by_name: profile?.display_name || "Anonymous",
       recommended_size_eth,
-      price_target: null,
+      price_target: price_target ?? null,
       voting_deadline: deadline.toISOString(),
+      document_ids: document_ids ?? [],
     })
     .select()
     .single();

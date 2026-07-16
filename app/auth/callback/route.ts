@@ -33,11 +33,11 @@ export async function GET(request: NextRequest) {
           return NextResponse.redirect(`${origin}/login?error=not_registered`);
         }
 
-        // Stamp the pre-assigned school onto the profile
+        // Stamp the pre-assigned school and role onto the profile
         const serviceClient = createServiceClient();
         await serviceClient
           .from("profiles")
-          .upsert({ id: user.id, school: member.school ?? null }, { onConflict: "id" });
+          .upsert({ id: user.id, school: member.school ?? null, role: member.role ?? 'member' }, { onConflict: "id" });
 
         const { data: profile } = await supabase
           .from("profiles")
