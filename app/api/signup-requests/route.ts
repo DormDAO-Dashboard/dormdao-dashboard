@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
   if (!email?.trim() || !email.includes("@")) return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
-  if (!school?.trim() || !SCHOOL_NAMES.includes(school.trim())) {
+  if (!school?.trim() || !(SCHOOL_NAMES as readonly string[]).includes(school.trim())) {
     return NextResponse.json({ error: "Valid school is required" }, { status: 400 });
   }
 
