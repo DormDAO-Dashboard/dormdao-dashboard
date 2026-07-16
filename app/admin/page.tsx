@@ -15,7 +15,11 @@ export default async function AdminPage() {
 
   const email  = user.email;
   const wallet = user.user_metadata?.wallet_address as string | undefined;
-  if (!isAdminUser(email, wallet)) redirect("/");
+  if (!isAdminUser(email, wallet)) {
+    const service2 = createServiceClient();
+    const { data: prof } = await service2.from("profiles").select("role").eq("id", user.id).single();
+    if (prof?.role !== "dorm_admin") redirect("/");
+  }
 
   const admin          = getAdminConfig();
   const initialMembers = await getMembers();

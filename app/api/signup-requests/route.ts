@@ -82,8 +82,11 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) {
+    const svcCheck = createServiceClient();
+    const { data: pf } = await svcCheck.from("profiles").select("role").eq("id", user.id).single();
+    if (pf?.role !== "dorm_admin") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const service = createServiceClient();

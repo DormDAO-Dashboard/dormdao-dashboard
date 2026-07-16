@@ -9,8 +9,11 @@ export async function DELETE(
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) {
+    const svc = createServiceClient();
+    const { data: pf } = await svc.from("profiles").select("role").eq("id", user.id).single();
+    if (pf?.role !== "dorm_admin") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -31,8 +34,11 @@ export async function PATCH(
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) {
+    const svc2 = createServiceClient();
+    const { data: pf2 } = await svc2.from("profiles").select("role").eq("id", user.id).single();
+    if (pf2?.role !== "dorm_admin") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;

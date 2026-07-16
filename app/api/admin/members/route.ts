@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { getMembers, saveMembers, Member } from "@/lib/members-store";
 
@@ -7,8 +7,10 @@ async function requireAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  return isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)
-    ? user : null;
+  if (isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) return user;
+  const service = createServiceClient();
+  const { data: prof } = await service.from("profiles").select("role").eq("id", user.id).single();
+  return prof?.role === "dorm_admin" ? user : null;
 }
 
 export async function GET() {
