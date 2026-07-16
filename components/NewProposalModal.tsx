@@ -11,10 +11,22 @@ interface Props {
   onCreated: (proposal: Proposal) => void;
 }
 
-function defaultDeadline(): string {
+const VOTING_PERIOD_HOURS = 36;
+
+function votingDeadline(): Date {
   const d = new Date();
-  d.setDate(d.getDate() + 7);
-  return d.toISOString().slice(0, 16);
+  d.setHours(d.getHours() + VOTING_PERIOD_HOURS);
+  return d;
+}
+
+function formatDeadline(d: Date): string {
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
@@ -25,7 +37,7 @@ export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
   const [description, setDescription] = useState("");
   const [sizeEth, setSizeEth] = useState("");
   const [priceTarget, setPriceTarget] = useState("");
-  const [deadline, setDeadline] = useState(defaultDeadline());
+  const [deadline] = useState(votingDeadline);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,7 +79,7 @@ export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
           description,
           recommended_size_eth: sizeEth ? parseFloat(sizeEth) : undefined,
           price_target: priceTarget ? parseFloat(priceTarget) : undefined,
-          voting_deadline: new Date(deadline).toISOString(),
+          voting_deadline: deadline.toISOString(),
         }),
       });
       const data = await res.json() as { proposal?: Proposal; error?: string };
@@ -194,15 +206,16 @@ export function NewProposalModal({ slug, colors, onClose, onCreated }: Props) {
 
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Voting Deadline <span className="text-red-500">*</span>
+              Voting Period
             </label>
-            <input
-              type="datetime-local"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              required
-              className={inputClass}
-            />
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                {VOTING_PERIOD_HOURS} Hours
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Ends {formatDeadline(deadline)}
+              </span>
+            </div>
           </div>
 
           {error && (
