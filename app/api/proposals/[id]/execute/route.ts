@@ -33,7 +33,7 @@ export async function PATCH(
       .eq("id", user.id)
       .single();
 
-    if (!canModerate(profile ?? {}, proposal.school)) {
+    if (!canModerate(profile ?? { role: null, school: null }, proposal.school)) {
       return NextResponse.json({ error: "Only club leadership can mark proposals as executed" }, { status: 403 });
     }
   }
