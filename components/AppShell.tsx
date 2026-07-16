@@ -346,7 +346,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         "w-full overflow-x-hidden transition-all duration-200 md:pt-[52px] pb-20 md:pb-0",
         pinned ? "md:ml-[200px]" : "md:ml-16"
       )}>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 overflow-x-hidden">
+        <main className="px-4 sm:px-4 lg:px-6 py-10 overflow-x-hidden">
           {children}
         </main>
       </div>
