@@ -6,32 +6,44 @@ import { formatNav, formatUSD, formatPct, slugify } from "@/lib/utils";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { schoolDisplayName } from "@/lib/schoolData";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 
 type SortKey = "rank" | "nav" | "usdReturn" | "ethReturn";
 
-function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-yellow-400 text-yellow-900">{rank}</span>;
-  if (rank === 2) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-gray-300 text-gray-700">{rank}</span>;
-  if (rank === 3) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-amber-600 text-white">{rank}</span>;
-  return <span className="text-xs font-mono text-gray-500">#{rank}</span>;
+function cardClasses(rank: number, isYours: boolean): string {
+  const border = isYours
+    ? "border-primary/50"
+    : rank === 1
+    ? "border-yellow-400/40 dark:border-yellow-400/20"
+    : rank === 2
+    ? "border-gray-400/40 dark:border-gray-400/20"
+    : rank === 3
+    ? "border-amber-600/40 dark:border-amber-600/20"
+    : "border-gray-200 dark:border-gray-800";
+
+  const bg =
+    rank === 1
+      ? "bg-yellow-400/20 dark:bg-yellow-400/15"
+      : rank === 2
+      ? "bg-gray-300/30 dark:bg-gray-400/15"
+      : rank === 3
+      ? "bg-amber-600/20 dark:bg-amber-600/15"
+      : "bg-white dark:bg-gray-900/30";
+
+  return cn("relative rounded-lg border p-4 hover:border-primary/40 transition-all cursor-pointer h-full", border, bg);
 }
 
 function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
   return (
     <Link href={`/schools/${s.slug}`}>
-      <div className="relative rounded-lg border border-gray-800 bg-gray-900/30 p-4 hover:border-primary/40 hover:bg-gray-800/30 transition-all cursor-pointer h-full">
-        {isYours && (
-          <span className="absolute top-2 left-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/30 leading-none">
-            Your School
-          </span>
-        )}
-        <div className={`flex items-start justify-between mb-3 ${isYours ? "mt-5" : ""}`}>
+      <div className={cardClasses(s.rank, !!isYours)}>
+        <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <SchoolLogo name={s.name} size={32} />
             <div>
-              <div className="mb-1"><RankBadge rank={s.rank} /></div>
-              <h2 className="text-white font-semibold">{schoolDisplayName(s.name)}</h2>
+              <div className="text-[11px] font-mono text-gray-400 dark:text-gray-500 mb-0.5">#{s.rank}</div>
+              <h2 className="text-gray-900 dark:text-white font-semibold">{schoolDisplayName(s.name)}</h2>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -44,7 +56,7 @@ function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
             <div className="text-gray-500">NAV</div>
-            <div className="font-mono text-gray-200">{formatNav(s.nav)}</div>
+            <div className="font-mono text-gray-700 dark:text-gray-200">{formatNav(s.nav)}</div>
           </div>
           <div>
             <div className="text-gray-500">USD Return</div>
@@ -61,6 +73,11 @@ function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
             <div className="font-mono text-gray-400">{formatPct(s.pctDeployed)}</div>
           </div>
         </div>
+        {isYours && (
+          <span className="absolute bottom-2 right-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/30 leading-none">
+            Your School
+          </span>
+        )}
       </div>
     </Link>
   );
@@ -89,19 +106,13 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
     return 0;
   });
 
-  const userSchool = userSlug ? sortedAll.find((s) => s.slug === userSlug) : null;
-
-  const isSearching = query.length > 0;
-
-  // When not searching, exclude user's school from main list (shown separately at top)
   const filtered = sortedAll.filter((s) => {
+    if (!query) return true;
     const q = query.toLowerCase();
-    const matchesQuery =
+    return (
       s.name.toLowerCase().includes(q) ||
-      schoolDisplayName(s.name).toLowerCase().includes(q);
-    if (!matchesQuery) return false;
-    if (!isSearching && userSlug === s.slug) return false;
-    return true;
+      schoolDisplayName(s.name).toLowerCase().includes(q)
+    );
   });
 
   return (
@@ -113,13 +124,13 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search schools…"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
           />
         </div>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortKey)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50"
+          className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
         >
           <option value="rank">Sort: Rank</option>
           <option value="nav">Sort: NAV</option>
@@ -129,16 +140,12 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {/* User's school pinned first when not searching */}
-        {!isSearching && userSchool && (
-          <SchoolCard s={userSchool} isYours />
-        )}
         {filtered.map((s) => (
-          <SchoolCard key={s.slug} s={s} isYours={isSearching && userSlug === s.slug} />
+          <SchoolCard key={s.slug} s={s} isYours={userSlug === s.slug} />
         ))}
       </div>
 
-      {filtered.length === 0 && (!userSchool || isSearching) && (
+      {filtered.length === 0 && (
         <div className="text-center py-16 text-gray-500">
           No schools match &quot;{query}&quot;
         </div>
