@@ -343,8 +343,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* ── Content area ───────────────────────────────────────── */}
       <div className={cn(
-        "w-full overflow-x-hidden transition-all duration-200 md:pt-[52px] pb-20 md:pb-0",
-        pinned ? "md:ml-[200px]" : "md:ml-16"
+        "overflow-x-hidden transition-all duration-200 md:pt-[52px] pb-20 md:pb-0",
+        pinned ? "md:ml-[200px] md:w-[calc(100%-200px)]" : "md:ml-16 md:w-[calc(100%-4rem)]"
       )}>
         <main className="px-4 sm:px-4 lg:px-6 py-10 overflow-x-hidden">
           {children}
