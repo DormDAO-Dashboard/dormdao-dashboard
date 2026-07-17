@@ -3,8 +3,8 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getAdminConfig, isAdminUser } from "@/lib/admin-config";
 import { getMembers } from "@/lib/members-store";
 import { AdminMembersSection } from "@/components/AdminMembersSection";
+import { AdminProfilesSection } from "@/components/AdminProfilesSection";
 import { SignupRequestsSection } from "@/components/SignupRequestsSection";
-import { schoolDisplayName } from "@/lib/schoolData";
 
 export const metadata = { title: "Admin — DormDAO" };
 
@@ -22,14 +22,30 @@ export default async function AdminPage() {
     if (prof?.role !== "dorm_admin") redirect("/");
   }
 
-  const admin          = getAdminConfig();
-  const initialMembers = await getMembers();
+  const admin      = getAdminConfig();
+  const allMembers = await getMembers();
 
   const serviceClient = createServiceClient();
-  const { data: dormAdmins } = await serviceClient
+  const { data: dormAdminProfiles } = await serviceClient
     .from("profiles")
     .select("id, display_name, school")
     .eq("role", "dorm_admin");
+
+  // Resolve emails for dorm_admin profiles to filter them from Members display
+  const dormAdminEmails = new Set<string>();
+  const dormAdminsWithEmail = await Promise.all(
+    (dormAdminProfiles ?? []).map(async (da) => {
+      const { data } = await serviceClient.auth.admin.getUserById(da.id);
+      const daEmail = data?.user?.email ?? null;
+      if (daEmail) dormAdminEmails.add(daEmail.toLowerCase());
+      return { ...da, email: daEmail };
+    })
+  );
+
+  // Exclude dorm_admins from Members list to avoid duplication
+  const initialMembers = allMembers.filter(
+    (m) => !dormAdminEmails.has(m.email.toLowerCase())
+  );
 
   const { data: recentFailedLogins } = await serviceClient
     .from("login_attempts")
@@ -46,53 +62,13 @@ export default async function AdminPage() {
         </p>
       </div>
 
-      {/* Admin members */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-            Admins
-            <span className="ml-2 text-xs text-gray-500 font-normal">{1 + (dormAdmins?.length ?? 0)} total</span>
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
-                <th className="text-left px-5 py-3">Name</th>
-                <th className="text-left px-5 py-3">School</th>
-                <th className="text-right px-5 py-3">Voting Units</th>
-                <th className="text-left px-5 py-3">Email</th>
-                <th className="text-left px-5 py-3">Wallet</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-gray-200/80 dark:border-gray-800/50">
-                <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{admin.name}</td>
-                <td className="px-5 py-3 text-gray-500 text-xs">—</td>
-                <td className="px-5 py-3 text-right font-mono text-primary">{admin.votingUnits}</td>
-                <td className="px-5 py-3 text-gray-400">{admin.email || "—"}</td>
-                <td className="px-5 py-3 font-mono text-gray-400 text-xs">
-                  {admin.wallet ? `${admin.wallet.slice(0, 6)}…${admin.wallet.slice(-4)}` : "—"}
-                </td>
-              </tr>
-              {(dormAdmins ?? []).map((da) => (
-                <tr key={da.id} className="border-b border-gray-200/80 dark:border-gray-800/50">
-                  <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{da.display_name || "—"}</td>
-                  <td className="px-5 py-3 text-gray-400 text-xs">{da.school ? schoolDisplayName(da.school) : "—"}</td>
-                  <td className="px-5 py-3 text-right font-mono text-primary">—</td>
-                  <td className="px-5 py-3 text-gray-400">—</td>
-                  <td className="px-5 py-3 text-gray-400">—</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AdminProfilesSection
+        envAdmin={{ name: admin.name, votingUnits: admin.votingUnits, email: admin.email ?? "", wallet: admin.wallet ?? "" }}
+        initialDormAdmins={dormAdminsWithEmail}
+      />
 
-      {/* Signup requests */}
       <SignupRequestsSection />
 
-      {/* Registered members (dynamic, managed by admin) */}
       <AdminMembersSection initialMembers={initialMembers} />
 
       {/* Recent failed logins */}
