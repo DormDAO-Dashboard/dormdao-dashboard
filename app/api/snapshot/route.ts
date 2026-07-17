@@ -4,7 +4,8 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getSchoolsData } from "@/lib/cache";
 import { Holding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
-import { sendEmailNotifications } from "@/lib/email";
+import { sendEmailNotifications, send12HourWarningEmail, sendProposalResultEmail } from "@/lib/email";
+import type { Proposal } from "@/lib/proposals";
 
 interface StoredHolding {
   ticker: string;
@@ -135,10 +136,28 @@ export async function POST(req: NextRequest) {
           await sendEmailNotifications(tradePayload).catch(console.error);
         }
       }
+      // Send 12-hour warning for proposals expiring within 13h that haven't been warned yet
+      const in13h = new Date(Date.now() + 13 * 3600 * 1000).toISOString();
+      const { data: warnProposals } = await supabase
+        .from("proposals")
+        .select("*")
+        .eq("status", "active")
+        .eq("deadline_warning_sent", false)
+        .lt("voting_deadline", in13h)
+        .gt("voting_deadline", new Date().toISOString());
+
+      if (warnProposals && warnProposals.length > 0) {
+        for (const proposal of warnProposals) {
+          await supabase.from("proposals").update({ deadline_warning_sent: true }).eq("id", proposal.id);
+          send12HourWarningEmail(proposal as Proposal).catch(console.error);
+        }
+        console.log(`[snapshot] sent 12h warning for ${warnProposals.length} proposals`);
+      }
+
       // Auto-resolve proposals whose voting deadline has passed
       const { data: expiredProposals } = await supabase
         .from("proposals")
-        .select("id, yes_votes, no_votes")
+        .select("*")
         .eq("status", "active")
         .lt("voting_deadline", new Date().toISOString());
 
@@ -149,6 +168,8 @@ export async function POST(req: NextRequest) {
             .from("proposals")
             .update({ status: resolvedStatus })
             .eq("id", proposal.id);
+          const resolved = { ...proposal, status: resolvedStatus } as Proposal;
+          sendProposalResultEmail(resolved).catch(console.error);
         }
         console.log(`[snapshot] resolved ${expiredProposals.length} expired proposals`);
       }

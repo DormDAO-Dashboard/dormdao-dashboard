@@ -35,6 +35,9 @@ export default async function ProfilePage({
     wallet_address?: string | null;
     is_public?: boolean | null;
     public_fields?: string[] | null;
+    vote_reminder_emails?: boolean | null;
+    is_alumni?: boolean | null;
+    alumni_email_optin?: boolean | null;
   } | null;
 
   const sharedProps = {
@@ -53,6 +56,9 @@ export default async function ProfilePage({
     initialWalletAddress: p?.wallet_address ?? "",
     initialIsPublic: p?.is_public ?? false,
     initialPublicFields: Array.isArray(p?.public_fields) ? (p.public_fields as string[]) : [],
+    initialVoteReminderEmails: p?.vote_reminder_emails ?? true,
+    initialIsAlumni: p?.is_alumni ?? false,
+    initialAlumniEmailOptin: p?.alumni_email_optin ?? false,
   };
 
   if (isSetup) {

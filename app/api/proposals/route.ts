@@ -3,7 +3,7 @@ import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import { sendPushNotifications } from "@/lib/push";
-import { sendEmailNotifications } from "@/lib/email";
+import { sendEmailNotifications, sendNewProposalEmail } from "@/lib/email";
 import { isAdminUser } from "@/lib/admin-config";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { TOKEN_META } from "@/lib/tokens";
@@ -147,6 +147,7 @@ export async function POST(req: NextRequest) {
     };
     await sendPushNotifications(payload).catch(console.error);
     await sendEmailNotifications(payload).catch(console.error);
+    await sendNewProposalEmail(created).catch(console.error);
   });
 
   return NextResponse.json({ proposal: created }, { status: 201 });

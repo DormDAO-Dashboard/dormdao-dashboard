@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { canModerate } from "@/lib/auth-utils";
+import { sendExecutionEmail } from "@/lib/email";
+import type { Proposal } from "@/lib/proposals";
 
 export async function PATCH(
   req: NextRequest,
@@ -66,5 +69,10 @@ export async function PATCH(
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  after(async () => {
+    await sendExecutionEmail(updated as Proposal).catch(console.error);
+  });
+
   return NextResponse.json({ proposal: updated });
 }

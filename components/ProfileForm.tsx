@@ -45,6 +45,9 @@ interface Props {
   initialWalletAddress: string;
   initialIsPublic: boolean;
   initialPublicFields: string[];
+  initialVoteReminderEmails: boolean;
+  initialIsAlumni: boolean;
+  initialAlumniEmailOptin: boolean;
   isSetup: boolean;
 }
 
@@ -195,6 +198,9 @@ export function ProfileForm({
   initialWalletAddress,
   initialIsPublic,
   initialPublicFields,
+  initialVoteReminderEmails,
+  initialIsAlumni,
+  initialAlumniEmailOptin,
   isSetup,
 }: Props) {
   if (isSetup) {
@@ -225,6 +231,9 @@ export function ProfileForm({
       initialWalletAddress={initialWalletAddress}
       initialIsPublic={initialIsPublic}
       initialPublicFields={initialPublicFields}
+      initialVoteReminderEmails={initialVoteReminderEmails}
+      initialIsAlumni={initialIsAlumni}
+      initialAlumniEmailOptin={initialAlumniEmailOptin}
     />
   );
 }
@@ -245,6 +254,9 @@ function NormalProfile({
   initialWalletAddress,
   initialIsPublic,
   initialPublicFields,
+  initialVoteReminderEmails,
+  initialIsAlumni,
+  initialAlumniEmailOptin,
 }: Omit<Props, "isSetup">) {
   const router = useRouter();
   const identity = parseIdentity(email);
@@ -261,9 +273,12 @@ function NormalProfile({
   const [telegram, setTelegram]             = useState(initialTelegram.replace(/^@+/, ""));
   const [discord, setDiscord]               = useState(initialDiscord);
   const [walletAddress, setWalletAddress]   = useState(initialWalletAddress);
-  const [isPublic, setIsPublic]             = useState(initialIsPublic);
+  const [isPublic, setIsPublic]               = useState(initialIsPublic);
   const DEFAULT_PUBLIC_FIELDS = ["display_name", "school", "graduation_year", "major", "twitter", "linkedin"];
-  const [publicFields, setPublicFields]     = useState<string[]>(initialPublicFields.length > 0 ? initialPublicFields : DEFAULT_PUBLIC_FIELDS);
+  const [publicFields, setPublicFields]       = useState<string[]>(initialPublicFields.length > 0 ? initialPublicFields : DEFAULT_PUBLIC_FIELDS);
+  const [voteReminderEmails, setVoteReminderEmails] = useState(initialVoteReminderEmails);
+  const [isAlumni, setIsAlumni]               = useState(initialIsAlumni);
+  const [alumniEmailOptin, setAlumniEmailOptin] = useState(initialAlumniEmailOptin);
   const [saving, setSaving]                 = useState(false);
   const [error, setError]                   = useState<string | null>(null);
 
@@ -297,6 +312,9 @@ function NormalProfile({
       wallet_address: effectiveWallet || null,
       is_public: isPublic,
       public_fields: publicFields,
+      vote_reminder_emails: voteReminderEmails,
+      is_alumni: isAlumni,
+      alumni_email_optin: alumniEmailOptin,
     });
 
     setSaving(false);
@@ -322,6 +340,9 @@ function NormalProfile({
     setWalletAddress(initialWalletAddress);
     setIsPublic(initialIsPublic);
     setPublicFields(initialPublicFields);
+    setVoteReminderEmails(initialVoteReminderEmails);
+    setIsAlumni(initialIsAlumni);
+    setAlumniEmailOptin(initialAlumniEmailOptin);
     setError(null);
     setEditing(false);
   }
@@ -579,6 +600,46 @@ function NormalProfile({
         <p className="text-xs text-gray-500 dark:text-gray-600">
           Wallet addresses are never shown publicly regardless of settings.
         </p>
+      </div>
+
+      {/* Notification Preferences */}
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 flex flex-col gap-4">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Notifications</p>
+
+        <label className="flex items-center justify-between gap-4 cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">Proposal vote reminders</p>
+            <p className="text-xs text-gray-500 mt-0.5">New proposals, 12-hour warnings, results, and trade executions</p>
+          </div>
+          <button type="button" role="switch" aria-checked={voteReminderEmails} onClick={() => setVoteReminderEmails((v) => !v)}
+            className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${voteReminderEmails ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"}`}>
+            <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${voteReminderEmails ? "translate-x-4" : "translate-x-0"}`} />
+          </button>
+        </label>
+
+        <label className="flex items-center justify-between gap-4 cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">I&apos;m an alumnus / alumna</p>
+            <p className="text-xs text-gray-500 mt-0.5">Mark yourself as a former member of your chapter</p>
+          </div>
+          <button type="button" role="switch" aria-checked={isAlumni} onClick={() => setIsAlumni((v) => !v)}
+            className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${isAlumni ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"}`}>
+            <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${isAlumni ? "translate-x-4" : "translate-x-0"}`} />
+          </button>
+        </label>
+
+        {isAlumni && (
+          <label className="flex items-center justify-between gap-4 cursor-pointer pl-4 border-l-2 border-primary/30">
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Receive alumni emails</p>
+              <p className="text-xs text-gray-500 mt-0.5">Stay in the loop on major votes even as an alum</p>
+            </div>
+            <button type="button" role="switch" aria-checked={alumniEmailOptin} onClick={() => setAlumniEmailOptin((v) => !v)}
+              className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${alumniEmailOptin ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"}`}>
+              <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${alumniEmailOptin ? "translate-x-4" : "translate-x-0"}`} />
+            </button>
+          </label>
+        )}
       </div>
 
       {error && (

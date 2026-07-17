@@ -4,6 +4,7 @@ import { isAdminUser } from "@/lib/admin-config";
 import { getMembers } from "@/lib/members-store";
 import { SCHOOL_NAMES } from "@/lib/schoolData";
 import { Resend } from "resend";
+import { sendInviteEmail } from "@/lib/email";
 
 const FROM_ADDRESS = "onboarding@resend.dev";
 
@@ -137,6 +138,9 @@ export async function PATCH(req: NextRequest) {
   }).eq("id", body.id);
 
   const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey && body.action === "approve") {
+    sendInviteEmail({ to: request.email, name: request.name, school: request.school }).catch(console.error);
+  }
   if (apiKey && body.action === "reject") {
     const resend = new Resend(apiKey);
     resend.emails.send({
