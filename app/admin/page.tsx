@@ -31,20 +31,39 @@ export default async function AdminPage() {
     .select("id, display_name, school")
     .eq("role", "dorm_admin");
 
-  // Resolve emails for dorm_admin profiles to filter them from Members display
+  // Resolve auth info for dorm_admin profiles; match against members.json by email OR wallet
   const dormAdminEmails = new Set<string>();
+  const dormAdminWallets = new Set<string>();
   const dormAdminsWithEmail = await Promise.all(
     (dormAdminProfiles ?? []).map(async (da) => {
       const { data } = await serviceClient.auth.admin.getUserById(da.id);
-      const daEmail = data?.user?.email ?? null;
-      if (daEmail) dormAdminEmails.add(daEmail.toLowerCase());
-      return { ...da, email: daEmail };
+      const authEmail = data?.user?.email ?? null;
+      const authWallet = (data?.user?.user_metadata?.wallet_address as string | undefined)?.toLowerCase();
+      if (authEmail) dormAdminEmails.add(authEmail.toLowerCase());
+      if (authWallet) dormAdminWallets.add(authWallet);
+
+      // Find matching members.json entry by email or wallet
+      const memberEntry = allMembers.find((m) =>
+        (authEmail && m.email.toLowerCase() === authEmail.toLowerCase()) ||
+        (authWallet && m.walletAddress && m.walletAddress.toLowerCase() === authWallet)
+      );
+      if (memberEntry?.email) dormAdminEmails.add(memberEntry.email.toLowerCase());
+      if (memberEntry?.walletAddress) dormAdminWallets.add(memberEntry.walletAddress.toLowerCase());
+
+      return {
+        ...da,
+        email: memberEntry?.email ?? authEmail,
+        walletAddress: memberEntry?.walletAddress ?? null,
+        memberId: memberEntry?.id ?? null,
+      };
     })
   );
 
   // Exclude dorm_admins from Members list to avoid duplication
   const initialMembers = allMembers.filter(
-    (m) => !dormAdminEmails.has(m.email.toLowerCase())
+    (m) =>
+      !dormAdminEmails.has(m.email.toLowerCase()) &&
+      !(m.walletAddress && dormAdminWallets.has(m.walletAddress.toLowerCase()))
   );
 
   const { data: recentFailedLogins } = await serviceClient

@@ -8,10 +8,14 @@ interface AdminProfile {
   display_name: string | null;
   school: string | null;
   email: string | null;
+  walletAddress: string | null;
+  memberId: string | null;
 }
 
 interface Draft {
-  display_name: string;
+  name: string;
+  email: string;
+  walletAddress: string;
   school: string;
 }
 
@@ -26,13 +30,18 @@ export function AdminProfilesSection({
 }) {
   const [dormAdmins, setDormAdmins] = useState<AdminProfile[]>(initialDormAdmins);
   const [editTarget, setEditTarget] = useState<AdminProfile | null>(null);
-  const [draft, setDraft] = useState<Draft>({ display_name: "", school: "" });
+  const [draft, setDraft] = useState<Draft>({ name: "", email: "", walletAddress: "", school: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function openEdit(da: AdminProfile) {
     setEditTarget(da);
-    setDraft({ display_name: da.display_name ?? "", school: da.school ?? "" });
+    setDraft({
+      name: da.display_name ?? "",
+      email: da.email ?? "",
+      walletAddress: da.walletAddress ?? "",
+      school: da.school ?? "",
+    });
     setError(null);
   }
 
@@ -42,20 +51,44 @@ export function AdminProfilesSection({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/profiles/${editTarget.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          display_name: draft.display_name || null,
-          school: draft.school || null,
-        }),
-      });
-      const data = await res.json() as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Failed to update");
+      if (editTarget.memberId) {
+        // Reuse member PATCH — syncs members.json + profile
+        const res = await fetch(`/api/admin/members/${editTarget.memberId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: draft.name || undefined,
+            email: draft.email || undefined,
+            walletAddress: draft.walletAddress || undefined,
+            school: draft.school || null,
+          }),
+        });
+        const data = await res.json() as { error?: string };
+        if (!res.ok) throw new Error(data.error ?? "Failed to update");
+      } else {
+        // Profile-only update (no members.json entry)
+        const res = await fetch(`/api/admin/profiles/${editTarget.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            display_name: draft.name || null,
+            school: draft.school || null,
+          }),
+        });
+        const data = await res.json() as { error?: string };
+        if (!res.ok) throw new Error(data.error ?? "Failed to update");
+      }
+
       setDormAdmins((prev) =>
         prev.map((da) =>
           da.id === editTarget.id
-            ? { ...da, display_name: draft.display_name || null, school: draft.school || null }
+            ? {
+                ...da,
+                display_name: draft.name || null,
+                email: draft.email || da.email,
+                walletAddress: draft.walletAddress || da.walletAddress,
+                school: draft.school || null,
+              }
             : da
         )
       );
@@ -105,7 +138,9 @@ export function AdminProfilesSection({
                   <td className="px-5 py-3 text-gray-400 text-xs">{da.school ? schoolDisplayName(da.school) : "—"}</td>
                   <td className="px-5 py-3 text-right font-mono text-gray-500">—</td>
                   <td className="px-5 py-3 text-gray-400">{da.email || "—"}</td>
-                  <td className="px-5 py-3 text-gray-400">—</td>
+                  <td className="px-5 py-3 font-mono text-gray-500 text-xs">
+                    {da.walletAddress ? `${da.walletAddress.slice(0, 6)}…${da.walletAddress.slice(-4)}` : "—"}
+                  </td>
                   <td className="px-5 py-3 text-right">
                     <button onClick={() => openEdit(da)} className="text-gray-600 hover:text-gray-300 transition-colors" title="Edit admin">
                       <Pencil className="w-4 h-4" />
@@ -130,21 +165,23 @@ export function AdminProfilesSection({
             </div>
             <form onSubmit={handleSave} className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Display Name</label>
-                <input
-                  value={draft.display_name}
-                  onChange={(e) => setDraft({ ...draft, display_name: e.target.value })}
-                  placeholder="Full name"
-                  className={fieldClass}
-                />
+                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Name</label>
+                <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  placeholder="Full name" className={fieldClass} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Email</label>
+                <input type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+                  placeholder="email@example.com" className={fieldClass} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Wallet Address</label>
+                <input value={draft.walletAddress} onChange={(e) => setDraft({ ...draft, walletAddress: e.target.value })}
+                  placeholder="0x…" className={fieldClass + " font-mono text-xs"} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">School</label>
-                <select
-                  value={draft.school}
-                  onChange={(e) => setDraft({ ...draft, school: e.target.value })}
-                  className={fieldClass}
-                >
+                <select value={draft.school} onChange={(e) => setDraft({ ...draft, school: e.target.value })} className={fieldClass}>
                   <option value="">— No school —</option>
                   {SCHOOL_NAMES.map((s) => (
                     <option key={s} value={s}>{schoolDisplayName(s)}</option>
