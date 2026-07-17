@@ -34,23 +34,32 @@ export async function GET(request: NextRequest) {
         }
 
         // Stamp the pre-assigned school and role onto the profile,
-        // pulling extra fields from an approved signup request if present
+        // pulling extra fields from an approved signup request if present.
+        // Never downgrade a dorm_admin role that was set directly in the DB.
         const serviceClient = createServiceClient();
-        const { data: signupRequest } = await serviceClient
-          .from("signup_requests")
-          .select("grad_year, major, linkedin, telegram")
-          .eq("email", (user.email ?? "").toLowerCase())
-          .eq("status", "approved")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+
+        const [{ data: existingProfile }, { data: signupRequest }] = await Promise.all([
+          serviceClient.from("profiles").select("role").eq("id", user.id).single(),
+          serviceClient
+            .from("signup_requests")
+            .select("grad_year, major, linkedin, telegram")
+            .eq("email", (user.email ?? "").toLowerCase())
+            .eq("status", "approved")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single(),
+        ]);
+
+        const preservedRole = existingProfile?.role === "dorm_admin"
+          ? "dorm_admin"
+          : (member.role ?? "member");
 
         await serviceClient
           .from("profiles")
           .upsert({
             id: user.id,
             school: member.school ?? null,
-            role: member.role ?? "member",
+            role: preservedRole,
             ...(signupRequest?.grad_year != null && { grad_year: signupRequest.grad_year }),
             ...(signupRequest?.major    && { major:    signupRequest.major }),
             ...(signupRequest?.linkedin && { linkedin: signupRequest.linkedin }),
