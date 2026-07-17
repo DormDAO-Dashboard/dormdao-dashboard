@@ -83,7 +83,13 @@ export default async function AdminPage() {
       </div>
 
       <AdminProfilesSection
-        envAdmin={{ name: admin.name, votingUnits: admin.votingUnits, email: admin.email ?? "", wallet: admin.wallet ?? "" }}
+        envAdmin={{
+          name: admin.name,
+          votingUnits: admin.votingUnits,
+          email: admin.email ?? "",
+          wallet: admin.wallet ?? "",
+          memberId: allMembers.find((m) => m.email.toLowerCase() === (admin.email ?? "").toLowerCase())?.id ?? null,
+        }}
         initialDormAdmins={dormAdminsWithEmail}
       />
 

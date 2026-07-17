@@ -27,14 +27,28 @@ export function AdminProfilesSection({
   envAdmin,
   initialDormAdmins,
 }: {
-  envAdmin: { name: string; votingUnits: number; email: string; wallet: string };
+  envAdmin: { name: string; votingUnits: number; email: string; wallet: string; memberId: string | null };
   initialDormAdmins: AdminProfile[];
 }) {
   const [dormAdmins, setDormAdmins] = useState<AdminProfile[]>(initialDormAdmins);
   const [editTarget, setEditTarget] = useState<AdminProfile | null>(null);
+  const [editingEnvAdmin, setEditingEnvAdmin] = useState(false);
+  const [envAdminName, setEnvAdminName] = useState(envAdmin.name);
   const [draft, setDraft] = useState<Draft>({ name: "", email: "", walletAddress: "", school: "", votingUnits: 10 });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function openEditEnvAdmin() {
+    setEditingEnvAdmin(true);
+    setDraft({
+      name: envAdminName,
+      email: envAdmin.email,
+      walletAddress: envAdmin.wallet,
+      school: "",
+      votingUnits: envAdmin.votingUnits,
+    });
+    setError(null);
+  }
 
   function openEdit(da: AdminProfile) {
     setEditTarget(da);
@@ -50,10 +64,27 @@ export function AdminProfilesSection({
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!editTarget) return;
     setSubmitting(true);
     setError(null);
     try {
+      if (editingEnvAdmin && envAdmin.memberId) {
+        const res = await fetch(`/api/admin/members/${envAdmin.memberId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: draft.name || undefined,
+            email: draft.email || undefined,
+            walletAddress: draft.walletAddress || undefined,
+            votingUnits: draft.votingUnits,
+          }),
+        });
+        const data = await res.json() as { error?: string };
+        if (!res.ok) throw new Error(data.error ?? "Failed to update");
+        setEnvAdminName(draft.name || envAdminName);
+        setEditingEnvAdmin(false);
+        return;
+      }
+      if (!editTarget) return;
       if (editTarget.memberId) {
         // Reuse member PATCH — syncs members.json + profile
         const res = await fetch(`/api/admin/members/${editTarget.memberId}`, {
@@ -105,6 +136,11 @@ export function AdminProfilesSection({
     }
   }
 
+  function closeModal() {
+    setEditTarget(null);
+    setEditingEnvAdmin(false);
+  }
+
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
@@ -127,15 +163,21 @@ export function AdminProfilesSection({
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-gray-200/80 dark:border-gray-800/50">
-                <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{envAdmin.name}</td>
+              <tr className="border-b border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
+                <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{envAdminName}</td>
                 <td className="px-5 py-3 text-gray-500 text-xs">—</td>
                 <td className="px-5 py-3 text-right font-mono text-primary">{envAdmin.votingUnits}</td>
                 <td className="px-5 py-3 text-gray-400">{envAdmin.email || "—"}</td>
                 <td className="px-5 py-3 font-mono text-gray-400 text-xs">
                   {envAdmin.wallet ? `${envAdmin.wallet.slice(0, 6)}…${envAdmin.wallet.slice(-4)}` : "—"}
                 </td>
-                <td className="px-5 py-3" />
+                <td className="px-5 py-3 text-right">
+                  {envAdmin.memberId && (
+                    <button onClick={openEditEnvAdmin} className="text-gray-600 hover:text-gray-300 transition-colors" title="Edit admin">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
+                </td>
               </tr>
               {dormAdmins.map((da) => (
                 <tr key={da.id} className="border-b border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
@@ -158,13 +200,13 @@ export function AdminProfilesSection({
         </div>
       </div>
 
-      {editTarget && (
+      {(editTarget || editingEnvAdmin) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setEditTarget(null)} />
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeModal} />
           <div className="relative w-full max-w-md bg-[#111] rounded-xl border border-gray-800 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-semibold text-white">Edit Admin</h3>
-              <button onClick={() => setEditTarget(null)} className="text-gray-500 hover:text-white transition-colors">
+              <button onClick={closeModal} className="text-gray-500 hover:text-white transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -206,7 +248,7 @@ export function AdminProfilesSection({
                 </div>
               )}
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setEditTarget(null)}
+                <button type="button" onClick={closeModal}
                   className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-white text-sm transition-colors">
                   Cancel
                 </button>
