@@ -10,6 +10,7 @@ interface AdminProfile {
   email: string | null;
   walletAddress: string | null;
   memberId: string | null;
+  votingUnits: number | null;
 }
 
 interface Draft {
@@ -17,6 +18,7 @@ interface Draft {
   email: string;
   walletAddress: string;
   school: string;
+  votingUnits: number;
 }
 
 const fieldClass = "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 w-full";
@@ -30,7 +32,7 @@ export function AdminProfilesSection({
 }) {
   const [dormAdmins, setDormAdmins] = useState<AdminProfile[]>(initialDormAdmins);
   const [editTarget, setEditTarget] = useState<AdminProfile | null>(null);
-  const [draft, setDraft] = useState<Draft>({ name: "", email: "", walletAddress: "", school: "" });
+  const [draft, setDraft] = useState<Draft>({ name: "", email: "", walletAddress: "", school: "", votingUnits: 10 });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +43,7 @@ export function AdminProfilesSection({
       email: da.email ?? "",
       walletAddress: da.walletAddress ?? "",
       school: da.school ?? "",
+      votingUnits: da.votingUnits ?? 10,
     });
     setError(null);
   }
@@ -61,6 +64,7 @@ export function AdminProfilesSection({
             email: draft.email || undefined,
             walletAddress: draft.walletAddress || undefined,
             school: draft.school || null,
+            votingUnits: draft.votingUnits,
           }),
         });
         const data = await res.json() as { error?: string };
@@ -88,6 +92,7 @@ export function AdminProfilesSection({
                 email: draft.email || da.email,
                 walletAddress: draft.walletAddress || da.walletAddress,
                 school: draft.school || null,
+                votingUnits: draft.votingUnits,
               }
             : da
         )
@@ -136,7 +141,7 @@ export function AdminProfilesSection({
                 <tr key={da.id} className="border-b border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
                   <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{da.display_name || "—"}</td>
                   <td className="px-5 py-3 text-gray-400 text-xs">{da.school ? schoolDisplayName(da.school) : "—"}</td>
-                  <td className="px-5 py-3 text-right font-mono text-gray-500">—</td>
+                  <td className="px-5 py-3 text-right font-mono text-primary">{da.votingUnits ?? "—"}</td>
                   <td className="px-5 py-3 text-gray-400">{da.email || "—"}</td>
                   <td className="px-5 py-3 font-mono text-gray-500 text-xs">
                     {da.walletAddress ? `${da.walletAddress.slice(0, 6)}…${da.walletAddress.slice(-4)}` : "—"}
@@ -168,6 +173,12 @@ export function AdminProfilesSection({
                 <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Name</label>
                 <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                   placeholder="Full name" className={fieldClass} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Voting Units</label>
+                <input type="number" min={0} value={draft.votingUnits}
+                  onChange={(e) => setDraft({ ...draft, votingUnits: parseInt(e.target.value) || 0 })}
+                  className={fieldClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Email</label>

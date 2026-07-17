@@ -55,6 +55,7 @@ export default async function AdminPage() {
         email: memberEntry?.email ?? authEmail,
         walletAddress: memberEntry?.walletAddress ?? null,
         memberId: memberEntry?.id ?? null,
+        votingUnits: memberEntry?.votingUnits ?? null,
       };
     })
   );
