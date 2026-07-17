@@ -33,11 +33,29 @@ export async function GET(request: NextRequest) {
           return NextResponse.redirect(`${origin}/login?error=not_registered`);
         }
 
-        // Stamp the pre-assigned school and role onto the profile
+        // Stamp the pre-assigned school and role onto the profile,
+        // pulling extra fields from an approved signup request if present
         const serviceClient = createServiceClient();
+        const { data: signupRequest } = await serviceClient
+          .from("signup_requests")
+          .select("grad_year, major, linkedin, telegram")
+          .eq("email", (user.email ?? "").toLowerCase())
+          .eq("status", "approved")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
         await serviceClient
           .from("profiles")
-          .upsert({ id: user.id, school: member.school ?? null, role: member.role ?? 'member' }, { onConflict: "id" });
+          .upsert({
+            id: user.id,
+            school: member.school ?? null,
+            role: member.role ?? "member",
+            ...(signupRequest?.grad_year != null && { grad_year: signupRequest.grad_year }),
+            ...(signupRequest?.major    && { major:    signupRequest.major }),
+            ...(signupRequest?.linkedin && { linkedin: signupRequest.linkedin }),
+            ...(signupRequest?.telegram && { telegram: signupRequest.telegram }),
+          }, { onConflict: "id" });
 
         const { data: profile } = await supabase
           .from("profiles")

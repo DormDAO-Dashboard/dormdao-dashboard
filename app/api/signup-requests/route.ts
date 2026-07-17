@@ -46,7 +46,9 @@ export async function POST(req: NextRequest) {
   } | null;
   if (!body) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-  const { name, email, school, wallet_address, message } = body;
+  const { name, email, school, wallet_address, message, grad_year, major, linkedin, telegram } = body as typeof body & {
+    grad_year?: number; major?: string; linkedin?: string; telegram?: string;
+  };
 
   if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
   if (!email?.trim() || !email.includes("@")) return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
@@ -69,6 +71,10 @@ export async function POST(req: NextRequest) {
     school: school.trim(),
     wallet_address: wallet_address?.trim() || null,
     message: message?.trim() || null,
+    grad_year: typeof grad_year === "number" ? grad_year : null,
+    major: major?.trim() || null,
+    linkedin: linkedin?.trim() || null,
+    telegram: telegram?.trim() || null,
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

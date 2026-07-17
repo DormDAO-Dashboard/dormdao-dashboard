@@ -4,12 +4,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 
+const CURRENT_YEAR = new Date().getFullYear();
+const GRAD_YEARS = Array.from({ length: 7 }, (_, i) => CURRENT_YEAR + i);
+
 export default function JoinPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [school, setSchool] = useState("");
   const [wallet, setWallet] = useState("");
   const [message, setMessage] = useState("");
+  const [gradYear, setGradYear] = useState("");
+  const [major, setMajor] = useState("");
+  const [linkedin, setLinkedin] = useState("");
+  const [telegram, setTelegram] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -26,6 +33,10 @@ export default function JoinPage() {
           name, email, school,
           wallet_address: wallet || undefined,
           message: message || undefined,
+          grad_year: gradYear ? parseInt(gradYear, 10) : undefined,
+          major: major || undefined,
+          linkedin: linkedin || undefined,
+          telegram: telegram || undefined,
         }),
       });
       const data = await res.json() as { error?: string };
@@ -96,6 +107,42 @@ export default function JoinPage() {
                     <option key={s} value={s}>{schoolDisplayName(s)}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                    Grad Year <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <select value={gradYear} onChange={(e) => setGradYear(e.target.value)} className={inputClass}>
+                    <option value="">— Year —</option>
+                    {GRAD_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                    Major <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input value={major} onChange={(e) => setMajor(e.target.value)}
+                    placeholder="e.g. Finance" className={inputClass} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                    LinkedIn <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input value={linkedin} onChange={(e) => setLinkedin(e.target.value)}
+                    placeholder="linkedin.com/in/…" className={inputClass} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                    Telegram <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input value={telegram} onChange={(e) => setTelegram(e.target.value)}
+                    placeholder="@username" className={inputClass} />
+                </div>
               </div>
 
               <div>
