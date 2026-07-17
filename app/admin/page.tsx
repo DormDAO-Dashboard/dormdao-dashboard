@@ -4,6 +4,7 @@ import { getAdminConfig, isAdminUser } from "@/lib/admin-config";
 import { getMembers } from "@/lib/members-store";
 import { AdminMembersSection } from "@/components/AdminMembersSection";
 import { SignupRequestsSection } from "@/components/SignupRequestsSection";
+import { schoolDisplayName } from "@/lib/schoolData";
 
 export const metadata = { title: "Admin — DormDAO" };
 
@@ -25,6 +26,11 @@ export default async function AdminPage() {
   const initialMembers = await getMembers();
 
   const serviceClient = createServiceClient();
+  const { data: dormAdmins } = await serviceClient
+    .from("profiles")
+    .select("id, display_name, school")
+    .eq("role", "dorm_admin");
+
   const { data: recentFailedLogins } = await serviceClient
     .from("login_attempts")
     .select("id, email, wallet_address, reason, created_at")
@@ -40,12 +46,12 @@ export default async function AdminPage() {
         </p>
       </div>
 
-      {/* Admin members (hardcoded from config) */}
+      {/* Admin members */}
       <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
             Admins
-            <span className="ml-2 text-xs text-gray-500 font-normal">1 total</span>
+            <span className="ml-2 text-xs text-gray-500 font-normal">{1 + (dormAdmins?.length ?? 0)} total</span>
           </h2>
         </div>
         <div className="overflow-x-auto">
@@ -53,6 +59,7 @@ export default async function AdminPage() {
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
                 <th className="text-left px-5 py-3">Name</th>
+                <th className="text-left px-5 py-3">School</th>
                 <th className="text-right px-5 py-3">Voting Units</th>
                 <th className="text-left px-5 py-3">Email</th>
                 <th className="text-left px-5 py-3">Wallet</th>
@@ -61,12 +68,22 @@ export default async function AdminPage() {
             <tbody>
               <tr className="border-b border-gray-200/80 dark:border-gray-800/50">
                 <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{admin.name}</td>
+                <td className="px-5 py-3 text-gray-500 text-xs">—</td>
                 <td className="px-5 py-3 text-right font-mono text-primary">{admin.votingUnits}</td>
                 <td className="px-5 py-3 text-gray-400">{admin.email || "—"}</td>
                 <td className="px-5 py-3 font-mono text-gray-400 text-xs">
                   {admin.wallet ? `${admin.wallet.slice(0, 6)}…${admin.wallet.slice(-4)}` : "—"}
                 </td>
               </tr>
+              {(dormAdmins ?? []).map((da) => (
+                <tr key={da.id} className="border-b border-gray-200/80 dark:border-gray-800/50">
+                  <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{da.display_name || "—"}</td>
+                  <td className="px-5 py-3 text-gray-400 text-xs">{da.school ? schoolDisplayName(da.school) : "—"}</td>
+                  <td className="px-5 py-3 text-right font-mono text-primary">—</td>
+                  <td className="px-5 py-3 text-gray-400">—</td>
+                  <td className="px-5 py-3 text-gray-400">—</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
