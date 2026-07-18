@@ -397,9 +397,11 @@ export function LeaderboardClient({
 
       {/* Three-panel layout — fixed widths (sized to match this layout at a
           standard desktop window), not responsive columns. Below that
-          combined width the row scrolls horizontally instead of condensing. */}
+          combined width the row scrolls horizontally instead of condensing;
+          above it, mx-auto centers the row so extra space grows evenly on
+          both sides instead of piling up on the right. */}
       <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
-      <div className="flex gap-4 h-full w-max">
+      <div className="flex gap-4 h-full w-max mx-auto">
 
         {/* ── Left: Quarterly ──────────────────────────────── */}
         <Panel
