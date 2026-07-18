@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getDefaultVisibility } from "@/lib/documents";
 import { isAdminUser } from "@/lib/admin-config";
+import { MAIN_DAO_NAME, isMainDaoAuthorized } from "@/lib/main-dao";
 
 export async function POST(req: NextRequest) {
   // Auth: must be signed in with a school matching the uploaded document's school
@@ -14,15 +15,11 @@ export async function POST(req: NextRequest) {
   const service = createServiceClient();
   const { data: profile } = await service
     .from("profiles")
-    .select("school")
+    .select("school, role")
     .eq("id", user.id)
     .single();
 
   const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
-
-  if (!isAdmin && !profile?.school) {
-    return NextResponse.json({ error: "Set your school on your profile to upload documents" }, { status: 403 });
-  }
 
   try {
     const formData = await req.formData();
@@ -33,8 +30,15 @@ export async function POST(req: NextRequest) {
     const documentDate = formData.get("document_date") as string | null;
     const documentType = (formData.get("document_type") as string | null) ?? "report";
 
+    const isMainDaoUpload = (school ?? "").trim().toLowerCase() === MAIN_DAO_NAME.toLowerCase();
+    const mainDaoOk = isMainDaoUpload && isMainDaoAuthorized(isAdmin, profile?.role);
+
+    if (!isAdmin && !mainDaoOk && !profile?.school) {
+      return NextResponse.json({ error: "Set your school on your profile to upload documents" }, { status: 403 });
+    }
+
     // Verify the school being uploaded to matches the user's school
-    if (!isAdmin && (!school || school.trim().toLowerCase() !== profile?.school?.trim().toLowerCase())) {
+    if (!isAdmin && !mainDaoOk && (!school || school.trim().toLowerCase() !== profile?.school?.trim().toLowerCase())) {
       return NextResponse.json({ error: "You can only upload documents for your own school" }, { status: 403 });
     }
 

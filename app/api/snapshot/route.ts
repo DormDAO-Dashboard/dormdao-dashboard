@@ -4,7 +4,13 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getSchoolsData } from "@/lib/cache";
 import { Holding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
-import { sendEmailNotifications, send12HourWarningEmail, sendProposalResultEmail } from "@/lib/email";
+import {
+  sendEmailNotifications, send12HourWarningEmail, sendProposalResultEmail,
+  sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl,
+} from "@/lib/email";
+import { slugify } from "@/lib/utils";
+import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
+import { MAIN_DAO_SLUG } from "@/lib/main-dao";
 import type { Proposal } from "@/lib/proposals";
 
 interface StoredHolding {
@@ -170,6 +176,49 @@ export async function POST(req: NextRequest) {
             .eq("id", proposal.id);
           const resolved = { ...proposal, status: resolvedStatus } as Proposal;
           sendProposalResultEmail(resolved).catch(console.error);
+
+          // Repost passed school proposals to Main DAO as a new proposal.
+          // Guard against Main DAO proposals reposting themselves.
+          if (resolvedStatus === "passed" && resolved.school !== MAIN_DAO_SLUG) {
+            const originSchoolName = SCHOOL_NAMES.find((name) => slugify(name) === resolved.school);
+            const originLabel = originSchoolName ? schoolDisplayName(originSchoolName) : resolved.school;
+            const mainDaoDeadline = new Date(Date.now() + 36 * 60 * 60 * 1000);
+
+            const { data: repostedRow, error: repostError } = await supabase
+              .from("proposals")
+              .insert({
+                school: MAIN_DAO_SLUG,
+                token_ticker: resolved.token_ticker,
+                token_name: resolved.token_name,
+                title: `${originLabel}: ${resolved.title}`,
+                description: resolved.description,
+                proposed_by: resolved.proposed_by,
+                proposed_by_name: resolved.proposed_by_name,
+                recommended_size_eth: resolved.recommended_size_eth,
+                price_target: resolved.price_target,
+                document_ids: resolved.document_ids ?? [],
+                voting_deadline: mainDaoDeadline.toISOString(),
+                created_by_admin: true,
+              })
+              .select()
+              .single();
+
+            if (repostError) {
+              console.error(`[snapshot] failed to repost proposal ${resolved.id} to Main DAO:`, repostError.message);
+            } else {
+              console.log(`[snapshot] reposted proposal ${resolved.id} to Main DAO`);
+              const reposted = repostedRow as Proposal;
+              const payload = {
+                type: "vote" as const,
+                title: `🗳️ New proposal: ${reposted.token_ticker}`,
+                body: `${proposalSchoolLabel(MAIN_DAO_SLUG)} is voting on ${reposted.token_name}. Cast your vote.`,
+                url: proposalVoteUrl(MAIN_DAO_SLUG),
+              };
+              await sendPushNotifications(payload).catch(console.error);
+              await sendEmailNotifications(payload).catch(console.error);
+              await sendNewProposalEmail(reposted).catch(console.error);
+            }
+          }
         }
         console.log(`[snapshot] resolved ${expiredProposals.length} expired proposals`);
       }

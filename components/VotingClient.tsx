@@ -15,9 +15,10 @@ interface Props {
   slug: string;
   schoolName: string;
   pageMode?: boolean;
+  isMainDao?: boolean;
 }
 
-export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
+export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = false }: Props) {
   const colors = getSchoolColors(slug);
 
   const [user, setUser] = useState<User | null>(null);
@@ -32,7 +33,10 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
   const [votingFor, setVotingFor] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  const isMember = !!user && userSchoolSlug === slug;
+  // Main DAO has no real school-membership concept — anyone who reaches this
+  // page has already passed the DormDAO-admin gate (env admin or dorm_admin
+  // role), both of which /api/admin/check already reports as isAdmin.
+  const isMember = isMainDao ? isAdmin : (!!user && userSchoolSlug === slug);
   const isLoggedIn = !!user;
   const isClubLeader = isMember && isClubLeadership({ role: userRole, school: null });
   const canManage = isMember || isAdmin;
@@ -81,7 +85,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
         const { count } = await supabase
           .from("profiles")
           .select("id", { count: "exact", head: true })
-          .eq("school", schoolName);
+          .eq(isMainDao ? "role" : "school", isMainDao ? "dorm_admin" : schoolName);
         setMemberCount(count ?? 0);
 
         await fetchProposals();
@@ -118,7 +122,7 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
     });
 
     return () => subscription.unsubscribe();
-  }, [slug, schoolName, fetchProposals]);
+  }, [slug, schoolName, fetchProposals, isMainDao]);
 
   async function handleVote(proposalId: string, vote: "yes" | "no") {
     setVotingFor(proposalId);
@@ -191,7 +195,9 @@ export function VotingClient({ slug, schoolName, pageMode = false }: Props) {
         </div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Members Only</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
-          This voting page is for {schoolDisplayName(schoolName)} members only.
+          {isMainDao
+            ? "This page is for DormDAO admins only."
+            : `This voting page is for ${schoolDisplayName(schoolName)} members only.`}
         </p>
       </div>
     );

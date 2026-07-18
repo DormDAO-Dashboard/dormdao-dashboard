@@ -5,6 +5,7 @@ import type { PushPayload } from "@/lib/push";
 import type { Proposal } from "@/lib/proposals";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
+import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
 
 const FROM_ADDRESS = "onboarding@resend.dev";
 const APP_URL = "https://dormdao-dashboard.vercel.app";
@@ -79,17 +80,36 @@ type ProfileRow = {
   alumni_email_optin?: boolean | null;
 };
 
-export async function getSchoolRecipients(schoolSlug: string): Promise<Recipient[]> {
+// Proposal display label / vote URL, aware of the synthetic Main DAO "school".
+export function proposalSchoolLabel(schoolSlug: string): string {
+  if (schoolSlug === MAIN_DAO_SLUG) return MAIN_DAO_NAME;
   const schoolName = (SCHOOL_NAMES as readonly string[]).find((n) => slugify(n) === schoolSlug);
-  if (!schoolName) return [];
+  return schoolName ? schoolDisplayName(schoolName) : schoolSlug;
+}
+
+export function proposalVoteUrl(schoolSlug: string): string {
+  return schoolSlug === MAIN_DAO_SLUG
+    ? `${APP_URL}/admin/main-dao`
+    : `${APP_URL}/schools/${schoolSlug}/vote`;
+}
+
+export async function getSchoolRecipients(schoolSlug: string): Promise<Recipient[]> {
+  // Main DAO has no "school members" — only DormDAO admins are notified.
+  const isMainDao = schoolSlug === MAIN_DAO_SLUG;
+  const schoolName = isMainDao
+    ? undefined
+    : (SCHOOL_NAMES as readonly string[]).find((n) => slugify(n) === schoolSlug);
+  if (!isMainDao && !schoolName) return [];
 
   const service = createServiceClient();
 
   const [{ data: memberRows }, { data: adminRows }] = await Promise.all([
-    service
-      .from("profiles")
-      .select("id, vote_reminder_emails, is_alumni, alumni_email_optin")
-      .eq("school", schoolName),
+    isMainDao
+      ? Promise.resolve({ data: [] as ProfileRow[] })
+      : service
+          .from("profiles")
+          .select("id, vote_reminder_emails, is_alumni, alumni_email_optin")
+          .eq("school", schoolName as string),
     service
       .from("profiles")
       .select("id, vote_reminder_emails")
@@ -219,8 +239,7 @@ export async function sendInviteEmail(opts: {
 
 export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
-  const schoolName = (SCHOOL_NAMES as readonly string[]).find((n) => slugify(n) === proposal.school);
-  const schoolLabel = schoolName ? schoolDisplayName(schoolName) : proposal.school;
+  const schoolLabel = proposalSchoolLabel(proposal.school);
   const deadline = new Date(proposal.voting_deadline).toLocaleString("en-US", {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
   });
@@ -237,7 +256,7 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
         <tr><td style="padding:5px 0;color:#6b7280">Deadline</td><td style="padding:5px 0">${deadline}</td></tr>
       </table>
       ${proposal.description ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin:0;line-height:1.6">${proposal.description.slice(0, 280)}${proposal.description.length > 280 ? "…" : ""}</p>` : ""}`,
-      cta: { label: "Cast your vote →", url: `${APP_URL}/schools/${proposal.school}/vote` },
+      cta: { label: "Cast your vote →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
   }));
@@ -245,8 +264,7 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
 
 export async function send12HourWarningEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
-  const schoolName = (SCHOOL_NAMES as readonly string[]).find((n) => slugify(n) === proposal.school);
-  const schoolLabel = schoolName ? schoolDisplayName(schoolName) : proposal.school;
+  const schoolLabel = proposalSchoolLabel(proposal.school);
   const total = proposal.yes_votes + proposal.no_votes;
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
 
@@ -260,7 +278,7 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
         Current tally: <strong>${proposal.yes_votes} yes / ${proposal.no_votes} no</strong>${total > 0 ? ` (${yesPct}% in favor)` : ""}.
       </p>
       <p style="font-size:14px;color:#374151;line-height:1.6;margin-top:8px">If you haven't voted yet, now is the time.</p>`,
-      cta: { label: "Vote now →", url: `${APP_URL}/schools/${proposal.school}/vote` },
+      cta: { label: "Vote now →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
   }));
@@ -269,8 +287,7 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
 export async function sendProposalResultEmail(proposal: Proposal): Promise<void> {
   if (proposal.status !== "passed" && proposal.status !== "rejected") return;
   const recipients = await getSchoolRecipients(proposal.school);
-  const schoolName = (SCHOOL_NAMES as readonly string[]).find((n) => slugify(n) === proposal.school);
-  const schoolLabel = schoolName ? schoolDisplayName(schoolName) : proposal.school;
+  const schoolLabel = proposalSchoolLabel(proposal.school);
   const passed = proposal.status === "passed";
   const total = proposal.yes_votes + proposal.no_votes;
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
@@ -286,7 +303,7 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
         <tr><td style="padding:5px 0;color:#6b7280">Final vote</td><td style="padding:5px 0">${proposal.yes_votes} yes / ${proposal.no_votes} no (${yesPct}% in favor)</td></tr>
       </table>
       <p style="font-size:13px;color:#6b7280;line-height:1.6">${passed ? "Club leadership will review and execute the trade if approved." : "This proposal did not receive enough votes to pass."}</p>`,
-      cta: { label: "View results →", url: `${APP_URL}/schools/${proposal.school}/vote` },
+      cta: { label: "View results →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
   }));
@@ -294,8 +311,7 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
 
 export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
-  const schoolName = (SCHOOL_NAMES as readonly string[]).find((n) => slugify(n) === proposal.school);
-  const schoolLabel = schoolName ? schoolDisplayName(schoolName) : proposal.school;
+  const schoolLabel = proposalSchoolLabel(proposal.school);
 
   await batchSend(recipients, (r) => ({
     subject: `🚀 Trade executed: ${proposal.token_ticker} — ${schoolLabel}`,
@@ -305,7 +321,7 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">The <strong>${proposal.token_ticker}</strong> trade has been executed by your club leadership.</p>
       ${proposal.execution_notes ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin-top:12px;line-height:1.6">${proposal.execution_notes}</p>` : ""}
       ${proposal.execution_tx ? `<p style="font-size:12px;color:#9ca3af;margin-top:12px;word-break:break-all">Tx: <a href="https://etherscan.io/tx/${proposal.execution_tx}" style="color:#1D9E75">${proposal.execution_tx.slice(0, 24)}…</a></p>` : ""}`,
-      cta: { label: "View portfolio →", url: `${APP_URL}/schools/${proposal.school}/vote` },
+      cta: { label: "View portfolio →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
   }));

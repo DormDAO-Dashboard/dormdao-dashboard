@@ -3,10 +3,10 @@ import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import { sendPushNotifications } from "@/lib/push";
-import { sendEmailNotifications, sendNewProposalEmail } from "@/lib/email";
+import { sendEmailNotifications, sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl } from "@/lib/email";
 import { isAdminUser } from "@/lib/admin-config";
-import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { TOKEN_META } from "@/lib/tokens";
+import { MAIN_DAO_SLUG, isMainDaoAuthorized } from "@/lib/main-dao";
 import type { Proposal } from "@/lib/proposals";
 
 export async function GET(req: NextRequest) {
@@ -27,13 +27,19 @@ export async function GET(req: NextRequest) {
       const service = createServiceClient();
       const { data: profile } = await service
         .from("profiles")
-        .select("school")
+        .select("school, role")
         .eq("id", user.id)
         .single();
 
-      const userSchoolSlug = profile?.school ? slugify(profile.school) : null;
-      if (userSchoolSlug !== school) {
-        return NextResponse.json({ error: "Access restricted to school members" }, { status: 403 });
+      if (school === MAIN_DAO_SLUG) {
+        if (!isMainDaoAuthorized(isAdmin, profile?.role)) {
+          return NextResponse.json({ error: "Access restricted to DormDAO admins" }, { status: 403 });
+        }
+      } else {
+        const userSchoolSlug = profile?.school ? slugify(profile.school) : null;
+        if (userSchoolSlug !== school) {
+          return NextResponse.json({ error: "Access restricted to school members" }, { status: 403 });
+        }
       }
     }
     authedUserId = user.id;
@@ -81,15 +87,11 @@ export async function POST(req: NextRequest) {
   const service = createServiceClient();
   const { data: profile } = await service
     .from("profiles")
-    .select("display_name, school")
+    .select("display_name, school, role")
     .eq("id", user.id)
     .single();
 
   const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
-
-  if (!isAdmin && !profile?.school) {
-    return NextResponse.json({ error: "Set your school on your profile before submitting" }, { status: 403 });
-  }
 
   const body = await req.json() as {
     school?: string;
@@ -104,8 +106,18 @@ export async function POST(req: NextRequest) {
   const { school, token_ticker, title, description, recommended_size_eth, price_target, document_ids } = body;
 
   if (!school) return NextResponse.json({ error: "school is required" }, { status: 400 });
-  if (!isAdmin && slugify(profile?.school ?? "") !== school) {
-    return NextResponse.json({ error: "You can only submit proposals for your own school" }, { status: 403 });
+
+  if (school === MAIN_DAO_SLUG) {
+    if (!isMainDaoAuthorized(isAdmin, profile?.role)) {
+      return NextResponse.json({ error: "Only DormDAO admins can submit Main DAO proposals" }, { status: 403 });
+    }
+  } else {
+    if (!isAdmin && !profile?.school) {
+      return NextResponse.json({ error: "Set your school on your profile before submitting" }, { status: 403 });
+    }
+    if (!isAdmin && slugify(profile?.school ?? "") !== school) {
+      return NextResponse.json({ error: "You can only submit proposals for your own school" }, { status: 403 });
+    }
   }
   if (!token_ticker?.trim()) return NextResponse.json({ error: "token_ticker is required" }, { status: 400 });
   if (!title?.trim()) return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -137,13 +149,12 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const created = proposal as Proposal;
-  const targetSchoolName = SCHOOL_NAMES.find((name) => slugify(name) === school);
   after(async () => {
     const payload = {
       type: "vote" as const,
       title: `🗳️ New proposal: ${created.token_ticker}`,
-      body: `${targetSchoolName ? schoolDisplayName(targetSchoolName) : profile?.school ?? "Your school"} is voting on ${created.token_name}. Cast your vote.`,
-      url: `https://dormdao-dashboard.vercel.app/schools/${school}/vote`,
+      body: `${proposalSchoolLabel(school)} is voting on ${created.token_name}. Cast your vote.`,
+      url: proposalVoteUrl(school),
     };
     await sendPushNotifications(payload).catch(console.error);
     await sendEmailNotifications(payload).catch(console.error);

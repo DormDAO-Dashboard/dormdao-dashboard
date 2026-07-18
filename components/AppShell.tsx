@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Trophy, GraduationCap, BarChart2, DollarSign, Activity,
   Newspaper, MessagesSquare, BookOpen, Info, Sun, Moon, User,
-  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users, Map,
+  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users, Map, Landmark,
 } from "lucide-react";
 import { slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
@@ -48,6 +48,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/profile":   "Profile",
   "/login":     "Sign In",
   "/admin":     "Admin",
+  "/admin/main-dao": "Main DAO",
+  "/admin/members":  "Members",
 };
 
 function deriveTitle(pathname: string): string {
@@ -80,6 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [hovered, setHovered]           = useState(false);
   const [showMore, setShowMore]         = useState(false);
   const [schoolsHovered, setSchoolsHovered] = useState(false);
+  const [adminHovered, setAdminHovered] = useState(false);
 
   useEffect(() => {
     try { setPinned(localStorage.getItem("sidebar-pinned") === "true"); } catch {}
@@ -245,7 +248,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             if (isAdmin) {
               const adminActive = matchesRoute("/admin", pathname);
-              navItems.push(
+              const showAdminSub = adminHovered || adminActive;
+
+              const adminLink = (
                 <Link key="admin" href="/admin" className={cn(
                   "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
                   adminActive
@@ -263,6 +268,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     Admin
                   </span>
                 </Link>
+              );
+
+              const adminSubItems = [
+                { href: "/admin/main-dao", label: "Main DAO", icon: Landmark },
+                { href: "/admin/members",  label: "Members",  icon: Users },
+              ].map(({ href, label, icon: SubIcon }) => {
+                const subActive = matchesRoute(href, pathname);
+                return (
+                  <Link key={href} href={href}
+                    className={cn(
+                      "relative flex items-center gap-3 pl-7 pr-2 py-2 rounded-lg transition-colors",
+                      subActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-500 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                    )}
+                  >
+                    {subActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-primary rounded-r-full" />
+                    )}
+                    <SubIcon className="w-4 h-4 shrink-0" />
+                    <span className={cn(
+                      "text-xs font-medium whitespace-nowrap transition-all duration-150",
+                      expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                    )}>
+                      {label}
+                    </span>
+                  </Link>
+                );
+              });
+
+              navItems.push(
+                <div key="admin-group"
+                  onMouseEnter={() => setAdminHovered(true)}
+                  onMouseLeave={() => setAdminHovered(false)}
+                >
+                  {adminLink}
+                  {showAdminSub && adminSubItems}
+                </div>
               );
             }
 
@@ -419,16 +462,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 );
               })}
               {isAdmin && (
-                <Link href="/admin" onClick={() => setShowMore(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
-                    matchesRoute("/admin", pathname)
-                      ? "text-primary bg-primary/10"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
-                  )}>
-                  <ShieldCheck className="w-5 h-5 shrink-0" />
-                  <span className="text-sm font-medium">Admin</span>
-                </Link>
+                <>
+                  <Link href="/admin/main-dao" onClick={() => setShowMore(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
+                      matchesRoute("/admin/main-dao", pathname)
+                        ? "text-primary bg-primary/10"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                    )}>
+                    <Landmark className="w-5 h-5 shrink-0" />
+                    <span className="text-sm font-medium">Main DAO</span>
+                  </Link>
+                  <Link href="/admin/members" onClick={() => setShowMore(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
+                      matchesRoute("/admin/members", pathname)
+                        ? "text-primary bg-primary/10"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                    )}>
+                    <ShieldCheck className="w-5 h-5 shrink-0" />
+                    <span className="text-sm font-medium">Members</span>
+                  </Link>
+                </>
               )}
               <div className="flex items-center justify-between px-4 py-3.5">
                 <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Theme</span>
