@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { formatUSD, formatPrice, formatPct } from "@/lib/utils";
 import { TOKEN_META } from "@/lib/tokens";
+import { TokenAllocationDonut } from "@/components/charts/TokenAllocationDonut";
 import { TrendingUp, TrendingDown, Search } from "lucide-react";
 
 const ABBREV: Record<string, string> = {
@@ -118,6 +119,15 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
           </div>
         </div>
       )}
+
+      {/* Aggregate token allocation */}
+      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5 mb-8">
+        <h2 className="text-sm font-semibold text-gray-300 mb-1">Aggregate Portfolio Allocation</h2>
+        <p className="text-xs text-gray-500 mb-2">
+          Share of total market value across every school&apos;s holdings combined. Top 9 tokens by value; the rest grouped as Other.
+        </p>
+        <TokenAllocationDonut tokens={initialTokens} prices={initialPrices} />
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-6">

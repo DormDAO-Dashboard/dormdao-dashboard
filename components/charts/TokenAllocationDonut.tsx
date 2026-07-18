@@ -1,30 +1,31 @@
 "use client";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useTheme } from "@/components/ThemeProvider";
-import { Holding } from "@/lib/types";
-import { formatNav } from "@/lib/utils";
+import { formatUSD } from "@/lib/utils";
+import { TOKEN_META } from "@/lib/tokens";
+import type { TokenInfo } from "@/components/TokensClient";
 
 const COLORS = [
   "#34d399", "#60a5fa", "#f59e0b", "#a78bfa", "#fb7185",
   "#38bdf8", "#fb923c", "#4ade80", "#e879f9", "#facc15",
-  "#f87171", "#818cf8", "#2dd4bf", "#c084fc", "#fdba74",
-  "#86efac", "#67e8f9", "#fca5a5", "#a5b4fc", "#6ee7b7",
 ];
 
 const RADIAN = Math.PI / 180;
+const TOP_N = 9;
 
 interface SliceData {
   name: string;
+  displayName: string;
   value: number;
-  usdValue: number;
+  pct: number;
 }
 
 interface Props {
-  holdings: Holding[];
-  nav: number;
+  tokens: TokenInfo[];
+  prices: Record<string, { usd: number; usd_24h_change: number }>;
 }
 
-export function PortfolioDonut({ holdings, nav }: Props) {
+export function TokenAllocationDonut({ tokens, prices }: Props) {
   const { theme } = useTheme();
   const light = theme === "light";
 
@@ -33,34 +34,39 @@ export function PortfolioDonut({ holdings, nav }: Props) {
   const lblClr  = light ? "#4b5563" : "#d1d5db";
   const lineClr = light ? "#9ca3af" : "#6b7280";
 
-  const withPct = holdings.filter((h) => h.pctOfPortfolio > 0);
-  if (withPct.length === 0) return null;
+  const valued = tokens
+    .map((t) => ({ ticker: t.ticker, usdValue: (prices[t.ticker]?.usd ?? 0) * t.totalTokens }))
+    .filter((t) => t.usdValue > 0)
+    .sort((a, b) => b.usdValue - a.usdValue);
 
-  const sorted: SliceData[] = [...withPct]
-    .map((h) => ({
-      name: h.ticker,
-      value: parseFloat(h.pctOfPortfolio.toFixed(1)),
-      usdValue: (h.pctOfPortfolio / 100) * nav,
-    }))
-    .sort((a, b) => b.value - a.value);
+  if (valued.length === 0) return null;
 
-  // Group slices < 3% into "Other" to avoid crowded labels
-  const large = sorted.filter((d) => d.value >= 3);
-  const small = sorted.filter((d) => d.value < 3);
-  const data: SliceData[] = [...large];
-  if (small.length > 0) {
+  const total = valued.reduce((s, t) => s + t.usdValue, 0);
+  const top = valued.slice(0, TOP_N);
+  const rest = valued.slice(TOP_N);
+
+  const data: SliceData[] = top.map((t) => ({
+    name: t.ticker,
+    displayName: TOKEN_META[t.ticker]?.displayTicker ?? t.ticker,
+    value: t.usdValue,
+    pct: (t.usdValue / total) * 100,
+  }));
+
+  if (rest.length > 0) {
+    const restValue = rest.reduce((s, t) => s + t.usdValue, 0);
     data.push({
       name: "Other",
-      value: parseFloat(small.reduce((s, d) => s + d.value, 0).toFixed(1)),
-      usdValue: small.reduce((s, d) => s + d.usdValue, 0),
+      displayName: "Other",
+      value: restValue,
+      pct: (restValue / total) * 100,
     });
   }
 
   function renderLabel(props: {
     cx?: number; cy?: number; midAngle?: number;
-    outerRadius?: number; name?: string; value?: number;
+    outerRadius?: number; displayName?: string; pct?: number;
   }) {
-    const { cx = 0, cy = 0, midAngle = 0, outerRadius = 0, name = "", value = 0 } = props;
+    const { cx = 0, cy = 0, midAngle = 0, outerRadius = 0, displayName = "", pct = 0 } = props;
     const radius = outerRadius + 36;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
@@ -72,8 +78,8 @@ export function PortfolioDonut({ holdings, nav }: Props) {
         fill={lblClr}
         fontSize={10}
       >
-        <tspan x={x} dy="-0.6em">{name}</tspan>
-        <tspan x={x} dy="1.3em">{value}%</tspan>
+        <tspan x={x} dy="-0.6em">{displayName}</tspan>
+        <tspan x={x} dy="1.3em">{pct.toFixed(1)}%</tspan>
       </text>
     );
   }
@@ -100,14 +106,14 @@ export function PortfolioDonut({ holdings, nav }: Props) {
         <Tooltip
           content={({ payload }) => {
             if (!payload?.length) return null;
-            const { name, value, usdValue } = payload[0].payload as SliceData;
+            const { name, displayName, value, pct } = payload[0].payload as SliceData;
             return (
               <div style={{ background: ttBg, border: `1px solid ${ttBord}` }} className="rounded-lg p-2.5 text-sm">
                 <p style={{ color: light ? "#111827" : "#ffffff" }} className="font-medium">
-                  {name === "Other" ? "Other" : `$${name}`}
+                  {name === "Other" ? "Other" : `$${displayName}`}
                 </p>
-                <p style={{ color: light ? "#6b7280" : "#d1d5db" }}>{value}% of portfolio</p>
-                {usdValue > 0 && <p className="text-primary">{formatNav(usdValue)}</p>}
+                <p style={{ color: light ? "#6b7280" : "#d1d5db" }}>{pct.toFixed(1)}% of aggregate portfolio</p>
+                <p className="text-primary">{formatUSD(value)}</p>
               </div>
             );
           }}
