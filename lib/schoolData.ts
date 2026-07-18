@@ -39,10 +39,7 @@ export function schoolDisplayName(name: string | null | undefined): string {
 
 // Short names for chart X-axis labels (internal key → abbreviated label).
 const SCHOOL_SHORT_NAMES: Record<string, string> = {
-  "Boston College": "BC",
-  "St. Andrews":    "St. A",
-  "Vanderbilt":     "Vandy",
-  "Villanova":      "Nova",
+  "Vanderbilt": "Vandy",
 };
 
 // Returns abbreviated name for chart axes; falls back to the internal key.
