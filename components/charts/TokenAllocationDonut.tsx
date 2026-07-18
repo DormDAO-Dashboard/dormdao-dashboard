@@ -84,7 +84,12 @@ export function TokenAllocationDonut({ tokens, prices }: Props) {
     if (!pos) return null;
     return (
       <g>
-        <line x1={pos.edgeX} y1={pos.edgeY} x2={pos.labelX} y2={pos.labelY} stroke={lineClr} strokeWidth={1} />
+        <polyline
+          points={`${pos.edgeX},${pos.edgeY} ${pos.bendX},${pos.bendY} ${pos.labelX},${pos.labelY}`}
+          fill="none"
+          stroke={lineClr}
+          strokeWidth={1}
+        />
         <text
           x={pos.labelX} y={pos.labelY}
           textAnchor={pos.anchor}

@@ -9,6 +9,15 @@ import { schoolDisplayName, schoolShortName, getQuarterLabel } from "@/lib/schoo
 import { createClient } from "@/lib/supabase/client";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
+// ─── Fixed panel widths ───────────────────────────────────────────────────────
+// Measured from the previous 1fr/2fr/1fr responsive grid at a standard desktop
+// window width, then frozen so panels never condense below this — the row
+// scrolls horizontally instead.
+
+const PANEL_WIDTH_QUARTERLY = 307;
+const PANEL_WIDTH_SEASON = 614;
+const PANEL_WIDTH_ALLTIME = 307;
+
 // ─── Season config ────────────────────────────────────────────────────────────
 
 type Season = "2025-2026" | "2024-2025" | "2023-2024";
@@ -50,20 +59,25 @@ function Panel({
   header,
   highlight,
   className,
+  style,
 }: {
   children: React.ReactNode;
   header: React.ReactNode;
   highlight?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
-    <div className={cn(
-      "flex flex-col overflow-hidden rounded-lg",
-      highlight
-        ? "border border-yellow-500/50 bg-yellow-500/[0.02]"
-        : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/20",
-      className
-    )}>
+    <div
+      style={style}
+      className={cn(
+        "flex flex-col overflow-hidden rounded-lg",
+        highlight
+          ? "border border-yellow-500/50 bg-yellow-500/[0.02]"
+          : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/20",
+        className
+      )}
+    >
       <div className={cn(
         "shrink-0 px-3 py-2 border-b",
         highlight ? "border-yellow-500/30 bg-yellow-500/[0.04]" : "border-gray-200 dark:border-gray-800"
@@ -381,12 +395,16 @@ export function LeaderboardClient({
         </div>
       </div>
 
-      {/* Three-panel layout */}
-      <div className="flex-1 min-h-0 grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] gap-4">
+      {/* Three-panel layout — fixed widths (sized to match this layout at a
+          standard desktop window), not responsive columns. Below that
+          combined width the row scrolls horizontally instead of condensing. */}
+      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
+      <div className="flex gap-4 h-full w-max">
 
         {/* ── Left: Quarterly ──────────────────────────────── */}
         <Panel
-          className="min-w-0"
+          className="shrink-0"
+          style={{ width: PANEL_WIDTH_QUARTERLY }}
           header={
             <>
               <div className="text-xs font-semibold text-gray-900 dark:text-white">Quarterly</div>
@@ -400,7 +418,8 @@ export function LeaderboardClient({
         {/* ── Middle: Current Season ────────────────────────── */}
         <Panel
           highlight
-          className="min-w-0"
+          className="shrink-0"
+          style={{ width: PANEL_WIDTH_SEASON }}
           header={
             <>
               <div className="flex items-baseline gap-1.5">
@@ -437,7 +456,8 @@ export function LeaderboardClient({
 
         {/* ── Right: All-Time ───────────────────────────────── */}
         <Panel
-          className="min-w-0"
+          className="shrink-0"
+          style={{ width: PANEL_WIDTH_ALLTIME }}
           header={
             <>
               <div className="text-xs font-semibold text-gray-900 dark:text-white">All-Time</div>
@@ -452,6 +472,7 @@ export function LeaderboardClient({
           )}
         </Panel>
 
+      </div>
       </div>
     </div>
   );
