@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { slugify, cn } from "@/lib/utils";
@@ -18,6 +18,9 @@ interface Props {
   isMainDao?: boolean;
 }
 
+const POLL_INTERVAL_MS = 15000;
+const POST_VOTE_POLL_DELAY_MS = 2000;
+
 export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = false }: Props) {
   const colors = getSchoolColors(slug);
 
@@ -32,6 +35,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
   const [showModal, setShowModal] = useState(false);
   const [votingFor, setVotingFor] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Main DAO has no real school-membership concept — anyone who reaches this
   // page has already passed the DormDAO-admin gate (env admin or dorm_admin
@@ -124,6 +128,27 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
     return () => subscription.unsubscribe();
   }, [slug, schoolName, fetchProposals, isMainDao]);
 
+  // Silent background poll so members already on the page see vote tally
+  // updates without refreshing. schedulePoll (re)arms a single timeout
+  // rather than a fixed setInterval so handleVote can push the next poll
+  // out by POST_VOTE_POLL_DELAY_MS after a vote, avoiding a race where an
+  // in-flight/near-due poll overwrites the just-applied optimistic tally
+  // before the server has caught up.
+  const schedulePoll = useCallback((delay: number) => {
+    if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current);
+    pollTimeoutRef.current = setTimeout(() => {
+      fetchProposals().finally(() => schedulePoll(POLL_INTERVAL_MS));
+    }, delay);
+  }, [fetchProposals]);
+
+  useEffect(() => {
+    if (activeTab !== "active") return;
+    schedulePoll(POLL_INTERVAL_MS);
+    return () => {
+      if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current);
+    };
+  }, [activeTab, schedulePoll]);
+
   async function handleVote(proposalId: string, vote: "yes" | "no") {
     setVotingFor(proposalId);
     try {
@@ -149,6 +174,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
               }
         )
       );
+      if (activeTab === "active") schedulePoll(POST_VOTE_POLL_DELAY_MS);
       showToast(`Voted ${vote.toUpperCase()} — vote recorded`);
     } catch {
       showToast("Network error — please try again");
