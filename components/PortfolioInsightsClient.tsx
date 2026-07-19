@@ -75,17 +75,6 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
     ? validAges.reduce((s, a) => s + a, 0) / validAges.length
     : null;
 
-  // Debug: open browser console to verify the fix
-  console.log('[PortfolioInsights] Position age debug for', holdings[0]?.ticker ?? 'unknown school');
-  holdings.forEach(h => {
-    if (!h.investmentDate) return;
-    const ms = parseDateMs(h.investmentDate);
-    const age = ms > 0 ? Math.round((now - ms) / (1000 * 60 * 60 * 24)) : null;
-    console.log(`  ${h.ticker}: ${h.investmentDate} → ${age ?? 'unparseable'}d ${ms >= SEASON_START_MS ? '✓' : '(prior season, excluded)'}`);
-  });
-  console.log(`  OLD avg: ${oldAvgAge !== null ? Math.round(oldAvgAge) : 'null'}d (${allAges.length} positions)`);
-  console.log(`  NEW avg: ${avgAgeDays !== null ? Math.round(avgAgeDays) : 'null'}d (${validAges.length} current-season positions)`);
-
   // P&L: prefer sheet's Gain(USD), then historical ETH, then current ETH
   const pnlByHolding = !loading
     ? holdings.flatMap((h) => {

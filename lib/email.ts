@@ -8,7 +8,7 @@ import { slugify } from "@/lib/utils";
 import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
 
 const FROM_ADDRESS = "onboarding@resend.dev";
-const APP_URL = "https://dormdao-dashboard.vercel.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
 
 // ── Unsubscribe token (HMAC-SHA256 keyed with CRON_SECRET) ───────────────────
 

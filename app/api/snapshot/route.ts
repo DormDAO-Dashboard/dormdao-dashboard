@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
             body: isBuy
               ? `New position opened by ${change.school_name}`
               : `Position reduced by ${change.school_name}`,
-            url: "https://dormdao-dashboard.vercel.app/activity",
+            url: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app"}/activity`,
           };
           await sendPushNotifications(tradePayload).catch(console.error);
           await sendEmailNotifications(tradePayload).catch(console.error);

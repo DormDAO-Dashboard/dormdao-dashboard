@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
       type: "forum" as const,
       title: `💬 New thread: ${thread.title}`,
       body: `${thread.school} posted in ${thread.category}`,
-      url: `https://dormdao-dashboard.vercel.app/forum/${thread.id}`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app"}/forum/${thread.id}`,
     };
     await sendPushNotifications(forumPayload).catch(console.error);
     await sendEmailNotifications(forumPayload).catch(console.error);

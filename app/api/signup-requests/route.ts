@@ -32,7 +32,7 @@ async function notifyAdmins(name: string, email: string, school: string, wallet:
           <tr><td style="padding:6px 0;color:#555">Wallet</td><td style="padding:6px 0;font-family:monospace">${wallet ?? "—"}</td></tr>
           <tr><td style="padding:6px 0;color:#555;vertical-align:top">Message</td><td style="padding:6px 0">${message ?? "—"}</td></tr>
         </table>
-        <a href="https://dormdao-dashboard.vercel.app/admin" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#1D9E75;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app"}/admin" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#1D9E75;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
           Review in Admin →
         </a>
       </div>

@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Something went wrong. Please try again.", { status: 500, headers: { "Content-Type": "text/plain" } });
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
   return new NextResponse(
     `<!DOCTYPE html>
 <html lang="en">
@@ -43,8 +44,9 @@ export async function GET(req: NextRequest) {
 <body>
   <div class="card">
     <h1>You've been unsubscribed</h1>
-    <p>You won't receive proposal or trade emails from DormDAO anymore. You can re-enable them any time from your profile.</p>
-    <a href="https://dormdao-dashboard.vercel.app/profile">Manage preferences</a>
+    <p>You won't receive proposal or trade emails from DormDAO anymore.</p>
+    <p>Changed your mind? You can re-enable email notifications anytime from your profile settings.</p>
+    <a href="${appUrl}/profile">Go to Profile Settings →</a>
   </div>
 </body>
 </html>`,

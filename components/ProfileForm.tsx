@@ -595,7 +595,7 @@ function NormalProfile({
 
         <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
           Fields marked public are visible to anyone who views your profile at{" "}
-          <span className="font-mono text-gray-500">dormdao-dashboard.vercel.app/users/[your-id]</span>
+          <span className="font-mono text-gray-500">{process.env.NEXT_PUBLIC_APP_URL?.replace("https://", "") ?? "dormdao-dashboard.vercel.app"}/users/[your-id]</span>
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-600">
           Wallet addresses are never shown publicly regardless of settings.

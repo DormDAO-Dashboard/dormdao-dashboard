@@ -180,11 +180,12 @@ export function SchoolMembers({
 
       let viewerIsSameSchool = false;
       if (user) {
-        const { data: vp } = await supabase
+        const { data: vp, error: vpErr } = await supabase
           .from("profiles")
           .select("school")
           .eq("id", user.id)
           .single();
+        if (vpErr) console.error("Failed to load viewer profile:", vpErr.message);
         viewerIsSameSchool = vp?.school === schoolName;
       }
 
@@ -201,7 +202,12 @@ export function SchoolMembers({
         query.eq("is_public", true);
       }
 
-      const { data } = await query;
+      const { data, error: membersErr } = await query;
+      if (membersErr) {
+        console.error("Failed to load school members:", membersErr.message);
+        setLoading(false);
+        return;
+      }
       const rows = (data as MemberRow[]) ?? [];
       const filtered = rows.map((m) => filterMemberFields(m, viewerIsSameSchool));
       setMembers(filtered);

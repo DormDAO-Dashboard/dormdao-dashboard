@@ -7,9 +7,8 @@ export async function GET() {
   // Check Sheets
   const t0 = Date.now();
   try {
-    const base = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    const base = process.env.NEXT_PUBLIC_APP_URL
+      ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
     const r = await fetch(`${base}/api/sheets`, { cache: "no-store" });
     results.sheets = { ok: r.ok, latency: Date.now() - t0 };
   } catch (e) {
