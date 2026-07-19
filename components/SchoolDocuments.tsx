@@ -83,12 +83,12 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          className="col-span-2 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+          className="col-span-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary"
         />
         <select
           value={docType}
           onChange={(e) => setDocType(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:border-primary"
+          className="px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary"
         >
           <option value="pitch_deck">Pitch Deck</option>
           <option value="thesis">Investment Thesis</option>
@@ -100,7 +100,7 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
           type="date"
           value={docDate}
           onChange={(e) => setDocDate(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:border-primary"
+          className="px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary"
         />
         {isVideo ? (
           <input
@@ -109,10 +109,10 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
             required
-            className="col-span-2 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+            className="col-span-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary"
           />
         ) : (
-          <label className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 cursor-pointer hover:border-gray-500 transition-colors">
+          <label className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-gray-500 transition-colors">
             <Upload className="w-4 h-4 text-gray-400 shrink-0" />
             <span className="text-sm text-gray-400 truncate">{file ? file.name : "Choose file…"}</span>
             <input
@@ -127,7 +127,7 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
       {isVideo && (
         <p className="text-[11px] text-gray-500">Videos are visible to {schoolDisplayName(schoolName)} members only.</p>
       )}
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
       <button
         type="submit"
         disabled={uploading || !title || (isVideo ? !videoUrl : !file)}
@@ -178,7 +178,7 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
 
   return (
     <>
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-6">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-300">Documents</h2>
         </div>
@@ -191,7 +191,7 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
               if (doc.locked) {
                 return (
                   <li key={doc.id} className="flex items-center gap-4 px-5 py-4 opacity-60">
-                    <div className="shrink-0 w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center">
+                    <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
                       <Lock className="w-4 h-4 text-gray-500" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -213,11 +213,11 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
               if (doc.document_type === "video" && doc.file_url) {
                 return (
                   <li key={doc.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-800/30 transition-colors">
-                    <div className="shrink-0 w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center">
+                    <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
                       <Play className="w-4 h-4 text-gray-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-white truncate">{doc.title}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{doc.title}</div>
                       <div className="flex items-center flex-wrap gap-2 mt-1">
                         <TypeBadge type={doc.document_type} />
                         {doc.document_date && (
@@ -227,7 +227,7 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
                     </div>
                     <button
                       onClick={() => setPlayingDoc(doc)}
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white transition-colors"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <Play className="w-3 h-3" />
                       Watch
@@ -238,11 +238,11 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
 
               return (
                 <li key={doc.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-800/30 transition-colors">
-                  <div className="shrink-0 w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center">
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
                     <FileText className="w-4 h-4 text-gray-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white truncate">{doc.title}</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{doc.title}</div>
                     <div className="flex items-center flex-wrap gap-2 mt-1">
                       <TypeBadge type={doc.document_type} />
                       {doc.document_date && (
@@ -254,7 +254,7 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
                     href={doc.file_url!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white transition-colors"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                   >
                     <Download className="w-3 h-3" />
                     View

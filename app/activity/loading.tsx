@@ -13,7 +13,7 @@ export default function Loading() {
       </div>
       <div className="flex flex-col gap-3">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+          <div key={i} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
             <Skeleton className="h-4 w-full mb-2" />
             <Skeleton className="h-3 w-48" />
           </div>

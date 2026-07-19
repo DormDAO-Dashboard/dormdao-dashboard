@@ -28,7 +28,7 @@ function LinkPreviewCard({ url }: { url: string }) {
   );
 
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="block rounded-lg border border-gray-700 bg-gray-800/60 p-3 hover:border-gray-600 transition-colors">
+    <a href={url} target="_blank" rel="noopener noreferrer" className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
       <div className="flex gap-3">
         {data.image && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -38,7 +38,7 @@ function LinkPreviewCard({ url }: { url: string }) {
           <div className="text-xs text-gray-500 mb-0.5 flex items-center gap-1">
             <ExternalLink className="w-3 h-3" />{data.siteName}
           </div>
-          {data.title && <div className="text-xs font-semibold text-white truncate">{data.title}</div>}
+          {data.title && <div className="text-xs font-semibold text-gray-900 dark:text-white truncate">{data.title}</div>}
           {data.description && <div className="text-xs text-gray-400 line-clamp-2 mt-0.5">{data.description}</div>}
         </div>
       </div>
@@ -102,30 +102,30 @@ export function NoteCard({ note, currentUserId, adminSecret, onDelete, onUpvote 
   const canDelete = adminSecret || (currentUserId && note.user_id === currentUserId);
 
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4 flex flex-col gap-3">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <SentimentBadge sentiment={note.sentiment} />
           {note.token_ticker && (
             <Link
               href={`/tokens/${note.token_ticker.toLowerCase()}`}
-              className="text-xs font-mono bg-gray-800 text-gray-300 px-2 py-0.5 rounded hover:text-white transition-colors"
+              className="text-xs font-mono bg-gray-800 text-gray-300 px-2 py-0.5 rounded hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               ${note.token_ticker}
             </Link>
           )}
           {note.thesis_type && (
-            <span className="text-xs bg-blue-900/40 text-blue-300 border border-blue-800/50 px-2 py-0.5 rounded">
+            <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 px-2 py-0.5 rounded">
               {note.thesis_type}
             </span>
           )}
           {note.time_horizon && (
-            <span className="text-xs bg-purple-900/40 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded">
+            <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50 px-2 py-0.5 rounded">
               {note.time_horizon}
             </span>
           )}
           {note.price_target != null && (
-            <span className="text-xs bg-amber-900/40 text-amber-300 border border-amber-800/50 px-2 py-0.5 rounded font-mono">
+            <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 px-2 py-0.5 rounded font-mono">
               Target: ${note.price_target}
             </span>
           )}

@@ -11,7 +11,7 @@ export default function Loading() {
           <Skeleton key={i} className="h-8 w-28 rounded-full" />
         ))}
       </div>
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-800">
           <Skeleton className="h-4 w-32" />
         </div>

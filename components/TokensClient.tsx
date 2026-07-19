@@ -96,14 +96,14 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
               const isUp = price ? price.usd_24h_change >= 0 : null;
               return (
                 <Link key={token.ticker} href={`/tokens/${token.ticker.toLowerCase()}`}>
-                  <div className="flex items-center gap-2 bg-gray-900/60 border border-gray-700 hover:border-primary/50 rounded-lg px-3 py-2 transition-all cursor-pointer">
+                  <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 hover:border-primary/50 rounded-lg px-3 py-2 transition-all cursor-pointer">
                     <div>
                       <div className="text-xs text-gray-500">{meta?.name ?? token.ticker}</div>
-                      <div className="font-mono font-bold text-white text-sm">${token.ticker}</div>
+                      <div className="font-mono font-bold text-gray-900 dark:text-white text-sm">${token.ticker}</div>
                     </div>
                     {price ? (
                       <div className="text-right">
-                        <div className="font-mono text-sm text-white">{formatPrice(price.usd)}</div>
+                        <div className="font-mono text-sm text-gray-900 dark:text-white">{formatPrice(price.usd)}</div>
                         <div className={`text-xs font-mono ${isUp ? "text-primary" : "text-danger"}`}>
                           {formatPct(price.usd_24h_change)}
                         </div>
@@ -121,7 +121,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
       )}
 
       {/* Aggregate token allocation */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5 mb-8">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 mb-8">
         <h2 className="text-sm font-semibold text-gray-300 mb-1">Aggregate Portfolio Allocation</h2>
         <p className="text-xs text-gray-500 mb-2">
           Share of total market value across every school&apos;s holdings combined. Top 9 tokens by value; the rest grouped as Other.
@@ -138,13 +138,13 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tokens…"
-            className="bg-gray-800 border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 w-44"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50 w-44"
           />
         </div>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortKey)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
         >
           <option value="schools">Sort: Schools</option>
           <option value="conviction">Sort: Conviction</option>
@@ -156,7 +156,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
           <select
             value={chainFilter}
             onChange={(e) => setChainFilter(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
           >
             <option value="">All Chains</option>
             {chains.map((c) => (
@@ -179,17 +179,17 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
 
           return (
             <Link key={token.ticker} href={`/tokens/${token.ticker.toLowerCase()}`}>
-              <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4 hover:border-primary/40 hover:bg-gray-800/30 transition-all cursor-pointer h-full flex flex-col">
+              <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 hover:border-primary/40 hover:bg-gray-800/30 transition-all cursor-pointer h-full flex flex-col">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">{meta?.name ?? token.ticker}</div>
-                    <div className="font-mono font-bold text-white">${displayTicker}</div>
+                    <div className="font-mono font-bold text-gray-900 dark:text-white">${displayTicker}</div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     {isVault ? (
-                      <span className="text-xs bg-blue-900/40 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded">Vault</span>
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 px-1.5 py-0.5 rounded">Vault</span>
                     ) : isPremarket ? (
-                      <span className="text-xs bg-orange-900/40 text-orange-300 border border-orange-800/50 px-1.5 py-0.5 rounded">Pre-market</span>
+                      <span className="text-xs bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 px-1.5 py-0.5 rounded">Pre-market</span>
                     ) : isUp !== null ? (
                       isUp
                         ? <TrendingUp className="w-4 h-4 text-primary shrink-0" />
@@ -204,7 +204,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
                   </div>
                 ) : price && price.usd > 0 ? (
                   <>
-                    <div className="font-mono text-lg font-semibold text-white">
+                    <div className="font-mono text-lg font-semibold text-gray-900 dark:text-white">
                       {formatPrice(price.usd)}
                     </div>
                     <div className={`text-xs font-mono ${isUp ? "text-primary" : "text-danger"}`}>

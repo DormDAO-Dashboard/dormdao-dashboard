@@ -101,26 +101,26 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
     : null;
 
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
       <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Insights</h2>
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-gray-800/50 rounded-lg p-3">
           <div className="text-xs text-gray-500 mb-1">Positions</div>
-          <div className="text-xl font-mono font-bold text-white">{positions}</div>
+          <div className="text-xl font-mono font-bold text-gray-900 dark:text-white">{positions}</div>
           <div className="text-xs text-gray-600 mt-0.5">active holdings</div>
         </div>
 
         {largestPosition ? (
           <div className="bg-gray-800/50 rounded-lg p-3">
             <div className="text-xs text-gray-500 mb-1">Largest Position</div>
-            <div className="text-lg font-mono font-bold text-white">${largestPosition.ticker}</div>
+            <div className="text-lg font-mono font-bold text-gray-900 dark:text-white">${largestPosition.ticker}</div>
             <div className="text-xs text-gray-600 mt-0.5">{largestPosition.pctOfPortfolio.toFixed(1)}% of portfolio</div>
           </div>
         ) : <div />}
 
         <div className="bg-gray-800/50 rounded-lg p-3">
           <div className="text-xs text-gray-500 mb-1">Avg Position Age</div>
-          <div className="text-xl font-mono font-bold text-white">
+          <div className="text-xl font-mono font-bold text-gray-900 dark:text-white">
             {avgAgeDays !== null ? `${Math.round(avgAgeDays)}d` : "—"}
           </div>
           <div className="text-xs text-gray-600 mt-0.5">
@@ -137,7 +137,7 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
         {!loading && bestPos && (
           <div className="bg-gray-800/50 rounded-lg p-3">
             <div className="text-xs text-gray-500 mb-1">Most Profitable</div>
-            <div className="text-sm font-mono font-bold text-white">${bestPos.ticker}</div>
+            <div className="text-sm font-mono font-bold text-gray-900 dark:text-white">${bestPos.ticker}</div>
             <div className="text-primary text-xs font-mono mt-0.5">
               +{formatUSD(bestPos.pnl)}
               {bestPos.pnlPct !== null && ` (+${bestPos.pnlPct.toFixed(0)}%)`}
@@ -148,7 +148,7 @@ export function PortfolioInsightsClient({ holdings, rank }: Props) {
         {!loading && worstPos && worstPos.pnl < 0 && (
           <div className="bg-gray-800/50 rounded-lg p-3">
             <div className="text-xs text-gray-500 mb-1">Biggest Loss</div>
-            <div className="text-sm font-mono font-bold text-white">${worstPos.ticker}</div>
+            <div className="text-sm font-mono font-bold text-gray-900 dark:text-white">${worstPos.ticker}</div>
             <div className="text-danger text-xs font-mono mt-0.5">
               {formatUSD(worstPos.pnl)}
               {worstPos.pnlPct !== null && ` (${worstPos.pnlPct.toFixed(0)}%)`}

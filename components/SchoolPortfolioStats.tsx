@@ -33,11 +33,11 @@ function TradeTypeBadge({ type }: { type: string }) {
   const cls =
     t === "buy"      ? "bg-primary/20 text-primary" :
     t === "exit"     ? "bg-danger/20 text-danger" :
-    t === "trim"     ? "bg-yellow-900/40 text-yellow-400" :
+    t === "trim"     ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400" :
     t === "increase" ? "bg-primary/20 text-primary" :
-    t === "decrease" ? "bg-yellow-900/40 text-yellow-400" :
+    t === "decrease" ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400" :
     t === "sell"     ? "bg-danger/20 text-danger" :
-                       "bg-gray-800 text-gray-400";
+                       "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
   const label =
     t === "increase" ? "add" :
     t === "decrease" ? "trim" :
@@ -123,10 +123,10 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
     : null;
 
   const lbl = "text-xs text-gray-400 mb-1";
-  const val = "font-mono font-semibold text-sm text-white";
+  const val = "font-mono font-semibold text-sm text-gray-900 dark:text-white";
 
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
       <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Insights</h2>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5">
@@ -241,14 +241,14 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
           ) : recentTrade ? (
             <div className="flex items-center gap-2 mt-1">
               <TradeTypeBadge type={recentTrade.change_type} />
-              <span className="font-mono text-sm text-white">${recentTrade.token_ticker}</span>
+              <span className="font-mono text-sm text-gray-900 dark:text-white">${recentTrade.token_ticker}</span>
               <span className="text-gray-700">·</span>
               <span className="text-xs text-gray-500">{daysAgo(recentTrade.detected_at)}</span>
             </div>
           ) : mostRecentHolding ? (
             <div className="flex items-center gap-2 mt-1">
               <TradeTypeBadge type="buy" />
-              <span className="font-mono text-sm text-white">${mostRecentHolding.ticker}</span>
+              <span className="font-mono text-sm text-gray-900 dark:text-white">${mostRecentHolding.ticker}</span>
               <span className="text-gray-700">·</span>
               <span className="text-xs text-gray-500">
                 {mostRecentHolding.investmentDate.replace(/\//g, "-")}

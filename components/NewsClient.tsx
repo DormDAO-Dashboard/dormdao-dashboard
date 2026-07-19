@@ -364,14 +364,14 @@ function PostModal({ userSchool, displayName, onClose, onSuccess }: ModalProps) 
     }
   }
 
-  const inputCls = "w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary/50";
+  const inputCls = "w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-primary/50";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-[#111] shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-white">Post Update</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Post Update</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -438,7 +438,7 @@ function PostModal({ userSchool, displayName, onClose, onSuccess }: ModalProps) 
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>

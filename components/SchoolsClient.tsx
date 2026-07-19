@@ -124,7 +124,7 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search schools…"
-            className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50"
           />
         </div>
         <select

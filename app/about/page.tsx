@@ -56,7 +56,7 @@ export default function AboutPage() {
             style={{ borderRadius: "16px" }}
           />
         </div>
-        <h1 className="text-4xl sm:text-5xl font-semibold text-white mb-4">DormDAO</h1>
+        <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 dark:text-white mb-4">DormDAO</h1>
         <p className="text-lg text-gray-500 mb-8">
           The world&apos;s first multi-university crypto investment DAO
         </p>
@@ -78,16 +78,16 @@ export default function AboutPage() {
           { label: "AUM", value: "~$1.18M" },
           { label: "ETH Invested", value: "760 ETH" },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-lg border border-gray-800 bg-gray-900/30 p-4 text-center">
-            <div className="text-2xl font-semibold font-mono text-white mb-1">{value}</div>
+          <div key={label} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 text-center">
+            <div className="text-2xl font-semibold font-mono text-gray-900 dark:text-white mb-1">{value}</div>
             <div className="text-xs text-gray-500">{label}</div>
           </div>
         ))}
       </div>
 
       {/* What is DormDAO */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-8 mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4">What is DormDAO?</h2>
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-8 mb-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">What is DormDAO?</h2>
         <p className="text-gray-400 leading-relaxed mb-4">
           DormDAO is a student-run investment DAO uniting 17 university blockchain clubs across the United States, Canada, and the UK. Founded in October 2023, it gives student investors hands-on experience managing real crypto portfolios and competing against each other in a transparent, on-chain leaderboard.
         </p>
@@ -98,14 +98,14 @@ export default function AboutPage() {
 
       {/* How it works */}
       <div className="mb-12">
-        <h2 className="text-xl font-semibold text-white mb-6 text-center">How It Works</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 text-center">How It Works</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           {STEPS.map(({ num, title, desc }) => (
-            <div key={num} className="rounded-lg border border-gray-800 bg-gray-900/30 p-6 text-center">
+            <div key={num} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-6 text-center">
               <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 text-primary font-bold text-lg flex items-center justify-center mx-auto mb-4">
                 {num}
               </div>
-              <h3 className="font-semibold text-white mb-2">{title}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
               <p className="text-sm text-gray-400">{desc}</p>
             </div>
           ))}
@@ -114,7 +114,7 @@ export default function AboutPage() {
 
       {/* Mission */}
       <div className="rounded-lg border border-primary/20 bg-primary/5 p-8 mb-12 text-center">
-        <h2 className="text-xl font-semibold text-white mb-3">Our Mission</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Our Mission</h2>
         <p className="text-gray-300 leading-relaxed max-w-2xl mx-auto">
           Investing in the future of blockchain and Web3 from university campuses — giving the next generation of crypto builders real capital, real stakes, and real experience before they graduate.
         </p>
@@ -122,13 +122,13 @@ export default function AboutPage() {
 
       {/* Member schools */}
       <div className="mb-12">
-        <h2 className="text-xl font-semibold text-white mb-6 text-center">Member Schools</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 text-center">Member Schools</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {SCHOOLS.map(({ name, slug }) => (
             <Link key={slug} href={`/schools/${slug}`}>
-              <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4 hover:border-primary/40 hover:bg-gray-800/50 transition-all cursor-pointer flex flex-col items-center gap-2 text-center">
+              <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 hover:border-primary/40 hover:bg-gray-800/50 transition-all cursor-pointer flex flex-col items-center gap-2 text-center">
                 <SchoolLogo name={name} size={40} />
-                <span className="text-sm text-white font-medium">{schoolDisplayName(name)}</span>
+                <span className="text-sm text-gray-900 dark:text-white font-medium">{schoolDisplayName(name)}</span>
               </div>
             </Link>
           ))}
@@ -144,7 +144,7 @@ export default function AboutPage() {
           href="https://www.dormdao.io"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           dormdao.io <ExternalLink className="w-4 h-4" />
         </a>

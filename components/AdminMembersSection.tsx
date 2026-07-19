@@ -39,11 +39,11 @@ interface CSVRow {
 }
 
 const ROLE_BADGE: Record<string, string> = {
-  president:  "bg-purple-900/40 text-purple-400 border border-purple-800",
-  director:   "bg-blue-900/40 text-blue-400 border border-blue-800",
-  club_admin: "bg-green-900/40 text-green-400 border border-green-800",
-  dorm_admin: "bg-teal-900/40 text-teal-400 border border-teal-800",
-  member:     "bg-gray-800 text-gray-500 border border-gray-700",
+  president:  "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800",
+  director:   "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800",
+  club_admin: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800",
+  dorm_admin: "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800",
+  member:     "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-500 border border-gray-200 dark:border-gray-700",
 };
 
 const EMPTY_DRAFT: MemberDraft = { name: "", votingUnits: 10, email: "", walletAddress: "", school: null, role: "member" };
@@ -184,7 +184,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
     }
   }
 
-  const fieldClass = "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 w-full";
+  const fieldClass = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50 w-full";
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
@@ -209,9 +209,9 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
               <div className="flex items-center justify-between">
-                <Dialog.Title className="text-base font-semibold text-white">Add Members</Dialog.Title>
+                <Dialog.Title className="text-base font-semibold text-gray-900 dark:text-white">Add Members</Dialog.Title>
                 <Dialog.Close asChild>
-                  <button className="text-gray-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+                  <button className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"><X className="w-4 h-4" /></button>
                 </Dialog.Close>
               </div>
 
@@ -304,7 +304,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
 
               <div className="flex items-center justify-end gap-3 pt-1">
                 <Dialog.Close asChild>
-                  <button className="px-4 py-2 rounded-lg border border-gray-700 text-gray-400 hover:text-white text-sm transition-colors">Cancel</button>
+                  <button className="px-4 py-2 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">Cancel</button>
                 </Dialog.Close>
                 <button onClick={handleSubmit} disabled={submitting || (mode === "csv" && csvRows.length === 0)}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 transition-colors text-sm font-medium disabled:opacity-50">
@@ -354,7 +354,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 </td>
                 <td className="px-5 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <button onClick={() => openEdit(m)} className="text-gray-600 hover:text-gray-300 transition-colors" title="Edit member">
+                    <button onClick={() => openEdit(m)} className="text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit member">
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button onClick={() => handleDelete(m.id)} disabled={deleting === m.id} className="text-gray-600 hover:text-danger transition-colors disabled:opacity-40" title="Remove member">
@@ -376,8 +376,8 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setEditTarget(null)} />
           <div className="relative w-full max-w-md bg-[#111] rounded-xl border border-gray-800 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-semibold text-white">Edit Member</h3>
-              <button onClick={() => setEditTarget(null)} className="text-gray-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Edit Member</h3>
+              <button onClick={() => setEditTarget(null)} className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"><X className="w-4 h-4" /></button>
             </div>
             <form onSubmit={handleEdit} className="flex flex-col gap-3">
               <Field label="Name *"><input value={editDraft.name} onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })} required className={fieldClass} /></Field>
@@ -397,7 +397,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               </Field>
               {editError && <ErrorBanner>{editError}</ErrorBanner>}
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setEditTarget(null)} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-white text-sm transition-colors">Cancel</button>
+                <button type="button" onClick={() => setEditTarget(null)} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">Cancel</button>
                 <button type="submit" disabled={editSubmitting} className="flex-1 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                   {editSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   Save Changes

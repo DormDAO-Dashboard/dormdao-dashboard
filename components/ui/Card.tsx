@@ -10,7 +10,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-lg border border-gray-800 bg-gray-900/30 p-4",
+        "rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4",
         className
       )}
     >
@@ -33,7 +33,7 @@ export function KpiCard({
   return (
     <Card className="flex flex-col gap-1.5">
       <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">{label}</span>
-      <span className="text-lg font-semibold font-mono text-white">{value}</span>
+      <span className="text-lg font-semibold font-mono text-gray-900 dark:text-white">{value}</span>
       {sub && (
         <span
           className={cn(

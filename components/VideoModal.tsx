@@ -19,7 +19,7 @@ export function VideoModal({ url, title, onClose }: { url: string; title: string
     >
       <div className="relative w-full max-w-4xl mx-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-white truncate">{title}</h3>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">{title}</h3>
           <button
             onClick={onClose}
             className="shrink-0 ml-3 p-1.5 rounded-lg hover:bg-white/10 transition-colors"

@@ -37,7 +37,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
     return ((a[sortKey] as number) - (b[sortKey] as number)) * mult;
   });
 
-  const thClass = "px-5 py-3 cursor-pointer hover:text-gray-300 select-none";
+  const thClass = "px-5 py-3 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 select-none";
 
   return (
     <div className="overflow-x-auto">
@@ -72,7 +72,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
               <td className="px-5 py-3">
                 <Link
                   href={`/schools/${s.slug}`}
-                  className="text-white hover:text-primary font-medium transition-colors"
+                  className="text-gray-900 dark:text-white hover:text-primary font-medium transition-colors"
                 >
                   {schoolDisplayName(s.name)}
                 </Link>

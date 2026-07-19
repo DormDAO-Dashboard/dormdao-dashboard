@@ -100,11 +100,11 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <Image src="/logo.jpg" width={56} height={56} alt="DormDAO" className="rounded-xl" />
           </div>
-          <h1 className="text-2xl font-semibold text-white mb-1">Sign in to DormDAO</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Sign in to DormDAO</h1>
           <p className="text-gray-500 text-sm">Connect with your school and join the community.</p>
         </div>
 
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-6 flex flex-col gap-3">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-6 flex flex-col gap-3">
           {(errorMsg || walletError) && (
             <div className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md px-3 py-2">
               {walletError ?? errorMsg}
@@ -115,7 +115,7 @@ export default function LoginPage() {
           <button
             onClick={signInWithGoogle}
             disabled={googleLoading || walletLoading}
-            className="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium transition-colors disabled:opacity-50"
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -136,7 +136,7 @@ export default function LoginPage() {
           <button
             onClick={connectWallet}
             disabled={walletLoading || googleLoading}
-            className="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium transition-colors disabled:opacity-50"
           >
             {/* MetaMask fox icon */}
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 318 318" fill="none">

@@ -15,7 +15,7 @@ function ExitTypeBadge({ type }: { type: ExitedHolding["exitType"] }) {
   }
   if (type === "trim") {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-300 dark:border-orange-500/30">
         Trim
       </span>
     );
@@ -84,7 +84,7 @@ export function ExitedHoldingsTable({ holdings, showSchool = false, schoolName, 
               <td className="px-5 py-3">
                 <Link
                   href={`/tokens/${h.ticker.toLowerCase()}`}
-                  className="font-mono font-semibold text-white hover:text-primary transition-colors"
+                  className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors"
                 >
                   ${h.ticker}
                 </Link>

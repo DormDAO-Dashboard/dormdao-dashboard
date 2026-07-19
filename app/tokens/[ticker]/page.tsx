@@ -111,21 +111,21 @@ function AdminDocUpload({ ticker, onUploaded }: { ticker: string; onUploaded: ()
     }
   }
 
-  const inputCls = "w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-gray-500";
+  const inputCls = "w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-500";
 
   return (
     <div className="mb-4">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-600/20 border border-yellow-600/40 text-yellow-400 text-xs hover:bg-yellow-600/30 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-100 dark:bg-yellow-600/20 border border-yellow-300 dark:border-yellow-600/40 text-yellow-700 dark:text-yellow-400 text-xs hover:bg-yellow-600/30 transition-colors"
       >
         <Upload className="w-3.5 h-3.5" />
         {open ? "Cancel Upload" : "Upload Document"}
       </button>
-      {result && <p className="text-xs text-yellow-300 mt-1">{result}</p>}
+      {result && <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">{result}</p>}
       {open && (
-        <form onSubmit={handleUpload} className="mt-3 p-4 rounded-xl border border-yellow-900/50 bg-yellow-900/10 flex flex-col gap-3">
-          <div className="text-xs font-medium text-yellow-400 mb-1">Upload Fund Document — ${ticker}</div>
+        <form onSubmit={handleUpload} className="mt-3 p-4 rounded-xl border border-yellow-300 dark:border-yellow-900/50 bg-yellow-50 dark:bg-yellow-900/10 flex flex-col gap-3">
+          <div className="text-xs font-medium text-yellow-700 dark:text-yellow-400 mb-1">Upload Fund Document — ${ticker}</div>
           <input
             required
             placeholder="Title (e.g. Hyperliquid $HYPE — Pitch Deck)"
@@ -166,7 +166,7 @@ function AdminDocUpload({ ticker, onUploaded }: { ticker: string; onUploaded: ()
           <button
             type="submit"
             disabled={uploading}
-            className="px-4 py-2 rounded-lg bg-yellow-600/30 border border-yellow-600/50 text-yellow-300 text-sm font-medium hover:bg-yellow-600/40 transition-colors disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-yellow-200 dark:bg-yellow-600/30 border border-yellow-400 dark:border-yellow-600/50 text-yellow-800 dark:text-yellow-300 text-sm font-medium hover:bg-yellow-600/40 transition-colors disabled:opacity-50"
           >
             {uploading ? "Uploading…" : "Upload"}
           </button>
@@ -256,17 +256,17 @@ export default function TokenDetailPage() {
       <AdminDocUpload ticker={tickerUpper} onUploaded={() => setDocsKey((k) => k + 1)} />
       <Link
         href="/tokens"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Tokens
       </Link>
 
       {/* Header */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-6 mb-6">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-start gap-6">
           <div className="flex-1">
             <div className="text-sm text-gray-400 mb-1">{meta?.name ?? tickerUpper}</div>
-            <h1 className="text-4xl font-bold font-mono text-white mb-4">${meta?.displayTicker ?? tickerUpper}</h1>
+            <h1 className="text-4xl font-bold font-mono text-gray-900 dark:text-white mb-4">${meta?.displayTicker ?? tickerUpper}</h1>
             {loadingPrice ? (
               <>
                 <Skeleton className="h-8 w-32 mb-2" />
@@ -274,7 +274,7 @@ export default function TokenDetailPage() {
               </>
             ) : price ? (
               <>
-                <div className="text-3xl font-mono font-bold text-white">{formatPrice(price.usd)}</div>
+                <div className="text-3xl font-mono font-bold text-gray-900 dark:text-white">{formatPrice(price.usd)}</div>
                 <div className={`flex items-center gap-1 text-sm font-mono mt-1 ${isUp ? "text-primary" : "text-danger"}`}>
                   {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                   {formatPct(price.usd_24h_change)} (24h)
@@ -282,12 +282,12 @@ export default function TokenDetailPage() {
               </>
             ) : meta?.vault ? (
               <div className="inline-flex items-center gap-2">
-                <span className="text-xs bg-blue-900/40 text-blue-300 border border-blue-800/50 px-2 py-1 rounded">Vault</span>
+                <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 px-2 py-1 rounded">Vault</span>
                 <span className="text-gray-500 text-sm">DeFi vault position</span>
               </div>
             ) : meta?.premarket ? (
               <div className="inline-flex items-center gap-2">
-                <span className="text-xs bg-orange-900/40 text-orange-300 border border-orange-800/50 px-2 py-1 rounded">Pre-market</span>
+                <span className="text-xs bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 px-2 py-1 rounded">Pre-market</span>
                 <span className="text-gray-500 text-sm">Not yet listed on CoinGecko</span>
               </div>
             ) : (
@@ -318,14 +318,14 @@ export default function TokenDetailPage() {
 
       {/* Market stats */}
       {meta?.geckoId && (
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5 mb-6">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-gray-300">Market Stats</h2>
             <a
               href={ARTEMIS_URL[tickerUpper] ?? "https://classic.artemis.ai/assets"}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-gray-500 border border-gray-700/60 hover:border-gray-500 hover:text-gray-300 px-2.5 py-1 rounded-md transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-gray-500 border border-gray-700/60 hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-2.5 py-1 rounded-md transition-colors"
             >
               View On-Chain Data → Artemis
             </a>
@@ -391,17 +391,17 @@ export default function TokenDetailPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <div className="text-xs text-gray-500 mb-1">Schools Holding</div>
-                <div className="font-mono font-bold text-white">{schoolPositions.length}/17</div>
+                <div className="font-mono font-bold text-gray-900 dark:text-white">{schoolPositions.length}/17</div>
               </div>
               <div>
                 <div className="text-xs text-gray-500 mb-1">Total Tokens</div>
-                <div className="font-mono font-bold text-white">
+                <div className="font-mono font-bold text-gray-900 dark:text-white">
                   {totalTokens > 0 ? totalTokens.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-gray-500 mb-1">Total Value</div>
-                <div className="font-mono font-bold text-white">
+                <div className="font-mono font-bold text-gray-900 dark:text-white">
                   {totalValueUsd > 0 ? formatUSD(totalValueUsd) : "—"}
                 </div>
               </div>
@@ -417,7 +417,7 @@ export default function TokenDetailPage() {
       })()}
 
       {/* Held by DormDAO */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-6">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-300">
             Held by DormDAO ({loadingSchools ? "…" : schoolPositions.length} school{schoolPositions.length !== 1 ? "s" : ""})
@@ -448,7 +448,7 @@ export default function TokenDetailPage() {
                     <td className="px-5 py-3">
                       <Link
                         href={`/schools/${pos.slug}`}
-                        className="text-white hover:text-primary font-medium transition-colors"
+                        className="text-gray-900 dark:text-white hover:text-primary font-medium transition-colors"
                       >
                         {schoolDisplayName(pos.school)}
                       </Link>
@@ -514,15 +514,15 @@ export default function TokenDetailPage() {
                   return (
                     <tr className="bg-gray-800/30 font-semibold">
                       <td className="px-5 py-3 text-xs text-gray-400 uppercase tracking-wide">DormDAO Total</td>
-                      <td className="px-5 py-3 text-right font-mono text-white">
+                      <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
                         {totalTokens !== 0 ? totalTokens.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "—"}
                       </td>
-                      <td className="px-5 py-3 text-right font-mono text-white">
+                      <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
                         {totalCostEth > 0 ? `${totalCostEth.toFixed(4)} ETH` : "—"}
                       </td>
                       <td className="px-5 py-3 text-right font-mono text-gray-400">—</td>
                       {price && (
-                        <td className="px-5 py-3 text-right font-mono text-white">
+                        <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
                           {totalValueUsd !== 0 ? formatUSD(totalValueUsd) : "—"}
                         </td>
                       )}

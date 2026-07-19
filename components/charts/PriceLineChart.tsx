@@ -78,7 +78,7 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
               "px-3 py-1 rounded text-xs font-medium transition-colors border",
               days === r.value
                 ? "bg-primary/20 text-primary border-primary/40"
-                : "text-gray-500 hover:text-gray-300 border-transparent"
+                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 border-transparent"
             )}
           >
             {r.label}

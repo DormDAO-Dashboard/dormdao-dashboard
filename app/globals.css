@@ -169,7 +169,7 @@ html.light .text-gray-200 { color: #1f2937; }
 html.light .text-gray-300 { color: #374151; }
 html.light .text-gray-400 { color: #52525b; }
 html.light .text-gray-500 { color: #71717a; }
-html.light .text-gray-600 { color: #a1a1aa; }
+html.light .text-gray-600 { color: #6b7280; }
 
 /* --- Hover states --- */
 html.light .hover\:bg-gray-800:hover { background-color: #f0f0f0; }

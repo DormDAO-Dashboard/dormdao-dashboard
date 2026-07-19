@@ -107,15 +107,15 @@ function SetupCard({
         <div className="rounded-xl border border-gray-800 bg-[#111] shadow-2xl p-8">
           <div className="text-center mb-8">
             <Image src="/logo.jpg" width={48} height={48} alt="DormDAO" className="rounded-xl mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white">Welcome to DormDAO 🎉</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome to DormDAO 🎉</h1>
             <p className="text-gray-400 text-sm mt-2">Let&apos;s set up your profile before you get started</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {school && (
-              <div className="flex items-center gap-2 bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2.5">
+              <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5">
                 <SchoolLogo name={school} size={18} />
-                <span className="text-sm text-white font-medium">{schoolDisplayName(school)}</span>
+                <span className="text-sm text-gray-900 dark:text-white font-medium">{schoolDisplayName(school)}</span>
                 <Lock className="w-3.5 h-3.5 text-gray-500 ml-auto shrink-0" />
                 <span className="text-xs text-gray-500">Assigned by DormDAO admin</span>
               </div>
@@ -123,7 +123,7 @@ function SetupCard({
 
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Step 1 — What should we call you? <span className="text-red-400">*</span>
+                Step 1 — What should we call you? <span className="text-red-600 dark:text-red-400">*</span>
               </label>
               <input
                 value={displayName}
@@ -131,7 +131,7 @@ function SetupCard({
                 placeholder="Your name"
                 maxLength={60}
                 required
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50"
               />
             </div>
 
@@ -144,7 +144,7 @@ function SetupCard({
                   <Image src={avatarUrl} width={48} height={48} alt="avatar"
                     className="rounded-xl border border-gray-700 object-cover shrink-0" unoptimized />
                 ) : (
-                  <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0">
                     <User className="w-5 h-5 text-gray-500" />
                   </div>
                 )}
@@ -152,7 +152,7 @@ function SetupCard({
                   <AvatarPicker current={avatarUrl} onSelect={setAvatarUrl} />
                   {avatarUrl && (
                     <button type="button" onClick={() => setAvatarUrl(null)}
-                      className="text-xs text-gray-500 hover:text-gray-300 transition-colors text-left">
+                      className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors text-left">
                       Skip — use default
                     </button>
                   )}
@@ -161,7 +161,7 @@ function SetupCard({
             </div>
 
             {error && (
-              <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+              <div className="text-sm text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-500/10 border border-red-300 dark:border-red-500/20 rounded-md px-3 py-2">
                 {error}
               </div>
             )}
@@ -486,7 +486,7 @@ function NormalProfile({
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Basic Info</p>
 
         <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>Display name <span className="text-red-400">*</span></label>
+          <label className={labelCls}>Display name <span className="text-red-600 dark:text-red-400">*</span></label>
           <input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Your name" maxLength={60} className={inputCls} />
         </div>
@@ -643,7 +643,7 @@ function NormalProfile({
       </div>
 
       {error && (
-        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">{error}</div>
+        <div className="text-sm text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-500/10 border border-red-300 dark:border-red-500/20 rounded-md px-3 py-2">{error}</div>
       )}
 
       <div className="flex items-center gap-3">

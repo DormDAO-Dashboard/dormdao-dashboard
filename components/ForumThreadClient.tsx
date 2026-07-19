@@ -127,12 +127,12 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link href="/forum" className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors mb-6">
+      <Link href="/forum" className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-6">
         <ArrowLeft className="w-3.5 h-3.5" />
         Back to Forum
       </Link>
 
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-6 mb-6">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-6 mb-6">
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           {thread.is_pinned && <Pin className="w-3.5 h-3.5 text-yellow-500" />}
           <span className={cn(
@@ -144,14 +144,14 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
           {thread.token_ticker && (
             <Link
               href={`/tokens/${thread.token_ticker}`}
-              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-gray-800 text-gray-300 border border-gray-700 hover:border-primary/40 hover:text-primary transition-colors"
+              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-primary/40 hover:text-primary transition-colors"
             >
               ${thread.token_ticker}
             </Link>
           )}
         </div>
 
-        <h1 className="text-lg font-bold text-white mb-4">{thread.title}</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{thread.title}</h1>
 
         {thread.content && (
           <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap mb-6">{thread.content}</p>
@@ -174,7 +174,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
               disabled={!user}
               className={cn(
                 "flex items-center gap-1 text-xs font-medium transition-colors",
-                upvoted ? "text-primary" : "text-gray-500 hover:text-gray-300",
+                upvoted ? "text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300",
                 !user && "opacity-50 cursor-default"
               )}
             >
@@ -195,7 +195,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 mb-4">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 mb-4">
         <div className="px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-300">
             {replies.length === 0
@@ -218,7 +218,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
             placeholder="Write a reply…"
             maxLength={2000}
             rows={4}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 resize-none"
+            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-primary/50 resize-none"
           />
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-700">{replyContent.length}/2000</span>

@@ -171,7 +171,7 @@ export function AddNoteForm({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full py-3 rounded-xl border border-dashed border-gray-700 text-gray-400 hover:text-white hover:border-primary/50 hover:bg-primary/5 transition-colors text-sm"
+        className="w-full py-3 rounded-xl border border-dashed border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-primary/50 hover:bg-primary/5 transition-colors text-sm"
       >
         + Add Research Note
       </button>
@@ -181,10 +181,10 @@ export function AddNoteForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border border-gray-700 bg-gray-900/80 p-4 flex flex-col gap-3"
+      className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/80 p-4 flex flex-col gap-3"
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-white">New Research Note</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">New Research Note</h3>
         <div className="text-xs text-gray-500">
           Posting as <span className="text-gray-300">{profileName}</span> · <span className="text-gray-300">{schoolDisplayName(profileSchool)}</span>
         </div>
@@ -196,7 +196,7 @@ export function AddNoteForm({
           <select
             value={form.token_ticker}
             onChange={(e) => setForm((f) => ({ ...f, token_ticker: e.target.value }))}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
           >
             <option value="">— Optional —</option>
             {availableTickers.map((t) => (
@@ -216,7 +216,7 @@ export function AddNoteForm({
                   "flex-1 py-2 rounded-lg text-xs font-medium transition-colors border",
                   form.sentiment === s && s === "bullish" && "bg-primary/20 border-primary/50 text-primary",
                   form.sentiment === s && s === "bearish" && "bg-danger/20 border-danger/50 text-danger",
-                  form.sentiment === s && s === "neutral" && "bg-gray-700 border-gray-600 text-white",
+                  form.sentiment === s && s === "neutral" && "bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white",
                   form.sentiment !== s && "bg-transparent border-gray-700 text-gray-500 hover:border-gray-600"
                 )}
               >
@@ -233,7 +233,7 @@ export function AddNoteForm({
           <select
             value={form.thesis_type}
             onChange={(e) => setForm((f) => ({ ...f, thesis_type: e.target.value }))}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
           >
             <option value="">— Optional —</option>
             {THESIS_TYPES.map((t) => (
@@ -250,7 +250,7 @@ export function AddNoteForm({
             value={form.price_target}
             onChange={(e) => setForm((f) => ({ ...f, price_target: e.target.value }))}
             placeholder="Optional"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50"
           />
         </div>
         <div>
@@ -258,7 +258,7 @@ export function AddNoteForm({
           <select
             value={form.time_horizon}
             onChange={(e) => setForm((f) => ({ ...f, time_horizon: e.target.value }))}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
           >
             <option value="">— Optional —</option>
             {TIME_HORIZONS.map((t) => (
@@ -275,13 +275,13 @@ export function AddNoteForm({
           value={form.url}
           onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
           placeholder="https://..."
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
+          className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50"
         />
         {urlPreviewLoading && (
           <p className="text-xs text-gray-500 mt-1">Fetching preview…</p>
         )}
         {urlPreview && !urlPreviewLoading && (
-          <div className="mt-2 rounded-lg border border-gray-700 bg-gray-800/60 p-3 flex gap-3">
+          <div className="mt-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3 flex gap-3">
             {urlPreview.image && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={urlPreview.image} alt="" className="w-16 h-12 object-cover rounded shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
@@ -290,7 +290,7 @@ export function AddNoteForm({
               <div className="text-xs text-gray-500 mb-0.5 flex items-center gap-1">
                 <ExternalLink className="w-3 h-3" />{urlPreview.siteName}
               </div>
-              {urlPreview.title && <div className="text-xs font-semibold text-white truncate">{urlPreview.title}</div>}
+              {urlPreview.title && <div className="text-xs font-semibold text-gray-900 dark:text-white truncate">{urlPreview.title}</div>}
               {urlPreview.description && <div className="text-xs text-gray-400 line-clamp-2 mt-0.5">{urlPreview.description}</div>}
             </div>
           </div>
@@ -304,11 +304,11 @@ export function AddNoteForm({
           onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
           placeholder={hasUrl ? "Add a comment (optional)…" : "Share your thesis (min 100 chars)..."}
           rows={4}
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 resize-none"
+          className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50 resize-none"
         />
         <div className="flex items-start justify-between mt-1">
           {submitAttempted && charCount < minChars ? (
-            <p className="text-xs text-red-400">At least {minChars} characters required ({minChars - charCount} more needed).</p>
+            <p className="text-xs text-red-600 dark:text-red-400">At least {minChars} characters required ({minChars - charCount} more needed).</p>
           ) : <span />}
           <span className={cn(
             "text-xs",
@@ -318,7 +318,7 @@ export function AddNoteForm({
           </span>
         </div>
         {submitError && (
-          <p className="text-xs text-red-400 mt-1 bg-red-900/20 border border-red-800/40 rounded px-3 py-2">{submitError}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 mt-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded px-3 py-2">{submitError}</p>
         )}
       </div>
 
@@ -326,7 +326,7 @@ export function AddNoteForm({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+          className="px-4 py-2 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           Cancel
         </button>

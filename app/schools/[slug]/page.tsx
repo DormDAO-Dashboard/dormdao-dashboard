@@ -57,7 +57,7 @@ async function SchoolContent({ slug }: { slug: string }) {
 
   return (
     <>
-      <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-4 transition-colors">
+      <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Schools
       </Link>
 
@@ -66,7 +66,7 @@ async function SchoolContent({ slug }: { slug: string }) {
         <SchoolLogo name={school.name} size={48} />
         <div>
           <div className="text-xs font-mono text-gray-500 mb-1">Rank #{school.rank}</div>
-          <h1 className="text-2xl font-semibold text-white">{schoolDisplayName(school.name)}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{schoolDisplayName(school.name)}</h1>
         </div>
       </div>
 
@@ -106,7 +106,7 @@ export default async function SchoolDetailPage({ params }: { params: Promise<{ s
           <Skeleton className="h-8 w-56 mb-8" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+              <div key={i} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
                 <Skeleton className="h-3 w-16 mb-2" />
                 <Skeleton className="h-7 w-24" />
               </div>

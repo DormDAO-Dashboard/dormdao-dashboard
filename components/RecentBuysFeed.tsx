@@ -85,7 +85,7 @@ export function RecentBuysFeed({ schools }: { schools: SchoolRow[] }) {
   if (recent.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-6">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
         <h2 className="text-sm font-semibold text-gray-300">Recent Buys</h2>
         <Link href="/activity" className="flex items-center gap-1 text-xs text-primary hover:underline">
@@ -115,13 +115,13 @@ export function RecentBuysFeed({ schools }: { schools: SchoolRow[] }) {
               </Link>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Link href={`/tokens/${buy.ticker.toLowerCase()}`} className="font-mono font-semibold text-white hover:text-primary text-sm transition-colors">
+                  <Link href={`/tokens/${buy.ticker.toLowerCase()}`} className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary text-sm transition-colors">
                     ${buy.ticker}
                   </Link>
                   {buy.blockchain && <span className="text-xs text-gray-500">{buy.blockchain}</span>}
                 </div>
                 <div className="text-xs text-gray-500 mt-0.5">
-                  <Link href={`/schools/${buy.schoolSlug}`} className="hover:text-gray-300 transition-colors">{schoolDisplayName(buy.school)}</Link>
+                  <Link href={`/schools/${buy.schoolSlug}`} className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">{schoolDisplayName(buy.school)}</Link>
                   {" · "}{daysAgo(buy.dateMs)}
                 </div>
               </div>

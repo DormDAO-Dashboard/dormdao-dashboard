@@ -54,17 +54,17 @@ function AdminPanel() {
   }
 
   return (
-    <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl border border-yellow-900/50 bg-yellow-900/10">
+    <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl border border-yellow-300 dark:border-yellow-900/50 bg-yellow-50 dark:bg-yellow-900/10">
       <Camera className="w-4 h-4 text-yellow-500 shrink-0" />
-      <span className="text-xs text-yellow-400">Admin</span>
+      <span className="text-xs text-yellow-700 dark:text-yellow-400">Admin</span>
       <button
         onClick={captureSnapshot}
         disabled={snapping}
-        className="px-3 py-1.5 rounded-lg bg-yellow-600/20 border border-yellow-600/40 text-yellow-400 text-xs hover:bg-yellow-600/30 transition-colors disabled:opacity-50"
+        className="px-3 py-1.5 rounded-lg bg-yellow-100 dark:bg-yellow-600/20 border border-yellow-300 dark:border-yellow-600/40 text-yellow-700 dark:text-yellow-400 text-xs hover:bg-yellow-600/30 transition-colors disabled:opacity-50"
       >
         {snapping ? "Saving…" : "Capture Snapshot"}
       </button>
-      {snapResult && <span className="text-xs text-yellow-300">{snapResult}</span>}
+      {snapResult && <span className="text-xs text-yellow-700 dark:text-yellow-300">{snapResult}</span>}
     </div>
   );
 }
@@ -111,7 +111,7 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
     : null;
   const posWinCount = holdingsWithGain.filter(h => h.gainUsd > 0).length;
 
-  const statCard = "rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-4 flex flex-col gap-1";
+  const statCard = "rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-4 py-4 flex flex-col gap-1";
 
   return (
     <div className="mb-5">
@@ -120,13 +120,13 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
 
         <div className={statCard}>
           <span className="text-xs text-gray-500">Most Widely Held</span>
-          <span className="text-base font-mono font-bold text-white">${mostWidelyHeldTicker}</span>
+          <span className="text-base font-mono font-bold text-gray-900 dark:text-white">${mostWidelyHeldTicker}</span>
           <span className="text-xs text-gray-600">{mostWidelyHeldCount > 0 ? `${mostWidelyHeldCount} of 17 schools` : "—"}</span>
         </div>
 
         <div className={statCard}>
           <span className="text-xs text-gray-500">Unique Tokens</span>
-          <span className="text-base font-mono font-bold text-white">{uniqueTokenCount}</span>
+          <span className="text-base font-mono font-bold text-gray-900 dark:text-white">{uniqueTokenCount}</span>
           <span className="text-xs text-gray-600">across all portfolios</span>
         </div>
 
@@ -134,7 +134,7 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
           <span className="text-xs text-gray-500">Best Position</span>
           {bestPos ? (
             <>
-              <span className="text-base font-mono font-bold text-white">${bestPos.ticker}</span>
+              <span className="text-base font-mono font-bold text-gray-900 dark:text-white">${bestPos.ticker}</span>
               <span className="text-xs font-mono text-primary">+{formatUSD(bestPos.gainUsd)}</span>
             </>
           ) : (
@@ -146,7 +146,7 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
           <span className="text-xs text-gray-500">Worst Position</span>
           {worstPos && worstPos.gainUsd < 0 ? (
             <>
-              <span className="text-base font-mono font-bold text-white">${worstPos.ticker}</span>
+              <span className="text-base font-mono font-bold text-gray-900 dark:text-white">${worstPos.ticker}</span>
               <span className="text-xs font-mono text-danger">{formatUSD(worstPos.gainUsd)}</span>
             </>
           ) : (
@@ -158,7 +158,7 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
           <span className="text-xs text-gray-500">Position Win Rate</span>
           {posWinRate !== null ? (
             <>
-              <span className="flex items-center gap-1 text-base font-mono font-bold text-white">
+              <span className="flex items-center gap-1 text-base font-mono font-bold text-gray-900 dark:text-white">
                 <TrendingUp className="w-3.5 h-3.5 text-primary shrink-0" />
                 {posWinRate}%
               </span>
@@ -171,7 +171,7 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
 
         <div className={statCard}>
           <span className="text-xs text-gray-500">Total Positions</span>
-          <span className="text-base font-mono font-bold text-white">{totalPositions}</span>
+          <span className="text-base font-mono font-bold text-gray-900 dark:text-white">{totalPositions}</span>
           <span className="text-xs text-gray-600">active holdings</span>
         </div>
 
@@ -237,7 +237,7 @@ export function DashboardClient({
             className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               period === key
                 ? "bg-primary/20 border-primary/50 text-primary"
-                : "bg-transparent border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+                : "bg-transparent border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
             }`}
           >
             {label}
@@ -266,30 +266,30 @@ export function DashboardClient({
 
       {/* Analytics row */}
       <div className="flex overflow-x-auto gap-3 mb-5 scrollbar-hide md:grid md:grid-cols-3">
-        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
+        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-4 py-3 flex flex-col">
           <span className="text-xs text-gray-500 mb-1">Win Rate</span>
-          <span className="text-lg font-mono font-bold text-white">{winRate}%</span>
+          <span className="text-lg font-mono font-bold text-gray-900 dark:text-white">{winRate}%</span>
           <span className="text-xs text-gray-600 mt-0.5">{ethReturns.filter((r) => r > 0).length}/{ethReturns.length} schools positive</span>
         </div>
-        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
+        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-4 py-3 flex flex-col">
           <span className="text-xs text-gray-500 mb-1">Sharpe Ratio</span>
-          <span className={`text-lg font-mono font-bold ${typeof sharpe === "string" || parseFloat(sharpe) >= 1 ? "text-primary" : parseFloat(sharpe) >= 0 ? "text-white" : "text-danger"}`}>{sharpe}</span>
+          <span className={`text-lg font-mono font-bold ${typeof sharpe === "string" || parseFloat(sharpe) >= 1 ? "text-primary" : parseFloat(sharpe) >= 0 ? "text-gray-900 dark:text-white" : "text-danger"}`}>{sharpe}</span>
           <span className="text-xs text-gray-600 mt-0.5">ETH return / std dev</span>
         </div>
-        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-800 bg-gray-900/30 px-4 py-3 flex flex-col">
+        <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-4 py-3 flex flex-col">
           <span className="text-xs text-gray-500 mb-1">Schools</span>
-          <span className="text-lg font-mono font-bold text-white">{activeSchools.length}</span>
+          <span className="text-lg font-mono font-bold text-gray-900 dark:text-white">{activeSchools.length}</span>
           <span className="text-xs text-gray-600 mt-0.5">active portfolios</span>
         </div>
       </div>
 
       {/* Charts row 1 */}
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Portfolio NAV by School (Ranked)</h2>
           <NavBarChart schools={activeSchools} />
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
           <h2 className="text-sm font-semibold text-gray-300 mb-3">ETH Return — All Schools</h2>
           <EthReturnChart schools={activeSchools} />
         </div>
@@ -297,18 +297,18 @@ export function DashboardClient({
 
       {/* Charts row 2 */}
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Top &amp; Bottom 3 — ETH Return</h2>
           <TopBottomChart schools={activeSchools} />
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Deployment % vs. NAV</h2>
           <DeploymentScatter schools={activeSchools} />
         </div>
       </div>
 
       {/* Leaderboard */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-4">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-4">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-300">
             School Leaderboard — All {activeSchools.length}

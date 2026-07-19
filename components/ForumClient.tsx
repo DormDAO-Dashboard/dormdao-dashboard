@@ -29,7 +29,7 @@ function CategoryBadge({ category }: { category: string }) {
   return (
     <span className={cn(
       "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-      CATEGORY_STYLES[category] ?? "bg-gray-800 text-gray-400 border border-gray-700"
+      CATEGORY_STYLES[category] ?? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
     )}>
       {CATEGORY_LABELS[category] ?? category}
     </span>
@@ -49,7 +49,7 @@ function ThreadCard({
   return (
     <Link
       href={`/forum/${thread.id}`}
-      className="block rounded-lg border border-gray-800 bg-gray-900/30 p-5 hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+      className="block rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150 cursor-pointer"
     >
       <div className="flex items-start gap-3">
         <button
@@ -70,14 +70,14 @@ function ThreadCard({
             {thread.token_ticker && (
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/tokens/${thread.token_ticker}`); }}
-                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-gray-800 text-gray-300 border border-gray-700 hover:border-primary/40 hover:text-primary transition-colors"
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-primary/40 hover:text-primary transition-colors"
               >
                 ${thread.token_ticker}
               </button>
             )}
           </div>
 
-          <h3 className="font-semibold text-white text-sm leading-snug mb-1 group-hover:text-primary transition-colors">
+          <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-snug mb-1 group-hover:text-primary transition-colors">
             {thread.title}
           </h3>
 
@@ -105,7 +105,7 @@ function ThreadCard({
 
 function ThreadSkeleton() {
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5 animate-pulse flex gap-3">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 animate-pulse flex gap-3">
       <div className="w-8 flex flex-col items-center gap-1 shrink-0 pt-0.5">
         <div className="h-4 w-4 bg-gray-800 rounded" />
         <div className="h-3 w-4 bg-gray-800 rounded" />
@@ -158,14 +158,14 @@ function NewThreadModal({ userSchool, displayName, onClose, onSuccess }: NewThre
     }
   }
 
-  const inputCls = "w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary/50";
+  const inputCls = "w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-primary/50";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-[#111] shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-white">New Thread</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">New Thread</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -235,7 +235,7 @@ function NewThreadModal({ userSchool, displayName, onClose, onSuccess }: NewThre
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -373,7 +373,7 @@ export function ForumClient({ school, ticker }: Props) {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <MessagesSquare className="w-5 h-5 text-primary" />
-              <h1 className="text-xl font-bold text-white">DAO Forum</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">DAO Forum</h1>
             </div>
             <p className="text-sm text-gray-500">Discuss pitches, strategies, and ideas across the DormDAO network</p>
           </div>
@@ -413,7 +413,7 @@ export function ForumClient({ school, ticker }: Props) {
                   "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                   category === key
                     ? "bg-primary/20 border-primary/50 text-primary"
-                    : "bg-transparent border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+                    : "bg-transparent border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
                 )}
               >
                 {label}
@@ -428,8 +428,8 @@ export function ForumClient({ school, ticker }: Props) {
                 className={cn(
                   "shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                   sort === key
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-transparent border-gray-700 text-gray-500 hover:text-gray-300"
+                    ? "bg-gray-200 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    : "bg-transparent border-gray-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 )}
               >
                 {label}
@@ -444,7 +444,7 @@ export function ForumClient({ school, ticker }: Props) {
           {Array.from({ length: isEmbedded ? 3 : 5 }).map((_, i) => <ThreadSkeleton key={i} />)}
         </div>
       ) : threads.length === 0 ? (
-        <div className="rounded-lg border border-gray-800 bg-gray-900/30 py-12 text-center">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 py-12 text-center">
           <MessagesSquare className="w-7 h-7 text-gray-700 mx-auto mb-2" />
           <p className="text-gray-500 text-sm">No threads yet</p>
           {user && userSchool && (
@@ -471,7 +471,7 @@ export function ForumClient({ school, ticker }: Props) {
           <button
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="px-5 py-2 text-xs font-medium border border-gray-700 rounded-lg text-gray-400 hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50"
+            className="px-5 py-2 text-xs font-medium border border-gray-700 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50"
           >
             {loadingMore ? "Loading…" : "Load more"}
           </button>

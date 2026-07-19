@@ -66,7 +66,7 @@ export function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
               <Image src="/logo.jpg" width={28} height={28} alt="DormDAO" className="rounded-md" />
-              <span className="font-semibold text-white text-sm hidden sm:block tracking-tight">DormDAO</span>
+              <span className="font-semibold text-gray-900 dark:text-white text-sm hidden sm:block tracking-tight">DormDAO</span>
             </Link>
 
             {/* Desktop nav — text links with underline indicator */}
@@ -80,7 +80,7 @@ export function Navbar() {
                     className={cn(
                       "flex items-center px-4 text-sm transition-colors border-b-2 -mb-px",
                       isActive
-                        ? "text-white font-medium border-primary"
+                        ? "text-gray-900 dark:text-white font-medium border-primary"
                         : "text-gray-500 hover:text-gray-200 border-transparent font-normal"
                     )}
                   >
@@ -100,7 +100,7 @@ export function Navbar() {
                     href={href}
                     className={cn(
                       "flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md transition-colors",
-                      isActive ? "text-primary" : "text-gray-500 hover:text-gray-300"
+                      isActive ? "text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -110,7 +110,7 @@ export function Navbar() {
               <button
                 onClick={() => setShowMore(true)}
                 aria-label="More navigation options"
-                className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md text-gray-500 hover:text-gray-300 transition-colors"
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
                 <MoreHorizontal className="w-5 h-5" />
               </button>
@@ -124,7 +124,7 @@ export function Navbar() {
                 className={cn(
                   "hidden md:flex items-center justify-center w-8 h-8 rounded-md border transition-colors duration-200",
                   theme === "dark"
-                    ? "border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600 hover:bg-gray-800"
+                    ? "border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
                     : "border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:bg-gray-100"
                 )}
               >
@@ -154,7 +154,7 @@ export function Navbar() {
                   className={cn(
                     "text-xs font-medium px-3 py-1.5 rounded-md border transition-colors",
                     theme === "dark"
-                      ? "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+                      ? "border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
                       : "border-gray-300 text-gray-500 hover:text-gray-800 hover:border-gray-400"
                   )}
                 >
@@ -179,7 +179,7 @@ export function Navbar() {
               <span className="text-sm font-semibold text-gray-300">More</span>
               <button
                 onClick={() => setShowMore(false)}
-                className="text-gray-500 hover:text-white transition-colors"
+                className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -210,7 +210,7 @@ export function Navbar() {
                   className={cn(
                     "flex items-center justify-center w-9 h-9 rounded-lg border transition-colors",
                     theme === "dark"
-                      ? "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+                      ? "border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
                       : "border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400"
                   )}
                 >

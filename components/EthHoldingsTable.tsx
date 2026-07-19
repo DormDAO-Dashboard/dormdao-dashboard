@@ -43,7 +43,7 @@ export function EthHoldingsTable({ schools }: { schools: SchoolRow[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-6">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-gray-800">
         <h2 className="text-sm font-semibold text-gray-300">ETH Holdings</h2>
       </div>
@@ -58,7 +58,7 @@ export function EthHoldingsTable({ schools }: { schools: SchoolRow[] }) {
         <tbody>
           {rows.map((row, i) => {
             const negative = row.ethTokens < 0;
-            const valueColor = negative ? "text-danger" : "text-white";
+            const valueColor = negative ? "text-danger" : "text-gray-900 dark:text-white";
             return (
               <tr
                 key={row.slug}
@@ -69,7 +69,7 @@ export function EthHoldingsTable({ schools }: { schools: SchoolRow[] }) {
                 <td className="px-5 py-3">
                   <Link
                     href={`/schools/${row.slug}`}
-                    className="text-white hover:text-primary transition-colors"
+                    className="text-gray-900 dark:text-white hover:text-primary transition-colors"
                   >
                     {schoolDisplayName(row.name)}
                   </Link>

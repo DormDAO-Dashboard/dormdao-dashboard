@@ -98,7 +98,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
         <select
           value={schoolFilter}
           onChange={e => setSchoolFilter(e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
         >
           <option value="">All Schools</option>
           {uniqueSchools.map(s => <option key={s} value={s}>{schoolDisplayName(s)}</option>)}
@@ -106,7 +106,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
         <select
           value={tickerFilter}
           onChange={e => setTickerFilter(e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
         >
           <option value="">All Tokens</option>
           {uniqueTickers.map(t => <option key={t} value={t}>${t}</option>)}
@@ -117,20 +117,20 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
             type="date"
             value={dateFrom}
             onChange={e => setDateFrom(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
           />
           <span>to</span>
           <input
             type="date"
             value={dateTo}
             onChange={e => setDateTo(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
           />
         </div>
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value as SortKey)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50 ml-auto"
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50 ml-auto"
         >
           <option value="recent">Sort: Most Recent</option>
           <option value="largest">Sort: Largest Position</option>
@@ -142,7 +142,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
       <div className="text-xs text-gray-500 mb-3">{filtered.length} positions</div>
 
       {/* Table */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -174,7 +174,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                       </Link>
                     </td>
                     <td className="px-5 py-3">
-                      <Link href={`/tokens/${buy.ticker.toLowerCase()}`} className="font-mono font-semibold text-white hover:text-primary transition-colors">
+                      <Link href={`/tokens/${buy.ticker.toLowerCase()}`} className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors">
                         ${buy.ticker}
                       </Link>
                     </td>

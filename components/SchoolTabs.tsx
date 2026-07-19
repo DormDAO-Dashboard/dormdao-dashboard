@@ -38,8 +38,8 @@ export function SchoolTabs({ school, otherSchools }: Props) {
             className={cn(
               "px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
               tab === t
-                ? "border-primary text-white font-medium"
-                : "border-transparent text-gray-500 hover:text-gray-300 font-normal"
+                ? "border-primary text-gray-900 dark:text-white font-medium"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-normal"
             )}
           >
             {t === "Members" && membersCount !== null ? `Members (${membersCount})` : t}
@@ -51,7 +51,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {tab === "Portfolio" && (
         <div className="flex flex-col gap-4">
           {(school.holdings?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+            <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
               <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Concentration</h2>
               <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
             </div>
@@ -66,7 +66,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
             />
           )}
 
-          <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-800">
               <h2 className="text-sm font-semibold text-gray-300">
                 Active Holdings ({school.holdings?.length ?? 0})
@@ -84,7 +84,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
           </div>
 
           {(school.nftHoldings?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
+            <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800">
                 <h2 className="text-sm font-semibold text-gray-300">
                   Active NFT Holdings ({school.nftHoldings.length})
@@ -104,7 +104,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {tab === "History" && (
         <div className="flex flex-col gap-4">
           {(school.exitedHoldings?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden">
+            <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800">
                 <h2 className="text-sm font-semibold text-gray-300">
                   Exited &amp; Trimmed Positions ({school.exitedHoldings.length})

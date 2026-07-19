@@ -20,11 +20,11 @@ interface Props {
 }
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  passed:   { label: "PASSED",   className: "bg-green-900/40 text-green-400 border border-green-800" },
-  rejected: { label: "REJECTED", className: "bg-red-900/40 text-red-400 border border-red-800" },
-  expired:  { label: "EXPIRED",  className: "bg-gray-800 text-gray-500 border border-gray-700" },
-  active:   { label: "ACTIVE",   className: "bg-blue-900/40 text-blue-400 border border-blue-800" },
-  executed: { label: "EXECUTED", className: "bg-purple-900/40 text-purple-400 border border-purple-800" },
+  passed:   { label: "PASSED",   className: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800" },
+  rejected: { label: "REJECTED", className: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800" },
+  expired:  { label: "EXPIRED",  className: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-500 border border-gray-200 dark:border-gray-700" },
+  active:   { label: "ACTIVE",   className: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800" },
+  executed: { label: "EXECUTED", className: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800" },
 };
 
 export function ProposalCard({
@@ -73,7 +73,7 @@ export function ProposalCard({
   }
 
   const inputClass =
-    "w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40";
+    "w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40";
 
   return (
     <>
@@ -123,7 +123,7 @@ export function ProposalCard({
               {proposal.description.length > 180 && (
                 <button
                   onClick={() => setExpanded((v) => !v)}
-                  className="mt-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-1 transition-colors"
+                  className="mt-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 transition-colors"
                 >
                   {expanded
                     ? <><ChevronUp className="w-3 h-3" /> Show less</>
@@ -135,18 +135,18 @@ export function ProposalCard({
 
           {/* Execution details */}
           {proposal.status === "executed" && proposal.execution_tx && (
-            <div className="mb-4 rounded-lg bg-purple-900/10 border border-purple-800/30 px-4 py-3 space-y-1">
+            <div className="mb-4 rounded-lg bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800/30 px-4 py-3 space-y-1">
               <a
                 href={proposal.execution_tx}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
               >
                 <ExternalLink className="w-3 h-3 shrink-0" />
                 View on Etherscan
               </a>
               {proposal.execution_notes && (
-                <p className="text-xs text-gray-400">{proposal.execution_notes}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{proposal.execution_notes}</p>
               )}
               {proposal.executed_at && (
                 <p className="text-xs text-gray-600">
@@ -177,11 +177,11 @@ export function ProposalCard({
               />
             </div>
             <div className="flex justify-between items-center mt-1.5">
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {totalVotes} of {memberCount > 0 ? memberCount : "?"} {schoolDisplayName(schoolName)} members voted
               </span>
               {active && (
-                <span className="text-xs text-gray-400 flex items-center gap-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {deadlineLabel(proposal.voting_deadline)}
                 </span>
@@ -196,8 +196,8 @@ export function ProposalCard({
                 <div className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium",
                   proposal.user_vote === "yes"
-                    ? "bg-green-900/30 text-green-400 border border-green-800"
-                    : "bg-red-900/30 text-red-400 border border-red-800"
+                    ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                    : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
                 )}>
                   <Check className="w-3.5 h-3.5" />
                   You voted {proposal.user_vote?.toUpperCase()}
@@ -223,10 +223,10 @@ export function ProposalCard({
               ) : (
                 <div className="relative">
                   <div className="flex gap-3 pointer-events-none opacity-40 select-none">
-                    <div className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-center border border-gray-600 text-gray-400">
+                    <div className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-center border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400">
                       ✓ Vote Yes
                     </div>
-                    <div className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-center border border-gray-600 text-gray-400">
+                    <div className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-center border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400">
                       ✗ Vote No
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export function ProposalCard({
             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
               <button
                 onClick={() => { setShowExecuteModal(true); setExecuteError(null); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-900/20 border border-purple-800/40 text-purple-400 hover:bg-purple-900/30 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
               >
                 ✓ Mark as Executed
               </button>
@@ -256,7 +256,7 @@ export function ProposalCard({
           )}
 
           {proposal.proposed_by_name && (
-            <p className="mt-3 text-xs text-gray-400">
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
               Proposed by {proposal.proposed_by_name}
             </p>
           )}
@@ -336,7 +336,7 @@ export function ProposalCard({
                 <button
                   type="submit"
                   disabled={executing}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-purple-900/30 border border-purple-800/50 text-purple-300 hover:bg-purple-900/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 dark:bg-purple-900/30 border border-purple-600 dark:border-purple-800/50 text-white dark:text-purple-300 hover:bg-purple-700 dark:hover:bg-purple-900/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
                   {executing && <Loader2 className="w-4 h-4 animate-spin" />}
                   Confirm Execution

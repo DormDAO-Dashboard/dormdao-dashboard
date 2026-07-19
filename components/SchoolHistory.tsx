@@ -49,7 +49,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-8 text-center text-gray-500 text-sm">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-8 text-center text-gray-500 text-sm">
         Loading history…
       </div>
     );
@@ -57,7 +57,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-8 text-center text-danger text-sm">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-8 text-center text-danger text-sm">
         {error}
       </div>
     );
@@ -65,9 +65,9 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
 
   if (snapshots.length < 2) {
     return (
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-12 text-center">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-12 text-center">
         <div className="text-4xl mb-4">📈</div>
-        <h3 className="text-white font-semibold mb-2">Historical data is being collected</h3>
+        <h3 className="text-gray-900 dark:text-white font-semibold mb-2">Historical data is being collected</h3>
         <p className="text-gray-400 text-sm max-w-sm mx-auto">
           Portfolio snapshots are captured daily. Check back tomorrow to see NAV and return history for {schoolDisplayName(schoolName)}.
         </p>
@@ -87,7 +87,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
   return (
     <div className="space-y-6">
       {/* NAV over time */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
         <h3 className="text-sm font-semibold text-gray-300 mb-4">NAV Over Time</h3>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -105,7 +105,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
       </div>
 
       {/* ETH Return over time */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
         <h3 className="text-sm font-semibold text-gray-300 mb-4">ETH Return Over Time</h3>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -129,7 +129,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
       </div>
 
       {/* ETH Balance over time */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
         <h3 className="text-sm font-semibold text-gray-300 mb-4">ETH Balance Over Time</h3>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>

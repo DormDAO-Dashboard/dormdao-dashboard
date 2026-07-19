@@ -142,7 +142,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
     return ((aVal as number) - (bVal as number)) * mult;
   });
 
-  const thClass = "px-5 py-3 cursor-pointer select-none hover:text-gray-300 transition-colors";
+  const thClass = "px-5 py-3 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors";
 
   return (
     <div className="overflow-x-auto">
@@ -214,7 +214,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 <td className="px-5 py-3">
                   <Link
                     href={`/tokens/${h.ticker.toLowerCase()}`}
-                    className="font-mono font-semibold text-white hover:text-primary transition-colors flex items-center gap-1"
+                    className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors flex items-center gap-1"
                   >
                     ${h.ticker}
                     <ExternalLink className="w-3 h-3 opacity-40" />

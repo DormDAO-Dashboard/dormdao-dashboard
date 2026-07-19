@@ -97,7 +97,7 @@ function ComingSoonModal({ zone, onClose }: { zone: Zone; onClose: () => void })
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -168,7 +168,7 @@ export default function MapPage() {
       {/* ── Mobile fallback ────────────────────────────────────────────────── */}
       <div className="fixed inset-0 z-[100] md:hidden flex flex-col items-center justify-center bg-[#0a0a0a] text-center px-6">
         <div className="text-6xl mb-4">🍜</div>
-        <h1 className="text-2xl font-bold text-white mb-3">Campus Map</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Campus Map</h1>
         <p className="text-gray-400 text-sm mb-8 max-w-xs leading-relaxed">
           Visit on desktop for the full interactive campus experience.
         </p>

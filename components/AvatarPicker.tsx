@@ -32,16 +32,16 @@ export function AvatarPicker({ current, onSelect }: Props) {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-xl border border-gray-700 bg-gray-900 shadow-2xl flex flex-col max-h-[80vh]">
+          <div className="w-full max-w-xl rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl flex flex-col max-h-[80vh]">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
               <div>
-                <h2 className="text-sm font-semibold text-white">Choose your Pudgy</h2>
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Choose your Pudgy</h2>
                 <p className="text-xs text-gray-500 mt-0.5">Pick a penguin to represent you across DormDAO.</p>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="text-gray-500 hover:text-white transition-colors"
+                className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>

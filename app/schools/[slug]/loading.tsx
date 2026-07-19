@@ -10,13 +10,13 @@ export default function Loading() {
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-lg border border-gray-800 bg-gray-900/30 p-5">
+          <div key={i} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
             <Skeleton className="h-3 w-16 mb-2" />
             <Skeleton className="h-7 w-24" />
           </div>
         ))}
       </div>
-      <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-6">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-gray-800">
           <Skeleton className="h-4 w-36" />
         </div>

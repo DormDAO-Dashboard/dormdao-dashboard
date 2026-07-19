@@ -80,7 +80,7 @@ export function TrimsAndSells() {
   const filtered = schoolFilter ? changes.filter(c => c.school_name === schoolFilter) : changes;
 
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 overflow-hidden mb-8">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-8">
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
         <div className="flex items-center gap-2">
           <TrendingDown className="w-4 h-4 text-danger" />
@@ -95,7 +95,7 @@ export function TrimsAndSells() {
           <select
             value={schoolFilter}
             onChange={e => setSchoolFilter(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
           >
             <option value="">All Schools</option>
             {uniqueSchools.map(s => <option key={s} value={s}>{schoolDisplayName(s)}</option>)}
@@ -149,7 +149,7 @@ export function TrimsAndSells() {
                     <td className="px-5 py-3">
                       <Link
                         href={`/tokens/${c.token_ticker.toLowerCase()}`}
-                        className="font-mono font-semibold text-white hover:text-primary transition-colors"
+                        className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors"
                       >
                         ${tokenMeta?.displayTicker ?? c.token_ticker}
                       </Link>
@@ -158,7 +158,7 @@ export function TrimsAndSells() {
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         isFull
                           ? "bg-danger/20 text-danger border border-danger/30"
-                          : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                          : "bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-300 dark:border-orange-500/30"
                       }`}>
                         {isFull ? "Full Exit" : "Trimmed"}
                       </span>
