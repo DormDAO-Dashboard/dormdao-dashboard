@@ -20,9 +20,12 @@ export default async function AdminMembersPage() {
     .select("id, display_name, school")
     .eq("role", "dorm_admin");
 
-  // Resolve auth info for dorm_admin profiles; match against members.json by email OR wallet
-  const dormAdminEmails = new Set<string>();
-  const dormAdminWallets = new Set<string>();
+  // Resolve auth info for dorm_admin profiles; match against members.json by email OR wallet.
+  // Seed with the env-configured admin too — it never has a profiles.role = "dorm_admin"
+  // row (it's recognized purely via env vars), so without this it'd show in both the
+  // Admins panel (env-admin render) and the Members table (its members.json record).
+  const dormAdminEmails = new Set<string>(admin.email ? [admin.email.toLowerCase()] : []);
+  const dormAdminWallets = new Set<string>(admin.wallet ? [admin.wallet.toLowerCase()] : []);
   const dormAdminsWithEmail = await Promise.all(
     (dormAdminProfiles ?? []).map(async (da) => {
       const { data } = await serviceClient.auth.admin.getUserById(da.id);

@@ -102,13 +102,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Stamp the member's pre-assigned school, role, and wallet onto their profile
+  // Stamp the member's pre-assigned school, role, and wallet onto their profile.
+  // Never downgrade a dorm_admin role that was set directly in the DB — mirrors
+  // the same guard in app/auth/callback/route.ts for Google sign-in.
   const userId = newUserId ?? linkData.user?.id;
   if (member && userId) {
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+    const preservedRole = existingProfile?.role === "dorm_admin" ? "dorm_admin" : (member.role ?? "member");
+
     await supabase
       .from("profiles")
       .upsert(
-        { id: userId, school: member.school ?? null, role: member.role ?? 'member', wallet_address: address },
+        { id: userId, school: member.school ?? null, role: preservedRole, wallet_address: address },
         { onConflict: "id" },
       );
   }
