@@ -67,7 +67,10 @@ export async function PATCH(
   const newList = [...members.slice(0, idx), updated, ...members.slice(idx + 1)];
   await saveMembers(newList);
 
-  // Sync to live profile if the member has already logged in
+  // Sync to live profile if the member has already logged in. Never downgrade
+  // a dorm_admin role that was set directly in the DB — this form can't even
+  // grant dorm_admin (VALID_ROLES excludes it), so it should never be able to
+  // take it away either. Mirrors the same guard in the login routes.
   if (updated.email) {
     const service = createServiceClient();
     const { data: authUser } = await service.auth.admin.listUsers();
@@ -75,9 +78,16 @@ export async function PATCH(
       (u) => u.email?.toLowerCase() === updated.email.toLowerCase()
     );
     if (matched) {
+      const { data: existingProfile } = await service
+        .from("profiles")
+        .select("role")
+        .eq("id", matched.id)
+        .single();
+      const preservedRole = existingProfile?.role === "dorm_admin" ? "dorm_admin" : updated.role;
+
       await service.from("profiles").update({
         school: updated.school ?? null,
-        role: updated.role,
+        role: preservedRole,
       }).eq("id", matched.id);
     }
   }
