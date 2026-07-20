@@ -58,14 +58,24 @@ export async function POST(request: NextRequest) {
   // Look up the member record to get their pre-assigned school
   const member = adminMatch ? null : await getMemberForUser(undefined, address);
 
-  // Synthetic email used to anchor this wallet to a Supabase auth account
-  const walletEmail = `wallet-${address.toLowerCase()}@wallet.dormdao.io`;
+  // Anchor this wallet login to the member's real registered email (not a
+  // synthetic wallet-only address) so signing in with Google or with this
+  // wallet both resolve to the same Supabase auth user / profile. Every
+  // registered member and the env-configured admin always has a real email
+  // on file — isRegisteredUser already confirmed one of those two matched.
+  const accountEmail = (member?.email ?? (adminMatch ? admin.email : undefined))?.toLowerCase();
+  if (!accountEmail) {
+    return NextResponse.json(
+      { error: "Wallet is registered but no account email is on file — contact a DormDAO admin." },
+      { status: 500 },
+    );
+  }
 
   // Attempt to create the Supabase user — ignore all errors (user may already exist,
-  // or Supabase may reject for project-specific reasons). generateLink works for
-  // both new and existing users so we proceed regardless.
+  // e.g. from a prior Google sign-in, or Supabase may reject for project-specific
+  // reasons). generateLink works for both new and existing users so we proceed regardless.
   const { data: createdData } = await supabase.auth.admin.createUser({
-    email: walletEmail,
+    email: accountEmail,
     email_confirm: true,
     user_metadata: { wallet_address: address, login_method: "wallet" },
   });
@@ -74,7 +84,7 @@ export async function POST(request: NextRequest) {
   const newUserId = createdData?.user?.id;
   if (adminMatch && newUserId) {
     await supabase.from("profiles").upsert(
-      { id: newUserId, display_name: admin.name, school: null, bio: null, avatar_url: null },
+      { id: newUserId, display_name: admin.name, school: null, bio: null, avatar_url: null, wallet_address: address },
       { onConflict: "id", ignoreDuplicates: true },
     );
   }
@@ -82,7 +92,7 @@ export async function POST(request: NextRequest) {
   // Generate a magic-link token server-side — no email is sent
   const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
     type: "magiclink",
-    email: walletEmail,
+    email: accountEmail,
   });
 
   if (linkError || !linkData?.properties?.hashed_token) {
@@ -92,12 +102,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Stamp the member's pre-assigned school and role onto their profile
+  // Stamp the member's pre-assigned school, role, and wallet onto their profile
   const userId = newUserId ?? linkData.user?.id;
   if (member && userId) {
     await supabase
       .from("profiles")
-      .upsert({ id: userId, school: member.school ?? null, role: member.role ?? 'member' }, { onConflict: "id" });
+      .upsert(
+        { id: userId, school: member.school ?? null, role: member.role ?? 'member', wallet_address: address },
+        { onConflict: "id" },
+      );
   }
 
   const res = NextResponse.json({ token_hash: linkData.properties.hashed_token });
