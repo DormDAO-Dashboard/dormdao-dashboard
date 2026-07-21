@@ -145,6 +145,11 @@ export default function MapPage() {
   const [showMkaEgg, setShowMkaEgg] = useState(false);
   const [comingSoonZone, setComingSoonZone] = useState<Zone | null>(null);
   const [videoZone, setVideoZone] = useState<Zone | null>(null);
+  const [debugZones, setDebugZones] = useState(false);
+
+  useEffect(() => {
+    setDebugZones(new URLSearchParams(window.location.search).get("debug") === "zones");
+  }, []);
 
   useEffect(() => {
     function updateViewport() {
@@ -283,9 +288,9 @@ export default function MapPage() {
                 <polygon
                   key={zone.id}
                   points={zone.points}
-                  fill={isHovered ? `rgba(${rgb}, 0.2)` : "transparent"}
-                  stroke={isHovered ? zone.color : "none"}
-                  strokeWidth={2}
+                  fill={isHovered ? `rgba(${rgb}, 0.2)` : debugZones ? `rgba(${rgb}, 0.1)` : "transparent"}
+                  stroke={isHovered || debugZones ? zone.color : "none"}
+                  strokeWidth={isHovered ? 2 : debugZones ? 1.5 : 0}
                   style={{
                     cursor: zone.isEasterEgg ? "crosshair" : "pointer",
                     transition: "all 150ms ease",
@@ -298,6 +303,22 @@ export default function MapPage() {
               );
             })}
           </svg>
+
+          {/* Debug: always-on zone labels with coordinates (?debug=zones) */}
+          {debugZones && ZONES.map((zone) => {
+            const c = centroid(zone.points);
+            return (
+              <div
+                key={zone.id}
+                className="absolute z-30 pointer-events-none -translate-x-1/2 -translate-y-1/2 text-center"
+                style={{ left: `${(c.x / IMAGE_WIDTH) * 100}%`, top: `${(c.y / IMAGE_HEIGHT) * 100}%` }}
+              >
+                <div className="px-2 py-1 rounded bg-black/80 text-[10px] font-mono whitespace-nowrap" style={{ color: zone.color }}>
+                  {zone.label}
+                </div>
+              </div>
+            );
+          })}
 
           {/* Label banner for non-easter-egg hovers */}
           {hoveredZone && !hoveredZone.isEasterEgg && (() => {
@@ -426,6 +447,17 @@ export default function MapPage() {
           autoPlay
           onClose={() => setVideoZone(null)}
         />
+      )}
+
+      {/* Debug: raw points readout (?debug=zones) */}
+      {debugZones && (
+        <div className="hidden md:block fixed bottom-4 right-4 z-40 max-w-md max-h-[70vh] overflow-y-auto rounded-lg bg-black/85 border border-white/20 p-3 font-mono text-[11px] text-gray-300 space-y-2">
+          {ZONES.map((zone) => (
+            <div key={zone.id}>
+              <span style={{ color: zone.color }}>{zone.id}</span>: {zone.points}
+            </div>
+          ))}
+        </div>
       )}
     </>
   );
