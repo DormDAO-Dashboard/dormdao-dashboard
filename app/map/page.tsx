@@ -8,8 +8,8 @@ import { VideoModal } from "@/components/VideoModal";
 // Native pixel dimensions of public/campus-map.png — the SVG overlay's
 // viewBox matches this exactly so zone polygons stay aligned regardless
 // of how large the image is rendered/panned.
-const IMAGE_WIDTH = 1670;
-const IMAGE_HEIGHT = 942;
+const IMAGE_WIDTH = 2172;
+const IMAGE_HEIGHT = 724;
 
 const PAN_ZONE = 80;   // px from screen edge that triggers panning
 const PAN_SPEED = 3;   // px per frame
@@ -29,14 +29,14 @@ interface Zone {
   description?: string;
 }
 
-// Coordinates are in campus-map.png pixel space (1670x942). Estimated from
+// Coordinates are in campus-map.png pixel space (2172x724). Estimated from
 // the illustration's building footprints — tune here after visual review.
 const ZONES: Zone[] = [
   {
     id: "dorm-builders",
     label: "Dorm Builders",
     sublabel: "Web3 Development",
-    points: "120,110 430,45 700,175 700,430 610,460 160,460 90,410 90,190",
+    points: "22,240 250,230 420,270 420,436 320,450 40,450 10,410 10,280",
     action: "external",
     href: "https://x.com/Dorm_DAO",
     color: "#2196F3",
@@ -45,7 +45,7 @@ const ZONES: Zone[] = [
     id: "dorm-catalyst",
     label: "Dorm Catalyst",
     sublabel: "Accelerator",
-    points: "930,10 1650,15 1650,300 1450,360 950,360 900,300 900,120",
+    points: "1880,215 2172,205 2172,420 2050,432 1900,420 1858,350 1858,260",
     action: "coming-soon",
     color: "#9C27B0",
     description: "Accelerating the next generation of crypto founders",
@@ -54,7 +54,7 @@ const ZONES: Zone[] = [
     id: "dorm-summit",
     label: "Dorm Summit",
     sublabel: "Annual Summit",
-    points: "930,225 1470,215 1470,440 1400,460 950,460 900,420 900,265",
+    points: "1090,230 1360,220 1480,270 1480,430 1400,450 1120,450 1080,400 1080,280",
     action: "coming-soon",
     color: "#FF9800",
     description: "The DormDAO annual summit and events",
@@ -63,7 +63,7 @@ const ZONES: Zone[] = [
     id: "dorm-capital",
     label: "Dorm Capital",
     sublabel: "Investment Portfolio",
-    points: "0,505 440,480 440,760 380,850 40,850 0,800",
+    points: "630,500 800,480 850,530 850,610 800,655 640,655 595,610 595,540",
     action: "navigate",
     href: "/leaderboard",
     color: "#4CAF50",
@@ -72,7 +72,7 @@ const ZONES: Zone[] = [
     id: "autzen",
     label: "Autzen Stadium",
     sublabel: "🦆 Go Ducks!",
-    points: "1200,560 1650,570 1650,880 1500,900 1220,860 1180,700",
+    points: "640,10 1350,5 1480,60 1480,175 1400,200 650,195 580,150 580,60",
     action: "video",
     videoUrl: "https://www.youtube.com/watch?v=SYt2GDh9PgU",
     color: "#FFD700",
@@ -82,7 +82,7 @@ const ZONES: Zone[] = [
     id: "animal-house",
     label: "Animal House",
     sublabel: "🎉 toga! toga!",
-    points: "950,700 1230,690 1230,860 1170,890 980,880 940,840",
+    points: "10,600 260,590 290,630 290,700 250,720 30,720 0,680 0,630",
     action: "video",
     videoUrl: "https://www.youtube.com/watch?v=vtFw3tADh3c",
     color: "#FF5722",
