@@ -36,7 +36,7 @@ const ZONES: Zone[] = [
     id: "dorm-builders",
     label: "Dorm Builders",
     sublabel: "Web3 Development",
-    points: "22,240 250,230 420,270 420,436 320,450 40,450 10,410 10,280",
+    points: "22,251 218,240 305,256 425,300 425,431 327,436 109,436 16,414 16,305",
     action: "external",
     href: "https://x.com/Dorm_DAO",
     color: "#2196F3",
@@ -45,7 +45,7 @@ const ZONES: Zone[] = [
     id: "dorm-catalyst",
     label: "Dorm Catalyst",
     sublabel: "Accelerator",
-    points: "1880,215 2172,205 2172,420 2050,432 1900,420 1858,350 1858,260",
+    points: "1908,240 2147,229 2172,262 2172,414 2126,427 1962,420 1908,371 1902,294",
     action: "coming-soon",
     color: "#9C27B0",
     description: "Accelerating the next generation of crypto founders",
@@ -54,7 +54,7 @@ const ZONES: Zone[] = [
     id: "dorm-summit",
     label: "Dorm Summit",
     sublabel: "Annual Summit",
-    points: "1090,230 1360,220 1480,270 1480,430 1400,450 1120,450 1080,400 1080,280",
+    points: "1134,256 1363,242 1472,294 1472,425 1406,436 1166,436 1128,392 1128,305",
     action: "coming-soon",
     color: "#FF9800",
     description: "The DormDAO annual summit and events",
@@ -63,7 +63,7 @@ const ZONES: Zone[] = [
     id: "dorm-capital",
     label: "Dorm Capital",
     sublabel: "Investment Portfolio",
-    points: "630,500 800,480 850,530 850,610 800,655 640,655 595,610 595,540",
+    points: "659,521 856,510 856,616 807,660 709,660 659,616",
     action: "navigate",
     href: "/leaderboard",
     color: "#4CAF50",
@@ -72,7 +72,7 @@ const ZONES: Zone[] = [
     id: "autzen",
     label: "Autzen Stadium",
     sublabel: "🦆 Go Ducks!",
-    points: "640,10 1350,5 1480,60 1480,175 1400,200 650,195 580,150 580,60",
+    points: "670,11 1477,5 1493,55 1493,185 1406,191 709,191 654,153 654,55",
     action: "video",
     videoUrl: "https://www.youtube.com/watch?v=SYt2GDh9PgU",
     color: "#FFD700",
@@ -82,7 +82,7 @@ const ZONES: Zone[] = [
     id: "animal-house",
     label: "Animal House",
     sublabel: "🎉 toga! toga!",
-    points: "10,600 260,590 290,630 290,700 250,720 30,720 0,680 0,630",
+    points: "22,621 262,610 283,643 283,709 240,719 33,719 16,692 16,649",
     action: "video",
     videoUrl: "https://www.youtube.com/watch?v=vtFw3tADh3c",
     color: "#FF5722",
@@ -156,7 +156,7 @@ export default function MapPage() {
   }, []);
 
   const aspect = IMAGE_WIDTH / IMAGE_HEIGHT;
-  const displayWidth = Math.max(viewport.w * 1.5, viewport.h * 1.5 * aspect);
+  const displayWidth = Math.max(viewport.w * 1.08, viewport.h * 1.08 * aspect);
   const displayHeight = displayWidth / aspect;
   const minX = viewport.w - displayWidth;
   const minY = viewport.h - displayHeight;
