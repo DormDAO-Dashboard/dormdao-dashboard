@@ -1,16 +1,27 @@
 "use client";
+import { useEffect } from "react";
 import { X } from "lucide-react";
 
-function toEmbedUrl(url: string): string | null {
+function toEmbedUrl(url: string, autoPlay: boolean): string | null {
   const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}${autoPlay ? "?autoplay=1" : ""}`;
   const loomMatch = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
   if (loomMatch) return `https://www.loom.com/embed/${loomMatch[1]}`;
   return null;
 }
 
-export function VideoModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
-  const embedUrl = toEmbedUrl(url);
+export function VideoModal({
+  url, title, onClose, autoPlay = false,
+}: { url: string; title: string; onClose: () => void; autoPlay?: boolean }) {
+  const embedUrl = toEmbedUrl(url, autoPlay);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
     <div

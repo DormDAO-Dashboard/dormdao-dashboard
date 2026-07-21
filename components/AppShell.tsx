@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
-  { href: "/",          label: "Leaderboard", icon: Trophy },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/schools",   label: "Schools",     icon: GraduationCap },
   { href: "/members",   label: "Members",     icon: Users },
   { href: "/analytics", label: "Analytics",   icon: BarChart2 },
@@ -34,7 +34,7 @@ const NAV_LINKS = [
 ] as const;
 
 const PAGE_TITLES: Record<string, string> = {
-  "/":          "Leaderboard",
+  "/leaderboard": "Leaderboard",
   "/schools":   "Schools",
   "/analytics": "Analytics",
   "/tokens":    "Tokens",
@@ -66,13 +66,17 @@ function matchesRoute(href: string, pathname: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-const PRIMARY_HREFS = new Set(["/", "/schools", "/analytics", "/activity", "/forum"]);
+const PRIMARY_HREFS = new Set(["/leaderboard", "/schools", "/analytics", "/activity", "/forum"]);
 const PRIMARY_LINKS = NAV_LINKS.filter(l => PRIMARY_HREFS.has(l.href));
 const MORE_LINKS    = NAV_LINKS.filter(l => !PRIMARY_HREFS.has(l.href));
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname          = usePathname();
   const { theme, toggle } = useTheme();
+
+  // The splash page (/) and campus map (/map) are full-screen experiences
+  // with their own chrome — skip the sidebar/top bar/mobile nav entirely.
+  const noShell = pathname === "/" || pathname.startsWith("/map");
 
   const [user, setUser]             = useState<SupabaseUser | null>(null);
   const [avatarSrc, setAvatarSrc]   = useState<string | null>(null);
@@ -152,6 +156,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sidebarItem = "flex items-center gap-3 w-full px-2 py-2.5 rounded-lg transition-colors text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]";
   const labelFade   = cn("text-sm whitespace-nowrap transition-all duration-150", expanded ? "opacity-100" : "opacity-0 pointer-events-none");
 
+  if (noShell) return <>{children}</>;
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-gray-100">
 
@@ -164,7 +170,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         {/* Logo */}
         <div className="flex items-center h-[52px] px-4 shrink-0 border-b border-gray-100 dark:border-white/[0.05] overflow-hidden">
-          <Link href="/" className="flex items-center gap-3 min-w-0">
+          <Link href="/leaderboard" className="flex items-center gap-3 min-w-0">
             <Image src="/logo.jpg" width={28} height={28} alt="DormDAO" className="rounded-md shrink-0" />
             <span className={cn(
               "font-semibold text-gray-900 dark:text-white text-sm whitespace-nowrap transition-all duration-150",

@@ -58,7 +58,7 @@ const TOKENS = [
 ];
 
 const QUICK_LINKS = [
-  { href: "/",          label: "Leaderboard", icon: Trophy },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/schools",   label: "Schools",     icon: GraduationCap },
   { href: "/analytics", label: "Analytics",   icon: BarChart2 },
   { href: "/activity",  label: "Activity",    icon: Activity },
