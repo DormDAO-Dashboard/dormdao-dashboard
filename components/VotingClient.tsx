@@ -51,11 +51,20 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
   }, []);
 
   const fetchProposals = useCallback(async () => {
-    const res = await fetch(`/api/proposals?school=${slug}`);
-    if (!res.ok) return;
-    const data = await res.json() as { proposals: Proposal[] };
-    setProposals(data.proposals ?? []);
-  }, [slug]);
+    try {
+      const res = await fetch(`/api/proposals?school=${slug}`);
+      if (!res.ok) {
+        console.error(`[fetchProposals] ${res.status} for school=${slug}`);
+        showToast("Couldn't refresh proposals — retrying shortly");
+        return;
+      }
+      const data = await res.json() as { proposals: Proposal[] };
+      setProposals(data.proposals ?? []);
+    } catch (err) {
+      console.error("[fetchProposals] network error:", err);
+      showToast("Couldn't refresh proposals — retrying shortly");
+    }
+  }, [slug, showToast]);
 
   useEffect(() => {
     const supabase = createClient();

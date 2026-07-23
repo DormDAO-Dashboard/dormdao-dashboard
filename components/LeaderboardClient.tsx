@@ -399,13 +399,18 @@ export function LeaderboardClient({
           standard desktop window), not responsive columns. Below that
           combined width the row scrolls horizontally instead of condensing;
           above it, mx-auto centers the row so extra space grows evenly on
-          both sides instead of piling up on the right. */}
-      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
+          both sides instead of piling up on the right. On mobile the combined
+          width is always wider than the viewport, so snap scrolling + an edge
+          fade make "swipe for more" discoverable instead of the row just
+          getting silently clipped. */}
+      <div className="relative flex-1 min-h-0">
+      <div className="absolute inset-y-0 right-0 w-8 pointer-events-none bg-gradient-to-l from-[#f4f4f5] dark:from-[#0a0a0a] to-transparent md:hidden z-10" />
+      <div className="h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory">
       <div className="flex gap-4 h-full w-max mx-auto">
 
         {/* ── Left: Quarterly ──────────────────────────────── */}
         <Panel
-          className="shrink-0"
+          className="shrink-0 snap-start"
           style={{ width: PANEL_WIDTH_QUARTERLY }}
           header={
             <>
@@ -420,7 +425,7 @@ export function LeaderboardClient({
         {/* ── Middle: Current Season ────────────────────────── */}
         <Panel
           highlight
-          className="shrink-0"
+          className="shrink-0 snap-start"
           style={{ width: PANEL_WIDTH_SEASON }}
           header={
             <>
@@ -458,7 +463,7 @@ export function LeaderboardClient({
 
         {/* ── Right: All-Time ───────────────────────────────── */}
         <Panel
-          className="shrink-0"
+          className="shrink-0 snap-start"
           style={{ width: PANEL_WIDTH_ALLTIME }}
           header={
             <>
@@ -474,6 +479,7 @@ export function LeaderboardClient({
           )}
         </Panel>
 
+      </div>
       </div>
       </div>
     </div>

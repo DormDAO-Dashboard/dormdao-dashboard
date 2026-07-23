@@ -15,8 +15,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "school param required" }, { status: 400 });
   }
 
-  // Auth gate: only members of that school (or admins) may see proposals
-  let authedUserId: string | null = null;
+  // Auth gate: only members of that school (or admins) may see proposals.
+  // Only the "not logged in" case returns an empty list — any unexpected
+  // exception here (Supabase blip, etc.) must surface as a real error, not
+  // silently render as "no proposals" (which is indistinguishable from a
+  // genuinely empty school and would hide missing votes from members).
+  let authedUserId: string;
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -43,8 +47,9 @@ export async function GET(req: NextRequest) {
       }
     }
     authedUserId = user.id;
-  } catch {
-    return NextResponse.json({ proposals: [] });
+  } catch (err) {
+    console.error("[proposals GET] auth/access check failed:", err);
+    return NextResponse.json({ error: "Failed to verify access — please try again" }, { status: 500 });
   }
 
   const service = createServiceClient();
