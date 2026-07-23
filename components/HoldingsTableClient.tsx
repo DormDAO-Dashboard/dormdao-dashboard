@@ -210,7 +210,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
             const roiEthPct = h.roiEthPct ?? null;
 
             return (
-              <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+              <tr key={h.ticker} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                 <td className="px-5 py-3">
                   <Link
                     href={`/tokens/${h.ticker.toLowerCase()}`}

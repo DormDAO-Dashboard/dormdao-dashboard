@@ -163,7 +163,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                 const { pnl, pnlPct } = getPnl(buy);
 
                 return (
-                  <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
+                  <tr key={`${buy.schoolSlug}-${buy.ticker}-${buy.dateStr}-${i}`} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
                     <td className="px-5 py-3">
                       <Link href={`/schools/${buy.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                         <SchoolLogo name={buy.school} size={20} />

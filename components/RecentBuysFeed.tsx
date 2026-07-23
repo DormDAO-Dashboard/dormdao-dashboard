@@ -109,7 +109,7 @@ export function RecentBuysFeed({ schools }: { schools: SchoolRow[] }) {
           }
 
           return (
-            <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/30 transition-colors">
+            <div key={`${buy.schoolSlug}-${buy.ticker}-${buy.dateStr}-${i}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/30 transition-colors">
               <Link href={`/schools/${buy.schoolSlug}`} className="shrink-0">
                 <SchoolLogo name={buy.school} size={28} />
               </Link>

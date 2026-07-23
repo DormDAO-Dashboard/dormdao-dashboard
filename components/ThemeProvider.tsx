@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 
 type Theme = "dark" | "light";
 const ThemeCtx = createContext<{ theme: Theme; toggle: () => void }>({
@@ -10,10 +10,12 @@ const ThemeCtx = createContext<{ theme: Theme; toggle: () => void }>({
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Lazy init reads localStorage synchronously on client so the first useEffect
   // fires with the correct value — no race where effect 2 overwrites localStorage
-  // before effect 1 reads it.
+  // before effect 1 reads it. Default must match the inline bootstrap script in
+  // app/layout.tsx ("dark") — a mismatched fallback here caused a flash + an
+  // unwanted persisted theme change on every first-time visitor.
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
-    return (localStorage.getItem("theme") as Theme) || "light";
+    return (localStorage.getItem("theme") as Theme) || "dark";
   });
 
   useEffect(() => {
@@ -22,9 +24,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const toggle = useCallback(() => setTheme((t) => (t === "dark" ? "light" : "dark")), []);
+  const value = useMemo(() => ({ theme, toggle }), [theme, toggle]);
 
-  return <ThemeCtx.Provider value={{ theme, toggle }}>{children}</ThemeCtx.Provider>;
+  return <ThemeCtx.Provider value={value}>{children}</ThemeCtx.Provider>;
 }
 
 export const useTheme = () => useContext(ThemeCtx);

@@ -202,11 +202,13 @@ export async function sendEmailNotifications(payload: PushPayload): Promise<void
 
   if (!profiles?.length) return;
 
-  const emails: string[] = [];
-  for (const profile of profiles) {
-    const { data } = await service.auth.admin.getUserById(profile.id);
-    if (data.user?.email) emails.push(data.user.email);
-  }
+  // Batch-resolve emails via one listUsers call instead of one getUserById
+  // per profile — same pattern as getSchoolRecipients below.
+  const optedInIds = new Set(profiles.map((p) => p.id));
+  const { data: { users } } = await service.auth.admin.listUsers({ perPage: 1000 });
+  const emails = users
+    .filter((u) => optedInIds.has(u.id) && u.email)
+    .map((u) => u.email as string);
   if (!emails.length) return;
 
   const resend = new Resend(apiKey);

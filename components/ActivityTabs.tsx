@@ -234,7 +234,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
               </thead>
               <tbody>
                 {entryRows.map((h, i) => (
-                  <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors">
+                  <tr key={`${h.schoolSlug}-${h.ticker}-${h.investmentDate}-${i}`} className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors">
                     <td className="px-5 py-3">
                       <Link href={`/schools/${h.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                         <SchoolLogo name={h.schoolName} size={20} />
@@ -296,7 +296,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                 {exitRows.map((h, i) => {
                   const up = (v: number) => v >= 0;
                   return (
-                    <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors">
+                    <tr key={`${h.schoolSlug}-${h.ticker}-${i}`} className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors">
                       <td className="px-5 py-3">
                         <Link href={`/schools/${h.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                           <SchoolLogo name={h.schoolName} size={20} />
@@ -527,7 +527,7 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors">
+                <tr key={`${r.schoolSlug}-${r.ticker}-${i}`} className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors">
                   <td className="px-5 py-3">
                     <Link href={`/schools/${r.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                       <SchoolLogo name={r.schoolName} size={20} />

@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface PushContextValue {
@@ -112,8 +112,13 @@ export function PushNotificationManager({ children }: { children: React.ReactNod
     }
   }, []);
 
+  const value = useMemo(
+    () => ({ isSupported, isSubscribed, isLoading, subscribe, unsubscribe }),
+    [isSupported, isSubscribed, isLoading, subscribe, unsubscribe]
+  );
+
   return (
-    <PushContext.Provider value={{ isSupported, isSubscribed, isLoading, subscribe, unsubscribe }}>
+    <PushContext.Provider value={value}>
       {children}
     </PushContext.Provider>
   );
