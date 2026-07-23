@@ -1,33 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export async function POST(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: noteId } = await params;
-  const { user_id } = await req.json();
+
+  // user_id is derived from the session, never trusted from the request body —
+  // a client-supplied user_id would let anyone vote as someone else, or
+  // (if omitted) skip the duplicate-vote check entirely.
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Sign in to vote" }, { status: 401 });
 
   const supabase = createServiceClient();
 
-  // Check for existing vote (by user_id if present, else session_id as a proxy)
-  if (user_id) {
-    const { data: existing } = await supabase
-      .from("note_votes")
-      .select("id")
-      .eq("note_id", noteId)
-      .eq("user_id", user_id)
-      .maybeSingle();
+  const { data: existing } = await supabase
+    .from("note_votes")
+    .select("id")
+    .eq("note_id", noteId)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-    if (existing) {
-      return NextResponse.json({ error: "Already voted" }, { status: 409 });
-    }
-
-    const { error: voteErr } = await supabase
-      .from("note_votes")
-      .insert({ note_id: noteId, user_id });
-    if (voteErr) return NextResponse.json({ error: voteErr.message }, { status: 500 });
+  if (existing) {
+    return NextResponse.json({ error: "Already voted" }, { status: 409 });
   }
+
+  const { error: voteErr } = await supabase
+    .from("note_votes")
+    .insert({ note_id: noteId, user_id: user.id });
+  if (voteErr) return NextResponse.json({ error: voteErr.message }, { status: 500 });
 
   const { data, error } = await supabase.rpc("increment_upvotes", {
     note_id: noteId,

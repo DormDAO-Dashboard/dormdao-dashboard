@@ -4,7 +4,7 @@ import { isAdminUser } from "@/lib/admin-config";
 import { getMembers } from "@/lib/members-store";
 import { SCHOOL_NAMES } from "@/lib/schoolData";
 import { Resend } from "resend";
-import { sendInviteEmail } from "@/lib/email";
+import { sendInviteEmail, escapeHtml } from "@/lib/email";
 
 const FROM_ADDRESS = "onboarding@resend.dev";
 
@@ -17,6 +17,12 @@ async function notifyAdmins(name: string, email: string, school: string, wallet:
     .split(",").map((e) => e.trim()).filter(Boolean);
   const recipients = [adminEmail, ...extraEmails];
 
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeSchool = escapeHtml(school);
+  const safeWallet = wallet ? escapeHtml(wallet) : null;
+  const safeMessage = message ? escapeHtml(message) : null;
+
   const resend = new Resend(apiKey);
   await resend.emails.send({
     from: FROM_ADDRESS,
@@ -26,11 +32,11 @@ async function notifyAdmins(name: string, email: string, school: string, wallet:
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto">
         <h2 style="font-size:18px;margin-bottom:4px">New Signup Request</h2>
         <table style="width:100%;border-collapse:collapse;font-size:14px">
-          <tr><td style="padding:6px 0;color:#555;width:120px">Name</td><td style="padding:6px 0"><strong>${name}</strong></td></tr>
-          <tr><td style="padding:6px 0;color:#555">Email</td><td style="padding:6px 0">${email}</td></tr>
-          <tr><td style="padding:6px 0;color:#555">School</td><td style="padding:6px 0">${school}</td></tr>
-          <tr><td style="padding:6px 0;color:#555">Wallet</td><td style="padding:6px 0;font-family:monospace">${wallet ?? "—"}</td></tr>
-          <tr><td style="padding:6px 0;color:#555;vertical-align:top">Message</td><td style="padding:6px 0">${message ?? "—"}</td></tr>
+          <tr><td style="padding:6px 0;color:#555;width:120px">Name</td><td style="padding:6px 0"><strong>${safeName}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#555">Email</td><td style="padding:6px 0">${safeEmail}</td></tr>
+          <tr><td style="padding:6px 0;color:#555">School</td><td style="padding:6px 0">${safeSchool}</td></tr>
+          <tr><td style="padding:6px 0;color:#555">Wallet</td><td style="padding:6px 0;font-family:monospace">${safeWallet ?? "—"}</td></tr>
+          <tr><td style="padding:6px 0;color:#555;vertical-align:top">Message</td><td style="padding:6px 0">${safeMessage ?? "—"}</td></tr>
         </table>
         <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app"}/admin" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#1D9E75;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
           Review in Admin →
@@ -148,7 +154,7 @@ export async function PATCH(req: NextRequest) {
       to: request.email,
       subject: "Your DormDAO access request",
       html: `<div style="font-family:sans-serif;max-width:480px">
-        <p style="font-size:15px">Hi ${request.name},</p>
+        <p style="font-size:15px">Hi ${escapeHtml(request.name)},</p>
         <p style="font-size:14px;color:#444">Your DormDAO request was not approved at this time. Contact your chapter lead for more information.</p>
       </div>`,
     }).catch(console.error);

@@ -66,8 +66,6 @@ export function NoteCard({ note, currentUserId, adminSecret, onDelete, onUpvote 
     try {
       const res = await fetch(`/api/notes/${note.id}/upvote`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: currentUserId }),
       });
       if (res.ok) {
         setUpvotes((u) => u + 1);

@@ -10,6 +10,19 @@ import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
 const FROM_ADDRESS = "onboarding@resend.dev";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
 
+// Escapes user-controlled strings before they're interpolated into email HTML.
+// Every proposal title/description, display name, and signup-form field that
+// reaches an email template is attacker-influenced (proposal fields by any
+// club member, signup fields by anyone — that endpoint requires no auth).
+export function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ── Unsubscribe token (HMAC-SHA256 keyed with CRON_SECRET) ───────────────────
 
 function makeUnsubToken(userId: string): string {
@@ -221,15 +234,17 @@ export async function sendInviteEmail(opts: {
   if (!apiKey) return;
   const resend = new Resend(apiKey);
   const schoolLabel = schoolDisplayName(opts.school);
+  const safeName = escapeHtml(opts.name);
+  const safeInvitedBy = opts.invitedBy ? escapeHtml(opts.invitedBy) : undefined;
   await resend.emails.send({
     from: FROM_ADDRESS,
     to: opts.to,
     subject: `You're invited to DormDAO — ${schoolLabel}`,
     html: buildTemplate({
-      title: `Welcome to DormDAO, ${opts.name}!`,
+      title: `Welcome to DormDAO, ${safeName}!`,
       schoolLabel,
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">
-        ${opts.invitedBy ? `<strong>${opts.invitedBy}</strong> has invited you` : "You've been invited"} to join the <strong>${schoolLabel}</strong> chapter on DormDAO — where university crypto clubs manage portfolios and vote on investments.
+        ${safeInvitedBy ? `<strong>${safeInvitedBy}</strong> has invited you` : "You've been invited"} to join the <strong>${schoolLabel}</strong> chapter on DormDAO — where university crypto clubs manage portfolios and vote on investments.
       </p>
       <p style="font-size:14px;color:#374151;line-height:1.6;margin-top:10px">Sign in with Google to set up your profile and start participating.</p>`,
       cta: { label: "Join DormDAO →", url: `${APP_URL}/login` },
@@ -243,19 +258,24 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
   const deadline = new Date(proposal.voting_deadline).toLocaleString("en-US", {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
   });
+  const ticker = escapeHtml(proposal.token_ticker);
+  const title = escapeHtml(proposal.title);
+  const tokenName = escapeHtml(proposal.token_name);
+  const proposedBy = proposal.proposed_by_name ? escapeHtml(proposal.proposed_by_name) : "Anonymous";
+  const description = proposal.description ? escapeHtml(proposal.description) : null;
 
   await batchSend(recipients, (r) => ({
-    subject: `🗳️ New proposal: ${proposal.token_ticker} — ${schoolLabel}`,
+    subject: `🗳️ New proposal: ${ticker} — ${schoolLabel}`,
     html: buildTemplate({
-      title: `New proposal: ${proposal.title}`,
+      title: `New proposal: ${title}`,
       schoolLabel,
       bodyHtml: `<table style="width:100%;border-collapse:collapse;font-size:13px;color:#374151;margin-bottom:14px">
-        <tr><td style="padding:5px 0;color:#6b7280;width:110px">Token</td><td style="padding:5px 0"><strong>${proposal.token_ticker}</strong> — ${proposal.token_name}</td></tr>
-        <tr><td style="padding:5px 0;color:#6b7280">Proposed by</td><td style="padding:5px 0">${proposal.proposed_by_name ?? "Anonymous"}</td></tr>
+        <tr><td style="padding:5px 0;color:#6b7280;width:110px">Token</td><td style="padding:5px 0"><strong>${ticker}</strong> — ${tokenName}</td></tr>
+        <tr><td style="padding:5px 0;color:#6b7280">Proposed by</td><td style="padding:5px 0">${proposedBy}</td></tr>
         ${proposal.recommended_size_eth ? `<tr><td style="padding:5px 0;color:#6b7280">Size</td><td style="padding:5px 0">${proposal.recommended_size_eth} ETH</td></tr>` : ""}
         <tr><td style="padding:5px 0;color:#6b7280">Deadline</td><td style="padding:5px 0">${deadline}</td></tr>
       </table>
-      ${proposal.description ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin:0;line-height:1.6">${proposal.description.slice(0, 280)}${proposal.description.length > 280 ? "…" : ""}</p>` : ""}`,
+      ${description ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin:0;line-height:1.6">${description.slice(0, 280)}${description.length > 280 ? "…" : ""}</p>` : ""}`,
       cta: { label: "Cast your vote →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
@@ -267,14 +287,16 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
   const schoolLabel = proposalSchoolLabel(proposal.school);
   const total = proposal.yes_votes + proposal.no_votes;
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
+  const ticker = escapeHtml(proposal.token_ticker);
+  const title = escapeHtml(proposal.title);
 
   await batchSend(recipients, (r) => ({
-    subject: `⏰ 12h left to vote: ${proposal.token_ticker} — ${schoolLabel}`,
+    subject: `⏰ 12h left to vote: ${ticker} — ${schoolLabel}`,
     html: buildTemplate({
-      title: `12 hours left: ${proposal.title}`,
+      title: `12 hours left: ${title}`,
       schoolLabel,
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">
-        The vote on <strong>${proposal.token_ticker}</strong> closes in ~12 hours.
+        The vote on <strong>${ticker}</strong> closes in ~12 hours.
         Current tally: <strong>${proposal.yes_votes} yes / ${proposal.no_votes} no</strong>${total > 0 ? ` (${yesPct}% in favor)` : ""}.
       </p>
       <p style="font-size:14px;color:#374151;line-height:1.6;margin-top:8px">If you haven't voted yet, now is the time.</p>`,
@@ -291,13 +313,15 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
   const passed = proposal.status === "passed";
   const total = proposal.yes_votes + proposal.no_votes;
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
+  const ticker = escapeHtml(proposal.token_ticker);
+  const title = escapeHtml(proposal.title);
 
   await batchSend(recipients, (r) => ({
-    subject: `${passed ? "✅ Passed" : "❌ Rejected"}: ${proposal.token_ticker} — ${schoolLabel}`,
+    subject: `${passed ? "✅ Passed" : "❌ Rejected"}: ${ticker} — ${schoolLabel}`,
     html: buildTemplate({
-      title: `${passed ? "✅ Proposal passed" : "❌ Proposal rejected"}: ${proposal.title}`,
+      title: `${passed ? "✅ Proposal passed" : "❌ Proposal rejected"}: ${title}`,
       schoolLabel,
-      bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">The vote on <strong>${proposal.token_ticker}</strong> has closed.</p>
+      bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">The vote on <strong>${ticker}</strong> has closed.</p>
       <table style="width:100%;border-collapse:collapse;font-size:13px;color:#374151;margin:12px 0">
         <tr><td style="padding:5px 0;color:#6b7280;width:110px">Result</td><td style="padding:5px 0"><strong style="color:${passed ? "#1D9E75" : "#ef4444"}">${passed ? "Passed" : "Rejected"}</strong></td></tr>
         <tr><td style="padding:5px 0;color:#6b7280">Final vote</td><td style="padding:5px 0">${proposal.yes_votes} yes / ${proposal.no_votes} no (${yesPct}% in favor)</td></tr>
@@ -312,15 +336,19 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
 export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
   const schoolLabel = proposalSchoolLabel(proposal.school);
+  const ticker = escapeHtml(proposal.token_ticker);
+  const title = escapeHtml(proposal.title);
+  const executionNotes = proposal.execution_notes ? escapeHtml(proposal.execution_notes) : null;
+  const executionTx = proposal.execution_tx ? escapeHtml(proposal.execution_tx) : null;
 
   await batchSend(recipients, (r) => ({
-    subject: `🚀 Trade executed: ${proposal.token_ticker} — ${schoolLabel}`,
+    subject: `🚀 Trade executed: ${ticker} — ${schoolLabel}`,
     html: buildTemplate({
-      title: `Trade executed: ${proposal.title}`,
+      title: `Trade executed: ${title}`,
       schoolLabel,
-      bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">The <strong>${proposal.token_ticker}</strong> trade has been executed by your club leadership.</p>
-      ${proposal.execution_notes ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin-top:12px;line-height:1.6">${proposal.execution_notes}</p>` : ""}
-      ${proposal.execution_tx ? `<p style="font-size:12px;color:#9ca3af;margin-top:12px;word-break:break-all">Tx: <a href="https://etherscan.io/tx/${proposal.execution_tx}" style="color:#1D9E75">${proposal.execution_tx.slice(0, 24)}…</a></p>` : ""}`,
+      bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">The <strong>${ticker}</strong> trade has been executed by your club leadership.</p>
+      ${executionNotes ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin-top:12px;line-height:1.6">${executionNotes}</p>` : ""}
+      ${executionTx ? `<p style="font-size:12px;color:#9ca3af;margin-top:12px;word-break:break-all">Tx: <a href="https://etherscan.io/tx/${executionTx}" style="color:#1D9E75">${executionTx.slice(0, 24)}…</a></p>` : ""}`,
       cta: { label: "View portfolio →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
