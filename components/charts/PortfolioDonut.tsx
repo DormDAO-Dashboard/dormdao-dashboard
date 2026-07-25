@@ -12,7 +12,7 @@ const COLORS = [
   "#86efac", "#67e8f9", "#fca5a5", "#a5b4fc", "#6ee7b7",
 ];
 
-const LABEL_OFFSET = 40;
+const LABEL_OFFSET = 28;
 const LABEL_MIN_GAP = 15;
 
 interface SliceData {
@@ -104,7 +104,7 @@ export function PortfolioDonut({ holdings, nav }: Props) {
           cx="50%"
           cy="50%"
           innerRadius={0}
-          outerRadius={90}
+          outerRadius={70}
           paddingAngle={0}
           dataKey="value"
           label={renderLabel}

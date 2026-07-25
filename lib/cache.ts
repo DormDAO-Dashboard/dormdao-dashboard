@@ -37,13 +37,19 @@ export const getSchoolsData = unstable_cache(
     const avgEthReturn = schools.reduce((s, x) => s + x.ethReturn, 0) / len;
     const avgDeployed = schools.reduce((s, x) => s + x.pctDeployed, 0) / len;
 
-    const tokenToSchools: Record<string, string[]> = {};
+    // Dedupe by school per ticker — a school can hold the same token across
+    // multiple separate positions/tranches, which would otherwise inflate
+    // both the displayed school-chip list and schoolCount stats.
+    const tokenToSchoolSets: Record<string, Set<string>> = {};
     for (const school of schools) {
       for (const h of school.holdings ?? []) {
-        if (!tokenToSchools[h.ticker]) tokenToSchools[h.ticker] = [];
-        tokenToSchools[h.ticker].push(school.name);
+        if (!tokenToSchoolSets[h.ticker]) tokenToSchoolSets[h.ticker] = new Set();
+        tokenToSchoolSets[h.ticker].add(school.name);
       }
     }
+    const tokenToSchools: Record<string, string[]> = Object.fromEntries(
+      Object.entries(tokenToSchoolSets).map(([ticker, set]) => [ticker, [...set]])
+    );
 
     return { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
   },

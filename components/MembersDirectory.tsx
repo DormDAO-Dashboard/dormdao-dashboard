@@ -32,13 +32,15 @@ function avatarColor(id: string): string {
 
 function MemberCard({ m }: { m: MemberProfile }) {
   const hasSocial = m.twitter || m.linkedin || m.telegram;
+  const [avatarFailed, setAvatarFailed] = useState(false);
   return (
     <Link href={`/users/${m.id}`}
       className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 flex flex-col gap-3 h-full hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
       <div className="flex items-center gap-3">
-        {m.avatar_url ? (
+        {m.avatar_url && !avatarFailed ? (
           <Image src={m.avatar_url} width={40} height={40} alt={m.display_name}
-            className="rounded-lg shrink-0 object-cover" unoptimized />
+            className="rounded-lg shrink-0 object-cover" unoptimized
+            onError={() => setAvatarFailed(true)} />
         ) : (
           <div className={`w-10 h-10 rounded-lg shrink-0 flex items-center justify-center text-white text-sm font-semibold ${avatarColor(m.id)}`}>
             {m.display_name.charAt(0).toUpperCase()}

@@ -12,7 +12,7 @@ const COLORS = [
 ];
 
 const TOP_N = 9;
-const LABEL_OFFSET = 40;
+const LABEL_OFFSET = 28;
 const LABEL_MIN_GAP = 15;
 
 interface SliceData {
@@ -111,7 +111,7 @@ export function TokenAllocationDonut({ tokens, prices }: Props) {
           cx="50%"
           cy="50%"
           innerRadius={0}
-          outerRadius={90}
+          outerRadius={70}
           paddingAngle={0}
           dataKey="value"
           label={renderLabel}

@@ -80,6 +80,7 @@ function avatarColor(id: string): string {
 function MemberCard({ m, schoolName }: { m: FilteredMember; schoolName: string }) {
   const initials = m.display_name.charAt(0).toUpperCase();
   const hasSocial = m.twitter || m.linkedin || m.telegram;
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
   return (
     <Link href={`/users/${m.id}`}
@@ -87,9 +88,10 @@ function MemberCard({ m, schoolName }: { m: FilteredMember; schoolName: string }
 
       {/* Avatar + name */}
       <div className="flex items-center gap-3">
-        {m.avatar_url ? (
+        {m.avatar_url && !avatarFailed ? (
           <Image src={m.avatar_url} width={40} height={40} alt={m.display_name}
-            className="rounded-lg shrink-0 object-cover" unoptimized />
+            className="rounded-lg shrink-0 object-cover" unoptimized
+            onError={() => setAvatarFailed(true)} />
         ) : (
           <div className={`w-10 h-10 rounded-lg shrink-0 flex items-center justify-center text-white text-sm font-semibold ${avatarColor(m.id)}`}>
             {initials}

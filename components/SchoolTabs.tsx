@@ -29,22 +29,26 @@ export function SchoolTabs({ school, otherSchools }: Props) {
 
   return (
     <>
-      {/* Tab bar */}
-      <div className="flex gap-0 border-b border-gray-800 mb-4">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={cn(
-              "px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
-              tab === t
-                ? "border-primary text-gray-900 dark:text-white font-medium"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-normal"
-            )}
-          >
-            {t === "Members" && membersCount !== null ? `Members (${membersCount})` : t}
-          </button>
-        ))}
+      {/* Tab bar — horizontally scrollable on mobile where all 6 tabs don't
+          fit; an edge fade hints there's more instead of just clipping. */}
+      <div className="relative mb-4">
+        <div className="absolute inset-y-0 right-0 w-8 pointer-events-none bg-gradient-to-l from-white dark:from-[#0a0a0a] to-transparent sm:hidden z-10" />
+        <div className="flex gap-0 border-b border-gray-200 dark:border-gray-800 overflow-x-auto scrollbar-hide">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={cn(
+                "shrink-0 px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
+                tab === t
+                  ? "border-primary text-gray-900 dark:text-white font-medium"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-normal"
+              )}
+            >
+              {t === "Members" && membersCount !== null ? `Members (${membersCount})` : t}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Portfolio tab */}
