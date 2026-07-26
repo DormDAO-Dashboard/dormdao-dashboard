@@ -171,12 +171,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="flex items-center h-[52px] px-4 shrink-0 border-b border-gray-100 dark:border-white/[0.05] overflow-hidden">
           <Link href="/leaderboard" className="flex items-center gap-3 min-w-0">
-            <Image src="/logo.jpg" width={28} height={28} alt="DormDAO" className="rounded-md shrink-0" />
+            <Image src="/logo.jpg" width={28} height={28} alt="Dormcapital" className="rounded-md shrink-0" />
             <span className={cn(
-              "font-semibold text-gray-900 dark:text-white text-sm whitespace-nowrap transition-all duration-150",
+              "font-bold text-sm whitespace-nowrap transition-all duration-150",
               expanded ? "opacity-100" : "opacity-0 pointer-events-none"
             )}>
-              DormDAO
+              <span className="text-gray-900 dark:text-white">dorm</span><span className="text-[#4C9A71]">capital</span>
             </span>
           </Link>
         </div>
