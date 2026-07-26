@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   if (body.sendOnboardingEmails) {
     for (const m of added) {
       if (m.email && m.school) {
-        sendInviteEmail({ to: m.email, name: m.name, school: m.school }).catch(console.error);
+        sendInviteEmail({ to: m.email, name: m.name, school: m.school, walletAddress: m.walletAddress || undefined }).catch(console.error);
       }
     }
   }

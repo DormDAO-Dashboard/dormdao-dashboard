@@ -145,7 +145,7 @@ export async function PATCH(req: NextRequest) {
 
   const apiKey = process.env.RESEND_API_KEY;
   if (apiKey && body.action === "approve") {
-    sendInviteEmail({ to: request.email, name: request.name, school: request.school }).catch(console.error);
+    sendInviteEmail({ to: request.email, name: request.name, school: request.school, walletAddress: request.wallet_address || undefined }).catch(console.error);
   }
   if (apiKey && body.action === "reject") {
     const resend = new Resend(apiKey);

@@ -25,14 +25,14 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
   {
     key: "onboarding_invite",
     label: "Onboarding Email",
-    trigger: "Sent when an admin imports a member with “Send email to members” checked, clicks the onboarding-email button next to a member, or approves a signup request.",
+    trigger: "Sent when an admin imports a member with “Send email to members” checked, clicks the onboarding-email button next to a member, or approves a signup request. If the member has a wallet on file, a fixed \"We have a wallet on file ending in ####\" line is automatically appended below the message and isn't editable here.",
     variables: ["name", "school"],
     fields: [
       { key: "subject", label: "Subject", default: "You're invited to DormDAO — {{school}}" },
       { key: "heading", label: "Heading", default: "Welcome to DormDAO, {{name}}!" },
       {
         key: "message", label: "Message", multiline: true,
-        default: "You've been invited to join the {{school}} chapter on DormDAO — where university crypto clubs manage portfolios and vote on investments.\n\nSign in with Google to set up your profile and start participating.",
+        default: "Your account is open — you've been invited to join the {{school}} chapter on DormDAO, where university crypto clubs manage portfolios and vote on investments.\n\nYou can sign in with your email or your connected wallet to set up your profile and start participating.",
       },
     ],
     sampleVars: { name: "Jane Doe", school: "Blockchain at Berkeley" },

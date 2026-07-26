@@ -253,6 +253,7 @@ export async function sendInviteEmail(opts: {
   name: string;
   school: string;
   invitedBy?: string;
+  walletAddress?: string;
 }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return;
@@ -265,6 +266,14 @@ export async function sendInviteEmail(opts: {
     ? `<p style="font-size:14px;color:#374151;line-height:1.6"><strong>${escapeHtml(opts.invitedBy)}</strong> invited you to join DormDAO.</p>`
     : "";
 
+  // Confirms which wallet is on file without requiring a template variable
+  // that would look broken (trailing "ending in ." etc.) for members added
+  // without a wallet — this line just doesn't render for them.
+  const walletLast4 = opts.walletAddress ? opts.walletAddress.slice(-4) : null;
+  const walletLine = walletLast4
+    ? `<p style="font-size:13px;color:#6b7280;line-height:1.6;margin-top:10px">We have a wallet on file ending in <strong>${escapeHtml(walletLast4)}</strong>.</p>`
+    : "";
+
   await resend.emails.send({
     from: FROM_ADDRESS,
     to: opts.to,
@@ -272,7 +281,7 @@ export async function sendInviteEmail(opts: {
     html: buildTemplate({
       title: renderField(t.heading, vars),
       schoolLabel,
-      bodyHtml: invitedLine + renderMessageHtml(t.message, vars),
+      bodyHtml: invitedLine + renderMessageHtml(t.message, vars) + walletLine,
       cta: { label: "Join DormDAO →", url: `${APP_URL}/login` },
     }),
   });

@@ -29,6 +29,7 @@ export async function POST(
     name: member.name,
     school: member.school,
     invitedBy: user.user_metadata?.full_name as string | undefined,
+    walletAddress: member.walletAddress || undefined,
   });
 
   return NextResponse.json({ success: true });
