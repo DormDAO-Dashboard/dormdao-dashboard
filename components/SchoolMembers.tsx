@@ -36,21 +36,11 @@ interface FilteredMember {
   telegram: string | null;
 }
 
-function filterMemberFields(member: MemberRow, isSameSchool: boolean): FilteredMember {
-  if (isSameSchool) {
-    return {
-      id: member.id,
-      display_name: member.display_name,
-      avatar_url: member.avatar_url,
-      bio: member.bio,
-      school: member.school,
-      graduation_year: member.graduation_year,
-      major: member.major,
-      twitter: member.twitter,
-      linkedin: member.linkedin,
-      telegram: member.telegram,
-    };
-  }
+// Same-school viewers can see every member of their school in this list (even
+// ones who haven't gone public), but the fields shown are still masked by each
+// member's own public_fields choice — matching the individual profile page and
+// the global directory, so a clubmate never sees more than the member opted into.
+function filterMemberFields(member: MemberRow): FilteredMember {
   const pf = Array.isArray(member.public_fields) ? member.public_fields : [];
   return {
     id: member.id,
@@ -211,7 +201,7 @@ export function SchoolMembers({
         return;
       }
       const rows = (data as MemberRow[]) ?? [];
-      const filtered = rows.map((m) => filterMemberFields(m, viewerIsSameSchool));
+      const filtered = rows.map((m) => filterMemberFields(m));
       setMembers(filtered);
       onCountLoad?.(filtered.length);
       setLoading(false);

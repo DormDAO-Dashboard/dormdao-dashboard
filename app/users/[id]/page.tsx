@@ -39,15 +39,18 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
   }
 
   const isSameSchool = Boolean(!isOwner && viewerSchool && profile.school && viewerSchool === profile.school);
-  const canViewAll = isOwner || isSameSchool;
+  // Same-school members can find and open a clubmate's profile even if it isn't
+  // in the public directory, but they don't get to see anything the member
+  // didn't opt into showing — only the owner gets an unfiltered view.
+  const canOpenProfile = isOwner || isSameSchool;
   const publicFields: string[] = Array.isArray(profile.public_fields) ? (profile.public_fields as string[]) : [];
 
   function canShow(field: string): boolean {
-    if (canViewAll) return true;
+    if (isOwner) return true;
     return publicFields.includes(field);
   }
 
-  if (!profile.is_public && !canViewAll) {
+  if (!profile.is_public && !canOpenProfile) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Link href="/schools"
