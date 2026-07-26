@@ -203,6 +203,14 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
     showToast("Proposal marked as executed");
   }
 
+  async function handleDelete(proposalId: string) {
+    const res = await fetch(`/api/proposals/${proposalId}`, { method: "DELETE" });
+    const data = await res.json() as { error?: string };
+    if (!res.ok) throw new Error(data.error ?? "Failed to delete proposal");
+    setProposals((prev) => prev.filter((p) => p.id !== proposalId));
+    showToast("Proposal deleted");
+  }
+
   const activeProposals = proposals.filter(isActive);
   const pastProposals   = proposals.filter((p) => !isActive(p));
 
@@ -285,11 +293,13 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
               isMember={isMember}
               isLoggedIn={isLoggedIn}
               isClubLeader={isClubLeader}
+              isAdmin={isAdmin}
               memberCount={memberCount}
               schoolName={schoolName}
               onVote={handleVote}
               votingInProgress={votingFor === proposal.id}
               onExecuted={handleExecuted}
+              onDelete={handleDelete}
             />
           ))}
         </div>

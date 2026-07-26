@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Check, Clock, ChevronDown, ChevronUp, Lock, Loader2, ExternalLink } from "lucide-react";
+import { Check, Clock, ChevronDown, ChevronUp, Lock, Loader2, ExternalLink, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Proposal, deadlineLabel, votePercents, isActive } from "@/lib/proposals";
 import type { SchoolColors } from "@/lib/schoolColors";
@@ -12,11 +12,13 @@ interface Props {
   isMember: boolean;
   isLoggedIn: boolean;
   isClubLeader: boolean;
+  isAdmin?: boolean;
   memberCount: number;
   schoolName: string;
   onVote: (id: string, vote: "yes" | "no") => Promise<void>;
   votingInProgress: boolean;
   onExecuted?: (id: string) => void;
+  onDelete?: (id: string) => Promise<void>;
 }
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -28,7 +30,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 };
 
 export function ProposalCard({
-  proposal, colors, isMember, isLoggedIn, isClubLeader, memberCount, schoolName, onVote, votingInProgress, onExecuted,
+  proposal, colors, isMember, isLoggedIn, isClubLeader, isAdmin, memberCount, schoolName, onVote, votingInProgress, onExecuted, onDelete,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [showExecuteModal, setShowExecuteModal] = useState(false);
@@ -37,6 +39,9 @@ export function ProposalCard({
   const [executeNotes, setExecuteNotes] = useState("");
   const [executing, setExecuting] = useState(false);
   const [executeError, setExecuteError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const active = isActive(proposal);
   const { yesPct, noPct } = votePercents(proposal.yes_votes, proposal.no_votes);
@@ -72,13 +77,37 @@ export function ProposalCard({
     }
   }
 
+  async function handleDeleteConfirm() {
+    if (!onDelete) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await onDelete(proposal.id);
+      setShowDeleteModal(false);
+    } catch (err) {
+      setDeleteError((err as Error).message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const inputClass =
     "w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40";
 
   return (
     <>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+      <div className="relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
         <div className="h-1 w-full" style={{ backgroundColor: colors.primary }} />
+
+        {isAdmin && onDelete && (
+          <button
+            onClick={() => { setShowDeleteModal(true); setDeleteError(null); }}
+            title="Delete proposal"
+            className="absolute top-3 right-3 z-10 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
 
         <div className="p-5">
           {/* Header */}
@@ -343,6 +372,54 @@ export function ProposalCard({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !deleting && setShowDeleteModal(false)} />
+          <div className="relative w-full max-w-md bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl overflow-hidden">
+            <div className="h-1 w-full bg-red-500" />
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Delete Proposal</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">${proposal.token_ticker}</span>
+                  {" — "}{proposal.title}
+                </p>
+              </div>
+
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                This permanently deletes the proposal and all its votes. This can&apos;t be undone.
+              </p>
+
+              {deleteError && (
+                <p className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                  {deleteError}
+                </p>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteConfirm}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Delete Proposal
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
