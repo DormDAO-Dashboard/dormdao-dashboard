@@ -14,9 +14,13 @@ import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 // window width, then frozen so panels never condense below this — the row
 // scrolls horizontally instead.
 
-const PANEL_WIDTH_QUARTERLY = 307;
+// Quarterly/All-Time widened slightly over the original 307px so the School
+// column has enough room for "Boston College" (the longest unabbreviated
+// school name) without truncating — column % splits are unchanged, only the
+// overall panel width grew to give the name column more pixels.
+const PANEL_WIDTH_QUARTERLY = 375;
 const PANEL_WIDTH_SEASON = 614;
-const PANEL_WIDTH_ALLTIME = 307;
+const PANEL_WIDTH_ALLTIME = 340;
 
 // ─── Season config ────────────────────────────────────────────────────────────
 

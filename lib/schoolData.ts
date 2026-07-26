@@ -38,9 +38,7 @@ export function schoolDisplayName(name: string | null | undefined): string {
 }
 
 // Short names for chart X-axis labels (internal key → abbreviated label).
-const SCHOOL_SHORT_NAMES: Record<string, string> = {
-  "Vanderbilt": "Vandy",
-};
+const SCHOOL_SHORT_NAMES: Record<string, string> = {};
 
 // Returns abbreviated name for chart axes; falls back to the internal key.
 export function schoolShortName(key: string): string {
