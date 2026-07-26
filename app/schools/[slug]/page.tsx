@@ -8,6 +8,7 @@ import { SchoolTabs } from "@/components/SchoolTabs";
 import { SyncFooter } from "@/components/SyncFooter";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { SCHOOL_SOCIALS, schoolDisplayName } from "@/lib/schoolData";
+import { getSchoolColors } from "@/lib/schoolColors";
 import { ArrowLeft, Globe, X, Link2, Camera, MessageSquare, Send, Code2 } from "lucide-react";
 
 function SocialLinks({ name }: { name: string }) {
@@ -47,6 +48,8 @@ async function SchoolContent({ slug }: { slug: string }) {
   const school = schools.find((s) => s.slug === slug) ?? null;
   if (!school) notFound();
 
+  const colors = getSchoolColors(school.slug);
+
   const otherSchools: Record<string, string[]> = {};
   for (const h of school.holdings ?? []) {
     const others = schools
@@ -57,13 +60,18 @@ async function SchoolContent({ slug }: { slug: string }) {
 
   return (
     <>
+      {/* Branded accent bar — visible to every visitor, logged in or not */}
+      <div className="h-1.5 w-full rounded-full mb-4" style={{ backgroundColor: colors.primary }} />
+
       <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Schools
       </Link>
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-4">
-        <SchoolLogo name={school.name} size={48} />
+        <div className="rounded-full p-0.5" style={{ backgroundColor: colors.primary }}>
+          <SchoolLogo name={school.name} size={48} />
+        </div>
         <div>
           <div className="text-xs font-mono text-gray-500 mb-1">Rank #{school.rank}</div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{schoolDisplayName(school.name)}</h1>
