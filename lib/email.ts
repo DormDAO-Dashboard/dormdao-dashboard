@@ -6,6 +6,8 @@ import type { Proposal } from "@/lib/proposals";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
 import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
+import { fillTemplate } from "@/lib/email-templates";
+import { getEffectiveTemplateFields } from "@/lib/email-templates-store";
 
 const FROM_ADDRESS = "onboarding@resend.dev";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
@@ -77,6 +79,26 @@ function buildTemplate(opts: {
     You received this from DormDAO &middot; ${footerLink}
   </div>
 </div>`;
+}
+
+// ── Admin-editable template fields ────────────────────────────────────────────
+// Fills an admin-authored subject/heading template with pre-escaped variable
+// values. The raw template text itself is escaped first (so a stray "&"/"<"
+// typed by an admin can't break the surrounding HTML) — {{tokens}} survive
+// escaping untouched and are substituted afterward.
+function renderField(raw: string, vars: Record<string, string>): string {
+  return fillTemplate(escapeHtml(raw), vars);
+}
+
+// Same as renderField, but splits on blank lines into <p> paragraphs for the
+// free-text "message" fields, which may be blank (nothing rendered).
+function renderMessageHtml(raw: string, vars: Record<string, string>): string {
+  const filled = renderField(raw, vars);
+  if (!filled.trim()) return "";
+  return filled
+    .split(/\n{2,}/)
+    .map((p, i) => `<p style="font-size:14px;color:#374151;line-height:1.6;${i > 0 ? "margin-top:10px" : ""}">${p.replace(/\n/g, "<br>")}</p>`)
+    .join("");
 }
 
 // ── School recipient resolution ───────────────────────────────────────────────
@@ -236,19 +258,21 @@ export async function sendInviteEmail(opts: {
   if (!apiKey) return;
   const resend = new Resend(apiKey);
   const schoolLabel = schoolDisplayName(opts.school);
-  const safeName = escapeHtml(opts.name);
-  const safeInvitedBy = opts.invitedBy ? escapeHtml(opts.invitedBy) : undefined;
+  const vars = { name: escapeHtml(opts.name), school: schoolLabel };
+  const t = await getEffectiveTemplateFields("onboarding_invite");
+
+  const invitedLine = opts.invitedBy
+    ? `<p style="font-size:14px;color:#374151;line-height:1.6"><strong>${escapeHtml(opts.invitedBy)}</strong> invited you to join DormDAO.</p>`
+    : "";
+
   await resend.emails.send({
     from: FROM_ADDRESS,
     to: opts.to,
-    subject: `You're invited to DormDAO — ${schoolLabel}`,
+    subject: fillTemplate(t.subject, vars),
     html: buildTemplate({
-      title: `Welcome to DormDAO, ${safeName}!`,
+      title: renderField(t.heading, vars),
       schoolLabel,
-      bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">
-        ${safeInvitedBy ? `<strong>${safeInvitedBy}</strong> has invited you` : "You've been invited"} to join the <strong>${schoolLabel}</strong> chapter on DormDAO — where university crypto clubs manage portfolios and vote on investments.
-      </p>
-      <p style="font-size:14px;color:#374151;line-height:1.6;margin-top:10px">Sign in with Google to set up your profile and start participating.</p>`,
+      bodyHtml: invitedLine + renderMessageHtml(t.message, vars),
       cta: { label: "Join DormDAO →", url: `${APP_URL}/login` },
     }),
   });
@@ -265,11 +289,13 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
   const tokenName = escapeHtml(proposal.token_name);
   const proposedBy = proposal.proposed_by_name ? escapeHtml(proposal.proposed_by_name) : "Anonymous";
   const description = proposal.description ? escapeHtml(proposal.description) : null;
+  const vars = { ticker, tokenName, school: schoolLabel, title };
+  const t = await getEffectiveTemplateFields("new_proposal");
 
   await batchSend(recipients, (r) => ({
-    subject: `🗳️ New proposal: ${ticker} — ${schoolLabel}`,
+    subject: fillTemplate(t.subject, vars),
     html: buildTemplate({
-      title: `New proposal: ${title}`,
+      title: renderField(t.heading, vars),
       schoolLabel,
       bodyHtml: `<table style="width:100%;border-collapse:collapse;font-size:13px;color:#374151;margin-bottom:14px">
         <tr><td style="padding:5px 0;color:#6b7280;width:110px">Token</td><td style="padding:5px 0"><strong>${ticker}</strong> — ${tokenName}</td></tr>
@@ -277,7 +303,8 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
         ${proposal.recommended_size_eth ? `<tr><td style="padding:5px 0;color:#6b7280">Size</td><td style="padding:5px 0">${proposal.recommended_size_eth} ETH</td></tr>` : ""}
         <tr><td style="padding:5px 0;color:#6b7280">Deadline</td><td style="padding:5px 0">${deadline}</td></tr>
       </table>
-      ${description ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin:0;line-height:1.6">${description.slice(0, 280)}${description.length > 280 ? "…" : ""}</p>` : ""}`,
+      ${description ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin:0;line-height:1.6">${description.slice(0, 280)}${description.length > 280 ? "…" : ""}</p>` : ""}
+      ${renderMessageHtml(t.message, vars)}`,
       cta: { label: "Cast your vote →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
@@ -291,17 +318,19 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
   const ticker = escapeHtml(proposal.token_ticker);
   const title = escapeHtml(proposal.title);
+  const vars = { ticker, school: schoolLabel, title };
+  const t = await getEffectiveTemplateFields("proposal_reminder_12h");
 
   await batchSend(recipients, (r) => ({
-    subject: `⏰ 12h left to vote: ${ticker} — ${schoolLabel}`,
+    subject: fillTemplate(t.subject, vars),
     html: buildTemplate({
-      title: `12 hours left: ${title}`,
+      title: renderField(t.heading, vars),
       schoolLabel,
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">
         The vote on <strong>${ticker}</strong> closes in ~12 hours.
         Current tally: <strong>${proposal.yes_votes} yes / ${proposal.no_votes} no</strong>${total > 0 ? ` (${yesPct}% in favor)` : ""}.
       </p>
-      <p style="font-size:14px;color:#374151;line-height:1.6;margin-top:8px">If you haven't voted yet, now is the time.</p>`,
+      ${renderMessageHtml(t.message, vars)}`,
       cta: { label: "Vote now →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
@@ -317,18 +346,23 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
   const ticker = escapeHtml(proposal.token_ticker);
   const title = escapeHtml(proposal.title);
+  const resultLabel = passed ? "Passed" : "Rejected";
+  const resultEmoji = passed ? "✅" : "❌";
+  const vars = { ticker, school: schoolLabel, title, resultLabel, resultEmoji };
+  const t = await getEffectiveTemplateFields("proposal_result");
+  const message = passed ? t.messagePassed : t.messageRejected;
 
   await batchSend(recipients, (r) => ({
-    subject: `${passed ? "✅ Passed" : "❌ Rejected"}: ${ticker} — ${schoolLabel}`,
+    subject: fillTemplate(t.subject, vars),
     html: buildTemplate({
-      title: `${passed ? "✅ Proposal passed" : "❌ Proposal rejected"}: ${title}`,
+      title: renderField(t.heading, vars),
       schoolLabel,
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">The vote on <strong>${ticker}</strong> has closed.</p>
       <table style="width:100%;border-collapse:collapse;font-size:13px;color:#374151;margin:12px 0">
-        <tr><td style="padding:5px 0;color:#6b7280;width:110px">Result</td><td style="padding:5px 0"><strong style="color:${passed ? "#1D9E75" : "#ef4444"}">${passed ? "Passed" : "Rejected"}</strong></td></tr>
+        <tr><td style="padding:5px 0;color:#6b7280;width:110px">Result</td><td style="padding:5px 0"><strong style="color:${passed ? "#1D9E75" : "#ef4444"}">${resultLabel}</strong></td></tr>
         <tr><td style="padding:5px 0;color:#6b7280">Final vote</td><td style="padding:5px 0">${proposal.yes_votes} yes / ${proposal.no_votes} no (${yesPct}% in favor)</td></tr>
       </table>
-      <p style="font-size:13px;color:#6b7280;line-height:1.6">${passed ? "Club leadership will review and execute the trade if approved." : "This proposal did not receive enough votes to pass."}</p>`,
+      ${renderMessageHtml(message, vars)}`,
       cta: { label: "View results →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
@@ -342,15 +376,18 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
   const title = escapeHtml(proposal.title);
   const executionNotes = proposal.execution_notes ? escapeHtml(proposal.execution_notes) : null;
   const executionTx = proposal.execution_tx ? escapeHtml(proposal.execution_tx) : null;
+  const vars = { ticker, school: schoolLabel, title };
+  const t = await getEffectiveTemplateFields("trade_executed");
 
   await batchSend(recipients, (r) => ({
-    subject: `🚀 Trade executed: ${ticker} — ${schoolLabel}`,
+    subject: fillTemplate(t.subject, vars),
     html: buildTemplate({
-      title: `Trade executed: ${title}`,
+      title: renderField(t.heading, vars),
       schoolLabel,
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">The <strong>${ticker}</strong> trade has been executed by your club leadership.</p>
       ${executionNotes ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin-top:12px;line-height:1.6">${executionNotes}</p>` : ""}
-      ${executionTx ? `<p style="font-size:12px;color:#9ca3af;margin-top:12px;word-break:break-all">Tx: <a href="https://etherscan.io/tx/${executionTx}" style="color:#1D9E75">${executionTx.slice(0, 24)}…</a></p>` : ""}`,
+      ${executionTx ? `<p style="font-size:12px;color:#9ca3af;margin-top:12px;word-break:break-all">Tx: <a href="https://etherscan.io/tx/${executionTx}" style="color:#1D9E75">${executionTx.slice(0, 24)}…</a></p>` : ""}
+      ${renderMessageHtml(t.message, vars)}`,
       cta: { label: "View portfolio →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),

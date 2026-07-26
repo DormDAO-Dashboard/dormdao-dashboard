@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Trophy, GraduationCap, BarChart2, DollarSign, Activity,
   Newspaper, MessagesSquare, BookOpen, Info, Sun, Moon, User,
-  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users, Map, Landmark,
+  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users, Map, Landmark, Mail,
 } from "lucide-react";
 import { slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
@@ -50,6 +50,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin":     "Admin",
   "/admin/main-dao": "Main DAO",
   "/admin/members":  "Members",
+  "/admin/email":    "Email Functions",
 };
 
 function deriveTitle(pathname: string): string {
@@ -277,8 +278,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               );
 
               const adminSubItems = [
-                { href: "/admin/main-dao", label: "Main DAO", icon: Landmark },
-                { href: "/admin/members",  label: "Members",  icon: Users },
+                { href: "/admin/main-dao", label: "Main DAO",       icon: Landmark },
+                { href: "/admin/members",  label: "Members",        icon: Users },
+                { href: "/admin/email",    label: "Email Functions", icon: Mail },
               ].map(({ href, label, icon: SubIcon }) => {
                 const subActive = matchesRoute(href, pathname);
                 return (
@@ -488,6 +490,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     )}>
                     <ShieldCheck className="w-5 h-5 shrink-0" />
                     <span className="text-sm font-medium">Members</span>
+                  </Link>
+                  <Link href="/admin/email" onClick={() => setShowMore(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
+                      matchesRoute("/admin/email", pathname)
+                        ? "text-primary bg-primary/10"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                    )}>
+                    <Mail className="w-5 h-5 shrink-0" />
+                    <span className="text-sm font-medium">Email Functions</span>
                   </Link>
                 </>
               )}
