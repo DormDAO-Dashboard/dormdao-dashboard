@@ -8,6 +8,7 @@ import { ResearchNote } from "@/lib/types";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
+import { MAIN_DAO_VOTER } from "@/lib/main-dao";
 import { formatDistanceToNow } from "date-fns";
 
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -118,7 +119,14 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
               {canShow("display_name") ? profile.display_name : "DormDAO Member"}
             </h1>
 
-            {canShow("school") && profile.school && (
+            {canShow("school") && profile.school === MAIN_DAO_VOTER && (
+              <Link href="/main-dao"
+                className="flex items-center gap-1.5 mt-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors w-fit">
+                {MAIN_DAO_VOTER}
+              </Link>
+            )}
+
+            {canShow("school") && profile.school && profile.school !== MAIN_DAO_VOTER && (
               <Link href={`/schools/${slugify(profile.school as string)}`}
                 className="flex items-center gap-1.5 mt-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors w-fit">
                 <SchoolLogo name={profile.school as string} size={14} />

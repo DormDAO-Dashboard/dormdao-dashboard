@@ -35,7 +35,7 @@ export async function POST(
 
   if (p.school === MAIN_DAO_SLUG) {
     const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
-    if (!isMainDaoAuthorized(isAdmin, profile?.role)) {
+    if (!isMainDaoAuthorized(isAdmin, profile?.role, profile?.school)) {
       return NextResponse.json({ error: "Only DormDAO admins can vote on Main DAO proposals" }, { status: 403 });
     }
   } else {

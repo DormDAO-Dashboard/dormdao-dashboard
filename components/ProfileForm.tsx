@@ -7,6 +7,7 @@ import { slugify } from "@/lib/utils";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { schoolDisplayName } from "@/lib/schoolData";
+import { MAIN_DAO_VOTER } from "@/lib/main-dao";
 import { LogOut, Save, User, Pencil, X, Wallet, Lock, Eye, EyeOff, ExternalLink } from "lucide-react";
 
 const SCHOOL_OK_COOKIE = "ddo-school-ok";
@@ -98,7 +99,7 @@ function SetupCard({
     if (upsertError) { setError(upsertError.message); return; }
 
     stampSchoolCookie();
-    router.push(`/schools/${slugify(school)}/vote`);
+    router.push(school === MAIN_DAO_VOTER ? "/main-dao" : `/schools/${slugify(school)}/vote`);
   }
 
   return (

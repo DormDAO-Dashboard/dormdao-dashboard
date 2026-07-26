@@ -10,6 +10,7 @@ import { SchoolLogo } from "@/components/SchoolLogo";
 import { VotingClient } from "@/components/VotingClient";
 import { schoolDisplayName } from "@/lib/schoolData";
 import { isAdminUser } from "@/lib/admin-config";
+import { MAIN_DAO_VOTER } from "@/lib/main-dao";
 
 async function VotingPageContent({ slug }: { slug: string }) {
   const { schools } = await getSchoolsData();
@@ -54,7 +55,8 @@ async function VotingPageContent({ slug }: { slug: string }) {
     .eq("id", user.id)
     .single();
 
-  const userSchoolSlug = profile?.school ? slugify(profile.school) : null;
+  const isMainDaoVoter = profile?.school === MAIN_DAO_VOTER;
+  const userSchoolSlug = profile?.school && !isMainDaoVoter ? slugify(profile.school) : null;
   const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
 
   if (userSchoolSlug !== slug && !isAdmin) {
@@ -78,6 +80,11 @@ async function VotingPageContent({ slug }: { slug: string }) {
             className="text-sm text-primary hover:underline"
           >
             Go to your school&apos;s voting page →
+          </Link>
+        )}
+        {isMainDaoVoter && (
+          <Link href="/main-dao" className="text-sm text-primary hover:underline">
+            Go to Main DAO voting →
           </Link>
         )}
       </div>

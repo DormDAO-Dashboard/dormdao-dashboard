@@ -2,11 +2,12 @@
 import { useState, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import Papa from "papaparse";
-import { UserPlus, Upload, FilePlus, X, Trash2, Pencil, MailPlus, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { UserPlus, Upload, FilePlus, X, Trash2, Pencil, MailPlus, AlertCircle, CheckCircle2, Loader2, Landmark } from "lucide-react";
 import { cn, formatLastSignIn } from "@/lib/utils";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { ROLE_OPTIONS, type MemberRole } from "@/lib/auth-utils";
+import { MAIN_DAO_VOTER } from "@/lib/main-dao";
 
 interface Member {
   id: string;
@@ -262,6 +263,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                     <select value={draft.school ?? ""} onChange={(e) => setDraft({ ...draft, school: e.target.value || null })} className={fieldClass}>
                       <option value="">— Select school —</option>
                       {SCHOOL_NAMES.map((s) => <option key={s} value={s}>{schoolDisplayName(s)}</option>)}
+                      <option value={MAIN_DAO_VOTER}>{MAIN_DAO_VOTER}</option>
                     </select>
                   </Field>
                   <Field label="Role">
@@ -369,7 +371,12 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               <tr key={m.id} className="border-b border-gray-200 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
                 <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{m.name}</td>
                 <td className="px-3 py-3">
-                  {m.school ? (
+                  {m.school === MAIN_DAO_VOTER ? (
+                    <div className="flex items-center gap-1.5">
+                      <Landmark className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <span className="text-xs text-gray-300">{MAIN_DAO_VOTER}</span>
+                    </div>
+                  ) : m.school ? (
                     <div className="flex items-center gap-1.5">
                       <SchoolLogo name={m.school} size={14} />
                       <span className="text-xs text-gray-300">{schoolDisplayName(m.school)}</span>
@@ -428,6 +435,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 <select value={editDraft.school ?? ""} onChange={(e) => setEditDraft({ ...editDraft, school: e.target.value || null })} className={fieldClass}>
                   <option value="">— No school —</option>
                   {SCHOOL_NAMES.map((s) => <option key={s} value={s}>{schoolDisplayName(s)}</option>)}
+                  <option value={MAIN_DAO_VOTER}>{MAIN_DAO_VOTER}</option>
                 </select>
               </Field>
               <Field label="Role">

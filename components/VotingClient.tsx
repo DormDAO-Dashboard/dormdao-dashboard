@@ -7,6 +7,7 @@ import { getSchoolColors } from "@/lib/schoolColors";
 import { type Proposal, isActive } from "@/lib/proposals";
 import { schoolDisplayName } from "@/lib/schoolData";
 import { isClubLeadership, type MemberRole } from "@/lib/auth-utils";
+import { MAIN_DAO_VOTER } from "@/lib/main-dao";
 import { ProposalCard } from "@/components/ProposalCard";
 import { NewProposalModal } from "@/components/NewProposalModal";
 import type { User } from "@supabase/supabase-js";
@@ -26,6 +27,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
 
   const [user, setUser] = useState<User | null>(null);
   const [userSchoolSlug, setUserSchoolSlug] = useState<string | null>(null);
+  const [isMainDaoVoter, setIsMainDaoVoter] = useState(false);
   const [userRole, setUserRole] = useState<MemberRole | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -37,13 +39,15 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Main DAO has no real school-membership concept — anyone who reaches this
-  // page has already passed the DormDAO-admin gate (env admin or dorm_admin
-  // role), both of which /api/admin/check already reports as isAdmin.
-  const isMember = isMainDao ? isAdmin : (!!user && userSchoolSlug === slug);
+  // Main DAO has no real school-membership concept — access is either
+  // DormDAO-admin-wide (env admin or dorm_admin role, reported by
+  // /api/admin/check as isAdmin) or a member explicitly assigned the
+  // "Main DAO Voter" designation in place of a school. Voters can view and
+  // vote but never manage proposals — canManage stays admin-only for Main DAO.
+  const isMember = isMainDao ? (isAdmin || isMainDaoVoter) : (!!user && userSchoolSlug === slug);
   const isLoggedIn = !!user;
   const isClubLeader = isMember && isClubLeadership({ role: userRole, school: null });
-  const canManage = isMember || isAdmin;
+  const canManage = isMainDao ? isAdmin : (isMember || isAdmin);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -82,6 +86,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
             .eq("id", u.id)
             .single();
           setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+          setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
           setUserRole((profile?.role as MemberRole) ?? null);
 
           try {
@@ -95,10 +100,15 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
           setIsAdmin(false);
         }
 
-        const { count } = await supabase
-          .from("profiles")
-          .select("id", { count: "exact", head: true })
-          .eq(isMainDao ? "role" : "school", isMainDao ? "dorm_admin" : schoolName);
+        const { count } = isMainDao
+          ? await supabase
+              .from("profiles")
+              .select("id", { count: "exact", head: true })
+              .or(`role.eq.dorm_admin,school.eq."${MAIN_DAO_VOTER}"`)
+          : await supabase
+              .from("profiles")
+              .select("id", { count: "exact", head: true })
+              .eq("school", schoolName);
         setMemberCount(count ?? 0);
 
         await fetchProposals();
@@ -113,6 +123,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
       setUser(session?.user ?? null);
       if (!session?.user) {
         setUserSchoolSlug(null);
+        setIsMainDaoVoter(false);
         setUserRole(null);
         setIsAdmin(false);
       } else {
@@ -122,6 +133,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
           .eq("id", session.user.id)
           .single();
         setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+        setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
         setUserRole((profile?.role as MemberRole) ?? null);
         try {
           const res = await fetch("/api/admin/check");
@@ -227,7 +239,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
     );
   }
 
-  if (pageMode && user && !canManage) {
+  if (pageMode && user && !isMember && !isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div
@@ -239,7 +251,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Members Only</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
           {isMainDao
-            ? "This page is for DormDAO admins only."
+            ? "This page is for DormDAO admins and Main DAO voters only."
             : `This voting page is for ${schoolDisplayName(schoolName)} members only.`}
         </p>
       </div>

@@ -16,6 +16,7 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { BellButton } from "@/components/BellButton";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { schoolDisplayName, schoolShortName } from "@/lib/schoolData";
+import { MAIN_DAO_VOTER } from "@/lib/main-dao";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -45,6 +46,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/research":  "DormDocs",
   "/about":     "About",
   "/map":       "Campus Map",
+  "/main-dao":  "Main DAO",
   "/profile":   "Profile",
   "/login":     "Sign In",
   "/admin":     "Admin",
@@ -185,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
           {(() => {
-            const userSchoolSlug = userSchool ? slugify(userSchool) : null;
+            const userSchoolSlug = userSchool && userSchool !== MAIN_DAO_VOTER ? slugify(userSchool) : null;
             const voteHref   = userSchoolSlug ? `/schools/${userSchoolSlug}/vote` : "/profile";
             const voteLabel  = userSchoolSlug ? `${schoolShortName(userSchool!)} Voting` : "Set School";
             const voteActive = userSchoolSlug ? matchesRoute(`/schools/${userSchoolSlug}/vote`, pathname) : false;
@@ -315,6 +317,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {showAdminSub && adminSubItems}
                 </div>
               );
+            } else if (userSchool === MAIN_DAO_VOTER) {
+              const mainDaoActive = matchesRoute("/main-dao", pathname);
+              navItems.push(
+                <Link key="main-dao-voter" href="/main-dao" className={cn(
+                  "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
+                  mainDaoActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                )}>
+                  {mainDaoActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                  )}
+                  <Landmark className="w-5 h-5 shrink-0" />
+                  <span className={cn(
+                    "text-sm font-medium whitespace-nowrap transition-all duration-150",
+                    expanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                  )}>
+                    Main DAO Voting
+                  </span>
+                </Link>
+              );
             }
 
             return navItems;
@@ -352,7 +375,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
 
-          {user && userSchool && (
+          {user && userSchool && userSchool !== MAIN_DAO_VOTER && (
             <Link
               href={`/schools/${slugify(userSchool)}`}
               className={cn(sidebarItem, "w-auto")}
@@ -443,7 +466,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="px-3 py-3">
               {user && (() => {
-                const userSchoolSlug = userSchool ? slugify(userSchool) : null;
+                const userSchoolSlug = userSchool && userSchool !== MAIN_DAO_VOTER ? slugify(userSchool) : null;
                 const voteHref   = userSchoolSlug ? `/schools/${userSchoolSlug}/vote` : "/profile";
                 const voteLabel  = userSchoolSlug ? `${schoolShortName(userSchool!)} Voting` : "Set School";
                 const voteActive = userSchoolSlug ? matchesRoute(`/schools/${userSchoolSlug}/vote`, pathname) : false;
@@ -509,6 +532,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <span className="text-sm font-medium">Email Functions</span>
                   </Link>
                 </>
+              )}
+              {!isAdmin && userSchool === MAIN_DAO_VOTER && (
+                <Link href="/main-dao" onClick={() => setShowMore(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
+                    matchesRoute("/main-dao", pathname)
+                      ? "text-primary bg-primary/10"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                  )}>
+                  <Landmark className="w-5 h-5 shrink-0" />
+                  <span className="text-sm font-medium">Main DAO Voting</span>
+                </Link>
               )}
               <div className="flex items-center justify-between px-4 py-3.5">
                 <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Theme</span>

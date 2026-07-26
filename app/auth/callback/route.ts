@@ -4,6 +4,7 @@ import { getMemberForUser } from "@/lib/access-control";
 import { isAdminUser } from "@/lib/admin-config";
 import { logLoginAttempt } from "@/lib/login-attempts";
 import { slugify } from "@/lib/utils";
+import { MAIN_DAO_VOTER } from "@/lib/main-dao";
 
 const SCHOOL_OK_COOKIE = "ddo-school-ok";
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -79,7 +80,9 @@ export async function GET(request: NextRequest) {
 
         // Returning user: go to their school vote page
         const schoolSlug = member.school ? slugify(member.school) : "";
-        const destination = schoolSlug ? `${origin}/schools/${schoolSlug}/vote` : `${origin}/`;
+        const destination = member.school === MAIN_DAO_VOTER
+          ? `${origin}/main-dao`
+          : schoolSlug ? `${origin}/schools/${schoolSlug}/vote` : `${origin}/`;
         const res = NextResponse.redirect(destination);
         res.cookies.set(SCHOOL_OK_COOKIE, "1", { path: "/", maxAge: ONE_YEAR, sameSite: "lax" });
         return res;
