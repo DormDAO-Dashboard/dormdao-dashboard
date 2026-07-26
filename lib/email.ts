@@ -259,20 +259,17 @@ export async function sendInviteEmail(opts: {
   if (!apiKey) return;
   const resend = new Resend(apiKey);
   const schoolLabel = schoolDisplayName(opts.school);
-  const vars = { name: escapeHtml(opts.name), school: schoolLabel };
+  const walletLast4 = opts.walletAddress ? opts.walletAddress.slice(-4) : null;
+  const vars = { name: escapeHtml(opts.name), school: schoolLabel, walletLast4: walletLast4 ? escapeHtml(walletLast4) : "" };
   const t = await getEffectiveTemplateFields("onboarding_invite");
 
   const invitedLine = opts.invitedBy
     ? `<p style="font-size:14px;color:#374151;line-height:1.6"><strong>${escapeHtml(opts.invitedBy)}</strong> invited you to join DormDAO.</p>`
     : "";
 
-  // Confirms which wallet is on file without requiring a template variable
-  // that would look broken (trailing "ending in ." etc.) for members added
-  // without a wallet — this line just doesn't render for them.
-  const walletLast4 = opts.walletAddress ? opts.walletAddress.slice(-4) : null;
-  const walletLine = walletLast4
-    ? `<p style="font-size:13px;color:#6b7280;line-height:1.6;margin-top:10px">We have a wallet on file ending in <strong>${escapeHtml(walletLast4)}</strong>.</p>`
-    : "";
+  // Only rendered when the member actually has a wallet on file — otherwise
+  // the {{walletLast4}} token would leave a broken-looking "ending in ." line.
+  const walletLine = walletLast4 ? renderMessageHtml(t.walletLine, vars) : "";
 
   await resend.emails.send({
     from: FROM_ADDRESS,
