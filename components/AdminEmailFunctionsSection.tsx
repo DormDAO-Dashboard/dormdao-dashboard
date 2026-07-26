@@ -117,12 +117,7 @@ export function AdminEmailFunctionsSection() {
             <div key={t.key} className="flex items-center gap-4 px-5 py-4">
               <Mail className="w-4 h-4 text-gray-400 dark:text-gray-600 shrink-0" />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{t.label}</p>
-                  {t.isOverridden && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">Edited</span>
-                  )}
-                </div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{t.label}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t.trigger}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">

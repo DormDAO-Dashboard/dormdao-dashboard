@@ -52,12 +52,31 @@ export default async function AdminMembersPage() {
     })
   );
 
+  // Resolve each member's last sign-in via one listUsers call, matched by
+  // email or wallet — same batch-lookup pattern used elsewhere in this file.
+  const { data: { users: authUsers } } = await serviceClient.auth.admin.listUsers({ perPage: 1000 });
+  const lastSignInByEmail = new Map<string, string | null>();
+  const lastSignInByWallet = new Map<string, string | null>();
+  for (const u of authUsers) {
+    if (u.email) lastSignInByEmail.set(u.email.toLowerCase(), u.last_sign_in_at ?? null);
+    const wallet = (u.user_metadata?.wallet_address as string | undefined)?.toLowerCase();
+    if (wallet) lastSignInByWallet.set(wallet, u.last_sign_in_at ?? null);
+  }
+
   // Exclude dorm_admins from Members list to avoid duplication
-  const initialMembers = allMembers.filter(
-    (m) =>
-      !dormAdminEmails.has(m.email.toLowerCase()) &&
-      !(m.walletAddress && dormAdminWallets.has(m.walletAddress.toLowerCase()))
-  );
+  const initialMembers = allMembers
+    .filter(
+      (m) =>
+        !dormAdminEmails.has(m.email.toLowerCase()) &&
+        !(m.walletAddress && dormAdminWallets.has(m.walletAddress.toLowerCase()))
+    )
+    .map((m) => ({
+      ...m,
+      lastSignInAt:
+        (m.email && lastSignInByEmail.get(m.email.toLowerCase())) ??
+        (m.walletAddress && lastSignInByWallet.get(m.walletAddress.toLowerCase())) ??
+        null,
+    }));
 
   const { data: recentFailedLogins } = await serviceClient
     .from("login_attempts")

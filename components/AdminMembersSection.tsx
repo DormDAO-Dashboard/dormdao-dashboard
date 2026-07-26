@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import Papa from "papaparse";
 import { UserPlus, Upload, FilePlus, X, Trash2, Pencil, MailPlus, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatLastSignIn } from "@/lib/utils";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { ROLE_OPTIONS, type MemberRole } from "@/lib/auth-utils";
@@ -17,6 +17,7 @@ interface Member {
   school: string | null;
   role: MemberRole;
   createdAt: string;
+  lastSignInAt: string | null;
 }
 
 interface MemberDraft {
@@ -354,19 +355,20 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
               <th className="text-left px-5 py-3">Name</th>
-              <th className="text-left px-5 py-3">School</th>
-              <th className="text-left px-5 py-3">Role</th>
-              <th className="text-right px-5 py-3">Voting Units</th>
-              <th className="text-left px-5 py-3">Email</th>
-              <th className="text-left px-5 py-3">Wallet</th>
-              <th className="px-5 py-3" />
+              <th className="text-left px-3 py-3">School</th>
+              <th className="text-left px-3 py-3">Role</th>
+              <th className="text-right px-3 py-3">Voting Units</th>
+              <th className="text-left px-3 py-3">Email</th>
+              <th className="text-left px-3 py-3">Wallet</th>
+              <th className="text-left px-3 py-3">Last Signed In</th>
+              <th className="px-3 py-3" />
             </tr>
           </thead>
           <tbody>
             {members.map((m) => (
               <tr key={m.id} className="border-b border-gray-200 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
                 <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{m.name}</td>
-                <td className="px-5 py-3">
+                <td className="px-3 py-3">
                   {m.school ? (
                     <div className="flex items-center gap-1.5">
                       <SchoolLogo name={m.school} size={14} />
@@ -374,17 +376,20 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                     </div>
                   ) : <span className="text-xs text-gray-600">—</span>}
                 </td>
-                <td className="px-5 py-3">
+                <td className="px-3 py-3">
                   <span className={cn("text-xs px-2 py-0.5 rounded font-medium", ROLE_BADGE[m.role] ?? ROLE_BADGE.member)}>
                     {ROLE_OPTIONS.find((o) => o.value === m.role)?.label ?? m.role}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-right font-mono text-primary">{m.votingUnits}</td>
-                <td className="px-5 py-3 text-gray-400">{m.email || "—"}</td>
-                <td className="px-5 py-3 font-mono text-gray-500 text-xs">
+                <td className="px-3 py-3 text-right font-mono text-primary">{m.votingUnits}</td>
+                <td className="px-3 py-3 text-gray-400">{m.email || "—"}</td>
+                <td className="px-3 py-3 font-mono text-gray-500 text-xs">
                   {m.walletAddress ? `${m.walletAddress.slice(0, 6)}…${m.walletAddress.slice(-4)}` : "—"}
                 </td>
-                <td className="px-5 py-3 text-right">
+                <td className="px-3 py-3 text-xs text-gray-400">
+                  {formatLastSignIn(m.lastSignInAt)}
+                </td>
+                <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button onClick={() => { setOnboardTarget(m); setOnboardError(null); }} className="text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Send onboarding email">
                       <MailPlus className="w-4 h-4" />
@@ -400,7 +405,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               </tr>
             ))}
             {members.length === 0 && (
-              <tr><td colSpan={7} className="px-5 py-8 text-center text-gray-400 dark:text-gray-600 text-sm">No members yet.</td></tr>
+              <tr><td colSpan={8} className="px-5 py-8 text-center text-gray-400 dark:text-gray-600 text-sm">No members yet.</td></tr>
             )}
           </tbody>
         </table>
