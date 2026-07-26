@@ -101,7 +101,7 @@ function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-yellow-400 text-yellow-900 shrink-0">{rank}</span>;
   if (rank === 2) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-gray-300 text-gray-700 shrink-0">{rank}</span>;
   if (rank === 3) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-amber-600 text-white shrink-0">{rank}</span>;
-  return <span className="font-mono text-[9px] text-gray-400 dark:text-gray-500">{rank}</span>;
+  return <span className="inline-flex w-5 h-5 items-center justify-center font-mono text-[9px] text-gray-400 dark:text-gray-500 shrink-0">{rank}</span>;
 }
 
 // ─── "You" badge ─────────────────────────────────────────────────────────────
