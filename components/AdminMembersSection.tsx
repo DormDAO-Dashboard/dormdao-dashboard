@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import Papa from "papaparse";
-import { UserPlus, Upload, FilePlus, X, Trash2, Pencil, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { UserPlus, Upload, FilePlus, X, Trash2, Pencil, MailPlus, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { SchoolLogo } from "@/components/SchoolLogo";
@@ -68,6 +68,10 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
   const [editDraft, setEditDraft] = useState<MemberDraft>(EMPTY_DRAFT);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+
+  const [onboardTarget, setOnboardTarget] = useState<Member | null>(null);
+  const [onboardSending, setOnboardSending] = useState(false);
+  const [onboardError, setOnboardError] = useState<string | null>(null);
 
   function resetModal() {
     setMode("manual");
@@ -181,6 +185,22 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
       setEditError((err as Error).message);
     } finally {
       setEditSubmitting(false);
+    }
+  }
+
+  async function handleSendOnboarding() {
+    if (!onboardTarget) return;
+    setOnboardSending(true);
+    setOnboardError(null);
+    try {
+      const res = await fetch(`/api/admin/members/${onboardTarget.id}/onboarding-email`, { method: "POST" });
+      const data = await res.json() as { success?: boolean; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to send email");
+      setOnboardTarget(null);
+    } catch (err) {
+      setOnboardError((err as Error).message);
+    } finally {
+      setOnboardSending(false);
     }
   }
 
@@ -354,6 +374,9 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 </td>
                 <td className="px-5 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
+                    <button onClick={() => { setOnboardTarget(m); setOnboardError(null); }} className="text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Send onboarding email">
+                      <MailPlus className="w-4 h-4" />
+                    </button>
                     <button onClick={() => openEdit(m)} className="text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit member">
                       <Pencil className="w-4 h-4" />
                     </button>
@@ -404,6 +427,30 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {onboardTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !onboardSending && setOnboardTarget(null)} />
+          <div className="relative w-full max-w-sm bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Send Onboarding Email</h3>
+              <button onClick={() => setOnboardTarget(null)} disabled={onboardSending} className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Send the onboarding email to <span className="text-gray-900 dark:text-white font-medium">{onboardTarget.name}</span>
+              {onboardTarget.email ? <> at <span className="text-gray-700 dark:text-gray-300">{onboardTarget.email}</span></> : null}?
+            </p>
+            {onboardError && <div className="mt-3"><ErrorBanner>{onboardError}</ErrorBanner></div>}
+            <div className="flex gap-3 pt-5">
+              <button type="button" onClick={() => setOnboardTarget(null)} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors disabled:opacity-40">Cancel</button>
+              <button type="button" onClick={handleSendOnboarding} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+                {onboardSending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Send
+              </button>
+            </div>
           </div>
         </div>
       )}
