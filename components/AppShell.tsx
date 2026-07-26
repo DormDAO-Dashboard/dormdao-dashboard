@@ -191,7 +191,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             const voteActive = userSchoolSlug ? matchesRoute(`/schools/${userSchoolSlug}/vote`, pathname) : false;
             const voteColor  = userSchoolSlug ? getSchoolColors(userSchoolSlug).primary : undefined;
 
-            const navItems = NAV_LINKS.flatMap(({ href, label, icon: Icon }) => {
+            const navItems = NAV_LINKS.filter(({ href }) => href !== "/map").flatMap(({ href, label, icon: Icon }) => {
               const active = matchesRoute(href, pathname);
               const link = (
                 <Link key={href} href={href} className={cn(
@@ -366,6 +366,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
             </Link>
           )}
+
+          <Link href="/map" className={sidebarItem}>
+            <Map className="w-5 h-5 shrink-0" />
+            <span className={labelFade}>
+              Return to Map
+            </span>
+          </Link>
         </div>
       </aside>
 

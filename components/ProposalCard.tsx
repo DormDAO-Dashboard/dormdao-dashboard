@@ -96,18 +96,8 @@ export function ProposalCard({
 
   return (
     <>
-      <div className="relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
         <div className="h-1 w-full" style={{ backgroundColor: colors.primary }} />
-
-        {isAdmin && onDelete && (
-          <button
-            onClick={() => { setShowDeleteModal(true); setDeleteError(null); }}
-            title="Delete proposal"
-            className="absolute top-3 right-3 z-10 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        )}
 
         <div className="p-5">
           {/* Header */}
@@ -288,6 +278,19 @@ export function ProposalCard({
             <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
               Proposed by {proposal.proposed_by_name}
             </p>
+          )}
+
+          {isAdmin && onDelete && (
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+              <button
+                onClick={() => { setShowDeleteModal(true); setDeleteError(null); }}
+                title="Delete proposal"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            </div>
           )}
         </div>
       </div>
