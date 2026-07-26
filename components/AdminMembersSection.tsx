@@ -60,6 +60,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
   const [csvErrors, setCsvErrors] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [sendOnboardingEmails, setSendOnboardingEmails] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ added: number; errors: string[] } | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -80,6 +81,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
     setCsvRows([]);
     setCsvErrors([]);
     setResult(null);
+    setSendOnboardingEmails(true);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -136,7 +138,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
       const res = await fetch("/api/admin/members", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ members: payload }),
+        body: JSON.stringify({ members: payload, sendOnboardingEmails }),
       });
       const data = await res.json() as { added: number; errors: string[]; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Server error");
@@ -321,6 +323,16 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                   {result.errors.map((e, i) => <ErrorBanner key={i}>{e}</ErrorBanner>)}
                 </div>
               )}
+
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 select-none cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sendOnboardingEmails}
+                  onChange={(e) => setSendOnboardingEmails(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-400 dark:border-gray-700 text-primary focus:ring-primary/50 accent-primary"
+                />
+                Send email to members
+              </label>
 
               <div className="flex items-center justify-end gap-3 pt-1">
                 <Dialog.Close asChild>

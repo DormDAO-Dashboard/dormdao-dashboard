@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { getMembers, saveMembers, Member } from "@/lib/members-store";
+import { sendInviteEmail } from "@/lib/email";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json() as {
     members: Array<{ name: string; votingUnits: number; email: string; walletAddress: string; school?: string | null; role?: string }>;
+    sendOnboardingEmails?: boolean;
   };
 
   if (!Array.isArray(body.members) || body.members.length === 0) {
@@ -64,6 +66,14 @@ export async function POST(req: NextRequest) {
   }
 
   if (added.length > 0) await saveMembers([...existing, ...added]);
+
+  if (body.sendOnboardingEmails) {
+    for (const m of added) {
+      if (m.email && m.school) {
+        sendInviteEmail({ to: m.email, name: m.name, school: m.school }).catch(console.error);
+      }
+    }
+  }
 
   return NextResponse.json({ added: added.length, errors });
 }
