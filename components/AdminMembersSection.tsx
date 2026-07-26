@@ -360,7 +360,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               <th className="text-right px-3 py-3">Voting Units</th>
               <th className="text-left px-3 py-3">Email</th>
               <th className="text-left px-3 py-3">Wallet</th>
-              <th className="text-left px-3 py-3">Last Signed In</th>
+              <th className="text-left pl-6 pr-3 py-3">Last Signed In</th>
               <th className="px-3 py-3" />
             </tr>
           </thead>
@@ -386,7 +386,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 <td className="px-3 py-3 font-mono text-gray-500 text-xs">
                   {m.walletAddress ? `${m.walletAddress.slice(0, 6)}…${m.walletAddress.slice(-4)}` : "—"}
                 </td>
-                <td className="px-3 py-3 text-xs text-gray-400">
+                <td className="pl-6 pr-3 py-3 text-xs text-gray-400">
                   {formatLastSignIn(m.lastSignInAt)}
                 </td>
                 <td className="px-3 py-3 text-right">
