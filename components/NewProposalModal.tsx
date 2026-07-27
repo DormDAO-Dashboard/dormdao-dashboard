@@ -62,7 +62,6 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
   const [titleManual, setTitleManual] = useState(false);
   const [description, setDescription] = useState("");
   const [sizeEth, setSizeEth] = useState("");
-  const [priceTarget, setPriceTarget] = useState("");
   const [deadline] = useState(votingDeadline);
   const [docFiles, setDocFiles] = useState<(File | null)[]>([null, null, null]);
   const [submitting, setSubmitting] = useState(false);
@@ -118,7 +117,6 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
           title,
           description,
           recommended_size_eth: sizeEth ? parseFloat(sizeEth) : undefined,
-          price_target: priceTarget ? parseFloat(priceTarget) : undefined,
           document_ids: documentIds.length > 0 ? documentIds : undefined,
         }),
       });
@@ -212,21 +210,6 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
               className={inputClass + " resize-none"}
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/5000</p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Price Target (USD)
-            </label>
-            <input
-              type="number"
-              value={priceTarget}
-              onChange={(e) => setPriceTarget(e.target.value)}
-              placeholder="e.g. 25.00"
-              min="0"
-              step="0.01"
-              className={inputClass}
-            />
           </div>
 
           <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60">
