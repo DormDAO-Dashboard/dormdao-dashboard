@@ -278,7 +278,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               {mode === "csv" && (
                 <div className="flex flex-col gap-3">
                   <p className="text-xs text-gray-500">
-                    CSV headers: <code className="text-gray-300">name, units, email, walletAddress, school, role</code>
+                    CSV headers: <code className="text-gray-300">name, role, units, email, walletAddress, school</code>
                   </p>
                   <label className="flex items-center justify-center gap-2 w-full px-4 py-4 rounded-lg border-2 border-dashed border-gray-700 hover:border-gray-500 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer text-sm">
                     <Upload className="w-4 h-4 shrink-0" />
@@ -292,20 +292,20 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                         <thead>
                           <tr className="border-b border-gray-800 text-gray-500">
                             <th className="text-left px-3 py-2">Name</th>
+                            <th className="text-left px-3 py-2">Role</th>
                             <th className="text-right px-3 py-2">Units</th>
                             <th className="text-left px-3 py-2">Email</th>
                             <th className="text-left px-3 py-2">School</th>
-                            <th className="text-left px-3 py-2">Role</th>
                           </tr>
                         </thead>
                         <tbody>
                           {csvRows.map((r, i) => (
                             <tr key={i} className="border-b border-gray-800/50 text-gray-300">
                               <td className="px-3 py-1.5">{r.name}</td>
+                              <td className="px-3 py-1.5 text-gray-400">{r.role || "member"}</td>
                               <td className="px-3 py-1.5 text-right font-mono">{r.votingUnits}</td>
                               <td className="px-3 py-1.5 text-gray-400">{r.email || "—"}</td>
                               <td className="px-3 py-1.5 text-gray-400">{r.school ? schoolDisplayName(r.school) : "—"}</td>
-                              <td className="px-3 py-1.5 text-gray-400">{r.role || "member"}</td>
                             </tr>
                           ))}
                         </tbody>
