@@ -53,7 +53,7 @@ function docTypeBadgeClass(type: string): string {
     return "bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30";
   if (type === "video")
     return "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30";
-  return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700";
+  return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700";
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ function Pill({ active, onClick, children }: {
         "shrink-0 whitespace-nowrap text-xs px-2.5 py-1 rounded-full border transition-colors",
         active
           ? "bg-primary text-white border-primary"
-          : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 bg-white dark:bg-transparent hover:border-gray-300 dark:hover:border-white/20"
+          : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 bg-white dark:bg-transparent hover:border-gray-300 dark:hover:border-white/20"
       )}
     >
       {children}
@@ -83,10 +83,10 @@ function LockedDocumentCard({ doc }: { doc: TokenDocument }) {
   return (
     <div className="flex flex-col rounded-xl border border-gray-200/60 dark:border-gray-800/60 bg-gray-50/50 dark:bg-gray-900/30 p-3.5 opacity-60 h-full">
       <div className="flex items-start justify-between gap-1.5 mb-2">
-        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 leading-snug line-clamp-2">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-400 leading-snug line-clamp-2">
           {doc.title}
         </h3>
-        <Lock className="w-3 h-3 text-gray-400 dark:text-gray-600 shrink-0 mt-0.5" />
+        <Lock className="w-3 h-3 text-gray-700 dark:text-gray-400 shrink-0 mt-0.5" />
       </div>
       <span className={cn(
         "inline-flex items-center self-start px-1.5 py-0.5 rounded text-[10px] font-medium mb-1.5",
@@ -94,8 +94,8 @@ function LockedDocumentCard({ doc }: { doc: TokenDocument }) {
       )}>
         {formatDocType(doc.document_type)}
       </span>
-      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
-      <p className="text-xs text-gray-400 dark:text-gray-600 mt-auto pt-2">{reason}</p>
+      <p className="text-xs text-gray-700 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
+      <p className="text-xs text-gray-700 dark:text-gray-400 mt-auto pt-2">{reason}</p>
     </div>
   );
 }
@@ -110,7 +110,7 @@ function VideoDocumentCard({ doc, onPlay }: { doc: TokenDocument; onPlay: () => 
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2">
           {doc.title}
         </h3>
-        <Play className="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-gray-600 dark:group-hover:text-gray-400 shrink-0 mt-0.5 transition-colors" />
+        <Play className="w-3 h-3 text-gray-700 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-400 shrink-0 mt-0.5 transition-colors" />
       </div>
       <span className={cn(
         "inline-flex items-center self-start px-1.5 py-0.5 rounded text-[10px] font-medium mb-1.5",
@@ -118,8 +118,8 @@ function VideoDocumentCard({ doc, onPlay }: { doc: TokenDocument; onPlay: () => 
       )}>
         {formatDocType(doc.document_type)}
       </span>
-      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
-      <p className="text-xs text-gray-400 dark:text-gray-600 mt-auto pt-2">{formatDocMonth(doc.document_date)}</p>
+      <p className="text-xs text-gray-700 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
+      <p className="text-xs text-gray-700 dark:text-gray-400 mt-auto pt-2">{formatDocMonth(doc.document_date)}</p>
     </button>
   );
 }
@@ -169,7 +169,7 @@ function DocumentCard({ doc, compareMode, selected, onToggle, disabled }: {
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2">
             {doc.title}
           </h3>
-          <ExternalLink className="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-gray-600 dark:group-hover:text-gray-400 shrink-0 mt-0.5 transition-colors" />
+          <ExternalLink className="w-3 h-3 text-gray-700 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-400 shrink-0 mt-0.5 transition-colors" />
         </div>
         <span className={cn(
           "inline-flex items-center self-start px-1.5 py-0.5 rounded text-[10px] font-medium mb-1.5",
@@ -177,11 +177,11 @@ function DocumentCard({ doc, compareMode, selected, onToggle, disabled }: {
         )}>
           {formatDocType(doc.document_type)}
         </span>
-        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
+        <p className="text-xs text-gray-700 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
         {doc.token_ticker && !/^school$/i.test(doc.token_ticker) && (
-          <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">${doc.token_ticker}</p>
+          <p className="text-xs text-gray-700 dark:text-gray-400 font-mono">${doc.token_ticker}</p>
         )}
-        <p className="text-xs text-gray-400 dark:text-gray-600 mt-auto pt-2">{formatDocMonth(doc.document_date)}</p>
+        <p className="text-xs text-gray-700 dark:text-gray-400 mt-auto pt-2">{formatDocMonth(doc.document_date)}</p>
       </a>
     </div>
   );
@@ -255,7 +255,7 @@ function DormDocsGrid() {
               "px-4 py-2 text-sm border-b-2 -mb-px transition-colors whitespace-nowrap",
               typeFilter === value
                 ? "border-primary text-gray-900 dark:text-white font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                : "border-transparent text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             )}
           >
             {label}
@@ -281,7 +281,7 @@ function DormDocsGrid() {
           </div>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-700 dark:text-gray-400 pointer-events-none" />
               <input
                 type="text"
                 value={tokenSearch}
@@ -305,7 +305,7 @@ function DormDocsGrid() {
                 "text-xs px-3 py-1.5 rounded-lg border transition-colors whitespace-nowrap",
                 compareMode
                   ? "bg-primary/20 border-primary/50 text-primary"
-                  : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600"
+                  : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 bg-white dark:bg-gray-900 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600"
               )}
             >
               {compareMode ? "Exit Compare" : "Compare Docs"}
@@ -316,7 +316,7 @@ function DormDocsGrid() {
 
       {/* Result count */}
       {!loading && (
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+        <p className="text-xs text-gray-700 dark:text-gray-400 mb-3">
           {filtered.length} document{filtered.length !== 1 ? "s" : ""}
         </p>
       )}
@@ -329,7 +329,7 @@ function DormDocsGrid() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 dark:text-gray-500 text-sm">
+        <div className="text-center py-16 text-gray-700 dark:text-gray-400 text-sm">
           {docs.length === 0 ? "No documents uploaded yet." : "No documents match your filters."}
         </div>
       ) : (
@@ -360,11 +360,11 @@ function DormDocsGrid() {
       {/* Compare action bar */}
       {compareMode && selectedDocs.length === 2 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-white/95 dark:bg-gray-900/95 border-t border-gray-200 dark:border-gray-800 backdrop-blur-sm">
-          <span className="text-sm text-gray-600 dark:text-gray-300">2 documents selected</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">2 documents selected</span>
           <div className="flex items-center gap-3">
             <button
               onClick={() => { setSelectedDocs([]); setCompareMode(false); }}
-              className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              className="text-xs text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
               Cancel
             </button>
@@ -403,7 +403,7 @@ export function ResearchTabs({ initialTickers: _ }: { initialTickers: string[] }
           <FileText className="w-5 h-5 text-primary" />
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">DormDocs</h1>
         </div>
-        <p className="text-gray-500 text-sm ml-8">Investment pitches and research from the DormDAO ecosystem</p>
+        <p className="text-gray-700 dark:text-gray-400 text-sm ml-8">Investment pitches and research from the DormDAO ecosystem</p>
       </div>
       <DormDocsGrid />
     </div>

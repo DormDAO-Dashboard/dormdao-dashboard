@@ -121,9 +121,9 @@ export function SignupRequestsSection() {
         </div>
 
         {loading ? (
-          <div className="px-5 py-8 text-center text-gray-400 text-sm">Loading…</div>
+          <div className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">Loading…</div>
         ) : requests.length === 0 ? (
-          <div className="px-5 py-8 text-center text-gray-400 dark:text-gray-600 text-sm">No signup requests yet.</div>
+          <div className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">No signup requests yet.</div>
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {requests.map((r) => (
@@ -131,7 +131,7 @@ export function SignupRequestsSection() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm text-gray-900 dark:text-white">{r.name}</span>
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{schoolDisplayName(r.school)}</span>
+                    <span className="text-xs text-gray-700 dark:text-gray-400">{schoolDisplayName(r.school)}</span>
                     <span className={cn(
                       "text-xs px-1.5 py-0.5 rounded font-medium",
                       r.status === "pending"  ? "bg-yellow-400/15 text-yellow-600 dark:text-yellow-400" :
@@ -140,11 +140,11 @@ export function SignupRequestsSection() {
                     )}>
                       {r.status}
                     </span>
-                    <span className="text-xs text-gray-400">{timeAgo(r.created_at)}</span>
+                    <span className="text-xs text-gray-700 dark:text-gray-400">{timeAgo(r.created_at)}</span>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{r.email}</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{r.email}</p>
                   {r.message && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 italic line-clamp-2">&ldquo;{r.message}&rdquo;</p>
+                    <p className="text-xs text-gray-700 dark:text-gray-400 mt-1 italic line-clamp-2">&ldquo;{r.message}&rdquo;</p>
                   )}
                 </div>
                 {r.status === "pending" && (
@@ -174,11 +174,11 @@ export function SignupRequestsSection() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setApproveModal(null)} />
           <div className="relative w-full max-w-sm bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl p-6">
             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Approve Request</h3>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-700 dark:text-gray-400 mb-4">
               Adding <strong className="text-gray-900 dark:text-white">{approveModal.name}</strong> ({schoolDisplayName(approveModal.school)})
             </p>
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Role</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">Role</label>
               <select
                 value={approveRole}
                 onChange={(e) => setApproveRole(e.target.value)}
@@ -193,7 +193,7 @@ export function SignupRequestsSection() {
               </div>
             )}
             <div className="flex gap-3">
-              <button onClick={() => setApproveModal(null)} className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Cancel</button>
+              <button onClick={() => setApproveModal(null)} className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Cancel</button>
               <button onClick={handleApprove} disabled={approving}
                 className="flex-1 py-2 rounded-lg bg-primary/20 border border-primary/40 text-primary text-sm font-medium hover:bg-primary/30 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                 {approving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -209,7 +209,7 @@ export function SignupRequestsSection() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRejectTarget(null)} />
           <div className="relative w-full max-w-sm bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl p-6">
             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Reject Request</h3>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-700 dark:text-gray-400 mb-4">
               Reject <strong className="text-gray-900 dark:text-white">{rejectTarget.name}</strong>&apos;s request? They&apos;ll receive a rejection email.
             </p>
             {error && (
@@ -218,7 +218,7 @@ export function SignupRequestsSection() {
               </div>
             )}
             <div className="flex gap-3">
-              <button onClick={() => setRejectTarget(null)} className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Cancel</button>
+              <button onClick={() => setRejectTarget(null)} className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Cancel</button>
               <button onClick={handleReject} disabled={rejecting}
                 className="flex-1 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-medium hover:bg-red-500/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                 {rejecting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

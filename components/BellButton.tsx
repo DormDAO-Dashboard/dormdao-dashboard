@@ -82,11 +82,11 @@ export function BellButton({ isLoggedIn }: { isLoggedIn: boolean }) {
       <div className="relative group">
         <button
           disabled
-          className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-300 dark:text-gray-700 cursor-not-allowed"
+          className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-700 dark:text-gray-400 cursor-not-allowed"
         >
           <Bell className="w-4 h-4" />
         </button>
-        <div className="absolute right-0 top-full mt-2 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-gray-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+        <div className="absolute right-0 top-full mt-2 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-gray-700 dark:text-gray-400 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
           Sign in to enable notifications
         </div>
       </div>
@@ -95,7 +95,7 @@ export function BellButton({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   if (!isSupported || isLoading) {
     return (
-      <button disabled className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 dark:text-gray-600">
+      <button disabled className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-700 dark:text-gray-400">
         <Bell className="w-4 h-4" />
       </button>
     );
@@ -110,7 +110,7 @@ export function BellButton({ isLoggedIn }: { isLoggedIn: boolean }) {
           "flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
           isSubscribed
             ? "text-primary hover:bg-primary/10"
-            : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+            : "text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
         )}
       >
         <Bell className={cn("w-4 h-4", isSubscribed && "fill-current")} />
@@ -119,7 +119,7 @@ export function BellButton({ isLoggedIn }: { isLoggedIn: boolean }) {
       {open && !isSubscribed && (
         <div className="absolute right-0 top-full mt-2 w-72 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl z-50 p-4">
           <p className="font-semibold text-sm text-gray-900 dark:text-white mb-1">Stay in the loop</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
+          <p className="text-xs text-gray-700 dark:text-gray-400 mb-4 leading-relaxed">
             Get notified when schools make trades or post new forum threads
           </p>
           <button
@@ -172,7 +172,7 @@ export function BellButton({ isLoggedIn }: { isLoggedIn: boolean }) {
               )}>
                 {emailEnabled && <Check className="w-2.5 h-2.5 text-black" />}
               </div>
-              <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <Mail className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 shrink-0" />
               <span className="text-xs text-gray-700 dark:text-gray-300">Email alerts</span>
             </button>
           </div>

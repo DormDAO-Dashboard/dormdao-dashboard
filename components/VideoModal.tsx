@@ -35,7 +35,7 @@ export function VideoModal({
             onClick={onClose}
             className="shrink-0 ml-3 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <X className="w-4 h-4 text-gray-300" />
+            <X className="w-4 h-4 text-gray-700 dark:text-gray-400" />
           </button>
         </div>
         {embedUrl ? (
@@ -49,7 +49,7 @@ export function VideoModal({
           </div>
         ) : (
           <div className="aspect-video flex items-center justify-center bg-gray-900 rounded-xl">
-            <p className="text-gray-500 text-sm">Unable to embed this video URL.</p>
+            <p className="text-gray-700 dark:text-gray-400 text-sm">Unable to embed this video URL.</p>
           </div>
         )}
       </div>

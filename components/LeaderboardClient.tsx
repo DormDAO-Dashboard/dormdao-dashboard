@@ -39,7 +39,7 @@ type SideSortKey = "rank" | "usdReturn" | "ethReturn";
 type QtSortKey = "name" | "quarterlyUsd" | "quarterlyEth";
 
 function SortIconNeutral({ col, sortKey, asc, yellow }: { col: string; sortKey: string; asc: boolean; yellow?: boolean }) {
-  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-400 dark:text-gray-600 inline ml-0.5 shrink-0" />;
+  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-700 dark:text-gray-400 inline ml-0.5 shrink-0" />;
   const cls = yellow ? "text-yellow-600 dark:text-yellow-400" : "text-primary";
   return asc
     ? <ChevronUp className={`w-3 h-3 ${cls} inline ml-0.5 shrink-0`} />
@@ -99,9 +99,9 @@ function Panel({
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-yellow-400 text-yellow-900 shrink-0">{rank}</span>;
-  if (rank === 2) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-gray-300 text-gray-700 shrink-0">{rank}</span>;
+  if (rank === 2) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-gray-300 text-gray-700 dark:text-gray-400 shrink-0">{rank}</span>;
   if (rank === 3) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-amber-600 text-white shrink-0">{rank}</span>;
-  return <span className="inline-flex w-5 h-5 items-center justify-center font-mono text-[9px] text-gray-400 dark:text-gray-500 shrink-0">{rank}</span>;
+  return <span className="inline-flex w-5 h-5 items-center justify-center font-mono text-[9px] text-gray-700 dark:text-gray-400 shrink-0">{rank}</span>;
 }
 
 // ─── "You" badge ─────────────────────────────────────────────────────────────
@@ -132,13 +132,13 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
     return ((a.quarterlyEthReturn ?? 0) - (b.quarterlyEthReturn ?? 0)) * mult;
   });
 
-  const th = "px-3 py-2 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
+  const th = "px-3 py-2 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-700 dark:text-gray-400 text-[10px] uppercase tracking-wide";
 
   return (
     <table className="w-full table-fixed text-xs" style={{ height: '100%' }}>
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
-          <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500 w-[13%]">#</th>
+          <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-700 dark:text-gray-400 w-[13%]">#</th>
           <th className={cn(th, "text-left")} onClick={() => toggle("name")}>
             School <SortIconNeutral col="name" sortKey={sortKey} asc={asc} />
           </th>
@@ -175,12 +175,12 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
               <td className="px-3 py-2 text-right">
                 {(s.quarterlyUsdReturn ?? 0) !== 0
                   ? <ReturnCell value={s.quarterlyUsdReturn!} />
-                  : <span className="text-gray-400 dark:text-gray-600 font-mono">—</span>}
+                  : <span className="text-gray-700 dark:text-gray-400 font-mono">—</span>}
               </td>
               <td className="px-3 py-2 text-right">
                 {(s.quarterlyEthReturn ?? 0) !== 0
                   ? <ReturnCell value={s.quarterlyEthReturn!} />
-                  : <span className="text-gray-400 dark:text-gray-600 font-mono">—</span>}
+                  : <span className="text-gray-700 dark:text-gray-400 font-mono">—</span>}
               </td>
             </tr>
           );
@@ -209,7 +209,7 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
 
   const th = (key: MainSortKey, extra = "") => cn(
     "px-3 py-2 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-[10px] uppercase tracking-wide",
-    sortKey === key ? "text-yellow-600 dark:text-yellow-400" : "text-gray-500",
+    sortKey === key ? "text-yellow-600 dark:text-yellow-400" : "text-gray-700 dark:text-gray-400",
     extra
   );
 
@@ -220,7 +220,7 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
           <th className={th("rank", "text-left w-[8%]")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
+          <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-700 dark:text-gray-400">School</th>
           <th className={th("nav", "text-right w-[14%]")} onClick={() => toggle("nav")}>
             NAV <SortIconNeutral col="nav" sortKey={sortKey} asc={asc} yellow />
           </th>
@@ -261,7 +261,7 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
               <td className="px-3 py-2 text-right font-mono text-gray-700 dark:text-gray-300 text-[10px] tabular-nums">{formatNav(s.nav)}</td>
               <td className="px-3 py-2 text-right"><ReturnCell value={s.usdReturn} /></td>
               <td className="px-3 py-2 text-right"><ReturnCell value={s.ethReturn} /></td>
-              <td className="px-3 py-2 text-right font-mono text-gray-600 dark:text-gray-400 text-[10px] tabular-nums">
+              <td className="px-3 py-2 text-right font-mono text-gray-700 dark:text-gray-400 text-[10px] tabular-nums">
                 {s.pctDeployed > 0 ? formatPct(s.pctDeployed, false) : "—"}
               </td>
             </tr>
@@ -289,7 +289,7 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
     return ((a[sortKey] as number) - (b[sortKey] as number)) * mult;
   });
 
-  const th = "px-3 py-2 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-500 text-[10px] uppercase tracking-wide";
+  const th = "px-3 py-2 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-700 dark:text-gray-400 text-[10px] uppercase tracking-wide";
 
   return (
     <table className="w-full table-fixed text-xs" style={{ height: '100%' }}>
@@ -298,7 +298,7 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
           <th className={cn(th, "text-left w-[13%]")} onClick={() => toggle("rank")}>
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} />
           </th>
-          <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-500">School</th>
+          <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-700 dark:text-gray-400">School</th>
           <th className={cn(th, "text-right w-[22%]")} onClick={() => toggle("usdReturn")}>
             USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
           </th>
@@ -385,9 +385,9 @@ export function LeaderboardClient({
       <div className="shrink-0 flex items-center justify-between mb-2">
         <div>
           <h1 className="text-base font-semibold text-gray-900 dark:text-white leading-tight">Leaderboard</h1>
-          <p className="text-[11px] text-gray-500">University DAO performance rankings across all seasons.</p>
+          <p className="text-[11px] text-gray-700 dark:text-gray-400">University DAO performance rankings across all seasons.</p>
         </div>
-        <div className="text-[10px] text-gray-500 dark:text-gray-600 text-right">
+        <div className="text-[10px] text-gray-700 dark:text-gray-400 text-right">
           <span>Synced {syncLabel}</span>
           {" · "}
           <button
@@ -419,7 +419,7 @@ export function LeaderboardClient({
           header={
             <>
               <div className="text-xs font-semibold text-gray-900 dark:text-white">Quarterly</div>
-              <div className="text-[10px] text-gray-500 mt-0.5">{getQuarterLabel()}</div>
+              <div className="text-[10px] text-gray-700 dark:text-gray-400 mt-0.5">{getQuarterLabel()}</div>
             </>
           }
         >
@@ -446,7 +446,7 @@ export function LeaderboardClient({
                       "text-[10px] font-medium transition-colors",
                       season === s.key
                         ? "text-yellow-700 dark:text-yellow-300"
-                        : "text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                        : "text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     )}
                   >
                     {s.tab}
@@ -459,7 +459,7 @@ export function LeaderboardClient({
           {activeSchools.length > 0 ? (
             <SeasonTable schools={activeSchools} userSlug={userSlug} />
           ) : (
-            <div className="py-16 text-center text-gray-500 dark:text-gray-600 text-xs">
+            <div className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs">
               Historical data for {activeSeason.label} coming soon.
             </div>
           )}
@@ -472,14 +472,14 @@ export function LeaderboardClient({
           header={
             <>
               <div className="text-xs font-semibold text-gray-900 dark:text-white">All-Time</div>
-              <div className="text-[10px] text-gray-500 mt-0.5">Since inception</div>
+              <div className="text-[10px] text-gray-700 dark:text-gray-400 mt-0.5">Since inception</div>
             </>
           }
         >
           {sinceInceptionSchools.length > 0 ? (
             <AllTimeTable schools={sinceInceptionSchools} userSlug={userSlug} />
           ) : (
-            <div className="py-16 text-center text-gray-500 dark:text-gray-600 text-xs">No data</div>
+            <div className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs">No data</div>
           )}
         </Panel>
 

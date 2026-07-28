@@ -57,7 +57,7 @@ export default function AboutPage() {
           />
         </div>
         <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 dark:text-white mb-4">DormDAO</h1>
-        <p className="text-lg text-gray-500 mb-8">
+        <p className="text-lg text-gray-700 dark:text-gray-400 mb-8">
           The world&apos;s first multi-university crypto investment DAO
         </p>
         <a
@@ -80,7 +80,7 @@ export default function AboutPage() {
         ].map(({ label, value }) => (
           <div key={label} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 text-center">
             <div className="text-2xl font-semibold font-mono text-gray-900 dark:text-white mb-1">{value}</div>
-            <div className="text-xs text-gray-500">{label}</div>
+            <div className="text-xs text-gray-700 dark:text-gray-400">{label}</div>
           </div>
         ))}
       </div>
@@ -88,10 +88,10 @@ export default function AboutPage() {
       {/* What is DormDAO */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-8 mb-8">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">What is DormDAO?</h2>
-        <p className="text-gray-400 leading-relaxed mb-4">
+        <p className="text-gray-700 dark:text-gray-400 leading-relaxed mb-4">
           DormDAO is a student-run investment DAO uniting 17 university blockchain clubs across the United States, Canada, and the UK. Founded in October 2023, it gives student investors hands-on experience managing real crypto portfolios and competing against each other in a transparent, on-chain leaderboard.
         </p>
-        <p className="text-gray-400 leading-relaxed">
+        <p className="text-gray-700 dark:text-gray-400 leading-relaxed">
           Each member school operates as an independent sub-DAO with its own ETH allocation. Schools research, debate, and vote on investments—gaining practical experience in DeFi, token analysis, and decentralized governance while managing real capital.
         </p>
       </div>
@@ -106,7 +106,7 @@ export default function AboutPage() {
                 {num}
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
-              <p className="text-sm text-gray-400">{desc}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-400">{desc}</p>
             </div>
           ))}
         </div>
@@ -115,7 +115,7 @@ export default function AboutPage() {
       {/* Mission */}
       <div className="rounded-lg border border-primary/20 bg-primary/5 p-8 mb-12 text-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Our Mission</h2>
-        <p className="text-gray-300 leading-relaxed max-w-2xl mx-auto">
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto">
           Investing in the future of blockchain and Web3 from university campuses — giving the next generation of crypto builders real capital, real stakes, and real experience before they graduate.
         </p>
       </div>
@@ -137,14 +137,14 @@ export default function AboutPage() {
 
       {/* Footer CTA */}
       <div className="text-center pb-16">
-        <p className="text-gray-500 text-sm mb-4">
+        <p className="text-gray-700 dark:text-gray-400 text-sm mb-4">
           Learn more about DormDAO and get involved
         </p>
         <a
           href="https://www.dormdao.io"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           dormdao.io <ExternalLink className="w-4 h-4" />
         </a>

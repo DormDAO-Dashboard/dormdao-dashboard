@@ -45,7 +45,7 @@ const ROLE_BADGE: Record<string, string> = {
   director:   "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800",
   club_admin: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800",
   dorm_admin: "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800",
-  member:     "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-500 border border-gray-200 dark:border-gray-700",
+  member:     "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700",
 };
 
 const EMPTY_DRAFT: MemberDraft = { name: "", votingUnits: 10, email: "", walletAddress: "", school: null, role: "member" };
@@ -215,7 +215,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
       <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
           Members
-          <span className="ml-2 text-xs text-gray-500 font-normal">{members.length} total</span>
+          <span className="ml-2 text-xs text-gray-700 dark:text-gray-400 font-normal">{members.length} total</span>
         </h2>
 
         <Dialog.Root open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetModal(); }}>
@@ -235,7 +235,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               <div className="flex items-center justify-between">
                 <Dialog.Title className="text-base font-semibold text-gray-900 dark:text-white">Add Members</Dialog.Title>
                 <Dialog.Close asChild>
-                  <button className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+                  <button className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X className="w-4 h-4" /></button>
                 </Dialog.Close>
               </div>
 
@@ -244,7 +244,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                   <button key={m} onClick={() => { setMode(m); setResult(null); }}
                     className={cn(
                       "flex items-center gap-2 flex-1 justify-center px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors",
-                      mode === m ? "border-primary/60 bg-primary/10 text-primary" : "border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600"
+                      mode === m ? "border-primary/60 bg-primary/10 text-primary" : "border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-200 hover:border-gray-600"
                     )}
                   >
                     {m === "manual" ? <FilePlus className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
@@ -277,10 +277,10 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
 
               {mode === "csv" && (
                 <div className="flex flex-col gap-3">
-                  <p className="text-xs text-gray-500">
-                    CSV headers: <code className="text-gray-300">name, role, units, email, walletAddress, school</code>
+                  <p className="text-xs text-gray-700 dark:text-gray-400">
+                    CSV headers: <code className="text-gray-700 dark:text-gray-400">name, role, units, email, walletAddress, school</code>
                   </p>
-                  <label className="flex items-center justify-center gap-2 w-full px-4 py-4 rounded-lg border-2 border-dashed border-gray-700 hover:border-gray-500 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer text-sm">
+                  <label className="flex items-center justify-center gap-2 w-full px-4 py-4 rounded-lg border-2 border-dashed border-gray-700 hover:border-gray-500 text-gray-700 dark:text-gray-400 hover:text-gray-200 transition-colors cursor-pointer text-sm">
                     <Upload className="w-4 h-4 shrink-0" />
                     {csvRows.length > 0 ? `${csvRows.length} rows loaded — click to replace` : "Click to select a .csv file"}
                     <input ref={fileRef} type="file" accept=".csv,text/csv" className="sr-only" onChange={handleCSVFile} />
@@ -290,7 +290,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                     <div className="overflow-x-auto rounded-lg border border-gray-800 max-h-48">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-gray-800 text-gray-500">
+                          <tr className="border-b border-gray-800 text-gray-700 dark:text-gray-400">
                             <th className="text-left px-3 py-2">Name</th>
                             <th className="text-left px-3 py-2">Role</th>
                             <th className="text-right px-3 py-2">Units</th>
@@ -300,12 +300,12 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                         </thead>
                         <tbody>
                           {csvRows.map((r, i) => (
-                            <tr key={i} className="border-b border-gray-800/50 text-gray-300">
+                            <tr key={i} className="border-b border-gray-800/50 text-gray-700 dark:text-gray-400">
                               <td className="px-3 py-1.5">{r.name}</td>
-                              <td className="px-3 py-1.5 text-gray-400">{r.role || "member"}</td>
+                              <td className="px-3 py-1.5 text-gray-700 dark:text-gray-400">{r.role || "member"}</td>
                               <td className="px-3 py-1.5 text-right font-mono">{r.votingUnits}</td>
-                              <td className="px-3 py-1.5 text-gray-400">{r.email || "—"}</td>
-                              <td className="px-3 py-1.5 text-gray-400">{r.school ? schoolDisplayName(r.school) : "—"}</td>
+                              <td className="px-3 py-1.5 text-gray-700 dark:text-gray-400">{r.email || "—"}</td>
+                              <td className="px-3 py-1.5 text-gray-700 dark:text-gray-400">{r.school ? schoolDisplayName(r.school) : "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -327,7 +327,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 </div>
               )}
 
-              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 select-none cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-400 select-none cursor-pointer">
                 <input
                   type="checkbox"
                   checked={sendOnboardingEmails}
@@ -339,7 +339,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
 
               <div className="flex items-center justify-end gap-3 pt-1">
                 <Dialog.Close asChild>
-                  <button className="px-4 py-2 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">Cancel</button>
+                  <button className="px-4 py-2 rounded-lg border border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">Cancel</button>
                 </Dialog.Close>
                 <button onClick={handleSubmit} disabled={submitting || (mode === "csv" && csvRows.length === 0)}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 transition-colors text-sm font-medium disabled:opacity-50">
@@ -355,7 +355,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
+            <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-700 dark:text-gray-400">
               <th className="text-left px-5 py-3">Name</th>
               <th className="text-left px-3 py-3">School</th>
               <th className="text-left px-3 py-3">Role</th>
@@ -373,15 +373,15 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 <td className="px-3 py-3">
                   {m.school === MAIN_DAO_VOTER ? (
                     <div className="flex items-center gap-1.5">
-                      <Landmark className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      <span className="text-xs text-gray-300">{MAIN_DAO_VOTER}</span>
+                      <Landmark className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 shrink-0" />
+                      <span className="text-xs text-gray-700 dark:text-gray-400">{MAIN_DAO_VOTER}</span>
                     </div>
                   ) : m.school ? (
                     <div className="flex items-center gap-1.5">
                       <SchoolLogo name={m.school} size={14} />
-                      <span className="text-xs text-gray-300">{schoolDisplayName(m.school)}</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-400">{schoolDisplayName(m.school)}</span>
                     </div>
-                  ) : <span className="text-xs text-gray-600">—</span>}
+                  ) : <span className="text-xs text-gray-700 dark:text-gray-400">—</span>}
                 </td>
                 <td className="px-3 py-3">
                   <span className={cn("text-xs px-2 py-0.5 rounded font-medium", ROLE_BADGE[m.role] ?? ROLE_BADGE.member)}>
@@ -389,22 +389,22 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                   </span>
                 </td>
                 <td className="px-3 py-3 text-right font-mono text-primary">{m.votingUnits}</td>
-                <td className="px-3 py-3 text-gray-400">{m.email || "—"}</td>
-                <td className="px-3 py-3 font-mono text-gray-500 text-xs">
+                <td className="px-3 py-3 text-gray-700 dark:text-gray-400">{m.email || "—"}</td>
+                <td className="px-3 py-3 font-mono text-gray-700 dark:text-gray-400 text-xs">
                   {m.walletAddress ? `${m.walletAddress.slice(0, 6)}…${m.walletAddress.slice(-4)}` : "—"}
                 </td>
-                <td className="pl-6 pr-3 py-3 text-xs text-gray-400">
+                <td className="pl-6 pr-3 py-3 text-xs text-gray-700 dark:text-gray-400">
                   {formatLastSignIn(m.lastSignInAt)}
                 </td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <button onClick={() => { setOnboardTarget(m); setOnboardError(null); }} className="text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Send onboarding email">
+                    <button onClick={() => { setOnboardTarget(m); setOnboardError(null); }} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Send onboarding email">
                       <MailPlus className="w-4 h-4" />
                     </button>
-                    <button onClick={() => openEdit(m)} className="text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit member">
+                    <button onClick={() => openEdit(m)} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit member">
                       <Pencil className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(m.id)} disabled={deleting === m.id} className="text-gray-600 hover:text-danger transition-colors disabled:opacity-40" title="Remove member">
+                    <button onClick={() => handleDelete(m.id)} disabled={deleting === m.id} className="text-gray-700 dark:text-gray-400 hover:text-danger transition-colors disabled:opacity-40" title="Remove member">
                       {deleting === m.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     </button>
                   </div>
@@ -412,7 +412,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               </tr>
             ))}
             {members.length === 0 && (
-              <tr><td colSpan={8} className="px-5 py-8 text-center text-gray-400 dark:text-gray-600 text-sm">No members yet.</td></tr>
+              <tr><td colSpan={8} className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">No members yet.</td></tr>
             )}
           </tbody>
         </table>
@@ -424,7 +424,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
           <div className="relative w-full max-w-md bg-[#111] rounded-xl border border-gray-800 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Edit Member</h3>
-              <button onClick={() => setEditTarget(null)} className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+              <button onClick={() => setEditTarget(null)} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X className="w-4 h-4" /></button>
             </div>
             <form onSubmit={handleEdit} className="flex flex-col gap-3">
               <Field label="Name *"><input value={editDraft.name} onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })} required className={fieldClass} /></Field>
@@ -445,7 +445,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               </Field>
               {editError && <ErrorBanner>{editError}</ErrorBanner>}
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setEditTarget(null)} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">Cancel</button>
+                <button type="button" onClick={() => setEditTarget(null)} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">Cancel</button>
                 <button type="submit" disabled={editSubmitting} className="flex-1 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                   {editSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   Save Changes
@@ -462,15 +462,15 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
           <div className="relative w-full max-w-sm bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Send Onboarding Email</h3>
-              <button onClick={() => setOnboardTarget(null)} disabled={onboardSending} className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
+              <button onClick={() => setOnboardTarget(null)} disabled={onboardSending} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-700 dark:text-gray-400">
               Send the onboarding email to <span className="text-gray-900 dark:text-white font-medium">{onboardTarget.name}</span>
               {onboardTarget.email ? <> at <span className="text-gray-700 dark:text-gray-300">{onboardTarget.email}</span></> : null}?
             </p>
             {onboardError && <div className="mt-3"><ErrorBanner>{onboardError}</ErrorBanner></div>}
             <div className="flex gap-3 pt-5">
-              <button type="button" onClick={() => setOnboardTarget(null)} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors disabled:opacity-40">Cancel</button>
+              <button type="button" onClick={() => setOnboardTarget(null)} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors disabled:opacity-40">Cancel</button>
               <button type="button" onClick={handleSendOnboarding} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                 {onboardSending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Send
@@ -486,7 +486,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">{label}</label>
+      <label className="text-xs text-gray-700 dark:text-gray-400 font-medium uppercase tracking-wider">{label}</label>
       {children}
     </div>
   );

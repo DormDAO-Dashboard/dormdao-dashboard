@@ -101,7 +101,7 @@ export default function LoginPage() {
             <Image src="/logo.jpg" width={56} height={56} alt="DormDAO" className="rounded-xl" />
           </div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Sign in to DormDAO</h1>
-          <p className="text-gray-500 text-sm">Connect with your school and join the community.</p>
+          <p className="text-gray-700 dark:text-gray-400 text-sm">Connect with your school and join the community.</p>
         </div>
 
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-6 flex flex-col gap-3">
@@ -126,7 +126,7 @@ export default function LoginPage() {
             {googleLoading ? "Redirecting…" : "Continue with Google"}
           </button>
 
-          <div className="flex items-center gap-2 text-xs text-gray-600">
+          <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-400">
             <div className="flex-1 h-px bg-gray-800" />
             or
             <div className="flex-1 h-px bg-gray-800" />
@@ -152,13 +152,13 @@ export default function LoginPage() {
             {walletLoading ? "Waiting for MetaMask…" : "Connect MetaMask"}
           </button>
 
-          <p className="text-xs text-gray-600 text-center">
+          <p className="text-xs text-gray-700 dark:text-gray-400 text-center">
             By signing in you agree to use this for DormDAO community purposes only.
           </p>
-          <p className="text-xs text-gray-600 text-center">
+          <p className="text-xs text-gray-700 dark:text-gray-400 text-center">
             DormDAO is invitation-only. Access is granted by your school&apos;s admin.
           </p>
-          <p className="text-xs text-gray-500 text-center pt-1">
+          <p className="text-xs text-gray-700 dark:text-gray-400 text-center pt-1">
             Not registered?{" "}
             <a href="/join" className="text-primary hover:underline">Request access →</a>
           </p>

@@ -135,7 +135,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
   }
 
   const inputClass =
-    "w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40";
+    "w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -145,7 +145,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
 
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-semibold text-gray-900 dark:text-white">New Investment Proposal</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+          <button onClick={onClose} className="text-gray-700 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -153,7 +153,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
                 Token Ticker <span className="text-red-500">*</span>
               </label>
               <input
@@ -167,7 +167,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
                 Recommended Size (ETH)
               </label>
               <input
@@ -183,7 +183,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
               Proposal Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -197,7 +197,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
               Pitch Summary / Description <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -209,26 +209,26 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
               placeholder="Explain the investment thesis, catalysts, risks..."
               className={inputClass + " resize-none"}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/5000</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mt-1 text-right">{description.length}/5000</p>
           </div>
 
           <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60">
             <span className="text-sm font-semibold text-gray-900 dark:text-white">
               {VOTING_PERIOD_HOURS} Hours
             </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-gray-700 dark:text-gray-400">
               Ends {formatDeadline(deadline)}
             </span>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-              Supporting Documents <span className="text-gray-400 font-normal">(optional PDFs)</span>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-2">
+              Supporting Documents <span className="text-gray-700 dark:text-gray-400 font-normal">(optional PDFs)</span>
             </label>
             <div className="space-y-2">
               {DOC_SLOTS.map((slot, i) => (
                 <div key={slot.type} className="flex items-center gap-2">
-                  <label className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:border-primary/50 cursor-pointer transition-colors text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                  <label className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:border-primary/50 cursor-pointer transition-colors text-xs text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                     <Paperclip className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate min-w-0">
                       {docFiles[i] ? docFiles[i]!.name : slot.label}
@@ -248,7 +248,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
                         setDoc(i, null);
                         if (fileRefs[i].current) fileRefs[i].current!.value = "";
                       }}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0"
+                      className="text-gray-700 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -259,7 +259,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
           </div>
 
           {uploadStatus && (
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-400">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               {uploadStatus}
             </div>
@@ -275,7 +275,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Cancel
             </button>

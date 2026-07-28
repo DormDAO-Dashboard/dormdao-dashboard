@@ -75,7 +75,7 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
 
   return (
     <form onSubmit={handleSubmit} className="border-t border-gray-800 px-5 py-4 space-y-3">
-      <p className="text-xs font-medium text-gray-400">Upload Document</p>
+      <p className="text-xs font-medium text-gray-700 dark:text-gray-400">Upload Document</p>
       <div className="grid grid-cols-2 gap-3">
         <input
           type="text"
@@ -113,8 +113,8 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
           />
         ) : (
           <label className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-gray-500 transition-colors">
-            <Upload className="w-4 h-4 text-gray-400 shrink-0" />
-            <span className="text-sm text-gray-400 truncate">{file ? file.name : "Choose file…"}</span>
+            <Upload className="w-4 h-4 text-gray-700 dark:text-gray-400 shrink-0" />
+            <span className="text-sm text-gray-700 dark:text-gray-400 truncate">{file ? file.name : "Choose file…"}</span>
             <input
               type="file"
               accept=".pdf,.doc,.docx,.ppt,.pptx"
@@ -125,7 +125,7 @@ function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded
         )}
       </div>
       {isVideo && (
-        <p className="text-[11px] text-gray-500">Videos are visible to {schoolDisplayName(schoolName)} members only.</p>
+        <p className="text-[11px] text-gray-700 dark:text-gray-400">Videos are visible to {schoolDisplayName(schoolName)} members only.</p>
       )}
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
       <button
@@ -180,11 +180,11 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
     <>
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-300">Documents</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">Documents</h2>
         </div>
 
         {docs.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-gray-500">No documents uploaded yet.</p>
+          <p className="px-5 py-6 text-sm text-gray-700 dark:text-gray-400">No documents uploaded yet.</p>
         ) : (
           <ul className="divide-y divide-gray-800/60">
             {docs.map((doc) => {
@@ -192,18 +192,18 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
                 return (
                   <li key={doc.id} className="flex items-center gap-4 px-5 py-4 opacity-60">
                     <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                      <Lock className="w-4 h-4 text-gray-500" />
+                      <Lock className="w-4 h-4 text-gray-700 dark:text-gray-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-400 truncate">{doc.title}</div>
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-400 truncate">{doc.title}</div>
                       <div className="flex items-center flex-wrap gap-2 mt-1">
                         <TypeBadge type={doc.document_type} />
                         {doc.document_date && (
-                          <span className="text-xs text-gray-600">{formatDocDate(doc.document_date)}</span>
+                          <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                         )}
                       </div>
                     </div>
-                    <span className="shrink-0 text-xs text-gray-500">
+                    <span className="shrink-0 text-xs text-gray-700 dark:text-gray-400">
                       {getLockReason(doc.visibility, doc.school)}
                     </span>
                   </li>
@@ -214,20 +214,20 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
                 return (
                   <li key={doc.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-800/30 transition-colors">
                     <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                      <Play className="w-4 h-4 text-gray-400" />
+                      <Play className="w-4 h-4 text-gray-700 dark:text-gray-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{doc.title}</div>
                       <div className="flex items-center flex-wrap gap-2 mt-1">
                         <TypeBadge type={doc.document_type} />
                         {doc.document_date && (
-                          <span className="text-xs text-gray-500">{formatDocDate(doc.document_date)}</span>
+                          <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={() => setPlayingDoc(doc)}
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-700 dark:text-gray-400 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <Play className="w-3 h-3" />
                       Watch
@@ -239,14 +239,14 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
               return (
                 <li key={doc.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-800/30 transition-colors">
                   <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-gray-400" />
+                    <FileText className="w-4 h-4 text-gray-700 dark:text-gray-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{doc.title}</div>
                     <div className="flex items-center flex-wrap gap-2 mt-1">
                       <TypeBadge type={doc.document_type} />
                       {doc.document_date && (
-                        <span className="text-xs text-gray-500">{formatDocDate(doc.document_date)}</span>
+                        <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                       )}
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
                     href={doc.file_url!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-700 dark:text-gray-400 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                   >
                     <Download className="w-3 h-3" />
                     View
@@ -270,7 +270,7 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
         )}
 
         {!canUpload && (
-          <div className="border-t border-gray-800 px-5 py-4 text-xs text-gray-600">
+          <div className="border-t border-gray-800 px-5 py-4 text-xs text-gray-700 dark:text-gray-400">
             {!isLoggedIn ? (
               <><Link href="/login" className="text-primary hover:underline">Sign in</Link> and set your school to upload documents.</>
             ) : (

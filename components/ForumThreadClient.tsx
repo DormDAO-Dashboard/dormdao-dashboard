@@ -16,11 +16,11 @@ function ReplyCard({ reply }: { reply: ForumReply }) {
       <SchoolLogo name={reply.school} size={20} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="text-xs font-medium text-gray-300">{schoolDisplayName(reply.school)}</span>
-          {reply.author_name && <span className="text-xs text-gray-600">· {reply.author_name}</span>}
-          <span className="text-xs text-gray-700">· {timeAgo(reply.created_at)}</span>
+          <span className="text-xs font-medium text-gray-700 dark:text-gray-400">{schoolDisplayName(reply.school)}</span>
+          {reply.author_name && <span className="text-xs text-gray-700 dark:text-gray-400">· {reply.author_name}</span>}
+          <span className="text-xs text-gray-700 dark:text-gray-400">· {timeAgo(reply.created_at)}</span>
         </div>
-        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
       </div>
     </div>
   );
@@ -119,7 +119,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
   if (notFound || !thread) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500 text-sm mb-2">Thread not found.</p>
+        <p className="text-gray-700 dark:text-gray-400 text-sm mb-2">Thread not found.</p>
         <Link href="/forum" className="text-xs text-primary hover:underline">← Back to Forum</Link>
       </div>
     );
@@ -127,7 +127,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link href="/forum" className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-6">
+      <Link href="/forum" className="inline-flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-6">
         <ArrowLeft className="w-3.5 h-3.5" />
         Back to Forum
       </Link>
@@ -137,7 +137,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
           {thread.is_pinned && <Pin className="w-3.5 h-3.5 text-yellow-500" />}
           <span className={cn(
             "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-            CATEGORY_STYLES[thread.category] ?? "bg-gray-800 text-gray-400"
+            CATEGORY_STYLES[thread.category] ?? "bg-gray-800 text-gray-700 dark:text-gray-400"
           )}>
             {CATEGORY_LABELS[thread.category] ?? thread.category}
           </span>
@@ -154,18 +154,18 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
         <h1 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{thread.title}</h1>
 
         {thread.content && (
-          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap mb-6">{thread.content}</p>
+          <p className="text-gray-700 dark:text-gray-400 text-sm leading-relaxed whitespace-pre-wrap mb-6">{thread.content}</p>
         )}
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 flex-wrap">
             <SchoolLogo name={thread.school} size={18} />
-            <span className="text-xs text-gray-400 font-medium">{schoolDisplayName(thread.school)}</span>
-            {thread.author_name && <span className="text-xs text-gray-600">· {thread.author_name}</span>}
-            <span className="text-xs text-gray-700">· {timeAgo(thread.created_at)}</span>
+            <span className="text-xs text-gray-700 dark:text-gray-400 font-medium">{schoolDisplayName(thread.school)}</span>
+            {thread.author_name && <span className="text-xs text-gray-700 dark:text-gray-400">· {thread.author_name}</span>}
+            <span className="text-xs text-gray-700 dark:text-gray-400">· {timeAgo(thread.created_at)}</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1 text-xs text-gray-500">
+            <span className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400">
               <MessageSquare className="w-3.5 h-3.5" />
               {thread.reply_count}
             </span>
@@ -174,7 +174,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
               disabled={!user}
               className={cn(
                 "flex items-center gap-1 text-xs font-medium transition-colors",
-                upvoted ? "text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300",
+                upvoted ? "text-primary" : "text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300",
                 !user && "opacity-50 cursor-default"
               )}
             >
@@ -186,7 +186,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
                 onClick={handleDelete}
                 disabled={deleting}
                 title="Delete thread"
-                className="flex items-center gap-1 text-xs text-gray-600 hover:text-red-500 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -197,7 +197,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
 
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 mb-4">
         <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-300">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
             {replies.length === 0
               ? "No replies yet"
               : `${replies.length} ${replies.length === 1 ? "Reply" : "Replies"}`}
@@ -221,7 +221,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
             className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-primary/50 resize-none"
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-700">{replyContent.length}/2000</span>
+            <span className="text-xs text-gray-700 dark:text-gray-400">{replyContent.length}/2000</span>
             <div className="flex items-center gap-3">
               {replyError && <span className="text-xs text-danger">{replyError}</span>}
               <button
@@ -235,7 +235,7 @@ export function ForumThreadClient({ threadId }: { threadId: string }) {
           </div>
         </form>
       ) : (
-        <div className="text-center py-6 text-xs text-gray-500">
+        <div className="text-center py-6 text-xs text-gray-700 dark:text-gray-400">
           <Link href="/login" className="text-primary hover:underline">Sign in</Link> to reply
         </div>
       )}

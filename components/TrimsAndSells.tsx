@@ -84,9 +84,9 @@ export function TrimsAndSells() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
         <div className="flex items-center gap-2">
           <TrendingDown className="w-4 h-4 text-danger" />
-          <h2 className="text-sm font-semibold text-gray-300">Position Trims Detected</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">Position Trims Detected</h2>
           {!loading && (
-            <span className="text-xs text-gray-600 ml-1">
+            <span className="text-xs text-gray-700 dark:text-gray-400 ml-1">
               {filtered.length} event{filtered.length !== 1 ? "s" : ""}
             </span>
           )}
@@ -104,16 +104,16 @@ export function TrimsAndSells() {
       </div>
 
       {loading ? (
-        <div className="px-5 py-8 text-center text-sm text-gray-500">Loading…</div>
+        <div className="px-5 py-8 text-center text-sm text-gray-700 dark:text-gray-400">Loading…</div>
       ) : filtered.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-gray-500">
+        <div className="px-5 py-8 text-center text-sm text-gray-700 dark:text-gray-400">
           No trims detected yet — checked hourly via snapshots.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800 text-xs text-gray-500">
+              <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                 <th className="text-left px-5 py-3">School</th>
                 <th className="text-left px-5 py-3">Token</th>
                 <th className="text-left px-5 py-3">Type</th>
@@ -143,7 +143,7 @@ export function TrimsAndSells() {
                         className="flex items-center gap-2 hover:text-primary transition-colors"
                       >
                         <SchoolLogo name={c.school_name} size={20} />
-                        <span className="text-gray-300 text-xs">{schoolDisplayName(c.school_name)}</span>
+                        <span className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(c.school_name)}</span>
                       </Link>
                     </td>
                     <td className="px-5 py-3">
@@ -163,10 +163,10 @@ export function TrimsAndSells() {
                         {isFull ? "Full Exit" : "Trimmed"}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs">
                       {formatQty(c.old_quantity)}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs">
                       {isFull ? "0" : formatQty(c.new_quantity)}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-danger text-xs">
@@ -178,7 +178,7 @@ export function TrimsAndSells() {
                           {pnl.gainUsd >= 0 ? "+" : ""}{formatUSD(pnl.gainUsd)}
                         </span>
                       ) : (
-                        <span className="text-gray-600">—</span>
+                        <span className="text-gray-700 dark:text-gray-400">—</span>
                       )}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">
@@ -187,7 +187,7 @@ export function TrimsAndSells() {
                           {pnl.roiUsdPct >= 0 ? "+" : ""}{pnl.roiUsdPct.toFixed(1)}%
                         </span>
                       ) : (
-                        <span className="text-gray-600">—</span>
+                        <span className="text-gray-700 dark:text-gray-400">—</span>
                       )}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">
@@ -196,10 +196,10 @@ export function TrimsAndSells() {
                           {pnl.roiEthPct >= 0 ? "+" : ""}{pnl.roiEthPct.toFixed(1)}%
                         </span>
                       ) : (
-                        <span className="text-gray-600">—</span>
+                        <span className="text-gray-700 dark:text-gray-400">—</span>
                       )}
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-500 text-xs">
+                    <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">
                       {c.detected_at ? formatDate(c.detected_at) : "—"}
                     </td>
                   </tr>

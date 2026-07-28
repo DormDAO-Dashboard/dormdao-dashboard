@@ -29,7 +29,7 @@ function CategoryBadge({ category }: { category: string }) {
   return (
     <span className={cn(
       "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-      CATEGORY_STYLES[category] ?? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+      CATEGORY_STYLES[category] ?? "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
     )}>
       {CATEGORY_LABELS[category] ?? category}
     </span>
@@ -56,7 +56,7 @@ function ThreadCard({
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onUpvote(thread.id); }}
           className={cn(
             "flex flex-col items-center gap-0.5 pt-0.5 shrink-0 transition-colors",
-            isUpvoted ? "text-primary" : "text-gray-600 hover:text-gray-400"
+            isUpvoted ? "text-primary" : "text-gray-700 dark:text-gray-400 hover:text-gray-400"
           )}
         >
           <ChevronUp className="w-4 h-4" />
@@ -82,17 +82,17 @@ function ThreadCard({
           </h3>
 
           {thread.content && (
-            <p className="text-gray-400 text-xs leading-relaxed line-clamp-2 mb-3">{thread.content}</p>
+            <p className="text-gray-700 dark:text-gray-400 text-xs leading-relaxed line-clamp-2 mb-3">{thread.content}</p>
           )}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 flex-wrap">
               <SchoolLogo name={thread.school} size={16} />
-              <span className="text-xs text-gray-400">{schoolDisplayName(thread.school)}</span>
-              {thread.author_name && <span className="text-xs text-gray-600">· {thread.author_name}</span>}
-              <span className="text-xs text-gray-700">· {timeAgo(thread.created_at)}</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400">{schoolDisplayName(thread.school)}</span>
+              {thread.author_name && <span className="text-xs text-gray-700 dark:text-gray-400">· {thread.author_name}</span>}
+              <span className="text-xs text-gray-700 dark:text-gray-400">· {timeAgo(thread.created_at)}</span>
             </div>
-            <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
+            <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400 shrink-0">
               <MessageSquare className="w-3.5 h-3.5" />
               <span>{thread.reply_count}</span>
             </div>
@@ -165,21 +165,21 @@ function NewThreadModal({ userSchool, displayName, onClose, onSuccess }: NewThre
       <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-[#111] shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">New Thread</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <button onClick={onClose} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">School</label>
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">School</label>
             <div className="flex items-center gap-2 bg-gray-800/60 rounded-lg px-3 py-2">
               <SchoolLogo name={userSchool} size={16} />
-              <span className="text-sm text-gray-300">{schoolDisplayName(userSchool)}</span>
-              <span className="text-xs text-gray-600 ml-auto">as {displayName || "Anonymous"}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-400">{schoolDisplayName(userSchool)}</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400 ml-auto">as {displayName || "Anonymous"}</span>
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">Category</label>
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">Category</label>
             <select value={category} onChange={e => setCategory(e.target.value)} className={inputCls}>
               <option value="general">General</option>
               <option value="token_research">Token Research</option>
@@ -189,7 +189,7 @@ function NewThreadModal({ userSchool, displayName, onClose, onSuccess }: NewThre
             </select>
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">
               Title <span className="text-danger">*</span>
             </label>
             <input
@@ -203,7 +203,7 @@ function NewThreadModal({ userSchool, displayName, onClose, onSuccess }: NewThre
             />
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">
               Content <span className="text-danger">*</span>
             </label>
             <textarea
@@ -215,11 +215,11 @@ function NewThreadModal({ userSchool, displayName, onClose, onSuccess }: NewThre
               required
               className={cn(inputCls, "resize-none")}
             />
-            <div className="text-right text-xs text-gray-700 mt-1">{content.length}/5000</div>
+            <div className="text-right text-xs text-gray-700 dark:text-gray-400 mt-1">{content.length}/5000</div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">
-              Token <span className="text-gray-600">(optional)</span>
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">
+              Token <span className="text-gray-700 dark:text-gray-400">(optional)</span>
             </label>
             <input
               type="text"
@@ -235,7 +235,7 @@ function NewThreadModal({ userSchool, displayName, onClose, onSuccess }: NewThre
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -375,7 +375,7 @@ export function ForumClient({ school, ticker }: Props) {
               <MessagesSquare className="w-5 h-5 text-primary" />
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">DAO Forum</h1>
             </div>
-            <p className="text-sm text-gray-500">Discuss pitches, strategies, and ideas across the DormDAO network</p>
+            <p className="text-sm text-gray-700 dark:text-gray-400">Discuss pitches, strategies, and ideas across the DormDAO network</p>
           </div>
           {user && userSchool && (
             <button
@@ -389,7 +389,7 @@ export function ForumClient({ school, ticker }: Props) {
         </div>
       ) : (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-300">Forum Discussions</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-400">Forum Discussions</h3>
           {user && userSchool && (
             <button
               onClick={() => setShowModal(true)}
@@ -413,7 +413,7 @@ export function ForumClient({ school, ticker }: Props) {
                   "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                   category === key
                     ? "bg-primary/20 border-primary/50 text-primary"
-                    : "bg-transparent border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
+                    : "bg-transparent border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
                 )}
               >
                 {label}
@@ -429,7 +429,7 @@ export function ForumClient({ school, ticker }: Props) {
                   "shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                   sort === key
                     ? "bg-gray-200 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                    : "bg-transparent border-gray-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    : "bg-transparent border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 )}
               >
                 {label}
@@ -445,8 +445,8 @@ export function ForumClient({ school, ticker }: Props) {
         </div>
       ) : threads.length === 0 ? (
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 py-12 text-center">
-          <MessagesSquare className="w-7 h-7 text-gray-700 mx-auto mb-2" />
-          <p className="text-gray-500 text-sm">No threads yet</p>
+          <MessagesSquare className="w-7 h-7 text-gray-700 dark:text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-700 dark:text-gray-400 text-sm">No threads yet</p>
           {user && userSchool && (
             <button onClick={() => setShowModal(true)} className="mt-2 text-xs text-primary hover:underline">
               Start the first thread
@@ -471,7 +471,7 @@ export function ForumClient({ school, ticker }: Props) {
           <button
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="px-5 py-2 text-xs font-medium border border-gray-700 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50"
+            className="px-5 py-2 text-xs font-medium border border-gray-700 rounded-lg text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50"
           >
             {loadingMore ? "Loading…" : "Load more"}
           </button>

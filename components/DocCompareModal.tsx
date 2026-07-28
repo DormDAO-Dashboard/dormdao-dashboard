@@ -41,7 +41,7 @@ export function DocCompareModal({ docs, onClose }: Props) {
         <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
           Comparing {docs.length} Documents
         </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+        <button onClick={onClose} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -55,7 +55,7 @@ export function DocCompareModal({ docs, onClose }: Props) {
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-800 bg-gray-900/60 shrink-0 gap-3">
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{doc.title}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-700 dark:text-gray-400">
                   {doc.school ? schoolDisplayName(doc.school) : "—"} · {formatDocType(doc.document_type)}
                 </p>
               </div>
@@ -63,7 +63,7 @@ export function DocCompareModal({ docs, onClose }: Props) {
                 href={doc.file_url ?? ""}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
+                className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
                 title="Open in new tab"
               >
                 <ExternalLink className="w-4 h-4" />

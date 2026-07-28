@@ -109,7 +109,7 @@ function SetupCard({
           <div className="text-center mb-8">
             <Image src="/logo.jpg" width={48} height={48} alt="DormDAO" className="rounded-xl mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome to DormDAO 🎉</h1>
-            <p className="text-gray-400 text-sm mt-2">Let&apos;s set up your profile before you get started</p>
+            <p className="text-gray-700 dark:text-gray-400 text-sm mt-2">Let&apos;s set up your profile before you get started</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -117,13 +117,13 @@ function SetupCard({
               <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5">
                 <SchoolLogo name={school} size={18} />
                 <span className="text-sm text-gray-900 dark:text-white font-medium">{schoolDisplayName(school)}</span>
-                <Lock className="w-3.5 h-3.5 text-gray-500 ml-auto shrink-0" />
-                <span className="text-xs text-gray-500">Assigned by DormDAO admin</span>
+                <Lock className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 ml-auto shrink-0" />
+                <span className="text-xs text-gray-700 dark:text-gray-400">Assigned by DormDAO admin</span>
               </div>
             )}
 
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <label className="text-xs font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                 Step 1 — What should we call you? <span className="text-red-600 dark:text-red-400">*</span>
               </label>
               <input
@@ -137,8 +137,8 @@ function SetupCard({
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Step 2 — Pick an avatar <span className="text-gray-600 normal-case font-normal">(optional)</span>
+              <label className="text-xs font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">
+                Step 2 — Pick an avatar <span className="text-gray-700 dark:text-gray-400 normal-case font-normal">(optional)</span>
               </label>
               <div className="flex items-center gap-4">
                 {avatarUrl ? (
@@ -146,14 +146,14 @@ function SetupCard({
                     className="rounded-xl border border-gray-700 object-cover shrink-0" unoptimized />
                 ) : (
                   <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0">
-                    <User className="w-5 h-5 text-gray-500" />
+                    <User className="w-5 h-5 text-gray-700 dark:text-gray-400" />
                   </div>
                 )}
                 <div className="flex flex-col gap-2">
                   <AvatarPicker current={avatarUrl} onSelect={setAvatarUrl} />
                   {avatarUrl && (
                     <button type="button" onClick={() => setAvatarUrl(null)}
-                      className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors text-left">
+                      className="text-xs text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors text-left">
                       Skip — use default
                     </button>
                   )}
@@ -356,7 +356,7 @@ function NormalProfile({
   }
 
   const inputCls = "bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50";
-  const labelCls = "text-xs text-gray-400 font-medium uppercase tracking-wider";
+  const labelCls = "text-xs text-gray-700 dark:text-gray-400 font-medium uppercase tracking-wider";
 
   // ── View mode ──────────────────────────────────────────────────
   if (!editing) {
@@ -369,12 +369,12 @@ function NormalProfile({
               className="rounded-xl shrink-0 object-cover" unoptimized />
           ) : (
             <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0">
-              <User className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+              <User className="w-6 h-6 text-gray-700 dark:text-gray-400" />
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="text-base font-semibold text-gray-900 dark:text-white truncate">
-              {displayName || <span className="text-gray-400 italic">No display name set</span>}
+              {displayName || <span className="text-gray-700 dark:text-gray-400 italic">No display name set</span>}
             </div>
             {school && (
               <div className="flex items-center gap-1.5 mt-1">
@@ -386,7 +386,7 @@ function NormalProfile({
             )}
             <div className="flex items-center gap-1.5 mt-1.5">
               {identity.method === "metamask" ? (
-                <Wallet className="w-3 h-3 text-gray-400 shrink-0" />
+                <Wallet className="w-3 h-3 text-gray-700 dark:text-gray-400 shrink-0" />
               ) : (
                 <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -395,14 +395,14 @@ function NormalProfile({
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
               )}
-              <span className="text-xs text-gray-500">{identity.label}</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400">{identity.label}</span>
             </div>
           </div>
         </div>
 
         {bio && (
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-5 py-4">
-            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{bio}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{bio}</p>
           </div>
         )}
 
@@ -410,7 +410,7 @@ function NormalProfile({
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-5 py-4 flex flex-wrap gap-4">
             {twitter && (
               <a href={`https://twitter.com/${twitter}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.741l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
@@ -419,7 +419,7 @@ function NormalProfile({
             )}
             {linkedin && (
               <a href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                 </svg>
@@ -428,7 +428,7 @@ function NormalProfile({
             )}
             {telegram && (
               <a href={`https://t.me/${telegram}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                 </svg>
@@ -438,7 +438,7 @@ function NormalProfile({
           </div>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-600 px-1">
+        <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-400 px-1">
           {isPublic
             ? <><Eye className="w-3.5 h-3.5" /> Profile visible in members directory</>
             : <><EyeOff className="w-3.5 h-3.5" /> Profile hidden from members directory</>}
@@ -451,7 +451,7 @@ function NormalProfile({
             Edit profile
           </button>
           <button onClick={handleSignOut}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-sm ml-auto">
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-sm ml-auto">
             <LogOut className="w-4 h-4" />
             Sign out
           </button>
@@ -470,21 +470,21 @@ function NormalProfile({
             className="rounded-xl shrink-0 object-cover" unoptimized />
         ) : (
           <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0">
-            <User className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            <User className="w-6 h-6 text-gray-700 dark:text-gray-400" />
           </div>
         )}
         <div className="flex flex-col">
           <div className="text-sm font-medium text-gray-900 dark:text-white">
             {identity.method === "metamask" ? "Connected via MetaMask" : "Signed in with Google"}
           </div>
-          <div className="text-xs text-gray-500 mt-0.5">{identity.label}</div>
+          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{identity.label}</div>
           <AvatarPicker current={avatarUrl} onSelect={setAvatarUrl} />
         </div>
       </div>
 
       {/* Basic info */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 flex flex-col gap-4">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Basic Info</p>
+        <p className="text-xs font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">Basic Info</p>
 
         <div className="flex flex-col gap-1.5">
           <label className={labelCls}>Display name <span className="text-red-600 dark:text-red-400">*</span></label>
@@ -499,10 +499,10 @@ function NormalProfile({
               <><SchoolLogo name={school} size={16} />
                 <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{schoolDisplayName(school)}</span></>
             ) : (
-              <span className="text-sm text-gray-400 italic">No school assigned</span>
+              <span className="text-sm text-gray-700 dark:text-gray-400 italic">No school assigned</span>
             )}
-            <Lock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 ml-auto shrink-0" />
-            <span className="text-xs text-gray-400 dark:text-gray-500">Assigned by admin</span>
+            <Lock className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 ml-auto shrink-0" />
+            <span className="text-xs text-gray-700 dark:text-gray-400">Assigned by admin</span>
           </div>
         </div>
 
@@ -511,7 +511,7 @@ function NormalProfile({
           <textarea value={bio} onChange={(e) => setBio(e.target.value)}
             placeholder="Tell the community a bit about yourself…" maxLength={280} rows={3}
             className={`${inputCls} resize-none`} />
-          <div className="text-xs text-gray-400 dark:text-gray-600 text-right">{bio.length}/280</div>
+          <div className="text-xs text-gray-700 dark:text-gray-400 text-right">{bio.length}/280</div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -530,12 +530,12 @@ function NormalProfile({
 
       {/* Social & Contact */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 flex flex-col gap-4">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Social &amp; Contact</p>
+        <p className="text-xs font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">Social &amp; Contact</p>
 
         <div className="flex flex-col gap-1.5">
           <label className={labelCls}>Twitter / X</label>
           <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-3 pr-1 focus-within:border-primary/50">
-            <span className="text-sm text-gray-400 dark:text-gray-500 select-none">@</span>
+            <span className="text-sm text-gray-700 dark:text-gray-400 select-none">@</span>
             <input value={twitter} onChange={(e) => setTwitter(e.target.value.replace(/^@+/, ""))}
               placeholder="yourhandle" maxLength={60}
               className="flex-1 min-w-0 bg-transparent py-2.5 px-1 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none" />
@@ -551,7 +551,7 @@ function NormalProfile({
         <div className="flex flex-col gap-1.5">
           <label className={labelCls}>Telegram</label>
           <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-3 pr-1 focus-within:border-primary/50">
-            <span className="text-sm text-gray-400 dark:text-gray-500 select-none">@</span>
+            <span className="text-sm text-gray-700 dark:text-gray-400 select-none">@</span>
             <input value={telegram} onChange={(e) => setTelegram(e.target.value.replace(/^@+/, ""))}
               placeholder="yourhandle" maxLength={60}
               className="flex-1 min-w-0 bg-transparent py-2.5 px-1 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none" />
@@ -562,18 +562,18 @@ function NormalProfile({
           <label className={labelCls}>Discord</label>
           <input value={discord} onChange={(e) => setDiscord(e.target.value)}
             placeholder="username" maxLength={60} className={inputCls} />
-          <p className="text-xs text-gray-400 dark:text-gray-600">Discord is never shown publicly.</p>
+          <p className="text-xs text-gray-700 dark:text-gray-400">Discord is never shown publicly.</p>
         </div>
       </div>
 
       {/* Privacy Settings */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 flex flex-col gap-4">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Privacy Settings</p>
+        <p className="text-xs font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">Privacy Settings</p>
 
         <label className="flex items-center justify-between gap-4 cursor-pointer">
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">Show my profile in the members directory</p>
-            <p className="text-xs text-gray-500 mt-0.5">When on, other DormDAO members can find your profile</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">When on, other DormDAO members can find your profile</p>
           </div>
           <button type="button" role="switch" aria-checked={isPublic} onClick={() => setIsPublic((v) => !v)}
             className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${isPublic ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"}`}>
@@ -582,35 +582,35 @@ function NormalProfile({
         </label>
 
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-gray-400 font-medium">Show publicly on your profile:</p>
+          <p className="text-xs text-gray-700 dark:text-gray-400 font-medium">Show publicly on your profile:</p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
             {VISIBILITY_FIELDS.map(({ key, label }) => (
               <label key={key} className="flex items-center gap-2 cursor-pointer select-none">
                 <input type="checkbox" checked={publicFields.includes(key)}
                   onChange={() => togglePublicField(key)} className="w-3.5 h-3.5 accent-primary" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">{label}</span>
+                <span className="text-xs text-gray-700 dark:text-gray-400">{label}</span>
               </label>
             ))}
           </div>
         </div>
 
-        <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+        <p className="text-xs text-gray-700 dark:text-gray-400 leading-relaxed">
           Fields marked public are visible to anyone who views your profile at{" "}
-          <span className="font-mono text-gray-500">{process.env.NEXT_PUBLIC_APP_URL?.replace("https://", "") ?? "dormdao-dashboard.vercel.app"}/users/[your-id]</span>
+          <span className="font-mono text-gray-700 dark:text-gray-400">{process.env.NEXT_PUBLIC_APP_URL?.replace("https://", "") ?? "dormdao-dashboard.vercel.app"}/users/[your-id]</span>
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-600">
+        <p className="text-xs text-gray-700 dark:text-gray-400">
           Wallet addresses are never shown publicly regardless of settings.
         </p>
       </div>
 
       {/* Notification Preferences */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 flex flex-col gap-4">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Notifications</p>
+        <p className="text-xs font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">Email Notifications</p>
 
         <label className="flex items-center justify-between gap-4 cursor-pointer">
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">Proposal vote reminders</p>
-            <p className="text-xs text-gray-500 mt-0.5">New proposals, 12-hour warnings, results, and trade executions</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">New proposals, 12-hour warnings, results, and trade executions</p>
           </div>
           <button type="button" role="switch" aria-checked={voteReminderEmails} onClick={() => setVoteReminderEmails((v) => !v)}
             className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${voteReminderEmails ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"}`}>
@@ -621,7 +621,7 @@ function NormalProfile({
         <label className="flex items-center justify-between gap-4 cursor-pointer">
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">I&apos;m an alumnus / alumna</p>
-            <p className="text-xs text-gray-500 mt-0.5">Mark yourself as a former member of your chapter</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">Mark yourself as a former member of your chapter</p>
           </div>
           <button type="button" role="switch" aria-checked={isAlumni} onClick={() => setIsAlumni((v) => !v)}
             className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${isAlumni ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"}`}>
@@ -633,7 +633,7 @@ function NormalProfile({
           <label className="flex items-center justify-between gap-4 cursor-pointer pl-4 border-l-2 border-primary/30">
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">Receive alumni emails</p>
-              <p className="text-xs text-gray-500 mt-0.5">Stay in the loop on major votes even as an alum</p>
+              <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">Stay in the loop on major votes even as an alum</p>
             </div>
             <button type="button" role="switch" aria-checked={alumniEmailOptin} onClick={() => setAlumniEmailOptin((v) => !v)}
               className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${alumniEmailOptin ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"}`}>
@@ -654,11 +654,11 @@ function NormalProfile({
           {saving ? "Saving…" : "Save changes"}
         </button>
         <button type="button" onClick={handleCancel}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-sm">
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-sm">
           <X className="w-4 h-4" /> Cancel
         </button>
         <button type="button" onClick={handleSignOut}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-sm ml-auto">
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-sm ml-auto">
           <LogOut className="w-4 h-4" /> Sign out
         </button>
       </div>

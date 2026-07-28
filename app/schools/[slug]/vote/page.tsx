@@ -34,7 +34,7 @@ async function VotingPageContent({ slug }: { slug: string }) {
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
           Sign in to access {schoolDisplayName(school.name)} voting
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm">
+        <p className="text-sm text-gray-700 dark:text-gray-400 mb-6 max-w-sm">
           Investment proposals and voting are available to verified {schoolDisplayName(school.name)} members.
         </p>
         <Link
@@ -71,7 +71,7 @@ async function VotingPageContent({ slug }: { slug: string }) {
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
           Members only
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 max-w-sm">
+        <p className="text-sm text-gray-700 dark:text-gray-400 mb-2 max-w-sm">
           This voting page is for {schoolDisplayName(school.name)} members only.
         </p>
         {userSchoolSlug && (
@@ -95,7 +95,7 @@ async function VotingPageContent({ slug }: { slug: string }) {
     <>
       <Link
         href={`/schools/${slug}`}
-        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-white mb-5 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-600 dark:hover:text-white mb-5 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back to {schoolDisplayName(school.name)}
       </Link>
@@ -108,10 +108,10 @@ async function VotingPageContent({ slug }: { slug: string }) {
           <h1 className="text-2xl font-semibold" style={{ color: colors.primary }}>
             {schoolDisplayName(school.name)}
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Investment Voting</p>
+          <p className="text-sm text-gray-700 dark:text-gray-400">Investment Voting</p>
         </div>
         {isAdmin && userSchoolSlug !== slug && (
-          <span className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+          <span className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400">
             <ShieldCheck className="w-3.5 h-3.5" />
             Admin view
           </span>

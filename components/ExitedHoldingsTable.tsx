@@ -24,7 +24,7 @@ function ExitTypeBadge({ type }: { type: ExitedHolding["exitType"] }) {
 }
 
 function ReturnCell({ value }: { value: number }) {
-  if (value === 0) return <span className="text-gray-600">—</span>;
+  if (value === 0) return <span className="text-gray-700 dark:text-gray-400">—</span>;
   const up = value >= 0;
   return (
     <span className={cn("flex items-center justify-end gap-1 font-mono", up ? "text-primary" : "text-danger")}>
@@ -44,7 +44,7 @@ interface Props {
 export function ExitedHoldingsTable({ holdings, showSchool = false, schoolName, schoolSlug }: Props) {
   if (holdings.length === 0) {
     return (
-      <p className="px-5 py-6 text-sm text-gray-500">No exited or trimmed positions recorded.</p>
+      <p className="px-5 py-6 text-sm text-gray-700 dark:text-gray-400">No exited or trimmed positions recorded.</p>
     );
   }
 
@@ -52,7 +52,7 @@ export function ExitedHoldingsTable({ holdings, showSchool = false, schoolName, 
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-800 text-xs text-gray-500">
+          <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
             {showSchool && <th className="text-left px-5 py-3">School</th>}
             <th className="text-left px-5 py-3">Token</th>
             <th className="text-left px-5 py-3">Type</th>
@@ -72,12 +72,12 @@ export function ExitedHoldingsTable({ holdings, showSchool = false, schoolName, 
                   {schoolSlug && schoolName ? (
                     <Link
                       href={`/schools/${schoolSlug}`}
-                      className="text-gray-300 text-xs hover:text-primary transition-colors"
+                      className="text-gray-700 dark:text-gray-400 text-xs hover:text-primary transition-colors"
                     >
                       {schoolDisplayName(schoolName)}
                     </Link>
                   ) : (
-                    <span className="text-gray-300 text-xs">{schoolDisplayName(schoolName)}</span>
+                    <span className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(schoolName)}</span>
                   )}
                 </td>
               )}
@@ -92,7 +92,7 @@ export function ExitedHoldingsTable({ holdings, showSchool = false, schoolName, 
               <td className="px-5 py-3">
                 <ExitTypeBadge type={h.exitType} />
               </td>
-              <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs">
+              <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs">
                 {h.costBasisEth !== 0 ? `${h.costBasisEth.toFixed(3)} ETH` : "—"}
               </td>
               <td className="px-5 py-3 text-right font-mono text-xs">
@@ -101,7 +101,7 @@ export function ExitedHoldingsTable({ holdings, showSchool = false, schoolName, 
                     {h.gainUsd >= 0 ? "+" : ""}{formatUSD(h.gainUsd)}
                   </span>
                 ) : (
-                  <span className="text-gray-600">—</span>
+                  <span className="text-gray-700 dark:text-gray-400">—</span>
                 )}
               </td>
               <td className="px-5 py-3 text-right">
@@ -110,10 +110,10 @@ export function ExitedHoldingsTable({ holdings, showSchool = false, schoolName, 
               <td className="px-5 py-3 text-right">
                 <ReturnCell value={h.roiUsdPct} />
               </td>
-              <td className="px-5 py-3 text-right text-gray-500 text-xs">
+              <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">
                 {h.investmentDate || "—"}
               </td>
-              <td className="px-5 py-3 text-right text-gray-500 text-xs">
+              <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">
                 {h.exitDate || "—"}
               </td>
             </tr>

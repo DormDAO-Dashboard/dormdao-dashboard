@@ -54,7 +54,7 @@ export function AllSchoolDocuments() {
   );
 
   if (docs.length === 0) return (
-    <div className="text-center py-20 text-gray-500">No documents uploaded yet.</div>
+    <div className="text-center py-20 text-gray-700 dark:text-gray-400">No documents uploaded yet.</div>
   );
 
   const bySchool = new Map<string, TokenDocument[]>();
@@ -74,7 +74,7 @@ export function AllSchoolDocuments() {
               <Link href={`/schools/${slugify(school)}`} className="text-sm font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors">
                 {schoolDisplayName(school)}
               </Link>
-              <span className="text-xs text-gray-600">{schoolDocs.length} document{schoolDocs.length !== 1 ? "s" : ""}</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400">{schoolDocs.length} document{schoolDocs.length !== 1 ? "s" : ""}</span>
             </div>
             <ul className="divide-y divide-gray-800/60">
               {schoolDocs.map((doc) => {
@@ -82,18 +82,18 @@ export function AllSchoolDocuments() {
                   return (
                     <li key={doc.id} className="flex items-center gap-4 px-5 py-4 opacity-60">
                       <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                        <Lock className="w-4 h-4 text-gray-500" />
+                        <Lock className="w-4 h-4 text-gray-700 dark:text-gray-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-400 truncate">{doc.title}</div>
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-400 truncate">{doc.title}</div>
                         <div className="flex items-center flex-wrap gap-2 mt-1">
                           <TypeBadge type={doc.document_type} />
                           {doc.document_date && (
-                            <span className="text-xs text-gray-600">{formatDocDate(doc.document_date)}</span>
+                            <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                           )}
                         </div>
                       </div>
-                      <span className="shrink-0 text-xs text-gray-500">
+                      <span className="shrink-0 text-xs text-gray-700 dark:text-gray-400">
                         {getLockReason(doc.visibility, doc.school)}
                       </span>
                     </li>
@@ -104,20 +104,20 @@ export function AllSchoolDocuments() {
                   return (
                     <li key={doc.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-800/30 transition-colors">
                       <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                        <Play className="w-4 h-4 text-gray-400" />
+                        <Play className="w-4 h-4 text-gray-700 dark:text-gray-400" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{doc.title}</div>
                         <div className="flex items-center flex-wrap gap-2 mt-1">
                           <TypeBadge type={doc.document_type} />
                           {doc.document_date && (
-                            <span className="text-xs text-gray-500">{formatDocDate(doc.document_date)}</span>
+                            <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                           )}
                         </div>
                       </div>
                       <button
                         onClick={() => setPlayingDoc(doc)}
-                        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-700 dark:text-gray-400 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                       >
                         <Play className="w-3 h-3" />
                         Watch
@@ -129,14 +129,14 @@ export function AllSchoolDocuments() {
                 return (
                   <li key={doc.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-800/30 transition-colors">
                     <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-gray-400" />
+                      <FileText className="w-4 h-4 text-gray-700 dark:text-gray-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{doc.title}</div>
                       <div className="flex items-center flex-wrap gap-2 mt-1">
                         <TypeBadge type={doc.document_type} />
                         {doc.document_date && (
-                          <span className="text-xs text-gray-500">{formatDocDate(doc.document_date)}</span>
+                          <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                         )}
                       </div>
                     </div>
@@ -144,7 +144,7 @@ export function AllSchoolDocuments() {
                       href={doc.file_url!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 text-gray-700 dark:text-gray-400 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <Download className="w-3 h-3" />
                       View

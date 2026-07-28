@@ -10,13 +10,13 @@ type SortKey = "rank" | "nav" | "usdReturn" | "ethReturn" | "pctDeployed";
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-yellow-400 text-yellow-900">{rank}</span>;
-  if (rank === 2) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-gray-300 text-gray-700">{rank}</span>;
+  if (rank === 2) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-gray-300 text-gray-700 dark:text-gray-400">{rank}</span>;
   if (rank === 3) return <span className="inline-flex w-7 h-7 items-center justify-center text-xs font-bold rounded-full bg-amber-600 text-white">{rank}</span>;
-  return <span className="text-gray-400 font-mono">#{rank}</span>;
+  return <span className="text-gray-700 dark:text-gray-400 font-mono">#{rank}</span>;
 }
 
 function SortIcon({ col, sortKey, asc }: { col: SortKey; sortKey: SortKey; asc: boolean }) {
-  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-600 inline ml-1" />;
+  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-700 dark:text-gray-400 inline ml-1" />;
   return asc
     ? <ChevronUp className="w-3 h-3 text-primary inline ml-1" />
     : <ChevronDown className="w-3 h-3 text-primary inline ml-1" />;
@@ -43,7 +43,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-800 text-xs text-gray-500">
+          <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
             <th className={`text-left ${thClass}`} onClick={() => toggleSort("rank")}>
               Rank <SortIcon col="rank" sortKey={sortKey} asc={asc} />
             </th>
@@ -77,7 +77,7 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
                   {schoolDisplayName(s.name)}
                 </Link>
               </td>
-              <td className="px-5 py-3 text-right font-mono text-gray-200">
+              <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                 {formatNav(s.nav)}
               </td>
               <td className={`px-5 py-3 text-right font-mono ${s.usdReturn >= 0 ? "text-primary" : "text-danger"}`}>
@@ -86,14 +86,14 @@ export function SortableLeaderboard({ schools }: { schools: SchoolRow[] }) {
               <td className={`px-5 py-3 text-right font-mono ${s.ethReturn >= 0 ? "text-primary" : "text-danger"}`}>
                 {formatPct(s.ethReturn, false)}
               </td>
-              <td className="px-5 py-3 text-right font-mono text-gray-400">
+              <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                 {formatPct(s.pctDeployed, false)}
               </td>
             </tr>
           ))}
           {schools.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-5 py-8 text-center text-gray-500 text-sm">
+              <td colSpan={6} className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">
                 No data available — check your Google Sheets configuration
               </td>
             </tr>

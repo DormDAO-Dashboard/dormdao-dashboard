@@ -249,7 +249,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
           🗳️
         </div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Members Only</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
+        <p className="text-sm text-gray-700 dark:text-gray-400 max-w-sm">
           {isMainDao
             ? "This page is for DormDAO admins and Main DAO voters only."
             : `This voting page is for ${schoolDisplayName(schoolName)} members only.`}
@@ -270,7 +270,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
               onClick={() => setActiveTab(tab)}
               className={cn(
                 "px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
-                activeTab === tab ? "font-medium" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                activeTab === tab ? "font-medium" : "border-transparent text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               )}
               style={activeTab === tab ? { borderColor: colors.primary, color: colors.primary } : {}}
             >
@@ -292,7 +292,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
       </div>
 
       {displayProposals.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-gray-700 dark:text-gray-400">
           {activeTab === "active" ? "No active proposals right now." : "No past proposals yet."}
         </div>
       ) : (
@@ -328,7 +328,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
       )}
 
       {toastMsg && (
-        <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium shadow-lg pointer-events-none">
+        <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-400 text-sm font-medium shadow-lg pointer-events-none">
           {toastMsg}
         </div>
       )}

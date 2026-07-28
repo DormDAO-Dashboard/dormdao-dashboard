@@ -151,18 +151,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div style={{ width: size, height: size }}
         className="rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 flex items-center justify-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
-        <User className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+        <User className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400" />
       </div>
     );
   }
 
-  const sidebarItem = "flex items-center gap-3 w-full px-2 py-2.5 rounded-lg transition-colors text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]";
+  const sidebarItem = "flex items-center gap-3 w-full px-2 py-2.5 rounded-lg transition-colors text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]";
   const labelFade   = cn("text-sm whitespace-nowrap transition-all duration-150", expanded ? "opacity-100" : "opacity-0 pointer-events-none");
 
   if (noShell) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-gray-100">
+    <div className="min-h-screen bg-[#0a0a0a] text-gray-700 dark:text-gray-400">
 
       {/* ── Left Sidebar (desktop only) ────────────────────────── */}
       <aside
@@ -200,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
                   active
                     ? "bg-primary/10 text-primary"
-                    : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                    : "text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
                 )}>
                   {active && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
@@ -225,7 +225,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       "relative flex items-center gap-3 pl-7 pr-2 py-2 rounded-lg transition-colors",
                       voteActive
                         ? "bg-opacity-10"
-                        : "text-gray-500 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                        : "text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
                     )}
                     style={voteActive ? { backgroundColor: `${voteColor}18`, color: voteColor } : {}}
                   >
@@ -264,7 +264,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
                   adminActive
                     ? "bg-primary/10 text-primary"
-                    : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                    : "text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
                 )}>
                   {adminActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
@@ -291,7 +291,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       "relative flex items-center gap-3 pl-7 pr-2 py-2 rounded-lg transition-colors",
                       subActive
                         ? "bg-primary/10 text-primary"
-                        : "text-gray-500 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                        : "text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
                     )}
                   >
                     {subActive && (
@@ -324,7 +324,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   "relative flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors",
                   mainDaoActive
                     ? "bg-primary/10 text-primary"
-                    : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                    : "text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
                 )}>
                   {mainDaoActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
@@ -382,7 +382,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <SchoolLogo name={userSchool} size={16} />
               <span className={cn(
-                "text-xs text-gray-400 whitespace-nowrap transition-all duration-150",
+                "text-xs text-gray-700 dark:text-gray-400 whitespace-nowrap transition-all duration-150",
                 expanded ? "opacity-100" : "opacity-0 pointer-events-none"
               )}>
                 {schoolDisplayName(userSchool)}
@@ -413,7 +413,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="ml-auto flex items-center gap-1 shrink-0">
           <BellButton isLoggedIn={!!user} />
           <button onClick={toggle} aria-label="Toggle theme"
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-700/60 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-700/60 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
             {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
           <Link href={user ? "/profile" : "/login"} className="ml-1">
@@ -439,14 +439,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           return (
             <Link key={href} href={href} className={cn(
               "flex items-center justify-center min-w-[48px] min-h-[48px] rounded-xl transition-colors",
-              active ? "text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              active ? "text-primary" : "text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             )}>
               <Icon className="w-5 h-5" />
             </Link>
           );
         })}
         <button onClick={() => setShowMore(true)}
-          className="flex items-center justify-center min-w-[48px] min-h-[48px] rounded-xl text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          className="flex items-center justify-center min-w-[48px] min-h-[48px] rounded-xl text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
           <MoreHorizontal className="w-5 h-5" />
         </button>
       </nav>
@@ -460,7 +460,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">More</span>
               <button onClick={() => setShowMore(false)}
-                className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -548,7 +548,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="flex items-center justify-between px-4 py-3.5">
                 <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Theme</span>
                 <button onClick={toggle}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
+                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
                   {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
               </div>

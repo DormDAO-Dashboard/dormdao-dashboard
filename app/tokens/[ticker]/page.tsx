@@ -161,7 +161,7 @@ function AdminDocUpload({ ticker, onUploaded }: { ticker: string; onUploaded: ()
             type="file"
             accept=".pdf,application/pdf"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="text-xs text-gray-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border file:border-gray-600 file:bg-gray-800 file:text-gray-300 file:text-xs hover:file:border-gray-500 cursor-pointer"
+            className="text-xs text-gray-700 dark:text-gray-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border file:border-gray-600 file:bg-gray-800 file:text-gray-300 file:text-xs hover:file:border-gray-500 cursor-pointer"
           />
           <button
             type="submit"
@@ -256,7 +256,7 @@ export default function TokenDetailPage() {
       <AdminDocUpload ticker={tickerUpper} onUploaded={() => setDocsKey((k) => k + 1)} />
       <Link
         href="/tokens"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Tokens
       </Link>
@@ -265,7 +265,7 @@ export default function TokenDetailPage() {
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-start gap-6">
           <div className="flex-1">
-            <div className="text-sm text-gray-400 mb-1">{meta?.name ?? tickerUpper}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-400 mb-1">{meta?.name ?? tickerUpper}</div>
             <h1 className="text-4xl font-bold font-mono text-gray-900 dark:text-white mb-4">${meta?.displayTicker ?? tickerUpper}</h1>
             {loadingPrice ? (
               <>
@@ -283,25 +283,25 @@ export default function TokenDetailPage() {
             ) : meta?.vault ? (
               <div className="inline-flex items-center gap-2">
                 <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 px-2 py-1 rounded">Vault</span>
-                <span className="text-gray-500 text-sm">DeFi vault position</span>
+                <span className="text-gray-700 dark:text-gray-400 text-sm">DeFi vault position</span>
               </div>
             ) : meta?.premarket ? (
               <div className="inline-flex items-center gap-2">
                 <span className="text-xs bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 px-2 py-1 rounded">Pre-market</span>
-                <span className="text-gray-500 text-sm">Not yet listed on CoinGecko</span>
+                <span className="text-gray-700 dark:text-gray-400 text-sm">Not yet listed on CoinGecko</span>
               </div>
             ) : (
-              <div className="text-gray-500">Price unavailable</div>
+              <div className="text-gray-700 dark:text-gray-400">Price unavailable</div>
             )}
           </div>
 
           {/* 24h range */}
           {coinDetail && (coinDetail.high24h || coinDetail.low24h) && (
             <div className="text-sm">
-              <div className="text-xs text-gray-500 mb-2">24h Range</div>
+              <div className="text-xs text-gray-700 dark:text-gray-400 mb-2">24h Range</div>
               <div className="flex items-center gap-2 font-mono">
                 <span className="text-danger">{coinDetail.low24h ? formatPrice(coinDetail.low24h) : "—"}</span>
-                <span className="text-gray-600">→</span>
+                <span className="text-gray-700 dark:text-gray-400">→</span>
                 <span className="text-primary">{coinDetail.high24h ? formatPrice(coinDetail.high24h) : "—"}</span>
               </div>
             </div>
@@ -320,12 +320,12 @@ export default function TokenDetailPage() {
       {meta?.geckoId && (
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-300">Market Stats</h2>
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Market Stats</h2>
             <a
               href={ARTEMIS_URL[tickerUpper] ?? "https://classic.artemis.ai/assets"}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-gray-500 border border-gray-700/60 hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-2.5 py-1 rounded-md transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-400 border border-gray-700/60 hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-2.5 py-1 rounded-md transition-colors"
             >
               View On-Chain Data → Artemis
             </a>
@@ -376,38 +376,38 @@ export default function TokenDetailPage() {
         return (
           <div className={`rounded-lg border p-5 mb-6 ${isProfitable === true ? "border-primary/30 bg-primary/5" : isProfitable === false ? "border-danger/30 bg-danger/5" : "border-gray-800 bg-gray-900/30"}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-300">Aggregate DormDAO Position</h2>
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Aggregate DormDAO Position</h2>
               <div className="flex items-center gap-2">
                 {isProfitable !== null && (
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isProfitable ? "bg-primary/20 text-primary" : "bg-danger/20 text-danger"}`}>
                     {isProfitable ? "DAO In Profit" : "DAO at Loss"}
                   </span>
                 )}
-                <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-mono">
+                <span className="text-xs bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded font-mono">
                   Conviction: {convictionScore}/10
                 </span>
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <div className="text-xs text-gray-500 mb-1">Schools Holding</div>
+                <div className="text-xs text-gray-700 dark:text-gray-400 mb-1">Schools Holding</div>
                 <div className="font-mono font-bold text-gray-900 dark:text-white">{schoolPositions.length}/17</div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 mb-1">Total Tokens</div>
+                <div className="text-xs text-gray-700 dark:text-gray-400 mb-1">Total Tokens</div>
                 <div className="font-mono font-bold text-gray-900 dark:text-white">
                   {totalTokens > 0 ? totalTokens.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 mb-1">Total Value</div>
+                <div className="text-xs text-gray-700 dark:text-gray-400 mb-1">Total Value</div>
                 <div className="font-mono font-bold text-gray-900 dark:text-white">
                   {totalValueUsd > 0 ? formatUSD(totalValueUsd) : "—"}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 mb-1">DAO P&amp;L</div>
-                <div className={`font-mono font-bold ${pnl === null ? "text-gray-500" : pnl >= 0 ? "text-primary" : "text-danger"}`}>
+                <div className="text-xs text-gray-700 dark:text-gray-400 mb-1">DAO P&amp;L</div>
+                <div className={`font-mono font-bold ${pnl === null ? "text-gray-700 dark:text-gray-400" : pnl >= 0 ? "text-primary" : "text-danger"}`}>
                   {pnl !== null ? `${pnl >= 0 ? "+" : ""}${formatUSD(pnl)}` : "—"}
                 </div>
               </div>
@@ -419,7 +419,7 @@ export default function TokenDetailPage() {
       {/* Held by DormDAO */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-300">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             Held by DormDAO ({loadingSchools ? "…" : schoolPositions.length} school{schoolPositions.length !== 1 ? "s" : ""})
           </h2>
         </div>
@@ -428,12 +428,12 @@ export default function TokenDetailPage() {
             {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
         ) : schoolPositions.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-gray-500">No DormDAO school holds ${tickerUpper}.</p>
+          <p className="px-5 py-6 text-sm text-gray-700 dark:text-gray-400">No DormDAO school holds ${tickerUpper}.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-xs text-gray-500">
+                <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                   <th className="text-left px-5 py-3">School</th>
                   <th className="text-right px-5 py-3">Tokens</th>
                   <th className="text-right px-5 py-3">Cost (ETH)</th>
@@ -453,19 +453,19 @@ export default function TokenDetailPage() {
                         {schoolDisplayName(pos.school)}
                       </Link>
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-300">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-300">
                       {pos.tokens !== 0
                         ? pos.tokens.toLocaleString(undefined, { maximumFractionDigits: 4 })
                         : "0.00"}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-300">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-300">
                       {pos.costBasisEth > 0 ? `${pos.costBasisEth} ETH` : "—"}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-400">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                       {pos.pctOfPortfolio > 0 ? `${pos.pctOfPortfolio.toFixed(1)}%` : "—"}
                     </td>
                     {price && (
-                      <td className="px-5 py-3 text-right font-mono text-gray-300">
+                      <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-300">
                         {pos.tokens !== 0 ? formatUSD(pos.tokens * price.usd) : formatUSD(0)}
                       </td>
                     )}
@@ -489,7 +489,7 @@ export default function TokenDetailPage() {
                               )}
                             </span>
                           ) : (
-                            <span className="text-gray-600">—</span>
+                            <span className="text-gray-700 dark:text-gray-400">—</span>
                           )}
                         </td>
                       );
@@ -513,14 +513,14 @@ export default function TokenDetailPage() {
                     ? (totalPnl / totalCostUsd) * 100 : null;
                   return (
                     <tr className="bg-gray-800/30 font-semibold">
-                      <td className="px-5 py-3 text-xs text-gray-400 uppercase tracking-wide">DormDAO Total</td>
+                      <td className="px-5 py-3 text-xs text-gray-700 dark:text-gray-400 uppercase tracking-wide">DormDAO Total</td>
                       <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
                         {totalTokens !== 0 ? totalTokens.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "—"}
                       </td>
                       <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
                         {totalCostEth > 0 ? `${totalCostEth.toFixed(4)} ETH` : "—"}
                       </td>
-                      <td className="px-5 py-3 text-right font-mono text-gray-400">—</td>
+                      <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">—</td>
                       {price && (
                         <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
                           {totalValueUsd !== 0 ? formatUSD(totalValueUsd) : "—"}
@@ -538,7 +538,7 @@ export default function TokenDetailPage() {
                               )}
                             </span>
                           ) : (
-                            <span className="text-gray-600">—</span>
+                            <span className="text-gray-700 dark:text-gray-400">—</span>
                           )}
                         </td>
                       )}
@@ -572,9 +572,9 @@ function StatItem({
 }) {
   return (
     <div>
-      <div className="text-xs text-gray-500 mb-1">{label}</div>
-      <div className="font-mono font-semibold text-gray-200">{value}</div>
-      {sub && <div className={`text-xs mt-0.5 ${subColor ?? "text-gray-500"}`}>{sub}</div>}
+      <div className="text-xs text-gray-700 dark:text-gray-400 mb-1">{label}</div>
+      <div className="font-mono font-semibold text-gray-700 dark:text-gray-200">{value}</div>
+      {sub && <div className={`text-xs mt-0.5 ${subColor ?? "text-gray-700 dark:text-gray-400"}`}>{sub}</div>}
     </div>
   );
 }

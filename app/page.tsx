@@ -70,7 +70,7 @@ export default function SplashPage() {
           DormDAO
         </h1>
 
-        <p className="mt-2 text-sm text-gray-300 tracking-widest uppercase">
+        <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 tracking-widest uppercase">
           The World&apos;s First Multi-University Crypto Investment DAO
         </p>
 
@@ -89,7 +89,7 @@ export default function SplashPage() {
         </Link>
       </div>
 
-      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-gray-600 select-none">
+      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-gray-700 dark:text-gray-400 select-none">
         © DormDAO 2026
       </p>
     </div>

@@ -81,7 +81,7 @@ export function Navbar() {
                       "flex items-center px-4 text-sm transition-colors border-b-2 -mb-px",
                       isActive
                         ? "text-gray-900 dark:text-white font-medium border-primary"
-                        : "text-gray-500 hover:text-gray-200 border-transparent font-normal"
+                        : "text-gray-700 dark:text-gray-400 hover:text-gray-200 border-transparent font-normal"
                     )}
                   >
                     {label}
@@ -100,7 +100,7 @@ export function Navbar() {
                     href={href}
                     className={cn(
                       "flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md transition-colors",
-                      isActive ? "text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      isActive ? "text-primary" : "text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -110,7 +110,7 @@ export function Navbar() {
               <button
                 onClick={() => setShowMore(true)}
                 aria-label="More navigation options"
-                className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
                 <MoreHorizontal className="w-5 h-5" />
               </button>
@@ -124,8 +124,8 @@ export function Navbar() {
                 className={cn(
                   "hidden md:flex items-center justify-center w-8 h-8 rounded-md border transition-colors duration-200",
                   theme === "dark"
-                    ? "border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    : "border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:bg-gray-100"
+                    ? "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    : "border-gray-300 text-gray-700 dark:text-gray-400 hover:text-gray-700 hover:border-gray-400 hover:bg-gray-100"
                 )}
               >
                 {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -154,8 +154,8 @@ export function Navbar() {
                   className={cn(
                     "text-xs font-medium px-3 py-1.5 rounded-md border transition-colors",
                     theme === "dark"
-                      ? "border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
-                      : "border-gray-300 text-gray-500 hover:text-gray-800 hover:border-gray-400"
+                      ? "border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
+                      : "border-gray-300 text-gray-700 dark:text-gray-400 hover:text-gray-800 hover:border-gray-400"
                   )}
                 >
                   Sign in
@@ -176,10 +176,10 @@ export function Navbar() {
           />
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#111] border-t border-gray-800 rounded-t-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-              <span className="text-sm font-semibold text-gray-300">More</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-400">More</span>
               <button
                 onClick={() => setShowMore(false)}
-                className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -194,7 +194,7 @@ export function Navbar() {
                     onClick={() => setShowMore(false)}
                     className={cn(
                       "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
-                      isActive ? "text-primary bg-primary/10" : "text-gray-300 hover:bg-gray-800/60"
+                      isActive ? "text-primary bg-primary/10" : "text-gray-700 dark:text-gray-400 hover:bg-gray-800/60"
                     )}
                   >
                     <Icon className="w-5 h-5 shrink-0" />
@@ -203,15 +203,15 @@ export function Navbar() {
                 );
               })}
               <div className="flex items-center justify-between px-4 py-3.5">
-                <span className="text-sm text-gray-300 font-medium">Theme</span>
+                <span className="text-sm text-gray-700 dark:text-gray-400 font-medium">Theme</span>
                 <button
                   onClick={toggle}
                   aria-label="Toggle theme"
                   className={cn(
                     "flex items-center justify-center w-9 h-9 rounded-lg border transition-colors",
                     theme === "dark"
-                      ? "border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
-                      : "border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400"
+                      ? "border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
+                      : "border-gray-300 text-gray-700 dark:text-gray-400 hover:text-gray-700 hover:border-gray-400"
                   )}
                 >
                   {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}

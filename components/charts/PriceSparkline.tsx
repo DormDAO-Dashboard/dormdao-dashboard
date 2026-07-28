@@ -33,7 +33,7 @@ export function PriceSparkline({ geckoId, positive }: SparklineProps) {
   }, [geckoId]);
 
   if (loading) return <div className="skeleton h-12 w-full" />;
-  if (!data.length) return <div className="text-xs text-gray-500">No chart data</div>;
+  if (!data.length) return <div className="text-xs text-gray-700 dark:text-gray-400">No chart data</div>;
 
   const color = positive !== false ? "#1D9E75" : "#E24B4A";
 

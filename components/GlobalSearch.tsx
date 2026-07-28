@@ -138,13 +138,13 @@ function SkeletonRow() {
 function CategoryHeader({ label, seeAllHref, onClose }: { label: string; seeAllHref: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between px-3 pt-3 pb-1">
-      <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 dark:text-gray-500">
+      <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-700 dark:text-gray-400">
         {label}
       </span>
       <a
         href={seeAllHref}
         onClick={onClose}
-        className="flex items-center gap-0.5 text-[10px] text-gray-400 dark:text-gray-500 hover:text-primary transition-colors"
+        className="flex items-center gap-0.5 text-[10px] text-gray-700 dark:text-gray-400 hover:text-primary transition-colors"
       >
         See all <ArrowRight className="w-2.5 h-2.5" />
       </a>
@@ -154,7 +154,7 @@ function CategoryHeader({ label, seeAllHref, onClose }: { label: string; seeAllH
 
 function TypeBadge({ type, docType }: { type: SearchResult["type"]; docType?: string }) {
   let label = type === "thread" ? "Thread" : type === "school" ? "School" : type === "token" ? "Token" : "Doc";
-  let cls   = "bg-gray-100 dark:bg-white/[0.08] text-gray-500 dark:text-gray-400";
+  let cls   = "bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-400";
 
   if (type === "token") {
     cls = "bg-amber-50 dark:bg-amber-500/[0.12] text-amber-600 dark:text-amber-400";
@@ -186,7 +186,7 @@ function ResultIcon({ result }: { result: SearchResult }) {
   const Icon = result.type === "token" ? DollarSign : result.type === "thread" ? MessageSquare : FileText;
   const cls  = result.type === "token"
     ? "bg-amber-50 dark:bg-amber-500/[0.12] text-amber-500 dark:text-amber-400"
-    : "bg-gray-100 dark:bg-white/[0.08] text-gray-500 dark:text-gray-400";
+    : "bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-400";
   return (
     <div className={cn("w-7 h-7 rounded-full flex items-center justify-center shrink-0", cls)}>
       <Icon className="w-3.5 h-3.5" />
@@ -219,7 +219,7 @@ function ResultRow({
           {result.type === "school" ? schoolDisplayName(result.label) : result.label}
         </div>
         {result.subtitle && (
-          <div className="text-xs text-gray-400 dark:text-gray-500 truncate leading-snug">
+          <div className="text-xs text-gray-700 dark:text-gray-400 truncate leading-snug">
             {result.subtitle}
           </div>
         )}
@@ -376,7 +376,7 @@ export function GlobalSearch() {
           ? "bg-white dark:bg-white/[0.12] ring-2 ring-primary/20 border border-primary/50"
           : "bg-gray-100 dark:bg-white/[0.08] border border-transparent hover:bg-gray-200/70 dark:hover:bg-white/[0.12]"
       )}>
-        <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+        <Search className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 shrink-0" />
         <input
           ref={inputRef}
           data-search-input
@@ -390,14 +390,14 @@ export function GlobalSearch() {
         {query ? (
           <button
             onClick={() => { setQuery(""); setGrouped({ tokens: [], schools: [], documents: [], threads: [] }); inputRef.current?.focus(); }}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0"
+            className="text-gray-700 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         ) : (
           <kbd className={cn(
             "hidden sm:inline-flex items-center text-[10px] rounded px-1.5 py-0.5 leading-none shrink-0 transition-opacity duration-100",
-            "bg-gray-200/80 dark:bg-white/[0.10] text-gray-400",
+            "bg-gray-200/80 dark:bg-white/[0.10] text-gray-700 dark:text-gray-400",
             open ? "opacity-0 pointer-events-none" : "opacity-100"
           )}>
             ⌘K
@@ -427,7 +427,7 @@ export function GlobalSearch() {
                 return (
                   <>
                     <div className="px-3 pt-2 pb-1">
-                      <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 dark:text-gray-500">Your School</span>
+                      <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-700 dark:text-gray-400">Your School</span>
                     </div>
                     <button
                       onMouseDown={(e) => { e.preventDefault(); router.push(`/schools/${userSchool.slug}`); close(); }}
@@ -439,9 +439,9 @@ export function GlobalSearch() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{schoolDisplayName(userSchool.name)}</div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500">Your school</div>
+                        <div className="text-xs text-gray-700 dark:text-gray-400">Your school</div>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <ArrowRight className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 shrink-0" />
                     </button>
                     <SectionDivider />
                   </>
@@ -451,7 +451,7 @@ export function GlobalSearch() {
               {recentNav.length > 0 && (
                 <>
                   <div className="px-3 pt-2 pb-1">
-                    <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 dark:text-gray-500">Recent</span>
+                    <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-700 dark:text-gray-400">Recent</span>
                   </div>
                   {recentNav.map((item, i) => {
                     const r: SearchResult = { type: item.type, label: item.label, href: item.href, external: item.external };
@@ -463,7 +463,7 @@ export function GlobalSearch() {
                         style={{ width: "calc(100% - 8px)" }}
                       >
                         <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/[0.08] flex items-center justify-center shrink-0">
-                          <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                          <Clock className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400" />
                         </div>
                         <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">{item.label}</span>
                         <TypeBadge type={item.type} />
@@ -475,7 +475,7 @@ export function GlobalSearch() {
               )}
 
               <div className="px-3 pt-3 pb-1">
-                <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 dark:text-gray-500">Jump to</span>
+                <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-700 dark:text-gray-400">Jump to</span>
               </div>
               {QUICK_LINKS.map(({ href, label, icon: Icon }) => (
                 <button
@@ -485,7 +485,7 @@ export function GlobalSearch() {
                   style={{ width: "calc(100% - 8px)" }}
                 >
                   <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/[0.08] flex items-center justify-center shrink-0">
-                    <Icon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                    <Icon className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400" />
                   </div>
                   <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
                 </button>
@@ -509,7 +509,7 @@ export function GlobalSearch() {
                 return (
                   <>
                     <div className="px-3 pt-2 pb-1">
-                      <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 dark:text-gray-500">Your School</span>
+                      <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-700 dark:text-gray-400">Your School</span>
                     </div>
                     <button
                       onMouseDown={(e) => { e.preventDefault(); router.push(`/schools/${userSchool.slug}`); close(); }}
@@ -521,9 +521,9 @@ export function GlobalSearch() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{schoolDisplayName(userSchool.name)}</div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500">Your school</div>
+                        <div className="text-xs text-gray-700 dark:text-gray-400">Your school</div>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <ArrowRight className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 shrink-0" />
                     </button>
                     <SectionDivider />
                   </>
@@ -576,9 +576,9 @@ export function GlobalSearch() {
           {hasQuery && !loading && !hasResults && (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/[0.06] flex items-center justify-center">
-                <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <Search className="w-5 h-5 text-gray-700 dark:text-gray-400" />
               </div>
-              <p className="text-sm text-gray-400 dark:text-gray-500">
+              <p className="text-sm text-gray-700 dark:text-gray-400">
                 No results for &ldquo;{dq}&rdquo;
               </p>
             </div>

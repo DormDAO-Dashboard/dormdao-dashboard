@@ -111,7 +111,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
           <option value="">All Tokens</option>
           {uniqueTickers.map(t => <option key={t} value={t}>${t}</option>)}
         </select>
-        <div className="flex items-center gap-2 text-sm text-gray-400">
+        <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-400">
           <span>From</span>
           <input
             type="date"
@@ -139,14 +139,14 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
         </select>
       </div>
 
-      <div className="text-xs text-gray-500 mb-3">{filtered.length} positions</div>
+      <div className="text-xs text-gray-700 dark:text-gray-400 mb-3">{filtered.length} positions</div>
 
       {/* Table */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800 text-xs text-gray-500">
+              <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                 <th className="text-left px-5 py-3">School</th>
                 <th className="text-left px-5 py-3">Token</th>
                 <th className="text-right px-5 py-3 hidden md:table-cell">Date</th>
@@ -168,8 +168,8 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                       <Link href={`/schools/${buy.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                         <SchoolLogo name={buy.school} size={20} />
                         <div>
-                          <div className="text-gray-300 text-xs">{schoolDisplayName(buy.school)}</div>
-                          <div className="text-[10px] text-gray-600 md:hidden mt-0.5">{buy.dateStr}</div>
+                          <div className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(buy.school)}</div>
+                          <div className="text-[10px] text-gray-700 dark:text-gray-400 md:hidden mt-0.5">{buy.dateStr}</div>
                         </div>
                       </Link>
                     </td>
@@ -178,19 +178,19 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                         ${buy.ticker}
                       </Link>
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-400 text-xs hidden md:table-cell">
+                    <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs hidden md:table-cell">
                       <div>{buy.dateStr}</div>
-                      <div className="text-gray-600">{daysAgo(buy.dateMs)}</div>
+                      <div className="text-gray-700 dark:text-gray-400">{daysAgo(buy.dateMs)}</div>
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-300 text-xs hidden md:table-cell">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs hidden md:table-cell">
                       {buy.costBasisEth > 0 ? `${buy.costBasisEth} ETH` : "—"}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-300 text-xs hidden md:table-cell">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs hidden md:table-cell">
                       {loading ? "…" : currentValue !== null ? formatUSD(currentValue) : "—"}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs hidden md:table-cell">
                       {loading ? (
-                        <span className="text-gray-600">…</span>
+                        <span className="text-gray-700 dark:text-gray-400">…</span>
                       ) : pnl !== null ? (
                         <span className={pnl >= 0 ? "text-primary" : "text-danger"}>
                           {pnl >= 0 ? "+" : ""}{formatUSD(pnl)}
@@ -199,7 +199,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                           )}
                         </span>
                       ) : (
-                        <span className="text-gray-600">—</span>
+                        <span className="text-gray-700 dark:text-gray-400">—</span>
                       )}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">
@@ -208,7 +208,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
                           {buy.roiEthPct >= 0 ? "+" : ""}{buy.roiEthPct.toFixed(1)}%
                         </span>
                       ) : (
-                        <span className="text-gray-600">—</span>
+                        <span className="text-gray-700 dark:text-gray-400">—</span>
                       )}
                     </td>
                   </tr>
@@ -218,7 +218,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
           </table>
         </div>
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-gray-500 text-sm">No purchases match the selected filters.</div>
+          <div className="text-center py-12 text-gray-700 dark:text-gray-400 text-sm">No purchases match the selected filters.</div>
         )}
       </div>
     </>

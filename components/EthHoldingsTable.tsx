@@ -45,14 +45,14 @@ export function EthHoldingsTable({ schools }: { schools: SchoolRow[] }) {
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-gray-800">
-        <h2 className="text-sm font-semibold text-gray-300">ETH Holdings</h2>
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">ETH Holdings</h2>
       </div>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-800">
-            <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500">School</th>
-            <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-500">ETH Holdings</th>
-            <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-500">USD Value</th>
+            <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-700 dark:text-gray-400">School</th>
+            <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-700 dark:text-gray-400">ETH Holdings</th>
+            <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-700 dark:text-gray-400">USD Value</th>
           </tr>
         </thead>
         <tbody>

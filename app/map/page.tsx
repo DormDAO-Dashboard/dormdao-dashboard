@@ -251,7 +251,7 @@ export default function MapPage() {
           </div>
           <Link
             href="/leaderboard"
-            className="text-xs text-gray-300 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+            className="text-xs text-gray-700 dark:text-gray-300 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
           >
             ← Back to Dashboard
           </Link>
@@ -340,7 +340,7 @@ export default function MapPage() {
                     <span style={{ color: hoveredZone.color }}>◆</span>
                     {hoveredZone.label}
                   </span>
-                  <span className="text-xs text-gray-400">{hoveredZone.sublabel}</span>
+                  <span className="text-xs text-gray-700 dark:text-gray-400">{hoveredZone.sublabel}</span>
                 </div>
               </div>
             );
@@ -393,7 +393,7 @@ export default function MapPage() {
       <div className="md:hidden flex flex-col items-center justify-center w-screen h-screen bg-[#0a0a0a] px-6 text-center gap-3">
         <span className="text-6xl">🍜</span>
         <h1 className="font-sans text-xl font-bold text-white mt-2">Campus Map</h1>
-        <p className="text-sm text-gray-400">Best experienced on desktop</p>
+        <p className="text-sm text-gray-700 dark:text-gray-400">Best experienced on desktop</p>
         <Link
           href="/leaderboard"
           className="mt-4 px-6 py-2.5 rounded-full font-sans font-semibold text-white text-sm"
@@ -416,7 +416,7 @@ export default function MapPage() {
           >
             <button
               onClick={() => setComingSoonZone(null)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors"
+              className="absolute top-3 right-3 text-gray-700 dark:text-gray-400 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -426,8 +426,8 @@ export default function MapPage() {
             >
               {comingSoonZone.label}
             </h2>
-            <p className="text-sm text-gray-400 mt-1">Coming soon to DormDAO</p>
-            <p className="text-sm text-gray-300 mt-4">{comingSoonZone.description}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">Coming soon to DormDAO</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mt-4">{comingSoonZone.description}</p>
             <Link
               href="/leaderboard"
               className="mt-6 inline-flex w-full items-center justify-center px-4 py-2.5 rounded-lg font-sans font-semibold text-white text-sm"
@@ -451,7 +451,7 @@ export default function MapPage() {
 
       {/* Debug: raw points readout (?debug=zones) */}
       {debugZones && (
-        <div className="hidden md:block fixed bottom-4 right-4 z-40 max-w-md max-h-[70vh] overflow-y-auto rounded-lg bg-black/85 border border-white/20 p-3 font-mono text-[11px] text-gray-300 space-y-2">
+        <div className="hidden md:block fixed bottom-4 right-4 z-40 max-w-md max-h-[70vh] overflow-y-auto rounded-lg bg-black/85 border border-white/20 p-3 font-mono text-[11px] text-gray-700 dark:text-gray-300 space-y-2">
           {ZONES.map((zone) => (
             <div key={zone.id}>
               <span style={{ color: zone.color }}>{zone.id}</span>: {zone.points}

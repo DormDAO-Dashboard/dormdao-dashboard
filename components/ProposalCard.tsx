@@ -24,7 +24,7 @@ interface Props {
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   passed:   { label: "PASSED",   className: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800" },
   rejected: { label: "REJECTED", className: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800" },
-  expired:  { label: "EXPIRED",  className: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-500 border border-gray-200 dark:border-gray-700" },
+  expired:  { label: "EXPIRED",  className: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700" },
   active:   { label: "ACTIVE",   className: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800" },
   executed: { label: "EXECUTED", className: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800" },
 };
@@ -93,7 +93,7 @@ export function ProposalCard({
   }
 
   const inputClass =
-    "w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40";
+    "w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40";
 
   return (
     <>
@@ -108,7 +108,7 @@ export function ProposalCard({
                 <span className="font-mono font-bold text-lg text-gray-900 dark:text-white">
                   ${proposal.token_ticker}
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">{proposal.token_name}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-400">{proposal.token_name}</span>
                 {!active && (
                   <span className={cn("text-xs px-2 py-0.5 rounded font-medium", badge.className)}>
                     {badge.label}
@@ -119,12 +119,12 @@ export function ProposalCard({
             </div>
             <div className="shrink-0 flex flex-col items-end gap-1 text-right">
               {proposal.recommended_size_eth != null && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 font-mono whitespace-nowrap">
+                <span className="text-xs text-gray-700 dark:text-gray-400 font-mono whitespace-nowrap">
                   Buy {proposal.recommended_size_eth} ETH
                 </span>
               )}
               {proposal.price_target != null && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 font-mono whitespace-nowrap">
+                <span className="text-xs text-gray-700 dark:text-gray-400 font-mono whitespace-nowrap">
                   Target ${proposal.price_target.toLocaleString()}
                 </span>
               )}
@@ -135,7 +135,7 @@ export function ProposalCard({
           {proposal.description && (
             <div className="mb-4">
               <p className={cn(
-                "text-sm text-gray-600 dark:text-gray-400 leading-relaxed",
+                "text-sm text-gray-700 dark:text-gray-400 leading-relaxed",
                 !expanded && "line-clamp-3"
               )}>
                 {proposal.description}
@@ -143,7 +143,7 @@ export function ProposalCard({
               {proposal.description.length > 180 && (
                 <button
                   onClick={() => setExpanded((v) => !v)}
-                  className="mt-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 transition-colors"
+                  className="mt-1 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 transition-colors"
                 >
                   {expanded
                     ? <><ChevronUp className="w-3 h-3" /> Show less</>
@@ -166,10 +166,10 @@ export function ProposalCard({
                 View on Etherscan
               </a>
               {proposal.execution_notes && (
-                <p className="text-xs text-gray-600 dark:text-gray-400">{proposal.execution_notes}</p>
+                <p className="text-xs text-gray-700 dark:text-gray-400">{proposal.execution_notes}</p>
               )}
               {proposal.executed_at && (
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-700 dark:text-gray-400">
                   Executed {new Date(proposal.executed_at).toLocaleDateString()}
                 </p>
               )}
@@ -197,11 +197,11 @@ export function ProposalCard({
               />
             </div>
             <div className="flex justify-between items-center mt-1.5">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-700 dark:text-gray-400">
                 {totalVotes} of {memberCount > 0 ? memberCount : "?"} {schoolDisplayName(schoolName)} members voted
               </span>
               {active && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <span className="text-xs text-gray-700 dark:text-gray-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {deadlineLabel(proposal.voting_deadline)}
                 </span>
@@ -243,15 +243,15 @@ export function ProposalCard({
               ) : (
                 <div className="relative">
                   <div className="flex gap-3 pointer-events-none opacity-40 select-none">
-                    <div className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-center border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400">
+                    <div className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-center border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-400">
                       ✓ Vote Yes
                     </div>
-                    <div className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-center border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400">
+                    <div className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-center border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-400">
                       ✗ Vote No
                     </div>
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-white/95 dark:bg-gray-900/95 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <span className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-400 bg-white/95 dark:bg-gray-900/95 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
                       <Lock className="w-3 h-3" />
                       {isLoggedIn
                         ? `Sign in as a ${schoolDisplayName(schoolName)} member to vote`
@@ -285,15 +285,15 @@ export function ProposalCard({
                   title={doc.title}
                   className="flex items-center gap-1.5 max-w-[200px] px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
                 >
-                  <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                  <span className="text-xs text-gray-600 dark:text-gray-300 truncate">{doc.title}</span>
+                  <FileText className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 shrink-0" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{doc.title}</span>
                 </button>
               ))}
             </div>
           )}
 
           {proposal.proposed_by_name && (
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-3 text-xs text-gray-700 dark:text-gray-400">
               Proposed by {proposal.proposed_by_name}
             </p>
           )}
@@ -303,7 +303,7 @@ export function ProposalCard({
               <button
                 onClick={() => { setShowDeleteModal(true); setDeleteError(null); }}
                 title="Delete proposal"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Delete
@@ -321,14 +321,14 @@ export function ProposalCard({
             <form onSubmit={handleExecute} className="p-6 space-y-4">
               <div>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">Mark as Executed</h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
                   <span className="font-medium text-gray-700 dark:text-gray-300">${proposal.token_ticker}</span>
                   {" — "}{proposal.title}
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
                   Etherscan TX Link <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -342,7 +342,7 @@ export function ProposalCard({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
                   Trade Output <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -356,8 +356,8 @@ export function ProposalCard({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                  Notes <span className="text-gray-400 font-normal">(optional)</span>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
+                  Notes <span className="text-gray-700 dark:text-gray-400 font-normal">(optional)</span>
                 </label>
                 <textarea
                   value={executeNotes}
@@ -379,7 +379,7 @@ export function ProposalCard({
                 <button
                   type="button"
                   onClick={() => setShowExecuteModal(false)}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Cancel
                 </button>
@@ -405,13 +405,13 @@ export function ProposalCard({
             <div className="p-6 space-y-4">
               <div>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">Delete Proposal</h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
                   <span className="font-medium text-gray-700 dark:text-gray-300">${proposal.token_ticker}</span>
                   {" — "}{proposal.title}
                 </p>
               </div>
 
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-700 dark:text-gray-400">
                 This permanently deletes the proposal and all its votes. This can&apos;t be undone.
               </p>
 
@@ -426,7 +426,7 @@ export function ProposalCard({
                   type="button"
                   onClick={() => setShowDeleteModal(false)}
                   disabled={deleting}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -453,12 +453,12 @@ export function ProposalCard({
                 href={viewingDoc.file_url ?? ""}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-700 dark:text-gray-400 hover:text-white transition-colors"
                 title="Open in new tab"
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
-              <button onClick={() => setViewingDoc(null)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setViewingDoc(null)} className="text-gray-700 dark:text-gray-400 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>

@@ -76,7 +76,7 @@ function CategoryBadge({ category }: { category: string }) {
   return (
     <span className={cn(
       "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wide",
-      CATEGORY_BADGE[category] ?? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+      CATEGORY_BADGE[category] ?? "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
     )}>
       {category}
     </span>
@@ -101,14 +101,14 @@ function FeaturedCard({ post }: { post: NewsPost }) {
     >
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[10px] font-semibold uppercase tracking-widest text-primary">Featured</span>
-        <span className="text-gray-300 dark:text-gray-700">·</span>
+        <span className="text-gray-700 dark:text-gray-400">·</span>
         <CategoryBadge category={post.category} />
       </div>
       <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-snug mb-3">
         {post.title}
       </h2>
       {post.content && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-4 mb-5">
+        <p className="text-sm text-gray-700 dark:text-gray-400 leading-relaxed line-clamp-4 mb-5">
           {post.content}
         </p>
       )}
@@ -117,12 +117,12 @@ function FeaturedCard({ post }: { post: NewsPost }) {
           <SchoolLogo name={post.school} size={20} />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{schoolDisplayName(post.school)}</span>
           {post.author_name && (
-            <span className="text-sm text-gray-400 dark:text-gray-500">· {post.author_name}</span>
+            <span className="text-sm text-gray-700 dark:text-gray-400">· {post.author_name}</span>
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(post.created_at)}</span>
-          {post.url && <ExternalLink className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />}
+          <span className="text-xs text-gray-700 dark:text-gray-400">{timeAgo(post.created_at)}</span>
+          {post.url && <ExternalLink className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400" />}
         </div>
       </div>
     </div>
@@ -156,7 +156,7 @@ function RegularCard({ post }: { post: NewsPost }) {
       </h3>
       {post.content && (
         <p className={cn(
-          "text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-3",
+          "text-sm text-gray-700 dark:text-gray-400 leading-relaxed mb-3",
           expanded ? "" : "line-clamp-2"
         )}>
           {post.content}
@@ -174,14 +174,14 @@ function RegularCard({ post }: { post: NewsPost }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <SchoolLogo name={post.school} size={16} />
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{schoolDisplayName(post.school)}</span>
+          <span className="text-xs font-medium text-gray-700 dark:text-gray-400">{schoolDisplayName(post.school)}</span>
           {post.author_name && (
-            <span className="text-xs text-gray-400 dark:text-gray-500">· {post.author_name}</span>
+            <span className="text-xs text-gray-700 dark:text-gray-400">· {post.author_name}</span>
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(post.created_at)}</span>
-          {post.url && <ExternalLink className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />}
+          <span className="text-xs text-gray-700 dark:text-gray-400">{timeAgo(post.created_at)}</span>
+          {post.url && <ExternalLink className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400" />}
         </div>
       </div>
     </div>
@@ -260,7 +260,7 @@ function SchoolFilterWidget({ schools, selected, onSelect }: {
               "text-xs px-2.5 py-1 rounded-full border transition-colors",
               selected === s
                 ? "bg-primary text-white border-primary"
-                : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20"
+                : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20"
             )}
           >
             {s ? schoolDisplayName(s) : "All Schools"}
@@ -283,9 +283,9 @@ function TopContributors({ contributors }: { contributors: Contributor[] }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{c.author_name}</div>
-              <div className="text-xs text-gray-400 dark:text-gray-500 truncate">{schoolDisplayName(c.school)}</div>
+              <div className="text-xs text-gray-700 dark:text-gray-400 truncate">{schoolDisplayName(c.school)}</div>
             </div>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tabular-nums shrink-0">
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-400 tabular-nums shrink-0">
               {c.count}
             </span>
           </div>
@@ -311,8 +311,8 @@ function ActiveSchoolsWidget({ posts }: { posts: NewsPost[] }) {
         {schoolCounts.map(([school, count]) => (
           <div key={school}>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-gray-600 dark:text-gray-400 truncate">{schoolDisplayName(school)}</span>
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tabular-nums ml-2 shrink-0">{count}</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400 truncate">{schoolDisplayName(school)}</span>
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-400 tabular-nums ml-2 shrink-0">{count}</span>
             </div>
             <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800">
               <div
@@ -371,21 +371,21 @@ function PostModal({ userSchool, displayName, onClose, onSuccess }: ModalProps) 
       <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-[#111] shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Post Update</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <button onClick={onClose} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">School</label>
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">School</label>
             <div className="flex items-center gap-2 bg-gray-800/60 rounded-lg px-3 py-2">
               <SchoolLogo name={userSchool} size={16} />
-              <span className="text-sm text-gray-300">{schoolDisplayName(userSchool)}</span>
-              <span className="text-xs text-gray-600 ml-auto">as {displayName || "Anonymous"}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-400">{schoolDisplayName(userSchool)}</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400 ml-auto">as {displayName || "Anonymous"}</span>
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">Category</label>
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">Category</label>
             <select value={category} onChange={e => setCategory(e.target.value)} className={inputCls}>
               <option value="news">News</option>
               <option value="research">Research</option>
@@ -394,7 +394,7 @@ function PostModal({ userSchool, displayName, onClose, onSuccess }: ModalProps) 
             </select>
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">
               Title <span className="text-danger">*</span>
             </label>
             <input
@@ -408,8 +408,8 @@ function PostModal({ userSchool, displayName, onClose, onSuccess }: ModalProps) 
             />
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">
-              Content <span className="text-gray-600">(optional)</span>
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">
+              Content <span className="text-gray-700 dark:text-gray-400">(optional)</span>
             </label>
             <textarea
               value={content}
@@ -419,11 +419,11 @@ function PostModal({ userSchool, displayName, onClose, onSuccess }: ModalProps) 
               rows={4}
               className={cn(inputCls, "resize-none")}
             />
-            <div className="text-right text-xs text-gray-700 mt-1">{content.length}/2000</div>
+            <div className="text-right text-xs text-gray-700 dark:text-gray-400 mt-1">{content.length}/2000</div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">
-              External Link <span className="text-gray-600">(optional)</span>
+            <label className="text-xs text-gray-700 dark:text-gray-400 mb-1.5 block">
+              External Link <span className="text-gray-700 dark:text-gray-400">(optional)</span>
             </label>
             <input
               type="url"
@@ -438,7 +438,7 @@ function PostModal({ userSchool, displayName, onClose, onSuccess }: ModalProps) 
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -569,7 +569,7 @@ export function NewsClient() {
             <Newspaper className="w-5 h-5 text-primary" />
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">DAO Headlines</h1>
           </div>
-          <p className="text-sm text-gray-500">News and updates from across the DormDAO network</p>
+          <p className="text-sm text-gray-700 dark:text-gray-400">News and updates from across the DormDAO network</p>
         </div>
         {user && userSchool && (
           <button
@@ -598,7 +598,7 @@ export function NewsClient() {
                   "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
                   categoryFilter === key
                     ? "bg-primary text-white border-primary"
-                    : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20"
+                    : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20"
                 )}
               >
                 {label}
@@ -608,7 +608,7 @@ export function NewsClient() {
 
           {/* Post count + sort */}
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs text-gray-400 dark:text-gray-500">
+            <span className="text-xs text-gray-700 dark:text-gray-400">
               {!loading && `${posts.length}${hasMore ? "+" : ""} posts`}
             </span>
             <div className="flex items-center gap-0.5">
@@ -620,7 +620,7 @@ export function NewsClient() {
                     "text-xs px-2.5 py-1 rounded-lg transition-colors",
                     sort === s
                       ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-medium"
-                      : "text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      : "text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                   )}
                 >
                   {s === "latest" ? "Latest" : "Popular"}
@@ -639,9 +639,9 @@ export function NewsClient() {
             </>
           ) : posts.length === 0 ? (
             <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 py-20 text-center">
-              <Newspaper className="w-8 h-8 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm font-medium">No posts yet</p>
-              <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">
+              <Newspaper className="w-8 h-8 text-gray-700 dark:text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-700 dark:text-gray-400 text-sm font-medium">No posts yet</p>
+              <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">
                 {user && userSchool
                   ? "Be the first to post an update from your school."
                   : "Sign in to post the first update."}
@@ -661,7 +661,7 @@ export function NewsClient() {
               <button
                 onClick={handleLoadMore}
                 disabled={loadingMore}
-                className="px-5 py-2 text-xs font-medium border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors disabled:opacity-50"
+                className="px-5 py-2 text-xs font-medium border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors disabled:opacity-50"
               >
                 {loadingMore ? "Loading…" : "Load more"}
               </button>

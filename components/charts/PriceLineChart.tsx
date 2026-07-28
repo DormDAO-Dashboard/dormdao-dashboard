@@ -78,7 +78,7 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
               "px-3 py-1 rounded text-xs font-medium transition-colors border",
               days === r.value
                 ? "bg-primary/20 text-primary border-primary/40"
-                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 border-transparent"
+                : "text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent"
             )}
           >
             {r.label}
@@ -88,7 +88,7 @@ export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
       {loading ? (
         <div className="h-48 bg-gray-800/50 animate-pulse rounded-lg" />
       ) : data.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+        <div className="h-48 flex items-center justify-center text-gray-700 dark:text-gray-400 text-sm">
           No chart data available
         </div>
       ) : (

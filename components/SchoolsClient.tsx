@@ -42,12 +42,12 @@ function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
           <div className="flex items-center gap-3">
             <SchoolLogo name={s.name} size={32} />
             <div>
-              <div className="text-[11px] font-mono text-gray-400 dark:text-gray-500 mb-0.5">#{s.rank}</div>
+              <div className="text-[11px] font-mono text-gray-700 dark:text-gray-400 mb-0.5">#{s.rank}</div>
               <h2 className="text-gray-900 dark:text-white font-semibold">{schoolDisplayName(s.name)}</h2>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-500 font-medium">ETH ROI</span>
+            <span className="text-xs text-gray-700 dark:text-gray-400 font-medium">ETH ROI</span>
             <span className={`text-sm font-mono font-bold ${s.ethReturn >= 0 ? "text-primary" : "text-danger"}`}>
               {formatPct(s.ethReturn)}
             </span>
@@ -55,22 +55,22 @@ function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
-            <div className="text-gray-500">NAV</div>
+            <div className="text-gray-700 dark:text-gray-400">NAV</div>
             <div className="font-mono text-gray-700 dark:text-gray-200">{formatNav(s.nav)}</div>
           </div>
           <div>
-            <div className="text-gray-500">USD Return</div>
+            <div className="text-gray-700 dark:text-gray-400">USD Return</div>
             <div className={`font-mono ${s.usdReturn >= 0 ? "text-primary" : "text-danger"}`}>
               {formatPct(s.usdReturn)}
             </div>
           </div>
           <div>
-            <div className="text-gray-500">Avg Entry FDV</div>
-            <div className="font-mono text-gray-400">{formatUSD(s.avgEntryFdv, true)}</div>
+            <div className="text-gray-700 dark:text-gray-400">Avg Entry FDV</div>
+            <div className="font-mono text-gray-700 dark:text-gray-400">{formatUSD(s.avgEntryFdv, true)}</div>
           </div>
           <div>
-            <div className="text-gray-500">Deployed</div>
-            <div className="font-mono text-gray-400">{formatPct(s.pctDeployed)}</div>
+            <div className="text-gray-700 dark:text-gray-400">Deployed</div>
+            <div className="font-mono text-gray-700 dark:text-gray-400">{formatPct(s.pctDeployed)}</div>
           </div>
         </div>
         {isYours && (
@@ -119,12 +119,12 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
     <>
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700 dark:text-gray-400" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search schools…"
-            className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50"
           />
         </div>
         <select
@@ -146,7 +146,7 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-gray-700 dark:text-gray-400">
           No schools match &quot;{query}&quot;
         </div>
       )}

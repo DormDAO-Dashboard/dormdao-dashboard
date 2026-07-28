@@ -115,64 +115,64 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
 
   return (
     <div className="mb-5">
-      <h2 className="text-sm font-semibold text-gray-300 mb-3">DAO-Wide Metrics</h2>
+      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">DAO-Wide Metrics</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
 
         <div className={statCard}>
-          <span className="text-xs text-gray-500">Most Widely Held</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">Most Widely Held</span>
           <span className="text-base font-mono font-bold text-gray-900 dark:text-white">${mostWidelyHeldTicker}</span>
-          <span className="text-xs text-gray-600">{mostWidelyHeldCount > 0 ? `${mostWidelyHeldCount} of 17 schools` : "—"}</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">{mostWidelyHeldCount > 0 ? `${mostWidelyHeldCount} of 17 schools` : "—"}</span>
         </div>
 
         <div className={statCard}>
-          <span className="text-xs text-gray-500">Unique Tokens</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">Unique Tokens</span>
           <span className="text-base font-mono font-bold text-gray-900 dark:text-white">{uniqueTokenCount}</span>
-          <span className="text-xs text-gray-600">across all portfolios</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">across all portfolios</span>
         </div>
 
         <div className={statCard}>
-          <span className="text-xs text-gray-500">Best Position</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">Best Position</span>
           {bestPos ? (
             <>
               <span className="text-base font-mono font-bold text-gray-900 dark:text-white">${bestPos.ticker}</span>
               <span className="text-xs font-mono text-primary">+{formatUSD(bestPos.gainUsd)}</span>
             </>
           ) : (
-            <span className="text-base font-mono font-bold text-gray-600">—</span>
+            <span className="text-base font-mono font-bold text-gray-700 dark:text-gray-400">—</span>
           )}
         </div>
 
         <div className={statCard}>
-          <span className="text-xs text-gray-500">Worst Position</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">Worst Position</span>
           {worstPos && worstPos.gainUsd < 0 ? (
             <>
               <span className="text-base font-mono font-bold text-gray-900 dark:text-white">${worstPos.ticker}</span>
               <span className="text-xs font-mono text-danger">{formatUSD(worstPos.gainUsd)}</span>
             </>
           ) : (
-            <span className="text-base font-mono font-bold text-gray-600">—</span>
+            <span className="text-base font-mono font-bold text-gray-700 dark:text-gray-400">—</span>
           )}
         </div>
 
         <div className={statCard}>
-          <span className="text-xs text-gray-500">Position Win Rate</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">Position Win Rate</span>
           {posWinRate !== null ? (
             <>
               <span className="flex items-center gap-1 text-base font-mono font-bold text-gray-900 dark:text-white">
                 <TrendingUp className="w-3.5 h-3.5 text-primary shrink-0" />
                 {posWinRate}%
               </span>
-              <span className="text-xs text-gray-600">{posWinCount}/{holdingsWithGain.length} positions</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400">{posWinCount}/{holdingsWithGain.length} positions</span>
             </>
           ) : (
-            <span className="text-base font-mono font-bold text-gray-600">—</span>
+            <span className="text-base font-mono font-bold text-gray-700 dark:text-gray-400">—</span>
           )}
         </div>
 
         <div className={statCard}>
-          <span className="text-xs text-gray-500">Total Positions</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">Total Positions</span>
           <span className="text-base font-mono font-bold text-gray-900 dark:text-white">{totalPositions}</span>
-          <span className="text-xs text-gray-600">active holdings</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400">active holdings</span>
         </div>
 
       </div>
@@ -237,7 +237,7 @@ export function DashboardClient({
             className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               period === key
                 ? "bg-primary/20 border-primary/50 text-primary"
-                : "bg-transparent border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
+                : "bg-transparent border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
             }`}
           >
             {label}
@@ -267,30 +267,30 @@ export function DashboardClient({
       {/* Analytics row */}
       <div className="flex overflow-x-auto gap-3 mb-5 scrollbar-hide md:grid md:grid-cols-3">
         <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-4 py-3 flex flex-col">
-          <span className="text-xs text-gray-500 mb-1">Win Rate</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400 mb-1">Win Rate</span>
           <span className="text-lg font-mono font-bold text-gray-900 dark:text-white">{winRate}%</span>
-          <span className="text-xs text-gray-600 mt-0.5">{ethReturns.filter((r) => r > 0).length}/{ethReturns.length} schools positive</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{ethReturns.filter((r) => r > 0).length}/{ethReturns.length} schools positive</span>
         </div>
         <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-4 py-3 flex flex-col">
-          <span className="text-xs text-gray-500 mb-1">Sharpe Ratio</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400 mb-1">Sharpe Ratio</span>
           <span className={`text-lg font-mono font-bold ${typeof sharpe === "string" || parseFloat(sharpe) >= 1 ? "text-primary" : parseFloat(sharpe) >= 0 ? "text-gray-900 dark:text-white" : "text-danger"}`}>{sharpe}</span>
-          <span className="text-xs text-gray-600 mt-0.5">ETH return / std dev</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">ETH return / std dev</span>
         </div>
         <div className="min-w-[120px] shrink-0 md:min-w-0 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 px-4 py-3 flex flex-col">
-          <span className="text-xs text-gray-500 mb-1">Schools</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400 mb-1">Schools</span>
           <span className="text-lg font-mono font-bold text-gray-900 dark:text-white">{activeSchools.length}</span>
-          <span className="text-xs text-gray-600 mt-0.5">active portfolios</span>
+          <span className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">active portfolios</span>
         </div>
       </div>
 
       {/* Charts row 1 */}
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Portfolio NAV by School (Ranked)</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">Portfolio NAV by School (Ranked)</h2>
           <NavBarChart schools={activeSchools} />
         </div>
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">ETH Return — All Schools</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">ETH Return — All Schools</h2>
           <EthReturnChart schools={activeSchools} />
         </div>
       </div>
@@ -298,11 +298,11 @@ export function DashboardClient({
       {/* Charts row 2 */}
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Top &amp; Bottom 3 — ETH Return</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">Top &amp; Bottom 3 — ETH Return</h2>
           <TopBottomChart schools={activeSchools} />
         </div>
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Deployment % vs. NAV</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">Deployment % vs. NAV</h2>
           <DeploymentScatter schools={activeSchools} />
         </div>
       </div>
@@ -310,7 +310,7 @@ export function DashboardClient({
       {/* Leaderboard */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-4">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-300">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
             School Leaderboard — All {activeSchools.length}
           </h2>
           <Link
@@ -332,7 +332,7 @@ export function DashboardClient({
       )}
 
       {/* Sync footer */}
-      <div className="text-center text-xs text-gray-600 pb-2">
+      <div className="text-center text-xs text-gray-700 dark:text-gray-400 pb-2">
         Last synced: {syncedAgo < 1 ? "just now" : `${syncedAgo} min ago`}
         {" · "}
         <button

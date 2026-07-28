@@ -21,7 +21,7 @@ export function SchoolNoteList({
 
   if (notes.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 text-sm">
+      <div className="text-center py-8 text-gray-700 dark:text-gray-400 text-sm">
         No research notes yet for {schoolDisplayName(schoolName)}. Be the first to add one!
       </div>
     );

@@ -45,7 +45,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
                 "shrink-0 px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
                 tab === t
                   ? "text-gray-900 dark:text-white font-medium"
-                  : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-normal"
+                  : "border-transparent text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-normal"
               )}
             >
               {t === "Members" && membersCount !== null ? `Members (${membersCount})` : t}
@@ -59,7 +59,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
         <div className="flex flex-col gap-4">
           {(school.holdings?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
-              <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Concentration</h2>
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">Portfolio Concentration</h2>
               <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
             </div>
           )}
@@ -75,7 +75,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
 
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-800">
-              <h2 className="text-sm font-semibold text-gray-300">
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
                 Active Holdings ({school.holdings?.length ?? 0})
               </h2>
             </div>
@@ -86,14 +86,14 @@ export function SchoolTabs({ school, otherSchools }: Props) {
                 schoolName={school.name}
               />
             ) : (
-              <p className="px-5 py-6 text-sm text-gray-500">No holdings data available.</p>
+              <p className="px-5 py-6 text-sm text-gray-700 dark:text-gray-400">No holdings data available.</p>
             )}
           </div>
 
           {(school.nftHoldings?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800">
-                <h2 className="text-sm font-semibold text-gray-300">
+                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
                   Active NFT Holdings ({school.nftHoldings.length})
                 </h2>
               </div>
@@ -113,7 +113,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
           {(school.exitedHoldings?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800">
-                <h2 className="text-sm font-semibold text-gray-300">
+                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
                   Exited &amp; Trimmed Positions ({school.exitedHoldings.length})
                 </h2>
               </div>

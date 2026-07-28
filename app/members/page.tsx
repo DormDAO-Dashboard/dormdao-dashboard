@@ -49,8 +49,8 @@ export default async function MembersPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">DormDAO Members</h1>
-        <p className="text-gray-500 mt-1 text-sm">Meet the people behind the portfolios</p>
-        <p className="text-gray-400 dark:text-gray-600 mt-1 text-xs">Don&apos;t see your profile? Go to your <a href="/profile" className="underline hover:text-gray-600 dark:hover:text-gray-400 transition-colors">profile settings</a> and enable &ldquo;Make profile public.&rdquo;</p>
+        <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">Meet the people behind the portfolios</p>
+        <p className="text-gray-700 dark:text-gray-400 mt-1 text-xs">Don&apos;t see your profile? Go to your <a href="/profile" className="underline hover:text-gray-600 dark:hover:text-gray-400 transition-colors">profile settings</a> and enable &ldquo;Make profile public.&rdquo;</p>
       </div>
       <MembersDirectory members={members} />
     </div>

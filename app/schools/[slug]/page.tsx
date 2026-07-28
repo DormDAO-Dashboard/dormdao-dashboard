@@ -33,7 +33,7 @@ function SocialLinks({ name }: { name: string }) {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-gray-400 border border-gray-700/60 hover:border-gray-500 hover:text-gray-200 px-2.5 py-1.5 rounded-lg transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-400 border border-gray-700/60 hover:border-gray-500 hover:text-gray-200 px-2.5 py-1.5 rounded-lg transition-colors"
         >
           {icon}
           {label}
@@ -63,7 +63,7 @@ async function SchoolContent({ slug }: { slug: string }) {
       {/* Branded accent bar — visible to every visitor, logged in or not */}
       <div className="h-1.5 w-full rounded-full mb-4" style={{ backgroundColor: colors.primary }} />
 
-      <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
+      <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Schools
       </Link>
 
@@ -73,7 +73,7 @@ async function SchoolContent({ slug }: { slug: string }) {
           <SchoolLogo name={school.name} size={48} />
         </div>
         <div>
-          <div className="text-xs font-mono text-gray-500 mb-1">Rank #{school.rank}</div>
+          <div className="text-xs font-mono text-gray-700 dark:text-gray-400 mb-1">Rank #{school.rank}</div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{schoolDisplayName(school.name)}</h1>
         </div>
       </div>

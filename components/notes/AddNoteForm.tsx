@@ -153,7 +153,7 @@ export function AddNoteForm({
     if (!isLoggedIn) {
       return (
         <div className="w-full py-3 rounded-xl border border-dashed border-gray-700 text-center">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-700 dark:text-gray-400">
             <Link href="/login" className="text-primary hover:underline">Sign in</Link> to post a research note
           </span>
         </div>
@@ -162,7 +162,7 @@ export function AddNoteForm({
     if (!profileSchool) {
       return (
         <div className="w-full py-3 rounded-xl border border-dashed border-gray-700 text-center">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-700 dark:text-gray-400">
             <Link href="/profile" className="text-primary hover:underline">Set your school on your profile</Link> to post a research note
           </span>
         </div>
@@ -171,7 +171,7 @@ export function AddNoteForm({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full py-3 rounded-xl border border-dashed border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-primary/50 hover:bg-primary/5 transition-colors text-sm"
+        className="w-full py-3 rounded-xl border border-dashed border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-primary/50 hover:bg-primary/5 transition-colors text-sm"
       >
         + Add Research Note
       </button>
@@ -185,14 +185,14 @@ export function AddNoteForm({
     >
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">New Research Note</h3>
-        <div className="text-xs text-gray-500">
-          Posting as <span className="text-gray-300">{profileName}</span> · <span className="text-gray-300">{schoolDisplayName(profileSchool)}</span>
+        <div className="text-xs text-gray-700 dark:text-gray-400">
+          Posting as <span className="text-gray-700 dark:text-gray-400">{profileName}</span> · <span className="text-gray-700 dark:text-gray-400">{schoolDisplayName(profileSchool)}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Token</label>
+          <label className="block text-xs text-gray-700 dark:text-gray-400 mb-1">Token</label>
           <select
             value={form.token_ticker}
             onChange={(e) => setForm((f) => ({ ...f, token_ticker: e.target.value }))}
@@ -205,7 +205,7 @@ export function AddNoteForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Sentiment *</label>
+          <label className="block text-xs text-gray-700 dark:text-gray-400 mb-1">Sentiment *</label>
           <div className="flex gap-1.5">
             {SENTIMENTS.map((s) => (
               <button
@@ -217,7 +217,7 @@ export function AddNoteForm({
                   form.sentiment === s && s === "bullish" && "bg-primary/20 border-primary/50 text-primary",
                   form.sentiment === s && s === "bearish" && "bg-danger/20 border-danger/50 text-danger",
                   form.sentiment === s && s === "neutral" && "bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white",
-                  form.sentiment !== s && "bg-transparent border-gray-700 text-gray-500 hover:border-gray-600"
+                  form.sentiment !== s && "bg-transparent border-gray-700 text-gray-700 dark:text-gray-400 hover:border-gray-600"
                 )}
               >
                 {s === "bullish" ? "↑" : s === "bearish" ? "↓" : "~"} {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -229,7 +229,7 @@ export function AddNoteForm({
 
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Thesis Type</label>
+          <label className="block text-xs text-gray-700 dark:text-gray-400 mb-1">Thesis Type</label>
           <select
             value={form.thesis_type}
             onChange={(e) => setForm((f) => ({ ...f, thesis_type: e.target.value }))}
@@ -242,7 +242,7 @@ export function AddNoteForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Price Target (USD)</label>
+          <label className="block text-xs text-gray-700 dark:text-gray-400 mb-1">Price Target (USD)</label>
           <input
             type="number"
             step="any"
@@ -254,7 +254,7 @@ export function AddNoteForm({
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Time Horizon</label>
+          <label className="block text-xs text-gray-700 dark:text-gray-400 mb-1">Time Horizon</label>
           <select
             value={form.time_horizon}
             onChange={(e) => setForm((f) => ({ ...f, time_horizon: e.target.value }))}
@@ -269,7 +269,7 @@ export function AddNoteForm({
       </div>
 
       <div>
-        <label className="block text-xs text-gray-400 mb-1">Article URL <span className="text-gray-600">(optional — paste a link to share)</span></label>
+        <label className="block text-xs text-gray-700 dark:text-gray-400 mb-1">Article URL <span className="text-gray-700 dark:text-gray-400">(optional — paste a link to share)</span></label>
         <input
           type="url"
           value={form.url}
@@ -278,7 +278,7 @@ export function AddNoteForm({
           className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50"
         />
         {urlPreviewLoading && (
-          <p className="text-xs text-gray-500 mt-1">Fetching preview…</p>
+          <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">Fetching preview…</p>
         )}
         {urlPreview && !urlPreviewLoading && (
           <div className="mt-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3 flex gap-3">
@@ -287,18 +287,18 @@ export function AddNoteForm({
               <img src={urlPreview.image} alt="" className="w-16 h-12 object-cover rounded shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
             )}
             <div className="min-w-0">
-              <div className="text-xs text-gray-500 mb-0.5 flex items-center gap-1">
+              <div className="text-xs text-gray-700 dark:text-gray-400 mb-0.5 flex items-center gap-1">
                 <ExternalLink className="w-3 h-3" />{urlPreview.siteName}
               </div>
               {urlPreview.title && <div className="text-xs font-semibold text-gray-900 dark:text-white truncate">{urlPreview.title}</div>}
-              {urlPreview.description && <div className="text-xs text-gray-400 line-clamp-2 mt-0.5">{urlPreview.description}</div>}
+              {urlPreview.description && <div className="text-xs text-gray-700 dark:text-gray-400 line-clamp-2 mt-0.5">{urlPreview.description}</div>}
             </div>
           </div>
         )}
       </div>
 
       <div>
-        <label className="block text-xs text-gray-400 mb-1">Analysis {hasUrl ? <span className="text-gray-600">(optional comment)</span> : "*"}</label>
+        <label className="block text-xs text-gray-700 dark:text-gray-400 mb-1">Analysis {hasUrl ? <span className="text-gray-700 dark:text-gray-400">(optional comment)</span> : "*"}</label>
         <textarea
           value={form.content}
           onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
@@ -312,7 +312,7 @@ export function AddNoteForm({
           ) : <span />}
           <span className={cn(
             "text-xs",
-            charCount < minChars ? "text-gray-500" : charCount > 2000 ? "text-danger" : "text-gray-400"
+            charCount < minChars ? "text-gray-700 dark:text-gray-400" : charCount > 2000 ? "text-danger" : "text-gray-700 dark:text-gray-400"
           )}>
             {charCount}/2000
           </span>
@@ -326,7 +326,7 @@ export function AddNoteForm({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="px-4 py-2 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="px-4 py-2 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           Cancel
         </button>

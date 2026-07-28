@@ -37,7 +37,7 @@ function TradeTypeBadge({ type }: { type: string }) {
     t === "increase" ? "bg-primary/20 text-primary" :
     t === "decrease" ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400" :
     t === "sell"     ? "bg-danger/20 text-danger" :
-                       "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+                       "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400";
   const label =
     t === "increase" ? "add" :
     t === "decrease" ? "trim" :
@@ -122,12 +122,12 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
     ? holdingsWithGain.reduce((w, h) => h.gainUsd < w.gainUsd ? h : w)
     : null;
 
-  const lbl = "text-xs text-gray-400 mb-1";
+  const lbl = "text-xs text-gray-700 dark:text-gray-400 mb-1";
   const val = "font-mono font-semibold text-sm text-gray-900 dark:text-white";
 
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
-      <h2 className="text-sm font-semibold text-gray-300 mb-4">Portfolio Insights</h2>
+      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">Portfolio Insights</h2>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5">
 
@@ -135,13 +135,13 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
         <div>
           <div className={lbl}>Positions</div>
           <div className={val}>{holdings.length}</div>
-          <div className="text-xs text-gray-600 mt-0.5">active holdings</div>
+          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">active holdings</div>
         </div>
 
         <div>
           <div className={lbl}>Rank</div>
           <div className={`${val} text-primary`}>#{rank}</div>
-          <div className="text-xs text-gray-600 mt-0.5">by ETH performance</div>
+          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">by ETH performance</div>
         </div>
 
         <div>
@@ -149,7 +149,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
           <div className={val}>
             {avgAgeDays !== null ? `${Math.round(avgAgeDays)}d` : "—"}
           </div>
-          <div className="text-xs text-gray-600 mt-0.5">
+          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">
             {avgAgeDays !== null ? `~${(avgAgeDays / 30).toFixed(1)} months` : "current season only"}
           </div>
         </div>
@@ -159,7 +159,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
           <div className={lbl}>Largest Position</div>
           <div className={val}>{largestPos ? `$${largestPos.ticker}` : "—"}</div>
           {largestPos && (
-            <div className="text-xs text-gray-600 mt-0.5">{largestPos.pctOfPortfolio.toFixed(1)}% of NAV</div>
+            <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{largestPos.pctOfPortfolio.toFixed(1)}% of NAV</div>
           )}
         </div>
 
@@ -167,7 +167,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
           <div className={lbl}>Smallest Position</div>
           <div className={val}>{smallestPos ? `$${smallestPos.ticker}` : "—"}</div>
           {smallestPos && (
-            <div className="text-xs text-gray-600 mt-0.5">{smallestPos.pctOfPortfolio.toFixed(1)}% of NAV</div>
+            <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{smallestPos.pctOfPortfolio.toFixed(1)}% of NAV</div>
           )}
         </div>
 
@@ -178,7 +178,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
               ? formatUSD(avgPositionSizeUsd)
               : "—"}
           </div>
-          <div className="text-xs text-gray-600 mt-0.5">avg USD per holding</div>
+          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">avg USD per holding</div>
         </div>
 
         {/* Win/Loss vs ETH */}
@@ -187,7 +187,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
           <div className={`${val} ${winRate === null ? "" : winRate >= 50 ? "text-primary" : "text-danger"}`}>
             {winRate !== null ? `${winRate}%` : "—"}
           </div>
-          <div className="text-xs text-gray-600 mt-0.5">
+          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">
             {holdingsWithEthRoi.length > 0
               ? `${winningCount}/${holdingsWithEthRoi.length} beat ETH`
               : "no ETH ROI data"}
@@ -199,7 +199,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
           <div className={`${val} ${winningCount > 0 ? "text-primary" : ""}`}>
             {holdingsWithEthRoi.length > 0 ? winningCount : "—"}
           </div>
-          <div className="text-xs text-gray-600 mt-0.5">outperforming ETH</div>
+          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">outperforming ETH</div>
         </div>
 
         <div>
@@ -207,7 +207,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
           <div className={`${val} ${losingCount > 0 ? "text-danger" : ""}`}>
             {holdingsWithEthRoi.length > 0 ? losingCount : "—"}
           </div>
-          <div className="text-xs text-gray-600 mt-0.5">underperforming ETH</div>
+          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">underperforming ETH</div>
         </div>
 
         {/* Best / worst (only when sheet has gainUsd) */}
@@ -237,25 +237,25 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
         <div className="col-span-2 md:col-span-3 border-t border-gray-800/60 pt-4">
           <div className={lbl}>Most Recent Position</div>
           {tradeLoading ? (
-            <div className="text-sm text-gray-600 mt-1">Loading…</div>
+            <div className="text-sm text-gray-700 dark:text-gray-400 mt-1">Loading…</div>
           ) : recentTrade ? (
             <div className="flex items-center gap-2 mt-1">
               <TradeTypeBadge type={recentTrade.change_type} />
               <span className="font-mono text-sm text-gray-900 dark:text-white">${recentTrade.token_ticker}</span>
-              <span className="text-gray-700">·</span>
-              <span className="text-xs text-gray-500">{daysAgo(recentTrade.detected_at)}</span>
+              <span className="text-gray-700 dark:text-gray-400">·</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400">{daysAgo(recentTrade.detected_at)}</span>
             </div>
           ) : mostRecentHolding ? (
             <div className="flex items-center gap-2 mt-1">
               <TradeTypeBadge type="buy" />
               <span className="font-mono text-sm text-gray-900 dark:text-white">${mostRecentHolding.ticker}</span>
-              <span className="text-gray-700">·</span>
-              <span className="text-xs text-gray-500">
+              <span className="text-gray-700 dark:text-gray-400">·</span>
+              <span className="text-xs text-gray-700 dark:text-gray-400">
                 {mostRecentHolding.investmentDate.replace(/\//g, "-")}
               </span>
             </div>
           ) : (
-            <div className="text-sm text-gray-600 mt-1">No data available</div>
+            <div className="text-sm text-gray-700 dark:text-gray-400 mt-1">No data available</div>
           )}
         </div>
 

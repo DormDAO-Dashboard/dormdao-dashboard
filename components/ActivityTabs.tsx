@@ -62,8 +62,8 @@ function AllExits({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHoldi
     <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-gray-300">All Exited &amp; Trimmed Positions</h2>
-          <span className="text-xs text-gray-600">{rows.length} total</span>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">All Exited &amp; Trimmed Positions</h2>
+          <span className="text-xs text-gray-700 dark:text-gray-400">{rows.length} total</span>
         </div>
         {schoolsInYear.length > 0 && (
           <select
@@ -80,12 +80,12 @@ function AllExits({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHoldi
       </div>
 
       {rows.length === 0 ? (
-        <p className="px-5 py-8 text-center text-sm text-gray-500">No exits recorded yet.</p>
+        <p className="px-5 py-8 text-center text-sm text-gray-700 dark:text-gray-400">No exits recorded yet.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800 text-xs text-gray-500">
+              <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                 <th className="text-left px-5 py-3">School</th>
                 <th className="text-left px-5 py-3">Token</th>
                 <th className="text-left px-5 py-3">Type</th>
@@ -108,7 +108,7 @@ function AllExits({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHoldi
                         className="flex items-center gap-2 hover:text-primary transition-colors"
                       >
                         <SchoolLogo name={h.schoolName} size={20} />
-                        <span className="text-gray-300 text-xs">{schoolDisplayName(h.schoolName)}</span>
+                        <span className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(h.schoolName)}</span>
                       </Link>
                     </td>
                     <td className="px-5 py-3">
@@ -126,7 +126,7 @@ function AllExits({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHoldi
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-300 dark:border-orange-500/30">Trim</span>
                       ) : null}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs">
                       {h.costBasisEth !== 0 ? `${h.costBasisEth.toFixed(3)} ETH` : "—"}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">
@@ -136,24 +136,24 @@ function AllExits({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHoldi
                             ? `$${(h.gainUsd / 1000).toFixed(1)}k`
                             : `$${h.gainUsd.toFixed(0)}`}
                         </span>
-                      ) : <span className="text-gray-600">—</span>}
+                      ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">
                       {h.roiEthPct !== 0 ? (
                         <span className={up(h.roiEthPct) ? "text-primary" : "text-danger"}>
                           {up(h.roiEthPct) ? "+" : ""}{h.roiEthPct.toFixed(1)}%
                         </span>
-                      ) : <span className="text-gray-600">—</span>}
+                      ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">
                       {h.roiUsdPct !== 0 ? (
                         <span className={up(h.roiUsdPct) ? "text-primary" : "text-danger"}>
                           {up(h.roiUsdPct) ? "+" : ""}{h.roiUsdPct.toFixed(1)}%
                         </span>
-                      ) : <span className="text-gray-600">—</span>}
+                      ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-500 text-xs">{h.investmentDate || "—"}</td>
-                    <td className="px-5 py-3 text-right text-gray-500 text-xs">{h.exitDate || "—"}</td>
+                    <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">{h.investmentDate || "—"}</td>
+                    <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">{h.exitDate || "—"}</td>
                   </tr>
                 );
               })}
@@ -195,7 +195,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
   ])].sort();
 
   if (entryRows.length === 0 && exitRows.length === 0) {
-    return <p className="text-center py-8 text-sm text-gray-500">No NFT activity in this period.</p>;
+    return <p className="text-center py-8 text-sm text-gray-700 dark:text-gray-400">No NFT activity in this period.</p>;
   }
 
   return (
@@ -216,13 +216,13 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
       {entryRows.length > 0 && (
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
           <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-semibold text-gray-300">Active NFT Holdings</h2>
-            <span className="text-xs text-gray-600">{entryRows.length} total</span>
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">Active NFT Holdings</h2>
+            <span className="text-xs text-gray-700 dark:text-gray-400">{entryRows.length} total</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-xs text-gray-500">
+                <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                   <th className="text-left px-5 py-3">School</th>
                   <th className="text-left px-5 py-3">NFT</th>
                   <th className="text-right px-5 py-3">Cost (ETH)</th>
@@ -238,14 +238,14 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                     <td className="px-5 py-3">
                       <Link href={`/schools/${h.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                         <SchoolLogo name={h.schoolName} size={20} />
-                        <span className="text-gray-300 text-xs">{schoolDisplayName(h.schoolName)}</span>
+                        <span className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(h.schoolName)}</span>
                       </Link>
                     </td>
                     <td className="px-5 py-3 font-mono font-semibold text-gray-900 dark:text-white">{h.ticker}</td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs">
                       {h.costBasisEth > 0 ? `${h.costBasisEth.toFixed(3)} ETH` : "—"}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono text-gray-300 text-xs">
+                    <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs">
                       {h.marketValueUsd ? `$${h.marketValueUsd.toFixed(2)}` : "—"}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">
@@ -253,16 +253,16 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                         <span className={h.roiEthPct >= 0 ? "text-primary" : "text-danger"}>
                           {h.roiEthPct >= 0 ? "+" : ""}{h.roiEthPct.toFixed(1)}%
                         </span>
-                      ) : <span className="text-gray-600">—</span>}
+                      ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">
                       {h.roiUsdPct !== undefined && h.roiUsdPct !== 0 ? (
                         <span className={h.roiUsdPct >= 0 ? "text-primary" : "text-danger"}>
                           {h.roiUsdPct >= 0 ? "+" : ""}{h.roiUsdPct.toFixed(1)}%
                         </span>
-                      ) : <span className="text-gray-600">—</span>}
+                      ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-500 text-xs">{h.investmentDate || "—"}</td>
+                    <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">{h.investmentDate || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -274,13 +274,13 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
       {exitRows.length > 0 && (
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
           <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-semibold text-gray-300">Exited NFT Positions</h2>
-            <span className="text-xs text-gray-600">{exitRows.length} total</span>
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">Exited NFT Positions</h2>
+            <span className="text-xs text-gray-700 dark:text-gray-400">{exitRows.length} total</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-xs text-gray-500">
+                <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                   <th className="text-left px-5 py-3">School</th>
                   <th className="text-left px-5 py-3">NFT</th>
                   <th className="text-left px-5 py-3">Type</th>
@@ -300,7 +300,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                       <td className="px-5 py-3">
                         <Link href={`/schools/${h.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                           <SchoolLogo name={h.schoolName} size={20} />
-                          <span className="text-gray-300 text-xs">{schoolDisplayName(h.schoolName)}</span>
+                          <span className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(h.schoolName)}</span>
                         </Link>
                       </td>
                       <td className="px-5 py-3 font-mono font-semibold text-gray-900 dark:text-white">{h.ticker}</td>
@@ -311,7 +311,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-300 dark:border-orange-500/30">Trim</span>
                         ) : null}
                       </td>
-                      <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs">
+                      <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs">
                         {h.costBasisEth !== 0 ? `${h.costBasisEth.toFixed(3)} ETH` : "—"}
                       </td>
                       <td className="px-5 py-3 text-right font-mono text-xs">
@@ -321,24 +321,24 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                               ? `$${(h.gainUsd / 1000).toFixed(1)}k`
                               : `$${h.gainUsd.toFixed(0)}`}
                           </span>
-                        ) : <span className="text-gray-600">—</span>}
+                        ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                       </td>
                       <td className="px-5 py-3 text-right font-mono text-xs">
                         {h.roiEthPct !== 0 ? (
                           <span className={up(h.roiEthPct) ? "text-primary" : "text-danger"}>
                             {up(h.roiEthPct) ? "+" : ""}{h.roiEthPct.toFixed(1)}%
                           </span>
-                        ) : <span className="text-gray-600">—</span>}
+                        ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                       </td>
                       <td className="px-5 py-3 text-right font-mono text-xs">
                         {h.roiUsdPct !== 0 ? (
                           <span className={up(h.roiUsdPct) ? "text-primary" : "text-danger"}>
                             {up(h.roiUsdPct) ? "+" : ""}{h.roiUsdPct.toFixed(1)}%
                           </span>
-                        ) : <span className="text-gray-600">—</span>}
+                        ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                       </td>
-                      <td className="px-5 py-3 text-right text-gray-500 text-xs">{h.investmentDate || "—"}</td>
-                      <td className="px-5 py-3 text-right text-gray-500 text-xs">{h.exitDate || "—"}</td>
+                      <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">{h.investmentDate || "—"}</td>
+                      <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">{h.exitDate || "—"}</td>
                     </tr>
                   );
                 })}
@@ -483,8 +483,8 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
     <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-gray-300">All Activity</h2>
-          <span className="text-xs text-gray-600">{rows.length} events</span>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">All Activity</h2>
+          <span className="text-xs text-gray-700 dark:text-gray-400">{rows.length} events</span>
         </div>
         <div className="flex flex-wrap gap-2">
           <select
@@ -510,12 +510,12 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
       </div>
 
       {rows.length === 0 ? (
-        <p className="px-5 py-8 text-center text-sm text-gray-500">No activity in this period.</p>
+        <p className="px-5 py-8 text-center text-sm text-gray-700 dark:text-gray-400">No activity in this period.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800 text-xs text-gray-500">
+              <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                 <th className="text-left px-5 py-3">School</th>
                 <th className="text-left px-5 py-3">Token</th>
                 <th className="text-left px-5 py-3">Type</th>
@@ -532,8 +532,8 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                     <Link href={`/schools/${r.schoolSlug}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                       <SchoolLogo name={r.schoolName} size={20} />
                       <div>
-                        <div className="text-gray-300 text-xs">{schoolDisplayName(r.schoolName)}</div>
-                        <div className="text-[10px] text-gray-600 md:hidden mt-0.5">{r.date || "—"}</div>
+                        <div className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(r.schoolName)}</div>
+                        <div className="text-[10px] text-gray-700 dark:text-gray-400 md:hidden mt-0.5">{r.date || "—"}</div>
                       </div>
                     </Link>
                   </td>
@@ -541,8 +541,8 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                   <td className="px-5 py-3">
                     <ActionBadge type={r.actionType} isNft={r.isNft} />
                   </td>
-                  <td className="px-5 py-3 text-right text-gray-500 text-xs hidden md:table-cell">{r.date || "—"}</td>
-                  <td className="px-5 py-3 text-right font-mono text-gray-400 text-xs hidden md:table-cell">
+                  <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs hidden md:table-cell">{r.date || "—"}</td>
+                  <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs hidden md:table-cell">
                     {r.costBasisEth > 0 ? `${r.costBasisEth.toFixed(3)} ETH` : "—"}
                   </td>
                   <td className="px-5 py-3 text-right font-mono text-xs hidden md:table-cell">
@@ -553,14 +553,14 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                           ? `$${(r.gainUsd / 1000).toFixed(1)}k`
                           : `$${r.gainUsd.toFixed(0)}`}
                       </span>
-                    ) : <span className="text-gray-700">—</span>}
+                    ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                   </td>
                   <td className="px-5 py-3 text-right font-mono text-xs hidden md:table-cell">
                     {r.roiEthPct !== undefined && r.roiEthPct !== 0 ? (
                       <span className={up(r.roiEthPct) ? "text-primary" : "text-danger"}>
                         {up(r.roiEthPct) ? "+" : ""}{r.roiEthPct.toFixed(1)}%
                       </span>
-                    ) : <span className="text-gray-700">—</span>}
+                    ) : <span className="text-gray-700 dark:text-gray-400">—</span>}
                   </td>
                 </tr>
               ))}
@@ -590,7 +590,7 @@ export function ActivityTabs({ schools }: { schools: SchoolRowWithHoldings[] }) 
               "shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
               year === y.key
                 ? "bg-primary/20 border-primary/50 text-primary"
-                : "bg-transparent border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
+                : "bg-transparent border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-600"
             )}
           >
             {y.label}
@@ -608,7 +608,7 @@ export function ActivityTabs({ schools }: { schools: SchoolRowWithHoldings[] }) 
               "shrink-0 whitespace-nowrap px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
               tab === t.key
                 ? "border-primary text-gray-900 dark:text-white font-medium"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-normal"
+                : "border-transparent text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-normal"
             )}
           >
             {t.label}

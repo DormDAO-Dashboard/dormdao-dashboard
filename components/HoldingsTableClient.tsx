@@ -47,7 +47,7 @@ function abbrev(name: string) {
 }
 
 function SortIcon({ col, sortKey, asc }: { col: SortKey; sortKey: SortKey; asc: boolean }) {
-  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-600 inline ml-1" />;
+  if (col !== sortKey) return <ChevronsUpDown className="w-3 h-3 text-gray-700 dark:text-gray-400 inline ml-1" />;
   return asc
     ? <ChevronUp className="w-3 h-3 text-primary inline ml-1" />
     : <ChevronDown className="w-3 h-3 text-primary inline ml-1" />;
@@ -148,7 +148,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-800 text-xs text-gray-500">
+          <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
             <th className="text-left px-5 py-3">Token</th>
             <th className={`text-left ${thClass}`} onClick={() => toggleSort("chain")}>
               Chain <SortIcon col="chain" sortKey={sortKey} asc={asc} />
@@ -220,24 +220,24 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                     <ExternalLink className="w-3 h-3 opacity-40" />
                   </Link>
                 </td>
-                <td className="px-5 py-3 text-gray-400 text-xs">{h.blockchain || "—"}</td>
-                <td className="px-5 py-3 text-right font-mono text-gray-300">
+                <td className="px-5 py-3 text-gray-700 dark:text-gray-400 text-xs">{h.blockchain || "—"}</td>
+                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {h.tokens !== 0
                     ? h.tokens.toLocaleString(undefined, { maximumFractionDigits: 4 })
                     : "—"}
                 </td>
-                <td className="px-5 py-3 text-right font-mono text-gray-300">
+                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {h.costBasisEth > 0 ? `${h.costBasisEth} ETH` : "—"}
                 </td>
-                <td className="px-5 py-3 text-right font-mono text-gray-300">
+                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {loading ? "…" : pricePerToken !== null ? formatPrice(pricePerToken) : "—"}
                 </td>
-                <td className="px-5 py-3 text-right font-mono text-gray-300">
+                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {loading ? "…" : currentValue !== null ? formatUSD(currentValue) : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono">
                   {loading ? (
-                    <span className="text-gray-500">…</span>
+                    <span className="text-gray-700 dark:text-gray-400">…</span>
                   ) : pnl !== null ? (
                     <span className={pnl >= 0 ? "text-primary" : "text-danger"}>
                       {pnl >= 0 ? "+" : ""}{formatUSD(pnl)}
@@ -248,7 +248,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                       )}
                     </span>
                   ) : (
-                    <span className="text-gray-600">—</span>
+                    <span className="text-gray-700 dark:text-gray-400">—</span>
                   )}
                 </td>
                 <td className="px-5 py-3 text-right font-mono">
@@ -257,13 +257,13 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                       {roiEthPct >= 0 ? "+" : ""}{roiEthPct.toFixed(1)}%
                     </span>
                   ) : (
-                    <span className="text-gray-600">—</span>
+                    <span className="text-gray-700 dark:text-gray-400">—</span>
                   )}
                 </td>
-                <td className="px-5 py-3 text-right font-mono text-gray-300">
+                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {h.pctOfPortfolio > 0 ? `${h.pctOfPortfolio.toFixed(1)}%` : "—"}
                 </td>
-                <td className="px-5 py-3 text-right text-gray-500 text-xs">
+                <td className="px-5 py-3 text-right text-gray-700 dark:text-gray-400 text-xs">
                   {h.investmentDate || "—"}
                 </td>
               </tr>

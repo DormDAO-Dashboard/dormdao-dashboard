@@ -10,7 +10,7 @@ export default async function AnalyticsPage() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-4">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Analytics</h1>
-        <p className="text-gray-500 mt-0.5 text-sm">Portfolio charts, statistics, and performance breakdown across all 17 DAOs.</p>
+        <p className="text-gray-700 dark:text-gray-400 mt-0.5 text-sm">Portfolio charts, statistics, and performance breakdown across all 17 DAOs.</p>
       </div>
       <DashboardClient
         schools={schools}

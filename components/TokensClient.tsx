@@ -88,7 +88,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
       {/* DormDAO Top Picks */}
       {topPicks.length > 0 && !search && !chainFilter && (
         <div className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">DormDAO Top Picks</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">DormDAO Top Picks</h2>
           <div className="flex flex-wrap gap-2">
             {topPicks.map((token) => {
               const price = initialPrices[token.ticker];
@@ -98,7 +98,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
                 <Link key={token.ticker} href={`/tokens/${token.ticker.toLowerCase()}`}>
                   <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 hover:border-primary/50 rounded-lg px-3 py-2 transition-all cursor-pointer">
                     <div>
-                      <div className="text-xs text-gray-500">{meta?.name ?? token.ticker}</div>
+                      <div className="text-xs text-gray-700 dark:text-gray-400">{meta?.name ?? token.ticker}</div>
                       <div className="font-mono font-bold text-gray-900 dark:text-white text-sm">${token.ticker}</div>
                     </div>
                     {price ? (
@@ -122,8 +122,8 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
 
       {/* Aggregate token allocation */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 mb-8">
-        <h2 className="text-sm font-semibold text-gray-300 mb-1">Aggregate Portfolio Allocation</h2>
-        <p className="text-xs text-gray-500 mb-2">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1">Aggregate Portfolio Allocation</h2>
+        <p className="text-xs text-gray-700 dark:text-gray-400 mb-2">
           Share of total market value across every school&apos;s holdings combined. Top 9 tokens by value; the rest grouped as Other.
         </p>
         <TokenAllocationDonut tokens={initialTokens} prices={initialPrices} />
@@ -132,7 +132,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-700 dark:text-gray-400 pointer-events-none" />
           <input
             type="text"
             value={search}
@@ -182,7 +182,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
               <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 hover:border-primary/40 hover:bg-gray-800/30 transition-all cursor-pointer h-full flex flex-col">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <div className="text-xs text-gray-500 mb-0.5">{meta?.name ?? token.ticker}</div>
+                    <div className="text-xs text-gray-700 dark:text-gray-400 mb-0.5">{meta?.name ?? token.ticker}</div>
                     <div className="font-mono font-bold text-gray-900 dark:text-white">${displayTicker}</div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
@@ -199,7 +199,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
                 </div>
 
                 {noPrice ? (
-                  <div className="text-xs text-gray-600 mt-1">
+                  <div className="text-xs text-gray-700 dark:text-gray-400 mt-1">
                     {isVault ? "DeFi vault position" : "Pre-market token"}
                   </div>
                 ) : price && price.usd > 0 ? (
@@ -212,16 +212,16 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
                     </div>
                   </>
                 ) : (
-                  <div className="text-xs text-gray-600 mt-1">Price unavailable</div>
+                  <div className="text-xs text-gray-700 dark:text-gray-400 mt-1">Price unavailable</div>
                 )}
 
                 {exposure > 0 && (
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-700 dark:text-gray-400 mt-1">
                     {formatUSD(exposure)} exposure
                   </div>
                 )}
 
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-xs text-gray-700 dark:text-gray-400 mt-2">
                   {token.schoolCount} school{token.schoolCount !== 1 ? "s" : ""}
                 </div>
 
@@ -229,13 +229,13 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
                   {token.schools.slice(0, 5).map((s) => (
                     <span
                       key={s}
-                      className="text-xs bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded"
+                      className="text-xs bg-gray-800 text-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded"
                     >
                       {ABBREV[s] ?? s.slice(0, 3).toUpperCase()}
                     </span>
                   ))}
                   {token.schools.length > 5 && (
-                    <span className="text-xs text-gray-600">+{token.schools.length - 5}</span>
+                    <span className="text-xs text-gray-700 dark:text-gray-400">+{token.schools.length - 5}</span>
                   )}
                 </div>
               </div>
@@ -243,7 +243,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
           );
         })}
         {sorted.length === 0 && (
-          <div className="col-span-full text-center py-12 text-gray-500 text-sm">
+          <div className="col-span-full text-center py-12 text-gray-700 dark:text-gray-400 text-sm">
             No tokens match &ldquo;{search}&rdquo;
           </div>
         )}

@@ -122,7 +122,7 @@ export function EthReturnChart({ schools }: { schools: SchoolRow[] }) {
           </div>
         </div>
         <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-gray-900/80 to-transparent flex items-center justify-end pr-1">
-          <span className="text-gray-500 text-xs">→</span>
+          <span className="text-gray-700 dark:text-gray-400 text-xs">→</span>
         </div>
       </div>
     );

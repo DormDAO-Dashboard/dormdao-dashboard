@@ -11,7 +11,7 @@ export default async function AdminMainDaoPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Main DAO</h1>
-        <p className="text-gray-500 mt-1 text-sm">
+        <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">
           DormDAO-wide investment proposals. Proposals that pass at an individual school are
           automatically reposted here for a Main DAO vote.
         </p>

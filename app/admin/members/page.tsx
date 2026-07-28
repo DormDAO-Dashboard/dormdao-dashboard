@@ -88,7 +88,7 @@ export default async function AdminMembersPage() {
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Members</h1>
-        <p className="text-gray-500 mt-1 text-sm">
+        <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">
           Manage DormDAO admin members and registered members.
         </p>
       </div>
@@ -113,13 +113,13 @@ export default async function AdminMembersPage() {
         <div className="px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
             Recent Failed Logins
-            <span className="ml-2 text-xs text-gray-500 font-normal">last 10</span>
+            <span className="ml-2 text-xs text-gray-700 dark:text-gray-400 font-normal">last 10</span>
           </h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
+              <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                 <th className="text-left px-5 py-3">Time</th>
                 <th className="text-left px-5 py-3">Email / Wallet</th>
                 <th className="text-left px-5 py-3">Reason</th>
@@ -128,10 +128,10 @@ export default async function AdminMembersPage() {
             <tbody>
               {(recentFailedLogins ?? []).map((row) => (
                 <tr key={row.id} className="border-b border-gray-200/80 dark:border-gray-800/50">
-                  <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
+                  <td className="px-5 py-3 text-xs text-gray-700 dark:text-gray-400 whitespace-nowrap">
                     {new Date(row.created_at as string).toLocaleString()}
                   </td>
-                  <td className="px-5 py-3 text-gray-400 font-mono text-xs">
+                  <td className="px-5 py-3 text-gray-700 dark:text-gray-400 font-mono text-xs">
                     {row.email ?? row.wallet_address ?? "—"}
                   </td>
                   <td className="px-5 py-3">
@@ -143,7 +143,7 @@ export default async function AdminMembersPage() {
               ))}
               {(recentFailedLogins ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-5 py-6 text-center text-gray-600 text-sm">
+                  <td colSpan={3} className="px-5 py-6 text-center text-gray-700 dark:text-gray-400 text-sm">
                     No failed login attempts on record.
                   </td>
                 </tr>

@@ -147,13 +147,13 @@ export function AdminProfilesSection({
         <div className="px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
             Admins
-            <span className="ml-2 text-xs text-gray-500 font-normal">{1 + dormAdmins.length} total</span>
+            <span className="ml-2 text-xs text-gray-700 dark:text-gray-400 font-normal">{1 + dormAdmins.length} total</span>
           </h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-500">
+              <tr className="border-b border-gray-200 dark:border-gray-800 text-xs text-gray-700 dark:text-gray-400">
                 <th className="text-left px-5 py-3">Name</th>
                 <th className="text-left px-5 py-3">School</th>
                 <th className="text-right px-5 py-3">Voting Units</th>
@@ -165,15 +165,15 @@ export function AdminProfilesSection({
             <tbody>
               <tr className="border-b border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
                 <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{envAdminName}</td>
-                <td className="px-5 py-3 text-gray-500 text-xs">—</td>
+                <td className="px-5 py-3 text-gray-700 dark:text-gray-400 text-xs">—</td>
                 <td className="px-5 py-3 text-right font-mono text-primary">{envAdmin.votingUnits}</td>
-                <td className="px-5 py-3 text-gray-400">{envAdmin.email || "—"}</td>
-                <td className="px-5 py-3 font-mono text-gray-400 text-xs">
+                <td className="px-5 py-3 text-gray-700 dark:text-gray-400">{envAdmin.email || "—"}</td>
+                <td className="px-5 py-3 font-mono text-gray-700 dark:text-gray-400 text-xs">
                   {envAdmin.wallet ? `${envAdmin.wallet.slice(0, 6)}…${envAdmin.wallet.slice(-4)}` : "—"}
                 </td>
                 <td className="px-5 py-3 text-right">
                   {envAdmin.memberId && (
-                    <button onClick={openEditEnvAdmin} className="text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
+                    <button onClick={openEditEnvAdmin} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
                       <Pencil className="w-4 h-4" />
                     </button>
                   )}
@@ -182,14 +182,14 @@ export function AdminProfilesSection({
               {dormAdmins.map((da) => (
                 <tr key={da.id} className="border-b border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
                   <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{da.display_name || "—"}</td>
-                  <td className="px-5 py-3 text-gray-400 text-xs">{da.school ? schoolDisplayName(da.school) : "—"}</td>
+                  <td className="px-5 py-3 text-gray-700 dark:text-gray-400 text-xs">{da.school ? schoolDisplayName(da.school) : "—"}</td>
                   <td className="px-5 py-3 text-right font-mono text-primary">{da.votingUnits ?? "—"}</td>
-                  <td className="px-5 py-3 text-gray-400">{da.email || "—"}</td>
-                  <td className="px-5 py-3 font-mono text-gray-500 text-xs">
+                  <td className="px-5 py-3 text-gray-700 dark:text-gray-400">{da.email || "—"}</td>
+                  <td className="px-5 py-3 font-mono text-gray-700 dark:text-gray-400 text-xs">
                     {da.walletAddress ? `${da.walletAddress.slice(0, 6)}…${da.walletAddress.slice(-4)}` : "—"}
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <button onClick={() => openEdit(da)} className="text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
+                    <button onClick={() => openEdit(da)} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
                       <Pencil className="w-4 h-4" />
                     </button>
                   </td>
@@ -206,34 +206,34 @@ export function AdminProfilesSection({
           <div className="relative w-full max-w-md bg-[#111] rounded-xl border border-gray-800 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Edit Admin</h3>
-              <button onClick={closeModal} className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <button onClick={closeModal} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
             <form onSubmit={handleSave} className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Name</label>
+                <label className="text-xs text-gray-700 dark:text-gray-400 font-medium uppercase tracking-wider">Name</label>
                 <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                   placeholder="Full name" className={fieldClass} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Voting Units</label>
+                <label className="text-xs text-gray-700 dark:text-gray-400 font-medium uppercase tracking-wider">Voting Units</label>
                 <input type="number" min={0} value={draft.votingUnits}
                   onChange={(e) => setDraft({ ...draft, votingUnits: parseInt(e.target.value) || 0 })}
                   className={fieldClass} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Email</label>
+                <label className="text-xs text-gray-700 dark:text-gray-400 font-medium uppercase tracking-wider">Email</label>
                 <input type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })}
                   placeholder="email@example.com" className={fieldClass} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">Wallet Address</label>
+                <label className="text-xs text-gray-700 dark:text-gray-400 font-medium uppercase tracking-wider">Wallet Address</label>
                 <input value={draft.walletAddress} onChange={(e) => setDraft({ ...draft, walletAddress: e.target.value })}
                   placeholder="0x…" className={fieldClass + " font-mono text-xs"} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">School</label>
+                <label className="text-xs text-gray-700 dark:text-gray-400 font-medium uppercase tracking-wider">School</label>
                 <select value={draft.school} onChange={(e) => setDraft({ ...draft, school: e.target.value })} className={fieldClass}>
                   <option value="">— No school —</option>
                   {SCHOOL_NAMES.map((s) => (
@@ -249,7 +249,7 @@ export function AdminProfilesSection({
               )}
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal}
-                  className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">
+                  className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">
                   Cancel
                 </button>
                 <button type="submit" disabled={submitting}
