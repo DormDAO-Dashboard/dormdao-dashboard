@@ -1,3 +1,9 @@
+export interface ProposalDocument {
+  id: string;
+  title: string;
+  file_url: string | null;
+}
+
 export interface Proposal {
   id: string;
   created_at: string;
@@ -21,6 +27,8 @@ export interface Proposal {
   executed_at: string | null;
   deadline_warning_sent: boolean;
   user_vote?: "yes" | "no" | null;
+  // Populated server-side by GET /api/proposals from document_ids — not a DB column.
+  documents?: ProposalDocument[];
 }
 
 export type VoteChoice = "yes" | "no";

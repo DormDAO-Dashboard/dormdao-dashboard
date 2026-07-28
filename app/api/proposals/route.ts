@@ -64,8 +64,24 @@ export async function GET(req: NextRequest) {
 
   const rows = (proposals ?? []) as Proposal[];
 
-  if (authedUserId && rows.length > 0) {
-    const ids = rows.map((p) => p.id);
+  // Attach lightweight document metadata (title, file_url) for each
+  // proposal's attached document_ids — the proposals table only stores ids.
+  const allDocIds = Array.from(new Set(rows.flatMap((p) => p.document_ids ?? [])));
+  const docsById = new Map<string, { id: string; title: string; file_url: string | null }>();
+  if (allDocIds.length > 0) {
+    const { data: docs } = await service
+      .from("token_documents")
+      .select("id, title, file_url")
+      .in("id", allDocIds);
+    for (const d of docs ?? []) docsById.set(d.id, d);
+  }
+  const rowsWithDocs = rows.map((p) => ({
+    ...p,
+    documents: (p.document_ids ?? []).map((id) => docsById.get(id)).filter((d): d is NonNullable<typeof d> => !!d),
+  }));
+
+  if (authedUserId && rowsWithDocs.length > 0) {
+    const ids = rowsWithDocs.map((p) => p.id);
     const { data: votes } = await service
       .from("proposal_votes")
       .select("proposal_id, vote")
@@ -76,12 +92,12 @@ export async function GET(req: NextRequest) {
       const voteMap: Record<string, "yes" | "no"> = {};
       for (const v of votes) voteMap[v.proposal_id] = v.vote;
       return NextResponse.json({
-        proposals: rows.map((p) => ({ ...p, user_vote: voteMap[p.id] ?? null })),
+        proposals: rowsWithDocs.map((p) => ({ ...p, user_vote: voteMap[p.id] ?? null })),
       });
     }
   }
 
-  return NextResponse.json({ proposals: rows });
+  return NextResponse.json({ proposals: rowsWithDocs });
 }
 
 export async function POST(req: NextRequest) {

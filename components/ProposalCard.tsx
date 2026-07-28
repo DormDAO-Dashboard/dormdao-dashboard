@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Check, Clock, ChevronDown, ChevronUp, Lock, Loader2, ExternalLink, Trash2 } from "lucide-react";
+import { Check, Clock, ChevronDown, ChevronUp, Lock, Loader2, ExternalLink, Trash2, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { type Proposal, deadlineLabel, votePercents, isActive } from "@/lib/proposals";
+import { type Proposal, type ProposalDocument, deadlineLabel, votePercents, isActive } from "@/lib/proposals";
 import type { SchoolColors } from "@/lib/schoolColors";
 import { schoolDisplayName } from "@/lib/schoolData";
 
@@ -42,6 +42,7 @@ export function ProposalCard({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<ProposalDocument | null>(null);
 
   const active = isActive(proposal);
   const { yesPct, noPct } = votePercents(proposal.yes_votes, proposal.no_votes);
@@ -274,6 +275,23 @@ export function ProposalCard({
             </div>
           )}
 
+          {/* Attached documents */}
+          {proposal.documents && proposal.documents.length > 0 && (
+            <div className="mt-3 flex flex-col items-start gap-1.5">
+              {proposal.documents.map((doc) => (
+                <button
+                  key={doc.id}
+                  onClick={() => setViewingDoc(doc)}
+                  title={doc.title}
+                  className="flex items-center gap-1.5 max-w-[200px] px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
+                >
+                  <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                  <span className="text-xs text-gray-600 dark:text-gray-300 truncate">{doc.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {proposal.proposed_by_name && (
             <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
               Proposed by {proposal.proposed_by_name}
@@ -424,6 +442,28 @@ export function ProposalCard({
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {viewingDoc && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-[#0a0a0a]">
+          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-800 shrink-0">
+            <h2 className="text-sm font-semibold text-white truncate">{viewingDoc.title}</h2>
+            <div className="flex items-center gap-4 shrink-0">
+              <a
+                href={viewingDoc.file_url ?? ""}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+                title="Open in new tab"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <button onClick={() => setViewingDoc(null)} className="text-gray-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          <iframe src={viewingDoc.file_url ?? ""} className="flex-1 w-full border-0" title={viewingDoc.title} />
         </div>
       )}
     </>
