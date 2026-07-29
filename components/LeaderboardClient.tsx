@@ -98,9 +98,9 @@ function Panel({
 // ─── Rank badge ───────────────────────────────────────────────────────────────
 
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="inline-flex w-5 h-5 items-center justify-center text-xs font-bold rounded-full bg-yellow-400 text-yellow-900 shrink-0">🥇</span>;
-  if (rank === 2) return <span className="inline-flex w-5 h-5 items-center justify-center text-xs font-bold rounded-full bg-gray-300 text-gray-700 dark:text-gray-400 shrink-0">🥈</span>;
-  if (rank === 3) return <span className="inline-flex w-5 h-5 items-center justify-center text-xs font-bold rounded-full bg-amber-600 text-white shrink-0">🥉</span>;
+  if (rank === 1) return <span className="inline-flex items-center justify-center text-lg leading-none shrink-0">🥇</span>;
+  if (rank === 2) return <span className="inline-flex items-center justify-center text-lg leading-none shrink-0">🥈</span>;
+  if (rank === 3) return <span className="inline-flex items-center justify-center text-lg leading-none shrink-0">🥉</span>;
   return <span className="inline-flex w-5 h-5 items-center justify-center font-mono text-xs text-gray-700 dark:text-gray-400 shrink-0">{rank}</span>;
 }
 
