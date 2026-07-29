@@ -16,22 +16,25 @@ export const SCHOOL_DISPLAY_NAMES: Record<string, string> = {
   "Cambridge":      "Cambridge Blockchain Society",
   "Columbia":       "Blockchain at Columbia",
   "Cornell":        "Cornell Blockchain",
-  "Dartmouth":      "Voxchain",
+  "Dartmouth":      "Voxchain (Dartmouth)",
+  "Illinois":       "Illini Blockchain",
+  "Imperial":       "Imperial Blockchain Society",
   "Michigan":       "Blockchain at Michigan",
   "NYU":            "NYU Blockchain & Fintech",
   "Oregon":         "Oregon Blockchain Group",
-  "Penn":           "FranklinDAO",
+  "Penn":           "FranklinDAO (Penn)",
   "Purdue":         "Boiler Blockchain",
   "St. Andrews":    "St. Andrews Blockchain",
   "Texas":          "Texas Blockchain",
   "USC":            "Blockchain at SC",
+  "UVA":            "Blockchain at UVA",
   "Vanderbilt":     "Vanderbilt Blockchain",
   "Villanova":      "Villanova Blockchain",
   "Waterloo":       "Waterloo Blockchain",
 };
 
 // Returns the blockchain-club display name for a school, falling back to the
-// original name for any school without a mapped club name (e.g. Imperial, UVA).
+// original name for any school without a mapped club name.
 export function schoolDisplayName(name: string | null | undefined): string {
   if (!name) return name ?? "";
   return SCHOOL_DISPLAY_NAMES[name] ?? name;
