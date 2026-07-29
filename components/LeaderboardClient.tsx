@@ -98,17 +98,17 @@ function Panel({
 // ─── Rank badge ───────────────────────────────────────────────────────────────
 
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-yellow-400 text-yellow-900 shrink-0">{rank}</span>;
-  if (rank === 2) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-gray-300 text-gray-700 dark:text-gray-400 shrink-0">{rank}</span>;
-  if (rank === 3) return <span className="inline-flex w-5 h-5 items-center justify-center text-[10px] font-bold rounded-full bg-amber-600 text-white shrink-0">{rank}</span>;
-  return <span className="inline-flex w-5 h-5 items-center justify-center font-mono text-[9px] text-gray-700 dark:text-gray-400 shrink-0">{rank}</span>;
+  if (rank === 1) return <span className="inline-flex w-5 h-5 items-center justify-center text-xs font-bold rounded-full bg-yellow-400 text-yellow-900 shrink-0">🥇</span>;
+  if (rank === 2) return <span className="inline-flex w-5 h-5 items-center justify-center text-xs font-bold rounded-full bg-gray-300 text-gray-700 dark:text-gray-400 shrink-0">🥈</span>;
+  if (rank === 3) return <span className="inline-flex w-5 h-5 items-center justify-center text-xs font-bold rounded-full bg-amber-600 text-white shrink-0">🥉</span>;
+  return <span className="inline-flex w-5 h-5 items-center justify-center font-mono text-xs text-gray-700 dark:text-gray-400 shrink-0">{rank}</span>;
 }
 
 // ─── "You" badge ─────────────────────────────────────────────────────────────
 
 function YouBadge() {
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-primary/20 text-primary border border-primary/30 leading-none ml-1 shrink-0">
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/30 leading-none ml-1 shrink-0">
       You
     </span>
   );
@@ -168,7 +168,7 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
               <td className="px-3 py-2 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolShortName(s.name)}</span>
+                  <span className="text-xs text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolShortName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
@@ -254,14 +254,14 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
               <td className="px-3 py-2 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolDisplayName(s.name)}</span>
+                  <span className="text-xs text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolDisplayName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
-              <td className="px-3 py-2 text-right font-mono text-gray-700 dark:text-gray-300 text-[10px] tabular-nums">{formatNav(s.nav)}</td>
+              <td className="px-3 py-2 text-right font-mono text-gray-700 dark:text-gray-300 text-xs tabular-nums">{formatNav(s.nav)}</td>
               <td className="px-3 py-2 text-right"><ReturnCell value={s.usdReturn} /></td>
               <td className="px-3 py-2 text-right"><ReturnCell value={s.ethReturn} /></td>
-              <td className="px-3 py-2 text-right font-mono text-gray-700 dark:text-gray-400 text-[10px] tabular-nums">
+              <td className="px-3 py-2 text-right font-mono text-gray-700 dark:text-gray-400 text-xs tabular-nums">
                 {s.pctDeployed > 0 ? formatPct(s.pctDeployed, false) : "—"}
               </td>
             </tr>
@@ -326,7 +326,7 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
               <td className="px-3 py-2 overflow-hidden">
                 <Link href={`/schools/${s.slug}`} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors" title={schoolDisplayName(s.name)}>
                   <SchoolLogo name={s.name} size={15} />
-                  <span className="text-[11px] text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolShortName(s.name)}</span>
+                  <span className="text-xs text-gray-900 dark:text-white font-semibold truncate min-w-0">{schoolShortName(s.name)}</span>
                   {isYou && <YouBadge />}
                 </Link>
               </td>
