@@ -194,20 +194,20 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
           </div>
         </div>
 
-        <div>
-          <div className={lbl}>Beating ETH</div>
-          <div className={`${val} ${winningCount > 0 ? "text-primary" : ""}`}>
-            {holdingsWithEthRoi.length > 0 ? winningCount : "—"}
+        <div className="flex flex-col gap-3">
+          <div>
+            <div className={lbl}>Positions Outperforming ETH</div>
+            <div className={`${val} ${winningCount > 0 ? "text-primary" : ""}`}>
+              {holdingsWithEthRoi.length > 0 ? winningCount : "—"}
+            </div>
           </div>
-          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">outperforming ETH</div>
-        </div>
 
-        <div>
-          <div className={lbl}>Lagging ETH</div>
-          <div className={`${val} ${losingCount > 0 ? "text-danger" : ""}`}>
-            {holdingsWithEthRoi.length > 0 ? losingCount : "—"}
+          <div>
+            <div className={lbl}>Positions Underperforming ETH</div>
+            <div className={`${val} ${losingCount > 0 ? "text-danger" : ""}`}>
+              {holdingsWithEthRoi.length > 0 ? losingCount : "—"}
+            </div>
           </div>
-          <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">underperforming ETH</div>
         </div>
 
         {/* Best / worst (only when sheet has gainUsd) */}
