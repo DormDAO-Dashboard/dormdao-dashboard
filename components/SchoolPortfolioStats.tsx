@@ -60,6 +60,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
       .from("portfolio_changes")
       .select("detected_at, change_type, token_ticker, token_name")
       .eq("school_name", schoolName)
+      .neq("token_ticker", "ETH")
       .order("detected_at", { ascending: false })
       .limit(3)
       .then(({ data }) => {
@@ -85,7 +86,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
 
   // Fallback for Most Recent Positions when portfolio_changes is empty
   const mostRecentHoldings = [...holdings]
-    .filter((h) => h.investmentDate)
+    .filter((h) => h.investmentDate && h.ticker !== "ETH")
     .sort((a, b) => parseDateMs(b.investmentDate) - parseDateMs(a.investmentDate))
     .slice(0, 3);
 
@@ -233,7 +234,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
 
         {/* Most recent positions — full width */}
         <div className="col-span-2 md:col-span-3 border-t border-gray-800/60 pt-4">
-          <div className={lbl}>Most Recent Positions</div>
+          <div className={lbl}>Most Recent Portfolio Updates</div>
           {tradeLoading ? (
             <div className="text-sm text-gray-700 dark:text-gray-400 mt-1">Loading…</div>
           ) : recentTrades.length > 0 ? (
