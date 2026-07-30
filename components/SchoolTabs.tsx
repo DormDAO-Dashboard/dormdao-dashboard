@@ -58,19 +58,19 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {tab === "Portfolio" && (
         <div className="flex flex-col gap-4">
           {(school.holdings?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
-              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">Portfolio Concentration</h2>
-              <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
-            </div>
-          )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
+                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">Portfolio Concentration</h2>
+                <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
+              </div>
 
-          {(school.holdings?.length ?? 0) > 0 && (
-            <SchoolPortfolioStats
-              holdings={school.holdings!}
-              schoolName={school.name}
-              nav={school.nav}
-              rank={school.rank}
-            />
+              <SchoolPortfolioStats
+                holdings={school.holdings!}
+                schoolName={school.name}
+                nav={school.nav}
+                rank={school.rank}
+              />
+            </div>
           )}
 
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
