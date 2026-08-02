@@ -139,6 +139,7 @@ export default function MapPage() {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef({ x: -1, y: -1 });
+  const panLayerRef = useRef<HTMLDivElement>(null);
 
   const [viewport, setViewport] = useState({ w: 1440, h: 900 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -147,6 +148,7 @@ export default function MapPage() {
   const [comingSoonZone, setComingSoonZone] = useState<Zone | null>(null);
   const [videoZone, setVideoZone] = useState<Zone | null>(null);
   const [debugZones, setDebugZones] = useState(false);
+  const [liveCoords, setLiveCoords] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setDebugZones(new URLSearchParams(window.location.search).get("debug") === "zones");
@@ -198,7 +200,13 @@ export default function MapPage() {
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     mouseRef.current = { x: e.clientX, y: e.clientY };
-  }, []);
+    if (debugZones && panLayerRef.current) {
+      const rect = panLayerRef.current.getBoundingClientRect();
+      const imgX = Math.round(((e.clientX - rect.left) / rect.width) * IMAGE_WIDTH);
+      const imgY = Math.round(((e.clientY - rect.top) / rect.height) * IMAGE_HEIGHT);
+      setLiveCoords({ x: imgX, y: imgY });
+    }
+  }, [debugZones]);
 
   function handleZoneEnter(zone: Zone) {
     setHoveredZone(zone);
@@ -260,6 +268,7 @@ export default function MapPage() {
 
         {/* Pannable image + zones */}
         <div
+          ref={panLayerRef}
           className="absolute top-0 left-0"
           style={{
             width: displayWidth,
@@ -388,6 +397,16 @@ export default function MapPage() {
           className="absolute inset-0 pointer-events-none z-10"
           style={{ background: "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%)" }}
         />
+
+        {/* Debug: coordinate tooltip that follows the cursor */}
+        {debugZones && liveCoords && (
+          <div
+            className="fixed z-40 pointer-events-none px-2 py-1 rounded bg-black/90 border border-white/30 text-white font-mono text-xs"
+            style={{ left: mouseRef.current.x + 14, top: mouseRef.current.y + 14 }}
+          >
+            {liveCoords.x},{liveCoords.y}
+          </div>
+        )}
       </div>
 
       {/* Mobile fallback */}
@@ -453,6 +472,9 @@ export default function MapPage() {
       {/* Debug: raw points readout (?debug=zones) */}
       {debugZones && (
         <div className="hidden md:block fixed bottom-4 right-4 z-40 max-w-md max-h-[70vh] overflow-y-auto rounded-lg bg-black/85 border border-white/20 p-3 font-mono text-[11px] text-gray-700 dark:text-gray-300 space-y-2">
+          <div className="text-white text-sm border-b border-white/20 pb-1.5 mb-1.5">
+            cursor: {liveCoords ? `${liveCoords.x},${liveCoords.y}` : "move mouse over map"}
+          </div>
           {ZONES.map((zone) => (
             <div key={zone.id}>
               <span style={{ color: zone.color }}>{zone.id}</span>: {zone.points}
