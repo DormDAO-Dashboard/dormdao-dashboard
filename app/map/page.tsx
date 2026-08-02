@@ -8,8 +8,8 @@ import { VideoModal } from "@/components/VideoModal";
 // Native pixel dimensions of public/campus-map.png — the SVG overlay's
 // viewBox matches this exactly so zone polygons stay aligned regardless
 // of how large the image is rendered/panned.
-const IMAGE_WIDTH = 2172;
-const IMAGE_HEIGHT = 724;
+const IMAGE_WIDTH = 3264;
+const IMAGE_HEIGHT = 1312;
 
 const PAN_ZONE = 80;   // px from screen edge that triggers panning
 const PAN_SPEED = 3;   // px per frame
@@ -29,14 +29,15 @@ interface Zone {
   description?: string;
 }
 
-// Coordinates are in campus-map.png pixel space (2172x724). Estimated from
-// the illustration's building footprints — tune here after visual review.
+// Coordinates are in campus-map.png pixel space (3264x1312). Estimated from
+// the illustration's building footprints — tune here after visual review
+// (append ?debug=zones to the URL to see outlines + raw points on-screen).
 const ZONES: Zone[] = [
   {
     id: "dorm-builders",
     label: "Dorm Builders",
     sublabel: "Web3 Development",
-    points: "22,251 218,240 305,256 425,300 425,431 327,436 109,436 16,414 16,305",
+    points: "864,612 1142,600 1142,830 1050,922 864,922 864,700",
     action: "external",
     href: "https://x.com/Dorm_DAO",
     color: "#2196F3",
@@ -45,7 +46,7 @@ const ZONES: Zone[] = [
     id: "dorm-catalyst",
     label: "Dorm Catalyst",
     sublabel: "Accelerator",
-    points: "1908,240 2147,229 2172,262 2172,414 2126,427 1962,420 1908,371 1902,294",
+    points: "2260,538 2560,520 2757,560 2757,775 2560,800 2300,780 2260,660",
     action: "coming-soon",
     color: "#9C27B0",
     description: "Accelerating the next generation of crypto founders",
@@ -54,7 +55,7 @@ const ZONES: Zone[] = [
     id: "dorm-summit",
     label: "Dorm Summit",
     sublabel: "Annual Summit",
-    points: "1134,256 1363,242 1472,294 1472,425 1406,436 1166,436 1128,392 1128,305",
+    points: "1623,783 1880,765 2040,800 2040,1060 1880,1090 1623,1060",
     action: "coming-soon",
     color: "#FF9800",
     description: "The DormDAO annual summit and events",
@@ -63,7 +64,7 @@ const ZONES: Zone[] = [
     id: "dorm-capital",
     label: "Dorm Capital",
     sublabel: "Investment Portfolio",
-    points: "659,521 856,510 856,616 807,660 709,660 659,616",
+    points: "1142,424 1360,395 1574,424 1574,700 1440,767 1260,767 1142,700",
     action: "navigate",
     href: "/leaderboard",
     color: "#4CAF50",
@@ -72,7 +73,7 @@ const ZONES: Zone[] = [
     id: "autzen",
     label: "Autzen Stadium",
     sublabel: "🦆 Go Ducks!",
-    points: "670,11 1477,5 1493,55 1493,185 1406,191 709,191 654,153 654,55",
+    points: "2122,228 2600,150 3101,212 3189,359 3101,522 2600,590 2122,539 1998,359",
     action: "video",
     videoUrl: "https://www.youtube.com/watch?v=SYt2GDh9PgU",
     color: "#FFD700",
@@ -82,7 +83,7 @@ const ZONES: Zone[] = [
     id: "animal-house",
     label: "Animal House",
     sublabel: "🎉 toga! toga!",
-    points: "22,621 262,610 283,643 283,709 240,719 33,719 16,692 16,649",
+    points: "653,359 900,340 1126,400 1126,702 950,702 653,620",
     action: "video",
     videoUrl: "https://www.youtube.com/watch?v=vtFw3tADh3c",
     color: "#FF5722",
