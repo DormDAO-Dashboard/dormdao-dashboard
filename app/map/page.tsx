@@ -46,7 +46,7 @@ const ZONES: Zone[] = [
     id: "dorm-catalyst",
     label: "Dorm Catalyst",
     sublabel: "Accelerator",
-    points: "2260,538 2560,520 2757,560 2757,775 2560,800 2300,780 2260,660",
+    points: "2583,748 2550,745 2550,762 2537,759 2520,751 2508,741 2504,738 2504,735 2478,730 2478,735 2472,735 2472,730 2412,723 2412,727 2406,727 2406,722 2387,720 2376,727 2354,739 2339,738 2339,724 2305,722 2296,704 2297,686 2294,679 2296,649 2303,628 2317,613 2333,601 2353,592 2376,578 2405,568 2427,562 2451,560 2478,559 2505,562 2529,568 2555,575 2577,584 2592,593 2607,605 2613,610 2627,619 2634,631 2639,643 2640,683 2639,694 2636,698 2636,710 2633,715 2633,716 2628,719 2624,724 2624,725 2621,726 2616,731 2610,734 2606,737 2606,739 2601,741 2598,740 2594,744 2593,744 2586,749 2583,748",
     action: "coming-soon",
     color: "#9C27B0",
     description: "Accelerating the next generation of crypto founders",
@@ -329,32 +329,6 @@ export default function MapPage() {
               </div>
             );
           })}
-
-          {/* Label banner for non-easter-egg hovers */}
-          {hoveredZone && !hoveredZone.isEasterEgg && (() => {
-            const c = centroid(hoveredZone.points);
-            return (
-              <div
-                className="absolute z-20 pointer-events-none animate-banner-fade-in animate-banner-bob"
-                style={{ left: `${(c.x / IMAGE_WIDTH) * 100}%`, top: `${(c.y / IMAGE_HEIGHT) * 100}%` }}
-              >
-                <div
-                  className="flex flex-col items-center gap-0.5 rounded-full px-5 py-2 -translate-x-1/2 -translate-y-full"
-                  style={{
-                    background: "linear-gradient(135deg, #0d1f0d, #1a2e1a)",
-                    border: `1px solid ${hoveredZone.color}`,
-                    boxShadow: `0 0 16px rgba(${hexToRgb(hoveredZone.color)}, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)`,
-                  }}
-                >
-                  <span className="font-sans text-sm font-bold text-white flex items-center gap-1.5">
-                    <span style={{ color: hoveredZone.color }}>◆</span>
-                    {hoveredZone.label}
-                  </span>
-                  <span className="text-xs text-gray-700 dark:text-gray-400">{hoveredZone.sublabel}</span>
-                </div>
-              </div>
-            );
-          })()}
 
           {/* Matthew Knight Arena — Oregon O levitation easter egg */}
           {showMkaEgg && (
