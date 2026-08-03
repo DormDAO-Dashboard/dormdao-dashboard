@@ -238,8 +238,7 @@ export default function MapPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const mkaZone = ZONES.find((z) => z.id === "dorm-catalyst")!;
-  const mkaCentroid = centroid(mkaZone.points);
+  const mkaCentroid = { x: 2323, y: 348 };
 
   return (
     <>
