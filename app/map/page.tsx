@@ -103,27 +103,6 @@ function hexToRgb(hex: string): string {
   return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
 }
 
-// Short rising tone in lieu of a real "SCO!" audio clip.
-function playScoTone() {
-  try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(440, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.35);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.5);
-  } catch {
-    // Web Audio unavailable — silently skip
-  }
-}
-
 const PARTICLES = [
   { left: "5%",  delay: "0s",   duration: "6s", drift: "6px" },
   { left: "16%", delay: "1.1s", duration: "7s", drift: "-8px" },
@@ -144,7 +123,6 @@ export default function MapPage() {
   const [viewport, setViewport] = useState({ w: 1440, h: 900 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [hoveredZone, setHoveredZone] = useState<Zone | null>(null);
-  const [showMkaEgg, setShowMkaEgg] = useState(false);
   const [comingSoonZone, setComingSoonZone] = useState<Zone | null>(null);
   const [videoZone, setVideoZone] = useState<Zone | null>(null);
   const [debugZones, setDebugZones] = useState(false);
@@ -210,15 +188,10 @@ export default function MapPage() {
 
   function handleZoneEnter(zone: Zone) {
     setHoveredZone(zone);
-    if (zone.id === "dorm-catalyst") {
-      setShowMkaEgg(true);
-      playScoTone();
-    }
   }
 
   function handleZoneLeave(zone: Zone) {
     setHoveredZone((cur) => (cur?.id === zone.id ? null : cur));
-    if (zone.id === "dorm-catalyst") setShowMkaEgg(false);
   }
 
   function handleZoneClick(zone: Zone) {
@@ -237,8 +210,6 @@ export default function MapPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  const mkaCentroid = { x: 2323, y: 348 };
 
   return (
     <>
@@ -330,22 +301,32 @@ export default function MapPage() {
             );
           })}
 
-          {/* Matthew Knight Arena — Oregon O levitation easter egg */}
-          {showMkaEgg && (
-            <div
-              className="absolute z-20 pointer-events-none animate-o-levitate"
-              style={{
-                left: `${(mkaCentroid.x / IMAGE_WIDTH) * 100}%`,
-                top: `${(mkaCentroid.y / IMAGE_HEIGHT) * 100}%`,
-                transform: "translate(-50%, -50%)",
-              }}
-            >
-              <svg width={72} height={72} viewBox="0 0 72 72">
-                <circle cx={36} cy={36} r={32} fill="#154733" stroke="#FEE123" strokeWidth={4} />
-                <text x={36} y={48} textAnchor="middle" fontSize={40} fontWeight={800} fill="#FEE123" fontFamily="sans-serif">O</text>
-              </svg>
-            </div>
-          )}
+          {/* Floating zone title banners — always visible, slow constant bob */}
+          {ZONES.filter((zone) => !zone.isEasterEgg).map((zone) => {
+            const c = centroid(zone.points);
+            return (
+              <div
+                key={zone.id}
+                className="absolute z-20 pointer-events-none animate-banner-fade-in animate-banner-bob-slow"
+                style={{ left: `${(c.x / IMAGE_WIDTH) * 100}%`, top: `${(c.y / IMAGE_HEIGHT) * 100}%` }}
+              >
+                <div
+                  className="flex flex-col items-center gap-0.5 rounded-full px-5 py-2 -translate-x-1/2 -translate-y-full"
+                  style={{
+                    background: "linear-gradient(135deg, #0d1f0d, #1a2e1a)",
+                    border: `1px solid ${zone.color}`,
+                    boxShadow: `0 0 16px rgba(${hexToRgb(zone.color)}, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)`,
+                  }}
+                >
+                  <span className="font-sans text-sm font-bold flex items-center gap-1.5" style={{ color: "#ffffff" }}>
+                    <span style={{ color: zone.color }}>◆</span>
+                    {zone.label}
+                  </span>
+                  <span className="text-xs" style={{ color: "#d1d5db" }}>{zone.sublabel}</span>
+                </div>
+              </div>
+            );
+          })}
 
           {/* Ambient particles */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">

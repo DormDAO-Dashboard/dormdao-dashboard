@@ -246,9 +246,4 @@ html.light ::-webkit-scrollbar-thumb { background: #d4d4d8; }
   50%      { transform: translate(-50%, -4px); }
 }
 .animate-banner-bob { animation: banner-bob 2s ease-in-out infinite; }
-
-@keyframes o-levitate {
-  0%   { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-30px) scale(1.05); opacity: 0; }
-}
-.animate-o-levitate { animation: o-levitate 1.5s ease-out forwards; }
+.animate-banner-bob-slow { animation: banner-bob 4s ease-in-out infinite; }
