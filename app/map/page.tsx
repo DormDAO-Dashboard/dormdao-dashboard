@@ -37,7 +37,7 @@ const ZONES: Zone[] = [
     id: "dorm-builders",
     label: "Dorm Builders",
     sublabel: "Web3 Development",
-    points: "864,612 1142,600 1142,830 1050,922 864,922 864,700",
+    points: "1072,1019 1072,961 1115,893 1139,896 1142,892 1205,898 1231,890 1273,895 1299,910 1344,914 1347,922 1383,926 1383,983 1349,1051 1265,1043 1259,1046 1234,1042 1234,1039 1195,1033 1190,1037 1187,1034 1184,1037 1162,1034 1160,1030",
     action: "external",
     href: "https://x.com/Dorm_DAO",
     color: "#2196F3",
@@ -55,7 +55,7 @@ const ZONES: Zone[] = [
     id: "dorm-summit",
     label: "Dorm Summit",
     sublabel: "Annual Summit",
-    points: "1623,783 1880,765 2040,800 2040,1060 1880,1090 1623,1060",
+    points: "1669,956 1669,889 1708,874 1744,811 1896,829 1896,857 2016,877 2016,952 2021,953 2021,958 2019,962 2019,988 2014,992 1999,995 1971,1043 1816,1016 1767,1037 1693,994 1678,994 1675,988 1675,967 1669,964 1668,959",
     action: "coming-soon",
     color: "#FF9800",
     description: "The DormDAO annual summit and events",
@@ -83,7 +83,7 @@ const ZONES: Zone[] = [
     id: "animal-house",
     label: "Animal House",
     sublabel: "🎉 toga! toga!",
-    points: "653,359 900,340 1126,400 1126,702 950,702 653,620",
+    points: "946,396 952,392 955,393 955,408 967,399 1037,407 1057,416 1057,407 1063,402 1066,404 1066,414 1072,419 1072,467 1058,481 1055,483 1048,492 1013,486 1010,483 968,476 965,478 935,474 935,426 934,425 946,414",
     action: "video",
     videoUrl: "https://www.youtube.com/watch?v=vtFw3tADh3c",
     color: "#FF5722",
@@ -469,19 +469,6 @@ export default function MapPage() {
         />
       )}
 
-      {/* Debug: raw points readout (?debug=zones) */}
-      {debugZones && (
-        <div className="hidden md:block fixed bottom-4 right-4 z-40 max-w-md max-h-[70vh] overflow-y-auto rounded-lg bg-black/85 border border-white/20 p-3 font-mono text-[11px] text-gray-700 dark:text-gray-300 space-y-2">
-          <div className="text-white text-sm border-b border-white/20 pb-1.5 mb-1.5">
-            cursor: {liveCoords ? `${liveCoords.x},${liveCoords.y}` : "move mouse over map"}
-          </div>
-          {ZONES.map((zone) => (
-            <div key={zone.id}>
-              <span style={{ color: zone.color }}>{zone.id}</span>: {zone.points}
-            </div>
-          ))}
-        </div>
-      )}
     </>
   );
 }
