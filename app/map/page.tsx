@@ -293,17 +293,18 @@ export default function MapPage() {
             {ZONES.map((zone) => {
               const isHovered = hoveredZone?.id === zone.id;
               const rgb = hexToRgb(zone.color);
+              const isAnimalHouse = zone.id === "animal-house";
               return (
                 <polygon
                   key={zone.id}
                   points={zone.points}
-                  fill={isHovered ? `rgba(${rgb}, 0.2)` : debugZones ? `rgba(${rgb}, 0.1)` : "transparent"}
-                  stroke={isHovered || debugZones ? zone.color : "none"}
-                  strokeWidth={isHovered ? 2 : debugZones ? 1.5 : 0}
+                  fill={isHovered ? `rgba(${rgb}, ${isAnimalHouse ? 0.04 : 0.2})` : debugZones ? `rgba(${rgb}, 0.1)` : "transparent"}
+                  stroke={isHovered ? `rgba(${rgb}, ${isAnimalHouse ? 0.15 : 1})` : debugZones ? zone.color : "none"}
+                  strokeWidth={isHovered ? (isAnimalHouse ? 1 : 2) : debugZones ? 1.5 : 0}
                   style={{
                     cursor: zone.isEasterEgg ? "crosshair" : "pointer",
                     transition: "all 150ms ease",
-                    filter: isHovered ? `drop-shadow(0 0 8px rgba(${rgb}, 0.6))` : "none",
+                    filter: isHovered && !isAnimalHouse ? `drop-shadow(0 0 8px rgba(${rgb}, 0.6))` : "none",
                   }}
                   onMouseEnter={() => handleZoneEnter(zone)}
                   onMouseLeave={() => handleZoneLeave(zone)}
