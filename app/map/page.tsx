@@ -226,11 +226,14 @@ export default function MapPage() {
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">🍜</span>
-            <span className="font-sans text-sm text-white">Campus Map</span>
+            <span className="font-sans text-sm" style={{ color: "#ffffff" }}>Campus Map</span>
           </div>
           <Link
             href="/leaderboard"
-            className="text-xs text-gray-700 dark:text-gray-300 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+            className="text-xs transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+            style={{ color: "#d1d5db" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#d1d5db")}
           >
             ← Back to Dashboard
           </Link>
@@ -367,8 +370,8 @@ export default function MapPage() {
       {/* Mobile fallback */}
       <div className="md:hidden flex flex-col items-center justify-center w-screen h-screen bg-[#0a0a0a] px-6 text-center gap-3">
         <span className="text-6xl">🍜</span>
-        <h1 className="font-sans text-xl font-bold text-white mt-2">Campus Map</h1>
-        <p className="text-sm text-gray-700 dark:text-gray-400">Best experienced on desktop</p>
+        <h1 className="font-sans text-xl font-bold mt-2" style={{ color: "#ffffff" }}>Campus Map</h1>
+        <p className="text-sm" style={{ color: "#9ca3af" }}>Best experienced on desktop</p>
         <Link
           href="/leaderboard"
           className="mt-4 px-6 py-2.5 rounded-full font-sans font-semibold text-white text-sm"
@@ -391,7 +394,10 @@ export default function MapPage() {
           >
             <button
               onClick={() => setComingSoonZone(null)}
-              className="absolute top-3 right-3 text-gray-700 dark:text-gray-400 hover:text-white transition-colors"
+              className="absolute top-3 right-3 transition-colors"
+              style={{ color: "#9ca3af" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#9ca3af")}
             >
               <X className="w-5 h-5" />
             </button>
@@ -401,8 +407,8 @@ export default function MapPage() {
             >
               {comingSoonZone.label}
             </h2>
-            <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">Coming soon to DormDAO</p>
-            <p className="text-sm text-gray-700 dark:text-gray-300 mt-4">{comingSoonZone.description}</p>
+            <p className="text-sm mt-1" style={{ color: "#9ca3af" }}>Coming soon to DormDAO</p>
+            <p className="text-sm mt-4" style={{ color: "#d1d5db" }}>{comingSoonZone.description}</p>
             <Link
               href="/leaderboard"
               className="mt-6 inline-flex w-full items-center justify-center px-4 py-2.5 rounded-lg font-sans font-semibold text-white text-sm"
