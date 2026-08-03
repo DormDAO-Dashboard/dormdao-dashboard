@@ -331,6 +331,21 @@ export default function MapPage() {
             );
           })}
 
+          {/* DormDAO ramen logo overlay */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.jpg"
+            alt="DormDAO"
+            className="absolute z-20 object-cover pointer-events-none select-none"
+            style={{
+              left: `${(2964 / IMAGE_WIDTH) * 100}%`,
+              top: `${(1018 / IMAGE_HEIGHT) * 100}%`,
+              width: `${((3075 - 2964) / IMAGE_WIDTH) * 100}%`,
+              height: `${((1125 - 1018) / IMAGE_HEIGHT) * 100}%`,
+            }}
+            draggable={false}
+          />
+
           {/* Ambient particles */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             {PARTICLES.map((p, i) => (
