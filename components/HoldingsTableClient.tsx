@@ -2,10 +2,18 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Holding } from "@/lib/types";
-import { formatUSD, formatPrice } from "@/lib/utils";
 import { ExternalLink, Download, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 type SortKey = "chain" | "tokens" | "costEth" | "price" | "value" | "pnl" | "roiEth" | "pctPort" | "date";
+
+function formatUSD2(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
 
 function exportCsv(holdings: Holding[], prices: Record<string, { usd: number }>, ethPrice: number, schoolName: string) {
   const headers = ["Token", "Chain", "Tokens", "Cost (ETH)", "Price (USD)", "Value (USD)", "% Portfolio", "Investment Date"];
@@ -223,24 +231,24 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 <td className="px-5 py-3 text-gray-700 dark:text-gray-400 text-xs">{h.blockchain || "—"}</td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {h.tokens !== 0
-                    ? h.tokens.toLocaleString(undefined, { maximumFractionDigits: 4 })
+                    ? h.tokens.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {h.costBasisEth > 0 ? `${h.costBasisEth} ETH` : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
-                  {loading ? "…" : pricePerToken !== null ? formatPrice(pricePerToken) : "—"}
+                  {loading ? "…" : pricePerToken !== null ? formatUSD2(pricePerToken) : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
-                  {loading ? "…" : currentValue !== null ? formatUSD(currentValue) : "—"}
+                  {loading ? "…" : currentValue !== null ? formatUSD2(currentValue) : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono">
                   {loading ? (
                     <span className="text-gray-700 dark:text-gray-400">…</span>
                   ) : pnl !== null ? (
                     <span className={pnl >= 0 ? "text-primary" : "text-danger"}>
-                      {pnl >= 0 ? "+" : ""}{formatUSD(pnl)}
+                      {pnl >= 0 ? "+" : ""}{formatUSD2(pnl)}
                       {pnlPct !== null && (
                         <span className="text-xs ml-1 opacity-70">
                           ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
