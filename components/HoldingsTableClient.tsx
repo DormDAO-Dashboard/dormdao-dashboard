@@ -6,6 +6,18 @@ import { ExternalLink, Download, ChevronUp, ChevronDown, ChevronsUpDown } from "
 
 type SortKey = "chain" | "tokens" | "costEth" | "price" | "value" | "pnl" | "roiEth" | "pctPort" | "date";
 
+// Investment dates aren't zero-padded (e.g. "2026/5/8" vs "2026/5/28"), so a
+// plain string comparison sorts them lexicographically instead of
+// chronologically. Parse to a real timestamp for sorting.
+function parseDateMs(dateStr: string): number | null {
+  if (!dateStr) return null;
+  const parts = dateStr.split(/[\/\-]/);
+  if (parts.length !== 3) return null;
+  const [y, m, d] = parts.map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d).getTime();
+}
+
 function formatUSD2(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -133,7 +145,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
       }
       case "roiEth": return h.roiEthPct ?? null;
       case "pctPort": return h.pctOfPortfolio > 0 ? h.pctOfPortfolio : null;
-      case "date": return h.investmentDate || "";
+      case "date": return parseDateMs(h.investmentDate);
     }
   }
 
