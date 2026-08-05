@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatUSD } from "@/lib/utils";
 import { parseDateMs } from "@/components/RecentBuysFeed";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { accentBorderColor } from "@/lib/schoolColors";
 
 interface RecentTrade {
   detected_at: string;
@@ -127,7 +128,10 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank, color }:
   const val = "font-mono font-semibold text-sm text-gray-900 dark:text-white";
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
+    <div
+      className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5"
+      style={{ borderColor: accentBorderColor(color) }}
+    >
       <SectionHeading color={color} className="mb-4">Portfolio Insights</SectionHeading>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5">

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { getSchoolColors } from "@/lib/schoolColors";
+import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
 import { SchoolRowWithHoldings } from "@/lib/cache";
 import { HoldingsTableClient } from "@/components/HoldingsTableClient";
 import { PortfolioDonut } from "@/components/charts/PortfolioDonut";
@@ -29,6 +29,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
   const [tab, setTab] = useState<Tab>(TABS.includes(initialTab) ? initialTab : "Portfolio");
   const [membersCount, setMembersCount] = useState<number | null>(null);
   const colors = getSchoolColors(school.slug);
+  const boxBorder = accentBorderColor(colors.primary);
 
   return (
     <>
@@ -60,7 +61,10 @@ export function SchoolTabs({ school, otherSchools }: Props) {
         <div className="flex flex-col gap-4">
           {(school.holdings?.length ?? 0) > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
+              <div
+                className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5"
+                style={{ borderColor: boxBorder }}
+              >
                 <SectionHeading color={colors.primary} className="mb-4">Portfolio Concentration</SectionHeading>
                 <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
               </div>
@@ -75,7 +79,10 @@ export function SchoolTabs({ school, otherSchools }: Props) {
             </div>
           )}
 
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+          <div
+            className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden"
+            style={{ borderColor: boxBorder }}
+          >
             <div className="px-5 py-4 border-b border-gray-800">
               <SectionHeading color={colors.primary}>
                 Active Holdings ({school.holdings?.length ?? 0})
@@ -93,7 +100,10 @@ export function SchoolTabs({ school, otherSchools }: Props) {
           </div>
 
           {(school.nftHoldings?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+            <div
+              className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden"
+              style={{ borderColor: boxBorder }}
+            >
               <div className="px-5 py-4 border-b border-gray-800">
                 <SectionHeading color={colors.primary}>
                   Active NFT Holdings ({school.nftHoldings.length})
@@ -113,7 +123,10 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {tab === "History" && (
         <div className="flex flex-col gap-4">
           {(school.exitedHoldings?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+            <div
+              className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden"
+              style={{ borderColor: boxBorder }}
+            >
               <div className="px-5 py-4 border-b border-gray-800">
                 <SectionHeading color={colors.primary}>
                   Exited &amp; Trimmed Positions ({school.exitedHoldings.length})

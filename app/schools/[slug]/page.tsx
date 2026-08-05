@@ -8,7 +8,7 @@ import { SchoolTabs } from "@/components/SchoolTabs";
 import { SyncFooter } from "@/components/SyncFooter";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { SCHOOL_SOCIALS, schoolDisplayName } from "@/lib/schoolData";
-import { getSchoolColors } from "@/lib/schoolColors";
+import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
 import { ArrowLeft, Globe, X, Link2, Camera, MessageSquare, Send, Code2 } from "lucide-react";
 
 function SocialLinks({ name }: { name: string }) {
@@ -49,6 +49,7 @@ async function SchoolContent({ slug }: { slug: string }) {
   if (!school) notFound();
 
   const colors = getSchoolColors(school.slug);
+  const boxBorder = accentBorderColor(colors.primary);
 
   const otherSchools: Record<string, string[]> = {};
   for (const h of school.holdings ?? []) {
@@ -90,18 +91,20 @@ async function SchoolContent({ slug }: { slug: string }) {
 
       {/* KPI cards — always visible above tabs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        <KpiCard label="NAV" value={formatNav(school.nav)} />
+        <KpiCard label="NAV" value={formatNav(school.nav)} accentColor={boxBorder} />
         <KpiCard
           label="USD Return"
           value={formatPct(school.usdReturn)}
           positive={school.usdReturn >= 0}
+          accentColor={boxBorder}
         />
         <KpiCard
           label="ETH Return"
           value={formatPct(school.ethReturn)}
           positive={school.ethReturn >= 0}
+          accentColor={boxBorder}
         />
-        <KpiCard label="% Deployed" value={formatPct(school.pctDeployed)} />
+        <KpiCard label="% Deployed" value={formatPct(school.pctDeployed)} accentColor={boxBorder} />
       </div>
 
       {/* Tabbed content */}
