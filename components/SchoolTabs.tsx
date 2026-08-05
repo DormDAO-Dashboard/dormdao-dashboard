@@ -11,6 +11,7 @@ import { SchoolMembers } from "@/components/SchoolMembers";
 import { SchoolDocuments } from "@/components/SchoolDocuments";
 import { ExitedHoldingsTable } from "@/components/ExitedHoldingsTable";
 import { SchoolPortfolioStats } from "@/components/SchoolPortfolioStats";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ForumClient } from "@/components/ForumClient";
 import { VotingClient } from "@/components/VotingClient";
 
@@ -60,7 +61,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
           {(school.holdings?.length ?? 0) > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
-                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">Portfolio Concentration</h2>
+                <SectionHeading color={colors.primary} className="mb-4">Portfolio Concentration</SectionHeading>
                 <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
               </div>
 
@@ -69,15 +70,16 @@ export function SchoolTabs({ school, otherSchools }: Props) {
                 schoolName={school.name}
                 nav={school.nav}
                 rank={school.rank}
+                color={colors.primary}
               />
             </div>
           )}
 
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-800">
-              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
+              <SectionHeading color={colors.primary}>
                 Active Holdings ({school.holdings?.length ?? 0})
-              </h2>
+              </SectionHeading>
             </div>
             {school.holdings && school.holdings.length > 0 ? (
               <HoldingsTableClient
@@ -93,9 +95,9 @@ export function SchoolTabs({ school, otherSchools }: Props) {
           {(school.nftHoldings?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800">
-                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
+                <SectionHeading color={colors.primary}>
                   Active NFT Holdings ({school.nftHoldings.length})
-                </h2>
+                </SectionHeading>
               </div>
               <HoldingsTableClient
                 holdings={school.nftHoldings}
@@ -113,9 +115,9 @@ export function SchoolTabs({ school, otherSchools }: Props) {
           {(school.exitedHoldings?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800">
-                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
+                <SectionHeading color={colors.primary}>
                   Exited &amp; Trimmed Positions ({school.exitedHoldings.length})
-                </h2>
+                </SectionHeading>
               </div>
               <ExitedHoldingsTable holdings={school.exitedHoldings} />
             </div>

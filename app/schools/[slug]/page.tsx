@@ -61,7 +61,10 @@ async function SchoolContent({ slug }: { slug: string }) {
   return (
     <>
       {/* Branded accent bar — visible to every visitor, logged in or not */}
-      <div className="h-1.5 w-full rounded-full mb-4" style={{ backgroundColor: colors.primary }} />
+      <div
+        className="h-1.5 w-full rounded-full mb-4 border border-gray-300/60 dark:border-gray-700/60"
+        style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})` }}
+      />
 
       <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Schools
@@ -69,8 +72,13 @@ async function SchoolContent({ slug }: { slug: string }) {
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-4">
-        <div className="rounded-full p-0.5" style={{ backgroundColor: colors.primary }}>
-          <SchoolLogo name={school.name} size={48} />
+        <div
+          className="rounded-full p-[3px] border-2 border-gray-300 dark:border-gray-700"
+          style={{ backgroundColor: colors.secondary }}
+        >
+          <div className="rounded-full p-0.5" style={{ backgroundColor: colors.primary }}>
+            <SchoolLogo name={school.name} size={48} />
+          </div>
         </div>
         <div>
           <div className="text-xs font-mono text-gray-700 dark:text-gray-400 mb-1">Rank #{school.rank}</div>

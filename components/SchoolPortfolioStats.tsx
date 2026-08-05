@@ -4,6 +4,7 @@ import { Holding } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 import { formatUSD } from "@/lib/utils";
 import { parseDateMs } from "@/components/RecentBuysFeed";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 interface RecentTrade {
   detected_at: string;
@@ -17,6 +18,7 @@ interface Props {
   schoolName: string;
   nav: number;
   rank: number;
+  color: string;
 }
 
 const SEASON_START_MS = new Date("2025-07-01").getTime();
@@ -50,7 +52,7 @@ function TradeTypeBadge({ type }: { type: string }) {
   );
 }
 
-export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props) {
+export function SchoolPortfolioStats({ holdings, schoolName, nav, rank, color }: Props) {
   const [recentTrades, setRecentTrades] = useState<RecentTrade[]>([]);
   const [tradeLoading, setTradeLoading] = useState(true);
 
@@ -126,7 +128,7 @@ export function SchoolPortfolioStats({ holdings, schoolName, nav, rank }: Props)
 
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
-      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">Portfolio Insights</h2>
+      <SectionHeading color={color} className="mb-4">Portfolio Insights</SectionHeading>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5">
 
