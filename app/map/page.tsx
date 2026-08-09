@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { VideoModal } from "@/components/VideoModal";
+import { SHOWCASE_COLORS } from "@/lib/showcaseColors";
 
 // Native pixel dimensions of public/campus-map.png — the SVG overlay's
 // viewBox matches this exactly so zone polygons stay aligned regardless
@@ -38,17 +39,18 @@ const ZONES: Zone[] = [
     label: "Dorm Builders",
     sublabel: "Web3 Development",
     points: "1072,1019 1072,961 1115,893 1139,896 1142,892 1205,898 1231,890 1273,895 1299,910 1344,914 1347,922 1383,926 1383,983 1349,1051 1265,1043 1259,1046 1234,1042 1234,1039 1195,1033 1190,1037 1187,1034 1184,1037 1162,1034 1160,1030",
-    action: "external",
-    href: "https://x.com/Dorm_DAO",
-    color: "#2196F3",
+    action: "navigate",
+    href: "/dorm-builders",
+    color: SHOWCASE_COLORS.dormBuilders,
   },
   {
     id: "dorm-catalyst",
     label: "Dorm Catalyst",
     sublabel: "Accelerator",
     points: "2583,748 2550,745 2550,762 2537,759 2520,751 2508,741 2504,738 2504,735 2478,730 2478,735 2472,735 2472,730 2412,723 2412,727 2406,727 2406,722 2387,720 2376,727 2354,739 2339,738 2339,724 2305,722 2296,704 2297,686 2294,679 2296,649 2303,628 2317,613 2333,601 2353,592 2376,578 2405,568 2427,562 2451,560 2478,559 2505,562 2529,568 2555,575 2577,584 2592,593 2607,605 2613,610 2627,619 2634,631 2639,643 2640,683 2639,694 2636,698 2636,710 2633,715 2633,716 2628,719 2624,724 2624,725 2621,726 2616,731 2610,734 2606,737 2606,739 2601,741 2598,740 2594,744 2593,744 2586,749 2583,748",
-    action: "coming-soon",
-    color: "#9C27B0",
+    action: "navigate",
+    href: "/dorm-catalyst",
+    color: SHOWCASE_COLORS.dormCatalyst,
     description: "Accelerating the next generation of crypto founders",
   },
   {
@@ -56,8 +58,9 @@ const ZONES: Zone[] = [
     label: "Dorm Summit",
     sublabel: "Annual Summit",
     points: "1669,956 1669,889 1708,874 1744,811 1896,829 1896,857 2016,877 2016,952 2021,953 2021,958 2019,962 2019,988 2014,992 1999,995 1971,1043 1816,1016 1767,1037 1693,994 1678,994 1675,988 1675,967 1669,964 1668,959",
-    action: "coming-soon",
-    color: "#FF9800",
+    action: "navigate",
+    href: "/dorm-summit",
+    color: SHOWCASE_COLORS.dormSummit,
     description: "The DormDAO annual summit and events",
   },
   {
