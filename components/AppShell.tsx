@@ -77,9 +77,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname          = usePathname();
   const { theme, toggle } = useTheme();
 
-  // The splash page (/) and campus map (/map) are full-screen experiences
-  // with their own chrome — skip the sidebar/top bar/mobile nav entirely.
-  const noShell = pathname === "/" || pathname.startsWith("/map");
+  // The splash page (/), campus map (/map), and its linked one-page
+  // showcase offshoots (Dorm Builders/Summit/Catalyst) are full-screen
+  // experiences with their own chrome — skip the sidebar/top bar/mobile nav
+  // entirely.
+  const SHOWCASE_ROUTES = ["/dorm-builders", "/dorm-summit", "/dorm-catalyst"];
+  const noShell =
+    pathname === "/" ||
+    pathname.startsWith("/map") ||
+    SHOWCASE_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"));
 
   const [user, setUser]             = useState<SupabaseUser | null>(null);
   const [avatarSrc, setAvatarSrc]   = useState<string | null>(null);

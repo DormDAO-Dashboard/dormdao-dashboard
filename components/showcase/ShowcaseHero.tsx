@@ -1,6 +1,3 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-
 export function ShowcaseHero({
   eyebrow,
   title,
@@ -18,13 +15,6 @@ export function ShowcaseHero({
 }) {
   return (
     <div className="text-center py-14">
-      <Link
-        href="/map"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-8 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back to Map
-      </Link>
-
       <div
         className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase mb-5"
         style={{ backgroundColor: `${accentColor}1A`, border: `1px solid ${accentColor}66`, color: accentColor }}

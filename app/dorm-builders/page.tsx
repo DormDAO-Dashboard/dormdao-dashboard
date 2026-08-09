@@ -1,4 +1,5 @@
 import { Rocket, MessageSquare, FileText, Link2 } from "lucide-react";
+import { ShowcasePageShell } from "@/components/showcase/ShowcasePageShell";
 import { ShowcaseHero } from "@/components/showcase/ShowcaseHero";
 import { ShowcaseSection } from "@/components/showcase/ShowcaseSection";
 import { PlaceholderNote } from "@/components/showcase/PlaceholderNote";
@@ -23,7 +24,7 @@ export default function DormBuildersPage() {
   const accent = SHOWCASE_COLORS.dormBuilders;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <ShowcasePageShell>
       {/* Top ~1/8: what Dorm Builders is */}
       <ShowcaseHero
         eyebrow="Dorm Builders"
@@ -90,6 +91,6 @@ export default function DormBuildersPage() {
           ))}
         </div>
       </ShowcaseSection>
-    </div>
+    </ShowcasePageShell>
   );
 }

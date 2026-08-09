@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { ShowcasePageShell } from "@/components/showcase/ShowcasePageShell";
 import { ShowcaseHero } from "@/components/showcase/ShowcaseHero";
 import { ShowcaseSection } from "@/components/showcase/ShowcaseSection";
 import { PlaceholderNote } from "@/components/showcase/PlaceholderNote";
@@ -17,7 +18,7 @@ export default function DormCatalystPage() {
   const accent = SHOWCASE_COLORS.dormCatalyst;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <ShowcasePageShell>
       <ShowcaseHero
         eyebrow="Dorm Catalyst"
         title="Dorm Catalyst"
@@ -65,6 +66,6 @@ export default function DormCatalystPage() {
           )}
         </div>
       </ShowcaseSection>
-    </div>
+    </ShowcasePageShell>
   );
 }
