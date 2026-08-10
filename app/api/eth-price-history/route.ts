@@ -3,15 +3,19 @@ import { NextRequest, NextResponse } from "next/server";
 // Historical ETH prices never change — cache indefinitely in memory
 const priceCache = new Map<string, number>();
 
-// Convert sheet date formats to CoinGecko's DD-MM-YYYY
+// Convert sheet date formats to CoinGecko's DD-MM-YYYY. Sheet dates aren't
+// zero-padded (e.g. "2026/5/8"), so month/day must accept 1-2 digits — a
+// strict \d{2} here silently dropped every single-digit month/day date.
 function toGeckoDate(dateStr: string): string | null {
   if (!dateStr) return null;
   const s = dateStr.replace(/\//g, "-").trim();
-  // YYYY-MM-DD → DD-MM-YYYY
-  const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (ymd) return `${ymd[3]}-${ymd[2]}-${ymd[1]}`;
-  // Already DD-MM-YYYY
-  if (/^\d{2}-\d{2}-\d{4}$/.test(s)) return s;
+  const pad = (n: string) => n.padStart(2, "0");
+  // YYYY-M-D → DD-MM-YYYY
+  const ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (ymd) return `${pad(ymd[3])}-${pad(ymd[2])}-${ymd[1]}`;
+  // Already D-M-YYYY / DD-MM-YYYY
+  const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (dmy) return `${pad(dmy[1])}-${pad(dmy[2])}-${dmy[3]}`;
   return null;
 }
 
