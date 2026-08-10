@@ -2,8 +2,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { X } from "lucide-react";
 import { VideoModal } from "@/components/VideoModal";
+import campusMapSrc from "@/public/campus-map.png";
 
 // Native pixel dimensions of public/campus-map.png — the SVG overlay's
 // viewBox matches this exactly so zone polygons stay aligned regardless
@@ -13,6 +15,24 @@ const IMAGE_HEIGHT = 1312;
 
 const PAN_ZONE = 80;   // px from screen edge that triggers panning
 const PAN_SPEED = 3;   // px per frame
+
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.5;
+const ZOOM_STEP = 0.1;
+const DRAG_THRESHOLD = 5; // px of mouse movement before a mousedown counts as a drag, not a click
+
+// Puddles easter egg — image-space position of the tree cluster he peeks out from
+const PUDDLES_X = 630;
+const PUDDLES_Y = 790;
+const PUDDLES_ZONE_SIZE = 40; // px (screen-space, scales with map zoom since it's a child of the transformed pan layer)
+const PUDDLES_WIDTH = 80; // px, rendered width when visible
+const PUDDLES_ASPECT = 1536 / 1024; // native puddles.png height/width ratio
+
+const COLLABCURRENCY_URL = "https://collabcurrency.com";
+
+function clamp(n: number, min: number, max: number) {
+  return Math.min(Math.max(n, min), max);
+}
 
 type ZoneAction = "navigate" | "external" | "coming-soon" | "video";
 
@@ -75,7 +95,7 @@ const ZONES: Zone[] = [
     sublabel: "🦆 Go Ducks!",
     points: "2124,250 2130,253 2130,275 2140,271 2155,268 2170,265 2193,262 2223,258 2246,257 2268,255 2292,257 2317,257 2339,258 2340,253 2339,248 2340,243 2326,242 2326,238 2352,230 2488,243 2488,266 2498,267 2498,278 2521,283 2539,290 2556,298 2571,308 2579,321 2579,344 2572,386 2547,401 2523,412 2491,420 2460,424 2412,430 2375,430 2332,427 2101,384 2082,372 2077,364 2077,338 2074,328 2076,306 2087,295 2102,286 2102,260",
     action: "video",
-    videoUrl: "https://www.youtube.com/watch?v=SYt2GDh9PgU",
+    videoUrl: "https://www.youtube.com/watch?v=5K3w7CKkeOQ",
     color: "#FFD700",
     isEasterEgg: true,
   },
@@ -85,7 +105,7 @@ const ZONES: Zone[] = [
     sublabel: "🎉 toga! toga!",
     points: "946,396 952,392 955,393 955,408 967,399 1037,407 1057,416 1057,407 1063,402 1066,404 1066,414 1072,419 1072,467 1058,481 1055,483 1048,492 1013,486 1010,483 968,476 965,478 935,474 935,426 934,425 946,414",
     action: "video",
-    videoUrl: "https://www.youtube.com/watch?v=vtFw3tADh3c",
+    videoUrl: "https://www.youtube.com/watch?v=MG7KCOO76Wc",
     color: "#FF5722",
     isEasterEgg: true,
   },
@@ -102,6 +122,9 @@ function hexToRgb(hex: string): string {
   const n = parseInt(hex.replace("#", ""), 16);
   return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
 }
+
+const AUTZEN_ZONE = ZONES.find((z) => z.id === "autzen")!;
+const AUTZEN_CENTROID = centroid(AUTZEN_ZONE.points);
 
 const PARTICLES = [
   { left: "5%",  delay: "0s",   duration: "6s", drift: "6px" },
@@ -121,12 +144,22 @@ export default function MapPage() {
   const panLayerRef = useRef<HTMLDivElement>(null);
 
   const [viewport, setViewport] = useState({ w: 1440, h: 900 });
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [view, setView] = useState({ x: 0, y: 0, zoom: 1 });
   const [hoveredZone, setHoveredZone] = useState<Zone | null>(null);
   const [comingSoonZone, setComingSoonZone] = useState<Zone | null>(null);
   const [videoZone, setVideoZone] = useState<Zone | null>(null);
   const [debugZones, setDebugZones] = useState(false);
   const [liveCoords, setLiveCoords] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isZoomingActive, setIsZoomingActive] = useState(false);
+  const [autzenOKey, setAutzenOKey] = useState<number | null>(null);
+  const [puddlesHovered, setPuddlesHovered] = useState(false);
+
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const dragStartViewRef = useRef({ x: 0, y: 0 });
+  const draggedRef = useRef(false);
+  const zoomIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setDebugZones(new URLSearchParams(window.location.search).get("debug") === "zones");
@@ -144,50 +177,126 @@ export default function MapPage() {
   const aspect = IMAGE_WIDTH / IMAGE_HEIGHT;
   const displayWidth = Math.max(viewport.w * 1.08, viewport.h * 1.08 * aspect);
   const displayHeight = displayWidth / aspect;
-  const minX = viewport.w - displayWidth;
-  const minY = viewport.h - displayHeight;
+
+  // Pan bounds at a given zoom level. Below 1:1 viewport coverage, the image
+  // is centered (can't fill the viewport) instead of pinned to an edge.
+  function getBounds(zoom: number) {
+    const w = displayWidth * zoom;
+    const h = displayHeight * zoom;
+    const minX = w <= viewport.w ? (viewport.w - w) / 2 : viewport.w - w;
+    const maxX = w <= viewport.w ? (viewport.w - w) / 2 : 0;
+    const minY = h <= viewport.h ? (viewport.h - h) / 2 : viewport.h - h;
+    const maxY = h <= viewport.h ? (viewport.h - h) / 2 : 0;
+    return { minX, maxX, minY, maxY };
+  }
 
   // Center the pan on mount / viewport change (main campus quad sits near
   // the image's vertical middle, so a true center start reads as "on campus").
   useEffect(() => {
-    setOffset({ x: minX / 2, y: minY / 2 });
+    setView({ x: (viewport.w - displayWidth) / 2, y: (viewport.h - displayHeight) / 2, zoom: 1 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewport.w, viewport.h]);
 
   // Cursor-edge panning via a persistent rAF loop reading the latest mouse
   // position from a ref (avoids restarting the loop on every mouse move).
+  // Disabled while click-drag panning is active so the two never fight.
   useEffect(() => {
     let animFrame: number;
     function pan() {
       const { x: mouseX, y: mouseY } = mouseRef.current;
-      if (mouseX >= 0) {
-        setOffset((prev) => {
+      if (mouseX >= 0 && !isDraggingRef.current) {
+        setView((prev) => {
+          const { minX, maxX, minY, maxY } = getBounds(prev.zoom);
           let { x, y } = prev;
-          if (mouseX < PAN_ZONE) x = Math.min(x + PAN_SPEED, 0);
+          if (mouseX < PAN_ZONE) x = Math.min(x + PAN_SPEED, maxX);
           if (mouseX > viewport.w - PAN_ZONE) x = Math.max(x - PAN_SPEED, minX);
-          if (mouseY < PAN_ZONE) y = Math.min(y + PAN_SPEED, 0);
+          if (mouseY < PAN_ZONE) y = Math.min(y + PAN_SPEED, maxY);
           if (mouseY > viewport.h - PAN_ZONE) y = Math.max(y - PAN_SPEED, minY);
-          return { x, y };
+          return { ...prev, x, y };
         });
       }
       animFrame = requestAnimationFrame(pan);
     }
     animFrame = requestAnimationFrame(pan);
     return () => cancelAnimationFrame(animFrame);
-  }, [viewport.w, viewport.h, minX, minY]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewport.w, viewport.h, displayWidth, displayHeight]);
+
+  // Scroll-to-zoom toward the cursor position. Attached as a native listener
+  // (not React's onWheel) so preventDefault reliably blocks page scroll.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      const cursorX = e.clientX;
+      const cursorY = e.clientY;
+
+      setIsZoomingActive(true);
+      if (zoomIdleTimeoutRef.current) clearTimeout(zoomIdleTimeoutRef.current);
+      zoomIdleTimeoutRef.current = setTimeout(() => setIsZoomingActive(false), 150);
+
+      setView((prev) => {
+        const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+        const newZoom = clamp(Math.round((prev.zoom + delta) * 10) / 10, MIN_ZOOM, MAX_ZOOM);
+        if (newZoom === prev.zoom) return prev;
+        const localX = (cursorX - prev.x) / prev.zoom;
+        const localY = (cursorY - prev.y) / prev.zoom;
+        const { minX, maxX, minY, maxY } = getBounds(newZoom);
+        return {
+          zoom: newZoom,
+          x: clamp(cursorX - localX * newZoom, minX, maxX),
+          y: clamp(cursorY - localY * newZoom, minY, maxY),
+        };
+      });
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewport.w, viewport.h, displayWidth, displayHeight]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     mouseRef.current = { x: e.clientX, y: e.clientY };
+
+    if (isDraggingRef.current) {
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) draggedRef.current = true;
+      setView((prev) => {
+        const { minX, maxX, minY, maxY } = getBounds(prev.zoom);
+        return {
+          ...prev,
+          x: clamp(dragStartViewRef.current.x + dx, minX, maxX),
+          y: clamp(dragStartViewRef.current.y + dy, minY, maxY),
+        };
+      });
+    }
+
     if (debugZones && panLayerRef.current) {
       const rect = panLayerRef.current.getBoundingClientRect();
       const imgX = Math.round(((e.clientX - rect.left) / rect.width) * IMAGE_WIDTH);
       const imgY = Math.round(((e.clientY - rect.top) / rect.height) * IMAGE_HEIGHT);
       setLiveCoords({ x: imgX, y: imgY });
     }
-  }, [debugZones]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debugZones, viewport.w, viewport.h, displayWidth, displayHeight]);
+
+  function handleMouseDown(e: React.MouseEvent) {
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    draggedRef.current = false;
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    dragStartViewRef.current = { x: view.x, y: view.y };
+  }
+
+  function stopDragging() {
+    isDraggingRef.current = false;
+    setIsDragging(false);
+  }
 
   function handleZoneEnter(zone: Zone) {
     setHoveredZone(zone);
+    if (zone.id === "autzen") setAutzenOKey((k) => (k ?? 0) + 1);
   }
 
   function handleZoneLeave(zone: Zone) {
@@ -195,6 +304,7 @@ export default function MapPage() {
   }
 
   function handleZoneClick(zone: Zone) {
+    if (draggedRef.current) return; // suppress click-through after a real drag
     if (zone.action === "navigate" && zone.href) router.push(zone.href);
     else if (zone.action === "external" && zone.href) window.open(zone.href, "_blank", "noopener,noreferrer");
     else if (zone.action === "coming-soon") setComingSoonZone(zone);
@@ -217,7 +327,11 @@ export default function MapPage() {
       <div
         ref={containerRef}
         onMouseMove={handleMouseMove}
+        onMouseDown={handleMouseDown}
+        onMouseUp={stopDragging}
+        onMouseLeave={stopDragging}
         className="hidden md:block relative w-screen h-screen overflow-hidden bg-[#0a0a0a]"
+        style={{ cursor: isDragging ? "grabbing" : "grab" }}
       >
         {/* Top bar */}
         <div
@@ -239,24 +353,28 @@ export default function MapPage() {
           </Link>
         </div>
 
-        {/* Pannable image + zones */}
+        {/* Pannable + zoomable image and zones */}
         <div
           ref={panLayerRef}
           className="absolute top-0 left-0"
           style={{
             width: displayWidth,
             height: displayHeight,
-            transform: `translate(${offset.x}px, ${offset.y}px)`,
+            transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`,
+            transformOrigin: "0 0",
+            transition: isDragging || isZoomingActive ? "none" : "transform 100ms ease",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/campus-map.png"
+          <Image
+            src={campusMapSrc}
             alt="DormDAO campus map"
-            width={displayWidth}
-            height={displayHeight}
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-            draggable={false}
+            fill
+            priority
+            quality={90}
+            placeholder="blur"
+            sizes="100vw"
+            className="object-cover pointer-events-none select-none"
+            onDragStart={(e) => e.preventDefault()}
           />
 
           <svg
@@ -307,6 +425,10 @@ export default function MapPage() {
           {/* Floating zone title banners — always visible, slow constant bob */}
           {ZONES.filter((zone) => !zone.isEasterEgg).map((zone) => {
             const c = centroid(zone.points);
+            // Approximate on-screen Y of the anchor point, to flip the banner
+            // below the polygon instead of above when too close to the top edge.
+            const screenY = view.y + (c.y / IMAGE_HEIGHT) * displayHeight * view.zoom;
+            const showBelow = screenY < 100;
             return (
               <div
                 key={zone.id}
@@ -314,22 +436,81 @@ export default function MapPage() {
                 style={{ left: `${(c.x / IMAGE_WIDTH) * 100}%`, top: `${(c.y / IMAGE_HEIGHT) * 100}%` }}
               >
                 <div
-                  className="flex flex-col items-center gap-0.5 rounded-full px-5 py-2 -translate-x-1/2 -translate-y-full"
+                  className="flex flex-col items-center gap-0.5 rounded-full px-6 py-2.5"
                   style={{
-                    background: "linear-gradient(135deg, #0d1f0d, #1a2e1a)",
-                    border: `1px solid ${zone.color}`,
-                    boxShadow: `0 0 16px rgba(${hexToRgb(zone.color)}, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)`,
+                    background: "rgba(10, 20, 10, 0.92)",
+                    border: `2px solid ${zone.color}`,
+                    boxShadow: `0 0 24px rgba(${hexToRgb(zone.color)}, 0.6), inset 0 1px 0 rgba(255,255,255,0.1)`,
+                    transform: showBelow ? "translate(-50%, 20px)" : "translate(-50%, calc(-100% - 20px))",
                   }}
                 >
-                  <span className="font-sans text-sm font-bold flex items-center gap-1.5" style={{ color: "#ffffff" }}>
+                  <span
+                    className="font-sans text-base font-bold flex items-center gap-1.5"
+                    style={{ color: "#ffffff", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
+                  >
                     <span style={{ color: zone.color }}>◆</span>
                     {zone.label}
                   </span>
-                  <span className="text-xs" style={{ color: "#d1d5db" }}>{zone.sublabel}</span>
+                  <span className="text-sm" style={{ color: "#d1d5db" }}>{zone.sublabel}</span>
                 </div>
               </div>
             );
           })}
+
+          {/* Oregon O — Autzen only, floats up and fades on every hover entry */}
+          {autzenOKey !== null && (
+            <div
+              key={autzenOKey}
+              className="absolute z-20 pointer-events-none"
+              style={{
+                left: `${(AUTZEN_CENTROID.x / IMAGE_WIDTH) * 100}%`,
+                top: `${(AUTZEN_CENTROID.y / IMAGE_HEIGHT) * 100}%`,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <div className="animate-autzen-o-float">
+                <svg width={80} height={80} viewBox="0 0 80 80">
+                  <circle cx={40} cy={40} r={28} fill="none" stroke="#154733" strokeWidth={18} />
+                  <circle cx={40} cy={40} r={37} fill="none" stroke="#FEE123" strokeWidth={3} />
+                  <circle cx={40} cy={40} r={19} fill="none" stroke="#FEE123" strokeWidth={3} />
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {/* Puddles easter egg — hidden hover zone over a tree cluster, silent (no label) */}
+          <div
+            className="absolute z-20"
+            style={{
+              left: `${(PUDDLES_X / IMAGE_WIDTH) * 100}%`,
+              top: `${(PUDDLES_Y / IMAGE_HEIGHT) * 100}%`,
+              width: PUDDLES_ZONE_SIZE,
+              height: PUDDLES_ZONE_SIZE,
+              transform: "translate(-50%, -50%)",
+            }}
+            onMouseEnter={() => setPuddlesHovered(true)}
+            onMouseLeave={() => setPuddlesHovered(false)}
+          >
+            <div
+              className="absolute left-1/2 bottom-1/2 overflow-hidden pointer-events-none"
+              style={{
+                width: PUDDLES_WIDTH,
+                height: PUDDLES_WIDTH * PUDDLES_ASPECT * 0.55,
+                transform: "translateX(-50%)",
+                opacity: puddlesHovered ? 1 : 0,
+                transition: puddlesHovered ? "opacity 300ms ease" : "opacity 200ms ease",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/puddles.png"
+                alt=""
+                className={puddlesHovered ? "animate-puddles-bob" : ""}
+                style={{ width: PUDDLES_WIDTH, height: "auto", display: "block" }}
+                draggable={false}
+              />
+            </div>
+          </div>
 
           {/* DormDAO ramen logo overlay */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -370,6 +551,26 @@ export default function MapPage() {
           className="absolute inset-0 pointer-events-none z-10"
           style={{ background: "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%)" }}
         />
+
+        {/* Collabcurrency partner badge — fixed overlay, unaffected by pan/zoom */}
+        <a
+          href={COLLABCURRENCY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-[filter]"
+          style={{
+            background: "rgba(0,0,0,0.7)",
+            backdropFilter: "blur(4px)",
+            border: "1px solid rgba(255,255,255,0.15)",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.2)")}
+          onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/collabcurrency-logo.jpeg" alt="" className="w-4 h-4 rounded-full" />
+          <span className="text-xs" style={{ color: "#9ca3af" }}>Powered by</span>
+          <span className="text-xs font-semibold" style={{ color: "#ffffff" }}>Collabcurrency</span>
+        </a>
 
         {/* Debug: coordinate tooltip that follows the cursor */}
         {debugZones && liveCoords && (
