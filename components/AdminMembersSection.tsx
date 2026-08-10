@@ -52,6 +52,7 @@ const EMPTY_DRAFT: MemberDraft = { name: "", votingUnits: 10, email: "", walletA
 
 export function AdminMembersSection({ initialMembers }: { initialMembers: Member[] }) {
   const [members, setMembers] = useState<Member[]>(initialMembers);
+  const [schoolFilter, setSchoolFilter] = useState("");
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"manual" | "csv">("manual");
 
@@ -210,13 +211,33 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
 
   const fieldClass = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50 w-full";
 
+  const NO_SCHOOL = "__none__";
+  const hasNoSchoolMembers = members.some((m) => !m.school);
+  const filteredMembers = !schoolFilter
+    ? members
+    : members.filter((m) => (schoolFilter === NO_SCHOOL ? !m.school : m.school === schoolFilter));
+
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
       <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
           Members
-          <span className="ml-2 text-xs text-gray-700 dark:text-gray-400 font-normal">{members.length} total</span>
+          <span className="ml-2 text-xs text-gray-700 dark:text-gray-400 font-normal">
+            {schoolFilter ? `${filteredMembers.length} of ${members.length}` : `${members.length} total`}
+          </span>
         </h2>
+
+        <div className="flex items-center gap-3">
+          <select
+            value={schoolFilter}
+            onChange={(e) => setSchoolFilter(e.target.value)}
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 focus:outline-none focus:border-primary/50"
+          >
+            <option value="">All Schools</option>
+            {SCHOOL_NAMES.map((s) => <option key={s} value={s}>{schoolDisplayName(s)}</option>)}
+            <option value={MAIN_DAO_VOTER}>{MAIN_DAO_VOTER}</option>
+            {hasNoSchoolMembers && <option value={NO_SCHOOL}>No School</option>}
+          </select>
 
         <Dialog.Root open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetModal(); }}>
           <Dialog.Trigger asChild>
@@ -350,6 +371,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
             </Dialog.Content>
           </Dialog.Portal>
         </Dialog.Root>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -367,7 +389,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
             </tr>
           </thead>
           <tbody>
-            {members.map((m) => (
+            {filteredMembers.map((m) => (
               <tr key={m.id} className="border-b border-gray-200 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
                 <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{m.name}</td>
                 <td className="px-3 py-3">
@@ -411,8 +433,12 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 </td>
               </tr>
             ))}
-            {members.length === 0 && (
-              <tr><td colSpan={8} className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">No members yet.</td></tr>
+            {filteredMembers.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">
+                  {members.length === 0 ? "No members yet." : "No members match this filter."}
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

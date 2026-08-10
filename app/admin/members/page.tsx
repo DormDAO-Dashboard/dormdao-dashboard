@@ -104,8 +104,6 @@ export default async function AdminMembersPage() {
         initialDormAdmins={dormAdminsWithEmail}
       />
 
-      <SignupRequestsSection />
-
       <AdminMembersSection initialMembers={initialMembers} />
 
       {/* Recent failed logins */}
@@ -152,6 +150,8 @@ export default async function AdminMembersPage() {
           </table>
         </div>
       </div>
+
+      <SignupRequestsSection />
     </div>
   );
 }

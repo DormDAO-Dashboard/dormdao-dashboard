@@ -8,7 +8,7 @@ import { SchoolTabs } from "@/components/SchoolTabs";
 import { SyncFooter } from "@/components/SyncFooter";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { SCHOOL_SOCIALS, schoolDisplayName } from "@/lib/schoolData";
-import { getSchoolColors } from "@/lib/schoolColors";
+import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
 import { ArrowLeft, Globe, X, Link2, Camera, MessageSquare, Send, Code2 } from "lucide-react";
 
 function SocialLinks({ name }: { name: string }) {
@@ -49,6 +49,7 @@ async function SchoolContent({ slug }: { slug: string }) {
   if (!school) notFound();
 
   const colors = getSchoolColors(school.slug);
+  const boxBorder = accentBorderColor(colors.primary);
 
   const otherSchools: Record<string, string[]> = {};
   for (const h of school.holdings ?? []) {
@@ -61,7 +62,10 @@ async function SchoolContent({ slug }: { slug: string }) {
   return (
     <>
       {/* Branded accent bar — visible to every visitor, logged in or not */}
-      <div className="h-1.5 w-full rounded-full mb-4" style={{ backgroundColor: colors.primary }} />
+      <div
+        className="h-1.5 w-full rounded-full mb-4 border border-gray-300/60 dark:border-gray-700/60"
+        style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})` }}
+      />
 
       <Link href="/schools" className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Schools
@@ -69,8 +73,13 @@ async function SchoolContent({ slug }: { slug: string }) {
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-4">
-        <div className="rounded-full p-0.5" style={{ backgroundColor: colors.primary }}>
-          <SchoolLogo name={school.name} size={48} />
+        <div
+          className="rounded-full p-[3px] border-2 border-gray-300 dark:border-gray-700"
+          style={{ backgroundColor: colors.secondary }}
+        >
+          <div className="rounded-full p-0.5" style={{ backgroundColor: colors.primary }}>
+            <SchoolLogo name={school.name} size={48} />
+          </div>
         </div>
         <div>
           <div className="text-xs font-mono text-gray-700 dark:text-gray-400 mb-1">Rank #{school.rank}</div>
@@ -82,18 +91,20 @@ async function SchoolContent({ slug }: { slug: string }) {
 
       {/* KPI cards — always visible above tabs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        <KpiCard label="NAV" value={formatNav(school.nav)} />
+        <KpiCard label="NAV" value={formatNav(school.nav)} accentColor={boxBorder} />
         <KpiCard
           label="USD Return"
           value={formatPct(school.usdReturn)}
           positive={school.usdReturn >= 0}
+          accentColor={boxBorder}
         />
         <KpiCard
           label="ETH Return"
           value={formatPct(school.ethReturn)}
           positive={school.ethReturn >= 0}
+          accentColor={boxBorder}
         />
-        <KpiCard label="% Deployed" value={formatPct(school.pctDeployed)} />
+        <KpiCard label="% Deployed" value={formatPct(school.pctDeployed)} accentColor={boxBorder} />
       </div>
 
       {/* Tabbed content */}

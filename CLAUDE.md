@@ -30,7 +30,7 @@ Grid of school cards. Each shows logo, name, NAV, ETH return, USD return, % depl
 
 ### /schools/[slug] — School Detail
 Five tabs:
-1. **Portfolio** — Active holdings table (Token, Chain, Tokens held, Cost basis, Current value, Return). Sortable by all columns except Token. Also shows Portfolio Insights card with: win rate, avg position age, most valuable hold, best performer, worst performer, total cost basis. Pie chart of portfolio concentration (external labels, no legend, per director feedback). Known bug: ETH rows show "—" for Chain, Tokens, Cost.
+1. **Portfolio** — Active holdings table (Token, Chain, Tokens held, Cost basis, Current value, Return). Sortable by all columns except Token. Also shows Portfolio Insights card with: win rate, avg position age, most valuable hold, best performer, worst performer, total cost basis. Pie chart of portfolio concentration (external labels, no legend, per director feedback). ETH rows intentionally show "—" for Cost (ETH) — the sheet has no cost-basis data for the fund's own ETH balance, since it's idle treasury rather than an acquired position.
 2. **History** — NAV over time line chart.
 3. **Members** — School member list.
 4. **Documents** — School-specific pitch decks and reports from Supabase Storage.
@@ -138,9 +138,8 @@ VAPID_SUBJECT
 RESEND_API_KEY
 
 ## Known issues to fix
-1. ETH rows on school detail Portfolio tab show "—" for Chain, Tokens, Cost
-2. /compare page stub exists but has no implementation yet
-3. /users/[id] public profile exists locally but not committed
+1. /compare page stub exists but has no implementation yet
+2. /users/[id] public profile exists locally but not committed
 
 ## Coding conventions
 - Use TypeScript strictly, no `any` types

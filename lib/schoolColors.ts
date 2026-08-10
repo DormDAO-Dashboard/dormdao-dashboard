@@ -35,3 +35,19 @@ export const DEFAULT_COLORS: SchoolColors = {
 export function getSchoolColors(slug: string): SchoolColors {
   return SCHOOL_COLORS[slug] ?? DEFAULT_COLORS;
 }
+
+// Most school primary colors are dark (navy, forest green, maroon), so a
+// simple alpha-blended border in that color disappears against the app's
+// near-black dark-mode background. Blending toward neutral gray instead
+// gives a muted tint with roughly consistent, moderate contrast against
+// both the light and dark page backgrounds.
+export function accentBorderColor(hex: string): string {
+  const clean = hex.replace("#", "");
+  const bigint = parseInt(clean, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  const gray = 140;
+  const mix = (c: number) => Math.round(c * 0.55 + gray * 0.45);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}

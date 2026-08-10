@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { getSchoolColors } from "@/lib/schoolColors";
+import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
+import { mergeHoldingsByTicker } from "@/lib/holdings";
 import { SchoolRowWithHoldings } from "@/lib/cache";
 import { HoldingsTableClient } from "@/components/HoldingsTableClient";
 import { PortfolioDonut } from "@/components/charts/PortfolioDonut";
@@ -11,6 +12,7 @@ import { SchoolMembers } from "@/components/SchoolMembers";
 import { SchoolDocuments } from "@/components/SchoolDocuments";
 import { ExitedHoldingsTable } from "@/components/ExitedHoldingsTable";
 import { SchoolPortfolioStats } from "@/components/SchoolPortfolioStats";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ForumClient } from "@/components/ForumClient";
 import { VotingClient } from "@/components/VotingClient";
 
@@ -28,6 +30,15 @@ export function SchoolTabs({ school, otherSchools }: Props) {
   const [tab, setTab] = useState<Tab>(TABS.includes(initialTab) ? initialTab : "Portfolio");
   const [membersCount, setMembersCount] = useState<number | null>(null);
   const colors = getSchoolColors(school.slug);
+  const boxBorder = accentBorderColor(colors.primary);
+
+  // The sheet sometimes lists the same ticker as multiple rows when a club
+  // bought it in separate tranches — merge those for portfolio-level views
+  // (table, chart, stats) so each token shows as a single position. The
+  // Activity/Recent-Buys feeds read school.holdings directly elsewhere and
+  // are unaffected, so a fresh tranche still shows up as its own recent buy.
+  const mergedHoldings = school.holdings ? mergeHoldingsByTicker(school.holdings) : undefined;
+  const mergedNftHoldings = school.nftHoldings ? mergeHoldingsByTicker(school.nftHoldings) : undefined;
 
   return (
     <>
@@ -57,31 +68,38 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {/* Portfolio tab */}
       {tab === "Portfolio" && (
         <div className="flex flex-col gap-4">
-          {(school.holdings?.length ?? 0) > 0 && (
+          {(mergedHoldings?.length ?? 0) > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
-                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">Portfolio Concentration</h2>
-                <PortfolioDonut holdings={school.holdings ?? []} nav={school.nav} />
+              <div
+                className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5"
+                style={{ borderColor: boxBorder }}
+              >
+                <SectionHeading color={colors.primary} className="mb-4">Portfolio Concentration</SectionHeading>
+                <PortfolioDonut holdings={mergedHoldings ?? []} nav={school.nav} />
               </div>
 
               <SchoolPortfolioStats
-                holdings={school.holdings!}
+                holdings={mergedHoldings!}
                 schoolName={school.name}
                 nav={school.nav}
                 rank={school.rank}
+                color={colors.primary}
               />
             </div>
           )}
 
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+          <div
+            className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden"
+            style={{ borderColor: boxBorder }}
+          >
             <div className="px-5 py-4 border-b border-gray-800">
-              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
-                Active Holdings ({school.holdings?.length ?? 0})
-              </h2>
+              <SectionHeading color={colors.primary}>
+                Active Holdings ({mergedHoldings?.length ?? 0})
+              </SectionHeading>
             </div>
-            {school.holdings && school.holdings.length > 0 ? (
+            {mergedHoldings && mergedHoldings.length > 0 ? (
               <HoldingsTableClient
-                holdings={school.holdings}
+                holdings={mergedHoldings}
                 otherSchools={otherSchools}
                 schoolName={school.name}
               />
@@ -90,15 +108,18 @@ export function SchoolTabs({ school, otherSchools }: Props) {
             )}
           </div>
 
-          {(school.nftHoldings?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+          {(mergedNftHoldings?.length ?? 0) > 0 && (
+            <div
+              className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden"
+              style={{ borderColor: boxBorder }}
+            >
               <div className="px-5 py-4 border-b border-gray-800">
-                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
-                  Active NFT Holdings ({school.nftHoldings.length})
-                </h2>
+                <SectionHeading color={colors.primary}>
+                  Active NFT Holdings ({mergedNftHoldings!.length})
+                </SectionHeading>
               </div>
               <HoldingsTableClient
-                holdings={school.nftHoldings}
+                holdings={mergedNftHoldings!}
                 otherSchools={{}}
                 schoolName={school.name}
               />
@@ -111,11 +132,14 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {tab === "History" && (
         <div className="flex flex-col gap-4">
           {(school.exitedHoldings?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+            <div
+              className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden"
+              style={{ borderColor: boxBorder }}
+            >
               <div className="px-5 py-4 border-b border-gray-800">
-                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
+                <SectionHeading color={colors.primary}>
                   Exited &amp; Trimmed Positions ({school.exitedHoldings.length})
-                </h2>
+                </SectionHeading>
               </div>
               <ExitedHoldingsTable holdings={school.exitedHoldings} />
             </div>

@@ -2,10 +2,30 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Holding } from "@/lib/types";
-import { formatUSD, formatPrice } from "@/lib/utils";
 import { ExternalLink, Download, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-type SortKey = "chain" | "tokens" | "costEth" | "price" | "value" | "pnl" | "roiEth" | "pctPort" | "date";
+type SortKey = "chain" | "tokens" | "costEth" | "purchasePrice" | "price" | "value" | "pnl" | "roiEth" | "pctPort" | "date";
+
+// Investment dates aren't zero-padded (e.g. "2026/5/8" vs "2026/5/28"), so a
+// plain string comparison sorts them lexicographically instead of
+// chronologically. Parse to a real timestamp for sorting.
+function parseDateMs(dateStr: string): number | null {
+  if (!dateStr) return null;
+  const parts = dateStr.split(/[\/\-]/);
+  if (parts.length !== 3) return null;
+  const [y, m, d] = parts.map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d).getTime();
+}
+
+function formatUSD2(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
 
 function exportCsv(holdings: Holding[], prices: Record<string, { usd: number }>, ethPrice: number, schoolName: string) {
   const headers = ["Token", "Chain", "Tokens", "Cost (ETH)", "Price (USD)", "Value (USD)", "% Portfolio", "Investment Date"];
@@ -81,9 +101,12 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
   useEffect(() => { fetchPrices(); }, [fetchPrices]);
 
   useEffect(() => {
+    // Needed both for the pnl fallback (holdings without a sheet-provided
+    // gainUsd) and for the Purchase Price column, which every holding with
+    // a cost basis needs regardless of whether gainUsd is present.
     const datesNeeded = Array.from(new Set(
       holdings
-        .filter((h) => h.gainUsd === undefined && h.investmentDate && h.costBasisEth > 0)
+        .filter((h) => h.investmentDate && h.costBasisEth > 0)
         .map((h) => h.investmentDate)
     ));
     if (datesNeeded.length === 0) return;
@@ -101,6 +124,18 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
     }
   }
 
+  // USD price per token at the time it was bought, derived from the ETH cost
+  // basis and that day's historical ETH price. Unlike the pnl fallback, this
+  // does NOT fall back to the current ETH price when the historical price is
+  // unavailable — a "purchase price" built from today's rate would be wrong,
+  // not just approximate, so it shows "—" instead.
+  function purchasePriceOf(h: Holding): number | null {
+    if (h.costBasisEth <= 0 || h.tokens <= 0) return null;
+    const ethAtPurchase = historicalEth[h.investmentDate];
+    if (!ethAtPurchase) return null;
+    return (h.costBasisEth * ethAtPurchase) / h.tokens;
+  }
+
   function getSortValue(h: Holding): number | string | null {
     const price = prices[h.ticker];
     const currentValue = price && h.tokens > 0
@@ -111,6 +146,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
       case "chain": return h.blockchain || "";
       case "tokens": return h.tokens > 0 ? h.tokens : null;
       case "costEth": return h.costBasisEth > 0 ? h.costBasisEth : null;
+      case "purchasePrice": return purchasePriceOf(h);
       case "price": {
         if (price) return price.usd;
         return h.marketValueUsd && h.tokens > 0 ? h.marketValueUsd / h.tokens : null;
@@ -125,7 +161,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
       }
       case "roiEth": return h.roiEthPct ?? null;
       case "pctPort": return h.pctOfPortfolio > 0 ? h.pctOfPortfolio : null;
-      case "date": return h.investmentDate || "";
+      case "date": return parseDateMs(h.investmentDate);
     }
   }
 
@@ -158,6 +194,9 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
             </th>
             <th className={`text-right ${thClass}`} onClick={() => toggleSort("costEth")}>
               Cost (ETH) <SortIcon col="costEth" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("purchasePrice")}>
+              Purchase Price <SortIcon col="purchasePrice" sortKey={sortKey} asc={asc} />
             </th>
             <th className={`text-right ${thClass}`} onClick={() => toggleSort("price")}>
               Price <SortIcon col="price" sortKey={sortKey} asc={asc} />
@@ -208,6 +247,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
             }
 
             const roiEthPct = h.roiEthPct ?? null;
+            const purchasePrice = purchasePriceOf(h);
 
             return (
               <tr key={h.ticker} className="border-b border-gray-800/50 hover:bg-gray-800/30">
@@ -223,24 +263,27 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 <td className="px-5 py-3 text-gray-700 dark:text-gray-400 text-xs">{h.blockchain || "—"}</td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {h.tokens !== 0
-                    ? h.tokens.toLocaleString(undefined, { maximumFractionDigits: 4 })
+                    ? h.tokens.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {h.costBasisEth > 0 ? `${h.costBasisEth} ETH` : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
-                  {loading ? "…" : pricePerToken !== null ? formatPrice(pricePerToken) : "—"}
+                  {purchasePrice !== null ? formatUSD2(purchasePrice) : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
-                  {loading ? "…" : currentValue !== null ? formatUSD(currentValue) : "—"}
+                  {loading ? "…" : pricePerToken !== null ? formatUSD2(pricePerToken) : "—"}
+                </td>
+                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
+                  {loading ? "…" : currentValue !== null ? formatUSD2(currentValue) : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono">
                   {loading ? (
                     <span className="text-gray-700 dark:text-gray-400">…</span>
                   ) : pnl !== null ? (
                     <span className={pnl >= 0 ? "text-primary" : "text-danger"}>
-                      {pnl >= 0 ? "+" : ""}{formatUSD(pnl)}
+                      {pnl >= 0 ? "+" : ""}{formatUSD2(pnl)}
                       {pnlPct !== null && (
                         <span className="text-xs ml-1 opacity-70">
                           ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
