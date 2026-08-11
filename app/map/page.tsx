@@ -21,6 +21,10 @@ const MAX_ZOOM = 2.5;
 const ZOOM_STEP = 0.1;
 const DRAG_THRESHOLD = 5; // px of mouse movement before a mousedown counts as a drag, not a click
 
+// Vertex-average centroids sit slightly left of these buildings' visual
+// center (irregular footprints skew the average) — nudge banners right.
+const BANNER_X_OFFSET = 112; // image-space px
+
 // Puddles easter egg — image-space position of the tree cluster he peeks out from
 const PUDDLES_X = 630;
 const PUDDLES_Y = 790;
@@ -439,7 +443,7 @@ export default function MapPage() {
               <div
                 key={zone.id}
                 className="absolute z-20 pointer-events-none animate-banner-fade-in animate-banner-bob-slow"
-                style={{ left: `${(c.x / IMAGE_WIDTH) * 100}%`, top: `${(c.y / IMAGE_HEIGHT) * 100}%` }}
+                style={{ left: `${((c.x + BANNER_X_OFFSET) / IMAGE_WIDTH) * 100}%`, top: `${(c.y / IMAGE_HEIGHT) * 100}%` }}
               >
                 <div
                   className="flex flex-col items-center gap-0.5 rounded-full px-6 py-2.5"
