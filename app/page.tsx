@@ -34,7 +34,7 @@ export default function SplashPage() {
       <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center gap-7">
         <div className="flex items-center gap-3">
           <h1
-            className="font-sans font-extrabold lowercase text-white text-5xl sm:text-7xl md:text-8xl"
+            className="font-sans font-extrabold lowercase text-[#fff] text-5xl sm:text-7xl md:text-8xl"
             style={{ textShadow: "0 2px 24px rgba(0,0,0,0.55)" }}
           >
             dorm dao
@@ -49,7 +49,7 @@ export default function SplashPage() {
 
         <div className="flex flex-col sm:flex-row items-stretch gap-2 sm:gap-3 max-w-[92vw]">
           <div className="flex items-center justify-center rounded-xl bg-black px-6 py-3.5 sm:px-8 sm:py-4 shadow-xl">
-            <span className="font-sans font-semibold text-white text-sm sm:text-lg">
+            <span className="font-sans font-semibold text-[#fff] text-sm sm:text-lg">
               supporting student investment groups
             </span>
           </div>

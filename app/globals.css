@@ -135,6 +135,11 @@ html.light .bg-\[\#0f1117\]\/95 { background-color: rgba(255, 255, 255, 0.97); }
 
 /* --- Backgrounds --- */
 html.light .bg-\[\#0a0a0a\] { background-color: #f4f4f5; }
+/* Elevated card/modal surfaces (bg-[#111]) — same treatment as bg-[#0a0a0a]
+   above. Missing this entry was the bug: these modals pair their background
+   with theme-following text (dark:text-white), which only reads correctly
+   if the background itself also flips in light mode. */
+html.light .bg-\[\#111\] { background-color: #f4f4f5; }
 html.light .bg-\[\#0f1117\] { background-color: #f4f4f5; }
 
 /* gray-900 variants */
@@ -234,6 +239,12 @@ html.light ::-webkit-scrollbar-thumb { background: #d4d4d8; }
   100% { transform: translate(var(--particle-drift, 8px), -140px); opacity: 0; }
 }
 .animate-particle-float { animation: particle-float var(--particle-duration, 6s) ease-in infinite; }
+
+@keyframes leaf-scatter {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--leaf-dx, 10px), var(--leaf-dy, -12px)) rotate(var(--leaf-rot, 45deg)); opacity: 0; }
+}
+.animate-leaf-scatter { animation: leaf-scatter 550ms ease-out forwards; }
 
 @keyframes banner-fade-in {
   from { opacity: 0; transform: translate(-50%, 4px); }

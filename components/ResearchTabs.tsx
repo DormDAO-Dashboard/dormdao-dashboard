@@ -69,7 +69,7 @@ function Pill({ active, onClick, children }: {
       className={cn(
         "shrink-0 whitespace-nowrap text-xs px-2.5 py-1 rounded-full border transition-colors",
         active
-          ? "bg-primary text-white border-primary"
+          ? "bg-primary text-[#fff] border-primary"
           : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 bg-white dark:bg-transparent hover:border-gray-300 dark:hover:border-white/20"
       )}
     >

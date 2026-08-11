@@ -164,7 +164,7 @@ export default function JoinPage() {
               </div>
 
               <button type="submit" disabled={submitting}
-                className="w-full py-2.5 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity">
+                className="w-full py-2.5 rounded-lg bg-primary text-[#fff] text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity">
                 {submitting ? "Submitting…" : "Request Access"}
               </button>
 

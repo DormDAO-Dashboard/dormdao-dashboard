@@ -328,7 +328,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
       )}
 
       {toastMsg && (
-        <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-400 text-sm font-medium shadow-lg pointer-events-none">
+        <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium shadow-lg pointer-events-none">
           {toastMsg}
         </div>
       )}

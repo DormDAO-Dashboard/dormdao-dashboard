@@ -259,7 +259,7 @@ function SchoolFilterWidget({ schools, selected, onSelect }: {
             className={cn(
               "text-xs px-2.5 py-1 rounded-full border transition-colors",
               selected === s
-                ? "bg-primary text-white border-primary"
+                ? "bg-primary text-[#fff] border-primary"
                 : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20"
             )}
           >
@@ -597,7 +597,7 @@ export function NewsClient() {
                 className={cn(
                   "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
                   categoryFilter === key
-                    ? "bg-primary text-white border-primary"
+                    ? "bg-primary text-[#fff] border-primary"
                     : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20"
                 )}
               >

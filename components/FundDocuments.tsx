@@ -13,12 +13,12 @@ function formatDocDate(dateStr: string | null): string {
 
 function TypeBadge({ type }: { type: string }) {
   if (type === "pitch_deck")
-    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-600 text-white border border-blue-700">Pitch Deck</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-600 text-[#fff] border border-blue-700">Pitch Deck</span>;
   if (type === "report")
-    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-600 text-white border border-emerald-700">Fund Report</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-600 text-[#fff] border border-emerald-700">Fund Report</span>;
   if (type === "video")
-    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-600 text-white border border-amber-700">Video</span>;
-  return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-500 text-white border border-gray-600">Document</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-600 text-[#fff] border border-amber-700">Video</span>;
+  return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-500 text-[#fff] border border-gray-600">Document</span>;
 }
 
 export function FundDocuments({ ticker, refreshKey = 0 }: { ticker: string; refreshKey?: number }) {

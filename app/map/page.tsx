@@ -34,22 +34,36 @@ const BANNER_X_OVERRIDE: Partial<Record<string, number>> = {
   "dorm-builders": 10,
 };
 
-// Puddles easter egg — hover trigger zone, centered over the pine-tree
-// cluster left of Dorm Capital. Image-space coords (fraction of
+// Puddles easter egg — hover trigger zone, centered over the single pine
+// tree left of Dorm Capital he hides behind. Image-space coords (fraction of
 // IMAGE_WIDTH/IMAGE_HEIGHT), like everything else positioned over the map art.
-const PUDDLES_ZONE_X = 1090;
-const PUDDLES_ZONE_Y = 555;
+const PUDDLES_ZONE_X = 1087;
+const PUDDLES_ZONE_Y = 593;
 const PUDDLES_ZONE_SIZE = 40; // px (screen-space, scales with map zoom since it's a child of the transformed pan layer)
 
-// Puddles himself. His rendered width/positions are all expressed in the same
-// image-space units as puddles-tree-cutout.png's placement (x:1045-1135,
-// y:485-625 below), a real crop of the map art re-composited on top of him —
-// so he's sized to fit, and stays aligned at every zoom level, entirely
-// hidden under it until he slides out to the left on hover.
-const PUDDLES_WIDTH_UNITS = 45; // fits well inside the 90x140 tree patch at native aspect
-const PUDDLES_HIDE_X = 1105; // bottom-center anchor, hidden behind the pines
-const PUDDLES_HIDE_Y = 615;
-const PUDDLES_REVEAL_X = PUDDLES_HIDE_X - 95; // slides left, clear of the patch's left edge (1045)
+// Puddles himself. His rendered width/position are expressed in the same
+// image-space units as puddles-tree-cutout.png's placement (x:1050-1120,
+// y:495-650 below), a real crop of that one tree re-composited on top of
+// him — so he's sized to fit, and stays aligned at every zoom level, entirely
+// hidden under it at rest. On hover he steps above the tree patch's z-index
+// and leans out to PUDDLES_REVEAL_X/Y with a right-to-left clip-path wipe
+// (see the JSX below), instead of popping straight up in place.
+const PUDDLES_WIDTH_UNITS = 18; // duck-sized against the map's buildings, not building-sized
+const PUDDLES_HIDE_X = 1084;
+const PUDDLES_HIDE_Y = 595;
+const PUDDLES_REVEAL_X = 1075;
+const PUDDLES_REVEAL_Y = 610;
+
+// Small leaf-scatter burst that plays once per reveal (see PUDDLES_REVEAL_KEY
+// remount trick below). Each leaf gets its own outward direction/distance/
+// spin/delay via CSS custom properties consumed by .animate-leaf-scatter.
+const PUDDLES_LEAVES = [
+  { dx: -14, dy: -10, rot: -70, delay: 0 },
+  { dx: -6, dy: -16, rot: 40, delay: 40 },
+  { dx: 4, dy: -18, rot: -30, delay: 80 },
+  { dx: 12, dy: -8, rot: 80, delay: 30 },
+  { dx: -10, dy: -4, rot: -50, delay: 110 },
+];
 
 const COLLABCURRENCY_URL = "https://collabcurrency.com";
 
@@ -179,6 +193,15 @@ export default function MapPage() {
   const [isZoomingActive, setIsZoomingActive] = useState(false);
   const [autzenOKey, setAutzenOKey] = useState<number | null>(null);
   const [puddlesHovered, setPuddlesHovered] = useState(false);
+  // Separate from puddlesHovered: z-index isn't animatable, so dropping him
+  // behind the tree the instant the mouse leaves would make him vanish
+  // mid-animation instead of visibly walking back into hiding. This stays
+  // true until the return transition below has actually finished playing.
+  const [puddlesAboveTree, setPuddlesAboveTree] = useState(false);
+  const puddlesLeaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Bumped on every reveal so the leaf-scatter burst below remounts (and its
+  // CSS animation restarts) each time he jumps out, not just the first.
+  const [puddlesRevealKey, setPuddlesRevealKey] = useState(0);
 
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
@@ -532,32 +555,87 @@ export default function MapPage() {
               height: PUDDLES_ZONE_SIZE,
               transform: "translate(-50%, -50%)",
             }}
-            onMouseEnter={() => setPuddlesHovered(true)}
-            onMouseLeave={() => setPuddlesHovered(false)}
+            onMouseEnter={() => {
+              if (puddlesLeaveTimeoutRef.current) clearTimeout(puddlesLeaveTimeoutRef.current);
+              setPuddlesAboveTree(true);
+              setPuddlesHovered(true);
+              setPuddlesRevealKey((k) => k + 1);
+            }}
+            onMouseLeave={() => {
+              setPuddlesHovered(false);
+              puddlesLeaveTimeoutRef.current = setTimeout(() => setPuddlesAboveTree(false), 700);
+            }}
           />
 
+          {/* Leaf-scatter burst — plays once per reveal, keyed so it remounts
+              (and its CSS animation restarts) every time he jumps out. */}
+          {puddlesHovered && (
+            <div
+              key={puddlesRevealKey}
+              className="absolute z-[23] pointer-events-none"
+              style={{
+                left: `${(PUDDLES_HIDE_X / IMAGE_WIDTH) * 100}%`,
+                top: `${(PUDDLES_HIDE_Y / IMAGE_HEIGHT) * 100}%`,
+                transform: "translate(-50%, -100%)",
+              }}
+            >
+              {PUDDLES_LEAVES.map((leaf, i) => (
+                <span
+                  key={i}
+                  className="absolute animate-leaf-scatter"
+                  style={{
+                    fontSize: 7,
+                    left: 0,
+                    top: 0,
+                    ["--leaf-dx" as string]: `${leaf.dx}px`,
+                    ["--leaf-dy" as string]: `${leaf.dy}px`,
+                    ["--leaf-rot" as string]: `${leaf.rot}deg`,
+                    animationDelay: `${leaf.delay}ms`,
+                  }}
+                >
+                  🍃
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Puddles himself — rests fully hidden under the tree cutout patch
-              below (z-21) and slides out to its left on hover. No opacity or
-              clip-path trick needed: the opaque patch does the occluding as
-              he moves out from under it, so the reveal grows naturally from
-              the left as he emerges. */}
+              (z-21) below at rest. On hover he steps above it (z-22) and
+              leans out to PUDDLES_REVEAL_X/Y with a right-to-left clip-path
+              wipe — the z-index step means he doesn't need to physically
+              clear the patch's edge to become visible, so this small lean
+              stays clear of the surrounding street geometry (lampposts, the
+              building wall) regardless of exactly how far he leans. */}
           <div
-            className="absolute z-20 pointer-events-none"
+            className="absolute pointer-events-none"
             style={{
               left: `${((puddlesHovered ? PUDDLES_REVEAL_X : PUDDLES_HIDE_X) / IMAGE_WIDTH) * 100}%`,
-              top: `${(PUDDLES_HIDE_Y / IMAGE_HEIGHT) * 100}%`,
+              top: `${((puddlesHovered ? PUDDLES_REVEAL_Y : PUDDLES_HIDE_Y) / IMAGE_HEIGHT) * 100}%`,
               width: `${(PUDDLES_WIDTH_UNITS / IMAGE_WIDTH) * 100}%`,
               transform: "translate(-50%, -100%)",
-              transition: "left 700ms ease",
+              zIndex: puddlesAboveTree ? 22 : 20,
+              transition: "left 700ms ease, top 700ms ease",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/puddles.png"
-              alt=""
-              style={{ width: "100%", height: "auto", display: "block" }}
-              draggable={false}
-            />
+            <div
+              style={{
+                clipPath: puddlesHovered ? "inset(0 0 0 0%)" : "inset(0 0 0 100%)",
+                transition: "clip-path 700ms ease",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/puddles.png"
+                alt=""
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  filter: "blur(0.15px)",
+                }}
+                draggable={false}
+              />
+            </div>
           </div>
 
           {/* Foreground tree cutout — cloned from the map art and layered above
@@ -568,10 +646,10 @@ export default function MapPage() {
             alt=""
             className="absolute z-[21] pointer-events-none select-none"
             style={{
-              left: `${(1045 / IMAGE_WIDTH) * 100}%`,
-              top: `${(485 / IMAGE_HEIGHT) * 100}%`,
-              width: `${(90 / IMAGE_WIDTH) * 100}%`,
-              height: `${(140 / IMAGE_HEIGHT) * 100}%`,
+              left: `${(1050 / IMAGE_WIDTH) * 100}%`,
+              top: `${(495 / IMAGE_HEIGHT) * 100}%`,
+              width: `${(70 / IMAGE_WIDTH) * 100}%`,
+              height: `${(155 / IMAGE_HEIGHT) * 100}%`,
             }}
             draggable={false}
           />
@@ -633,13 +711,13 @@ export default function MapPage() {
       </div>
 
       {/* Mobile fallback */}
-      <div className="md:hidden flex flex-col items-center justify-center w-screen h-screen bg-[#0a0a0a] px-6 text-center gap-3">
+      <div className="md:hidden flex flex-col items-center justify-center w-screen h-screen bg-black px-6 text-center gap-3">
         <span className="text-6xl">🍜</span>
         <h1 className="font-sans text-xl font-bold mt-2" style={{ color: "#ffffff" }}>Campus Map</h1>
         <p className="text-sm" style={{ color: "#9ca3af" }}>Best experienced on desktop</p>
         <Link
           href="/leaderboard"
-          className="mt-4 px-6 py-2.5 rounded-full font-sans font-semibold text-white text-sm"
+          className="mt-4 px-6 py-2.5 rounded-full font-sans font-semibold text-[#fff] text-sm"
           style={{ backgroundImage: "linear-gradient(180deg, #4CAF50 0%, #2d8a30 100%)" }}
         >
           Enter Dashboard
@@ -676,7 +754,7 @@ export default function MapPage() {
             <p className="text-sm mt-4" style={{ color: "#d1d5db" }}>{comingSoonZone.description}</p>
             <Link
               href="/leaderboard"
-              className="mt-6 inline-flex w-full items-center justify-center px-4 py-2.5 rounded-lg font-sans font-semibold text-white text-sm"
+              className="mt-6 inline-flex w-full items-center justify-center px-4 py-2.5 rounded-lg font-sans font-semibold text-[#fff] text-sm"
               style={{ backgroundImage: "linear-gradient(180deg, #4CAF50 0%, #2d8a30 100%)" }}
             >
               Enter Dashboard →

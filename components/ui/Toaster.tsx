@@ -27,8 +27,8 @@ export function Toaster() {
             className={cn(
               "flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium animate-in slide-in-from-right-5",
               t.type === "success"
-                ? "bg-primary text-white"
-                : "bg-danger text-white"
+                ? "bg-primary text-[#fff]"
+                : "bg-danger text-[#fff]"
             )}
           >
             {t.type === "success" ? (

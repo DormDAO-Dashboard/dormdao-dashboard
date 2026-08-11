@@ -386,7 +386,7 @@ export function ProposalCard({
                 <button
                   type="submit"
                   disabled={executing}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 dark:bg-purple-900/30 border border-purple-600 dark:border-purple-800/50 text-white dark:text-purple-300 hover:bg-purple-700 dark:hover:bg-purple-900/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 dark:bg-purple-900/30 border border-purple-600 dark:border-purple-800/50 text-[#fff] dark:text-purple-300 hover:bg-purple-700 dark:hover:bg-purple-900/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
                   {executing && <Loader2 className="w-4 h-4 animate-spin" />}
                   Confirm Execution
@@ -434,7 +434,7 @@ export function ProposalCard({
                   type="button"
                   onClick={handleDeleteConfirm}
                   disabled={deleting}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-red-600 text-[#fff] hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
                   {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
                   Delete Proposal
