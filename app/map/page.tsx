@@ -462,21 +462,16 @@ export default function MapPage() {
                   style={{ transform: showBelow ? "translate(-50%, 14px)" : "translate(-50%, calc(-100% - 14px))" }}
                 >
                   {showBelow && (
-                    <div
-                      style={{
-                        width: 0, height: 0, marginBottom: -1,
-                        borderLeft: "7px solid transparent",
-                        borderRight: "7px solid transparent",
-                        borderBottom: "9px solid #8a5a30",
-                        filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.35))",
-                      }}
-                    />
+                    <div style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.35))" }}>
+                      <div style={{ width: 0, height: 0, borderLeft: "18px solid transparent", borderRight: "18px solid transparent", borderBottom: "22px solid #8a5a30" }} />
+                      <div style={{ width: 0, height: 0, marginTop: -20, marginLeft: 5, borderLeft: "13px solid transparent", borderRight: "13px solid transparent", borderBottom: "16px solid #e6cd9a" }} />
+                    </div>
                   )}
                   <div
                     className="flex flex-col items-center gap-0.5 rounded-lg px-5 py-2"
                     style={{
                       background: "linear-gradient(180deg, #f5e6c8, #e6cd9a)",
-                      border: "2px solid #8a5a30",
+                      border: "3px solid #8a5a30",
                       boxShadow: "0 3px 10px rgba(0,0,0,0.45)",
                     }}
                   >
@@ -489,15 +484,10 @@ export default function MapPage() {
                     <span className="text-sm" style={{ color: "#7a5a34" }}>{zone.sublabel}</span>
                   </div>
                   {!showBelow && (
-                    <div
-                      style={{
-                        width: 0, height: 0, marginTop: -1,
-                        borderLeft: "7px solid transparent",
-                        borderRight: "7px solid transparent",
-                        borderTop: "9px solid #8a5a30",
-                        filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.35))",
-                      }}
-                    />
+                    <div style={{ marginTop: -3, filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.35))" }}>
+                      <div style={{ width: 0, height: 0, borderLeft: "18px solid transparent", borderRight: "18px solid transparent", borderTop: "22px solid #8a5a30" }} />
+                      <div style={{ width: 0, height: 0, marginTop: -22, marginLeft: 5, borderLeft: "13px solid transparent", borderRight: "13px solid transparent", borderTop: "16px solid #e6cd9a" }} />
+                    </div>
                   )}
                 </div>
               </div>
@@ -557,6 +547,22 @@ export default function MapPage() {
               />
             </div>
           </div>
+
+          {/* Foreground tree cutout — cloned from the map art and layered above
+              Puddles so the actual tree occludes him instead of him sitting on top */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/puddles-tree-cutout.png"
+            alt=""
+            className="absolute z-[21] pointer-events-none select-none"
+            style={{
+              left: `${(1070 / IMAGE_WIDTH) * 100}%`,
+              top: `${(565 / IMAGE_HEIGHT) * 100}%`,
+              width: `${((1125 - 1070) / IMAGE_WIDTH) * 100}%`,
+              height: `${((600 - 565) / IMAGE_HEIGHT) * 100}%`,
+            }}
+            draggable={false}
+          />
 
           {/* Ambient particles */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
