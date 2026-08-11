@@ -34,12 +34,22 @@ const BANNER_X_OVERRIDE: Partial<Record<string, number>> = {
   "dorm-builders": 10,
 };
 
-// Puddles easter egg — image-space position of the tree cluster he peeks out from
-const PUDDLES_X = 1091;
-const PUDDLES_Y = 573;
+// Puddles easter egg — hover trigger zone, centered over the pine-tree
+// cluster left of Dorm Capital. Image-space coords (fraction of
+// IMAGE_WIDTH/IMAGE_HEIGHT), like everything else positioned over the map art.
+const PUDDLES_ZONE_X = 1090;
+const PUDDLES_ZONE_Y = 555;
 const PUDDLES_ZONE_SIZE = 40; // px (screen-space, scales with map zoom since it's a child of the transformed pan layer)
-const PUDDLES_WIDTH = 28; // px, rendered width when visible
-const PUDDLES_ASPECT = 1536 / 1024; // native puddles.png height/width ratio
+
+// Puddles himself. His rendered width/positions are all expressed in the same
+// image-space units as puddles-tree-cutout.png's placement (x:1045-1135,
+// y:485-625 below), a real crop of the map art re-composited on top of him —
+// so he's sized to fit, and stays aligned at every zoom level, entirely
+// hidden under it until he slides out to the left on hover.
+const PUDDLES_WIDTH_UNITS = 45; // fits well inside the 90x140 tree patch at native aspect
+const PUDDLES_HIDE_X = 1105; // bottom-center anchor, hidden behind the pines
+const PUDDLES_HIDE_Y = 615;
+const PUDDLES_REVEAL_X = PUDDLES_HIDE_X - 95; // slides left, clear of the patch's left edge (1045)
 
 const COLLABCURRENCY_URL = "https://collabcurrency.com";
 
@@ -516,36 +526,38 @@ export default function MapPage() {
           <div
             className="absolute z-20"
             style={{
-              left: `${(PUDDLES_X / IMAGE_WIDTH) * 100}%`,
-              top: `${(PUDDLES_Y / IMAGE_HEIGHT) * 100}%`,
+              left: `${(PUDDLES_ZONE_X / IMAGE_WIDTH) * 100}%`,
+              top: `${(PUDDLES_ZONE_Y / IMAGE_HEIGHT) * 100}%`,
               width: PUDDLES_ZONE_SIZE,
               height: PUDDLES_ZONE_SIZE,
               transform: "translate(-50%, -50%)",
             }}
             onMouseEnter={() => setPuddlesHovered(true)}
             onMouseLeave={() => setPuddlesHovered(false)}
+          />
+
+          {/* Puddles himself — rests fully hidden under the tree cutout patch
+              below (z-21) and slides out to its left on hover. No opacity or
+              clip-path trick needed: the opaque patch does the occluding as
+              he moves out from under it, so the reveal grows naturally from
+              the left as he emerges. */}
+          <div
+            className="absolute z-20 pointer-events-none"
+            style={{
+              left: `${((puddlesHovered ? PUDDLES_REVEAL_X : PUDDLES_HIDE_X) / IMAGE_WIDTH) * 100}%`,
+              top: `${(PUDDLES_HIDE_Y / IMAGE_HEIGHT) * 100}%`,
+              width: `${(PUDDLES_WIDTH_UNITS / IMAGE_WIDTH) * 100}%`,
+              transform: "translate(-50%, -100%)",
+              transition: "left 700ms ease",
+            }}
           >
-            <div
-              className="absolute left-1/2 bottom-1/2 overflow-hidden pointer-events-none"
-              style={{
-                width: PUDDLES_WIDTH,
-                height: PUDDLES_WIDTH * PUDDLES_ASPECT * 0.55,
-                transform: "translateX(-50%)",
-                opacity: puddlesHovered ? 1 : 0,
-                clipPath: puddlesHovered ? "inset(0 0 0 0%)" : "inset(0 0 0 100%)",
-                transition: puddlesHovered
-                  ? "opacity 300ms ease, clip-path 300ms ease"
-                  : "opacity 200ms ease, clip-path 200ms ease",
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/puddles.png"
-                alt=""
-                style={{ width: PUDDLES_WIDTH, height: "auto", display: "block" }}
-                draggable={false}
-              />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/puddles.png"
+              alt=""
+              style={{ width: "100%", height: "auto", display: "block" }}
+              draggable={false}
+            />
           </div>
 
           {/* Foreground tree cutout — cloned from the map art and layered above
@@ -556,10 +568,10 @@ export default function MapPage() {
             alt=""
             className="absolute z-[21] pointer-events-none select-none"
             style={{
-              left: `${(1070 / IMAGE_WIDTH) * 100}%`,
-              top: `${(565 / IMAGE_HEIGHT) * 100}%`,
-              width: `${((1125 - 1070) / IMAGE_WIDTH) * 100}%`,
-              height: `${((600 - 565) / IMAGE_HEIGHT) * 100}%`,
+              left: `${(1045 / IMAGE_WIDTH) * 100}%`,
+              top: `${(485 / IMAGE_HEIGHT) * 100}%`,
+              width: `${(90 / IMAGE_WIDTH) * 100}%`,
+              height: `${(140 / IMAGE_HEIGHT) * 100}%`,
             }}
             draggable={false}
           />
