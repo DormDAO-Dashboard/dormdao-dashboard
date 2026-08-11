@@ -253,9 +253,3 @@ html.light ::-webkit-scrollbar-thumb { background: #d4d4d8; }
   100% { transform: translateY(-60px); opacity: 0; }
 }
 .animate-autzen-o-float { animation: autzen-o-float 1.5s ease-out forwards; }
-
-@keyframes puddles-bob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-8px); }
-}
-.animate-puddles-bob { animation: puddles-bob 1s ease-in-out infinite; }

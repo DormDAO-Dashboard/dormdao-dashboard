@@ -530,7 +530,6 @@ export default function MapPage() {
               <img
                 src="/puddles.png"
                 alt=""
-                className={puddlesHovered ? "animate-puddles-bob" : ""}
                 style={{ width: PUDDLES_WIDTH, height: "auto", display: "block" }}
                 draggable={false}
               />
