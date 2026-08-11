@@ -458,22 +458,47 @@ export default function MapPage() {
                 }}
               >
                 <div
-                  className="flex flex-col items-center gap-0.5 rounded-full px-6 py-2.5"
-                  style={{
-                    background: "rgba(10, 20, 10, 0.92)",
-                    border: `2px solid ${zone.color}`,
-                    boxShadow: `0 0 24px rgba(${hexToRgb(zone.color)}, 0.6), inset 0 1px 0 rgba(255,255,255,0.1)`,
-                    transform: showBelow ? "translate(-50%, 20px)" : "translate(-50%, calc(-100% - 20px))",
-                  }}
+                  className="flex flex-col items-center"
+                  style={{ transform: showBelow ? "translate(-50%, 14px)" : "translate(-50%, calc(-100% - 14px))" }}
                 >
-                  <span
-                    className="font-sans text-base font-bold flex items-center gap-1.5"
-                    style={{ color: "#ffffff", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
+                  {showBelow && (
+                    <div
+                      style={{
+                        width: 0, height: 0, marginBottom: -1,
+                        borderLeft: "7px solid transparent",
+                        borderRight: "7px solid transparent",
+                        borderBottom: "9px solid #8a5a30",
+                        filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.35))",
+                      }}
+                    />
+                  )}
+                  <div
+                    className="flex flex-col items-center gap-0.5 rounded-lg px-5 py-2"
+                    style={{
+                      background: "linear-gradient(180deg, #f5e6c8, #e6cd9a)",
+                      border: "2px solid #8a5a30",
+                      boxShadow: "0 3px 10px rgba(0,0,0,0.45)",
+                    }}
                   >
-                    <span style={{ color: zone.color }}>◆</span>
-                    {zone.label}
-                  </span>
-                  <span className="text-sm" style={{ color: "#d1d5db" }}>{zone.sublabel}</span>
+                    <span
+                      className="font-sans text-base font-bold tracking-wide"
+                      style={{ color: "#4a2f16" }}
+                    >
+                      {zone.label}
+                    </span>
+                    <span className="text-sm" style={{ color: "#7a5a34" }}>{zone.sublabel}</span>
+                  </div>
+                  {!showBelow && (
+                    <div
+                      style={{
+                        width: 0, height: 0, marginTop: -1,
+                        borderLeft: "7px solid transparent",
+                        borderRight: "7px solid transparent",
+                        borderTop: "9px solid #8a5a30",
+                        filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.35))",
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             );
