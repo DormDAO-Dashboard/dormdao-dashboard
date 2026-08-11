@@ -25,11 +25,20 @@ const DRAG_THRESHOLD = 5; // px of mouse movement before a mousedown counts as a
 // center (irregular footprints skew the average) — nudge banners right.
 const BANNER_X_OFFSET = 112; // image-space px
 
+// Per-zone fine-tuning on top of BANNER_X_OFFSET — the uniform offset gets
+// most zones close, but each polygon's shape skews the vertex-average
+// centroid differently, so a few need an extra nudge.
+const BANNER_X_OVERRIDE: Partial<Record<string, number>> = {
+  "dorm-capital": 32,
+  "dorm-catalyst": -34,
+  "dorm-builders": 10,
+};
+
 // Puddles easter egg — image-space position of the tree cluster he peeks out from
-const PUDDLES_X = 630;
-const PUDDLES_Y = 790;
+const PUDDLES_X = 1091;
+const PUDDLES_Y = 573;
 const PUDDLES_ZONE_SIZE = 40; // px (screen-space, scales with map zoom since it's a child of the transformed pan layer)
-const PUDDLES_WIDTH = 80; // px, rendered width when visible
+const PUDDLES_WIDTH = 28; // px, rendered width when visible
 const PUDDLES_ASPECT = 1536 / 1024; // native puddles.png height/width ratio
 
 const COLLABCURRENCY_URL = "https://collabcurrency.com";
@@ -443,7 +452,10 @@ export default function MapPage() {
               <div
                 key={zone.id}
                 className="absolute z-20 pointer-events-none animate-banner-fade-in animate-banner-bob-slow"
-                style={{ left: `${((c.x + BANNER_X_OFFSET) / IMAGE_WIDTH) * 100}%`, top: `${(c.y / IMAGE_HEIGHT) * 100}%` }}
+                style={{
+                  left: `${((c.x + BANNER_X_OFFSET + (BANNER_X_OVERRIDE[zone.id] ?? 0)) / IMAGE_WIDTH) * 100}%`,
+                  top: `${(c.y / IMAGE_HEIGHT) * 100}%`,
+                }}
               >
                 <div
                   className="flex flex-col items-center gap-0.5 rounded-full px-6 py-2.5"
@@ -508,7 +520,10 @@ export default function MapPage() {
                 height: PUDDLES_WIDTH * PUDDLES_ASPECT * 0.55,
                 transform: "translateX(-50%)",
                 opacity: puddlesHovered ? 1 : 0,
-                transition: puddlesHovered ? "opacity 300ms ease" : "opacity 200ms ease",
+                clipPath: puddlesHovered ? "inset(0 0 0 0%)" : "inset(0 0 0 100%)",
+                transition: puddlesHovered
+                  ? "opacity 300ms ease, clip-path 300ms ease"
+                  : "opacity 200ms ease, clip-path 200ms ease",
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
