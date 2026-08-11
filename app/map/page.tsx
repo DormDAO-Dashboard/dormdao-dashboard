@@ -516,11 +516,8 @@ export default function MapPage() {
               }}
             >
               <div className="animate-autzen-o-float">
-                <svg width={80} height={80} viewBox="0 0 80 80">
-                  <circle cx={40} cy={40} r={28} fill="none" stroke="#154733" strokeWidth={18} />
-                  <circle cx={40} cy={40} r={37} fill="none" stroke="#FEE123" strokeWidth={3} />
-                  <circle cx={40} cy={40} r={19} fill="none" stroke="#FEE123" strokeWidth={3} />
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/oregon-o.png" alt="" width={80} height={68} draggable={false} />
               </div>
             </div>
           )}
