@@ -17,7 +17,6 @@ const IMAGE_HEIGHT = 1312;
 const PAN_ZONE = 80;   // px from screen edge that triggers panning
 const PAN_SPEED = 3;   // px per frame
 
-const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2.5;
 const ZOOM_STEP = 0.1;
 const DRAG_THRESHOLD = 5; // px of mouse movement before a mousedown counts as a drag, not a click
@@ -180,6 +179,10 @@ export default function MapPage() {
   const aspect = IMAGE_WIDTH / IMAGE_HEIGHT;
   const displayWidth = Math.max(viewport.w * 1.08, viewport.h * 1.08 * aspect);
   const displayHeight = displayWidth / aspect;
+  // Furthest zoom-out allowed: the point where the image's top/bottom edges
+  // exactly reach the viewport edges (the image is much wider than it is
+  // tall relative to the screen, so height is always the binding constraint).
+  const minZoom = Math.min(1, viewport.h / displayHeight);
 
   // Pan bounds at a given zoom level. Below 1:1 viewport coverage, the image
   // is centered (can't fill the viewport) instead of pinned to an edge.
@@ -241,7 +244,7 @@ export default function MapPage() {
 
       setView((prev) => {
         const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
-        const newZoom = clamp(Math.round((prev.zoom + delta) * 10) / 10, MIN_ZOOM, MAX_ZOOM);
+        const newZoom = clamp(Math.round((prev.zoom + delta) * 10) / 10, minZoom, MAX_ZOOM);
         if (newZoom === prev.zoom) return prev;
         const localX = (cursorX - prev.x) / prev.zoom;
         const localY = (cursorY - prev.y) / prev.zoom;
@@ -514,21 +517,6 @@ export default function MapPage() {
               />
             </div>
           </div>
-
-          {/* DormDAO ramen logo overlay */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.jpg"
-            alt="DormDAO"
-            className="absolute z-20 object-cover pointer-events-none select-none"
-            style={{
-              left: `${(2964 / IMAGE_WIDTH) * 100}%`,
-              top: `${(1018 / IMAGE_HEIGHT) * 100}%`,
-              width: `${((3075 - 2964) / IMAGE_WIDTH) * 100}%`,
-              height: `${((1125 - 1018) / IMAGE_HEIGHT) * 100}%`,
-            }}
-            draggable={false}
-          />
 
           {/* Ambient particles */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
