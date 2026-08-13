@@ -6,6 +6,7 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { VideoModal } from "@/components/VideoModal";
 import campusMapSrc from "@/public/campus-map.png";
+import puddlesTreeCutoutSrc from "@/public/puddles-tree-cutout.png";
 import { SHOWCASE_COLORS } from "@/lib/showcaseColors";
 
 // Native pixel dimensions of public/campus-map.png — the SVG overlay's
@@ -639,11 +640,12 @@ export default function MapPage() {
           </div>
 
           {/* Foreground tree cutout — cloned from the map art and layered above
-              Puddles so the actual tree occludes him instead of him sitting on top */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/puddles-tree-cutout.png"
-            alt=""
+              Puddles so the actual tree occludes him instead of him sitting on
+              top. Routed through next/image at the same quality={90} as the
+              main map (below) so it gets identical re-encoding — otherwise
+              this raw crop reads visibly sharper than the compressed map
+              around it. */}
+          <div
             className="absolute z-[21] pointer-events-none select-none"
             style={{
               left: `${(1050 / IMAGE_WIDTH) * 100}%`,
@@ -651,8 +653,16 @@ export default function MapPage() {
               width: `${(70 / IMAGE_WIDTH) * 100}%`,
               height: `${(155 / IMAGE_HEIGHT) * 100}%`,
             }}
-            draggable={false}
-          />
+          >
+            <Image
+              src={puddlesTreeCutoutSrc}
+              alt=""
+              fill
+              quality={90}
+              className="object-cover"
+              draggable={false}
+            />
+          </div>
 
           {/* Ambient particles */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
