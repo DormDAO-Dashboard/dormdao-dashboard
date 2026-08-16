@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { getMembers, saveMembers, Member } from "@/lib/members-store";
@@ -68,10 +69,13 @@ export async function POST(req: NextRequest) {
   if (added.length > 0) await saveMembers([...existing, ...added]);
 
   if (body.sendOnboardingEmails) {
-    for (const m of added) {
-      if (m.email && m.school) {
-        sendInviteEmail({ to: m.email, name: m.name, school: m.school, walletAddress: m.walletAddress || undefined }).catch(console.error);
-      }
+    const toEmail = added.filter((m) => m.email && m.school);
+    if (toEmail.length > 0) {
+      after(async () => {
+        for (const m of toEmail) {
+          await sendInviteEmail({ to: m.email, name: m.name, school: m.school!, walletAddress: m.walletAddress || undefined }).catch(console.error);
+        }
+      });
     }
   }
 

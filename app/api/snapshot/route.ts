@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
       if (warnProposals && warnProposals.length > 0) {
         for (const proposal of warnProposals) {
           await supabase.from("proposals").update({ deadline_warning_sent: true }).eq("id", proposal.id);
-          send12HourWarningEmail(proposal as Proposal).catch(console.error);
+          await send12HourWarningEmail(proposal as Proposal).catch(console.error);
         }
         console.log(`[snapshot] sent 12h warning for ${warnProposals.length} proposals`);
       }
@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
             .update({ status: resolvedStatus })
             .eq("id", proposal.id);
           const resolved = { ...proposal, status: resolvedStatus } as Proposal;
-          sendProposalResultEmail(resolved).catch(console.error);
+          await sendProposalResultEmail(resolved).catch(console.error);
 
           // Repost passed school proposals to Main DAO as a new proposal.
           // Guard against Main DAO proposals reposting themselves.

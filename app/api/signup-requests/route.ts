@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { getMembers } from "@/lib/members-store";
@@ -86,8 +87,10 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  notifyAdmins(name.trim(), email.trim(), school.trim(), wallet_address?.trim() || null, message?.trim() || null)
-    .catch(console.error);
+  after(async () => {
+    await notifyAdmins(name.trim(), email.trim(), school.trim(), wallet_address?.trim() || null, message?.trim() || null)
+      .catch(console.error);
+  });
 
   return NextResponse.json({ success: true }, { status: 201 });
 }
@@ -145,19 +148,23 @@ export async function PATCH(req: NextRequest) {
 
   const apiKey = process.env.RESEND_API_KEY;
   if (apiKey && body.action === "approve") {
-    sendInviteEmail({ to: request.email, name: request.name, school: request.school, walletAddress: request.wallet_address || undefined }).catch(console.error);
+    after(async () => {
+      await sendInviteEmail({ to: request.email, name: request.name, school: request.school, walletAddress: request.wallet_address || undefined }).catch(console.error);
+    });
   }
   if (apiKey && body.action === "reject") {
-    const resend = new Resend(apiKey);
-    resend.emails.send({
-      from: FROM_ADDRESS,
-      to: request.email,
-      subject: "Your DormDAO access request",
-      html: `<div style="font-family:sans-serif;max-width:480px">
-        <p style="font-size:15px">Hi ${escapeHtml(request.name)},</p>
-        <p style="font-size:14px;color:#444">Your DormDAO request was not approved at this time. Contact your chapter lead for more information.</p>
-      </div>`,
-    }).catch(console.error);
+    after(async () => {
+      const resend = new Resend(apiKey);
+      await resend.emails.send({
+        from: FROM_ADDRESS,
+        to: request.email,
+        subject: "Your DormDAO access request",
+        html: `<div style="font-family:sans-serif;max-width:480px">
+          <p style="font-size:15px">Hi ${escapeHtml(request.name)},</p>
+          <p style="font-size:14px;color:#444">Your DormDAO request was not approved at this time. Contact your chapter lead for more information.</p>
+        </div>`,
+      }).catch(console.error);
+    });
   }
 
   return NextResponse.json({ success: true, status });

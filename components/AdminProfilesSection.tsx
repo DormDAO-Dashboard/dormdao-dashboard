@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Pencil, X, Loader2, AlertCircle } from "lucide-react";
+import { MailPlus, Pencil, X, Loader2, AlertCircle } from "lucide-react";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 
 interface AdminProfile {
@@ -37,6 +37,26 @@ export function AdminProfilesSection({
   const [draft, setDraft] = useState<Draft>({ name: "", email: "", walletAddress: "", school: "", votingUnits: 10 });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [onboardTarget, setOnboardTarget] = useState<{ memberId: string; name: string; email: string | null } | null>(null);
+  const [onboardSending, setOnboardSending] = useState(false);
+  const [onboardError, setOnboardError] = useState<string | null>(null);
+
+  async function handleSendOnboarding() {
+    if (!onboardTarget) return;
+    setOnboardSending(true);
+    setOnboardError(null);
+    try {
+      const res = await fetch(`/api/admin/members/${onboardTarget.memberId}/onboarding-email`, { method: "POST" });
+      const data = await res.json() as { success?: boolean; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to send email");
+      setOnboardTarget(null);
+    } catch (err) {
+      setOnboardError((err as Error).message);
+    } finally {
+      setOnboardSending(false);
+    }
+  }
 
   function openEditEnvAdmin() {
     setEditingEnvAdmin(true);
@@ -173,9 +193,14 @@ export function AdminProfilesSection({
                 </td>
                 <td className="px-5 py-3 text-right">
                   {envAdmin.memberId && (
-                    <button onClick={openEditEnvAdmin} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
-                      <Pencil className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => { setOnboardTarget({ memberId: envAdmin.memberId!, name: envAdminName, email: envAdmin.email || null }); setOnboardError(null); }} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Send onboarding email">
+                        <MailPlus className="w-4 h-4" />
+                      </button>
+                      <button onClick={openEditEnvAdmin} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>
@@ -189,9 +214,16 @@ export function AdminProfilesSection({
                     {da.walletAddress ? `${da.walletAddress.slice(0, 6)}…${da.walletAddress.slice(-4)}` : "—"}
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <button onClick={() => openEdit(da)} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
-                      <Pencil className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      {da.memberId && (
+                        <button onClick={() => { setOnboardTarget({ memberId: da.memberId!, name: da.display_name || "this admin", email: da.email }); setOnboardError(null); }} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Send onboarding email">
+                          <MailPlus className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button onClick={() => openEdit(da)} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -259,6 +291,35 @@ export function AdminProfilesSection({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {onboardTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !onboardSending && setOnboardTarget(null)} />
+          <div className="relative w-full max-w-sm bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Send Onboarding Email</h3>
+              <button onClick={() => setOnboardTarget(null)} disabled={onboardSending} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-400">
+              Send the onboarding email to <span className="text-gray-900 dark:text-white font-medium">{onboardTarget.name}</span>
+              {onboardTarget.email ? <> at <span className="text-gray-700 dark:text-gray-300">{onboardTarget.email}</span></> : null}?
+            </p>
+            {onboardError && (
+              <div className="mt-3 flex items-start gap-2 text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                {onboardError}
+              </div>
+            )}
+            <div className="flex gap-3 pt-5">
+              <button type="button" onClick={() => setOnboardTarget(null)} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors disabled:opacity-40">Cancel</button>
+              <button type="button" onClick={handleSendOnboarding} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+                {onboardSending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Send
+              </button>
+            </div>
           </div>
         </div>
       )}
