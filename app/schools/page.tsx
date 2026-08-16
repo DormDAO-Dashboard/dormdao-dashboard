@@ -8,7 +8,9 @@ export default async function SchoolsPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">School Portfolios</h1>
-        <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">All {schools.length} DormDAO member universities</p>
+        <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">
+          {schools.length > 0 ? `All ${schools.length} DormDAO member universities` : "Live data temporarily unavailable"}
+        </p>
       </div>
       <SchoolsClient initialSchools={schools} />
     </div>

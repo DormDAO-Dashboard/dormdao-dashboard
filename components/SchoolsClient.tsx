@@ -145,7 +145,13 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {filtered.length === 0 && initialSchools.length === 0 && (
+        <div className="text-center py-16 text-gray-700 dark:text-gray-400">
+          Live data temporarily unavailable. Check back soon.
+        </div>
+      )}
+
+      {filtered.length === 0 && initialSchools.length > 0 && (
         <div className="text-center py-16 text-gray-700 dark:text-gray-400">
           No schools match &quot;{query}&quot;
         </div>

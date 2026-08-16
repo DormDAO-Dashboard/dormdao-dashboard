@@ -375,6 +375,11 @@ export function LeaderboardClient({
 
   const activeSeason = SEASONS.find(s => s.key === season)!;
 
+  // Current-season data (and All-Time, which shares the same source tab) is
+  // always expected to be populated — an empty result means the upstream
+  // sheet returned invalid data, not that data hasn't been added yet.
+  const liveDataUnavailable = season === "2025-2026" && activeSchools.length === 0;
+
   const syncedAgo = Math.round((Date.now() - new Date(fetchedAt).getTime()) / 60000);
   const syncLabel = syncedAgo < 1 ? "just now" : `${syncedAgo}m ago`;
 
@@ -423,7 +428,13 @@ export function LeaderboardClient({
             </>
           }
         >
-          <QuarterlyTable schools={schools} userSlug={userSlug} />
+          {schools.length > 0 ? (
+            <QuarterlyTable schools={schools} userSlug={userSlug} />
+          ) : (
+            <div className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs px-4">
+              Live data temporarily unavailable. Check back soon.
+            </div>
+          )}
         </Panel>
 
         {/* ── Middle: Current Season ────────────────────────── */}
@@ -458,6 +469,10 @@ export function LeaderboardClient({
         >
           {activeSchools.length > 0 ? (
             <SeasonTable schools={activeSchools} userSlug={userSlug} />
+          ) : liveDataUnavailable ? (
+            <div className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs px-4">
+              Live data temporarily unavailable. Check back soon.
+            </div>
           ) : (
             <div className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs">
               Historical data for {activeSeason.label} coming soon.
@@ -479,7 +494,9 @@ export function LeaderboardClient({
           {sinceInceptionSchools.length > 0 ? (
             <AllTimeTable schools={sinceInceptionSchools} userSlug={userSlug} />
           ) : (
-            <div className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs">No data</div>
+            <div className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs px-4">
+              {liveDataUnavailable ? "Live data temporarily unavailable. Check back soon." : "No data"}
+            </div>
           )}
         </Panel>
 

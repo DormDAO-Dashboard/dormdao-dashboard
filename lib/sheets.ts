@@ -156,6 +156,27 @@ function parseSinceInception(data: string[][]): LeaderboardEntry[] {
   return parseLeaderboardSection(data, "Member School Leaderboard (Since Inception)");
 }
 
+// Build historical-season rows from a standings tab. `nameToDisplay` (from the
+// current-season leaderboard, if available) fills in slug/nav/pctDeployed
+// fallbacks; pass an empty map when the current season has no data yet.
+function buildHistoricalRows(data: string[][], nameToDisplay: Map<string, SchoolRow>): SchoolRow[] {
+  const entries = parseHistoricalLeaderboard(data);
+  return entries.map((e) => {
+    const displayName = tabToDisplayName(e.name);
+    const existing = nameToDisplay.get(displayName.toLowerCase());
+    return {
+      rank: e.rank,
+      name: displayName,
+      slug: existing?.slug ?? slugify(displayName),
+      nav: e.nav || existing?.nav || 0,
+      usdReturn: e.usdReturn,
+      ethReturn: e.ethReturn,
+      avgEntryFdv: e.avgEntryFdv,
+      pctDeployed: e.pctDeployed || existing?.pctDeployed || 0,
+    };
+  }).sort((a, b) => a.rank - b.rank);
+}
+
 function parseHistoricalLeaderboard(data: string[][]): LeaderboardEntry[] {
   // Historical tabs use "Member School Leaderboard" without a year suffix,
   // or fall back to the first leaderboard-like section found.
@@ -554,8 +575,12 @@ export async function fetchSheetsData(): Promise<{
     }
   }
 
+  // Historical seasons live on their own tabs, independent of the current-season
+  // LEADERBOARD tab, so parse them regardless of whether the current season is broken.
   if (leaderboardEntries.length === 0) {
-    return { schools: [], sinceInceptionSchools: [], schools2425: [], schools2324: [], daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt: new Date().toISOString() };
+    const schools2425 = buildHistoricalRows(data2425, new Map());
+    const schools2324 = buildHistoricalRows(data2324, new Map());
+    return { schools: [], sinceInceptionSchools: [], schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt: new Date().toISOString() };
   }
 
   // 2. Fetch holdings for each school in parallel
@@ -614,26 +639,8 @@ export async function fetchSheetsData(): Promise<{
   }).sort((a, b) => a.rank - b.rank);
 
   // 5. Parse historical year leaderboards
-  function buildHistoricalRows(data: string[][]): SchoolRow[] {
-    const entries = parseHistoricalLeaderboard(data);
-    return entries.map((e) => {
-      const displayName = tabToDisplayName(e.name);
-      const existing = nameToDisplay.get(displayName.toLowerCase());
-      return {
-        rank: e.rank,
-        name: displayName,
-        slug: existing?.slug ?? slugify(displayName),
-        nav: e.nav,
-        usdReturn: e.usdReturn,
-        ethReturn: e.ethReturn,
-        avgEntryFdv: e.avgEntryFdv,
-        pctDeployed: e.pctDeployed,
-      };
-    }).sort((a, b) => a.rank - b.rank);
-  }
-
-  const schools2425 = buildHistoricalRows(data2425);
-  const schools2324 = buildHistoricalRows(data2324);
+  const schools2425 = buildHistoricalRows(data2425, nameToDisplay);
+  const schools2324 = buildHistoricalRows(data2324, nameToDisplay);
 
   return { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt: new Date().toISOString() };
 }
