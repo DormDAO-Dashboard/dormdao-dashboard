@@ -84,6 +84,8 @@ export default async function AdminMembersPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
+  const envAdminMember = allMembers.find((m) => m.email.toLowerCase() === (admin.email ?? "").toLowerCase());
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -99,7 +101,8 @@ export default async function AdminMembersPage() {
           votingUnits: admin.votingUnits,
           email: admin.email ?? "",
           wallet: admin.wallet ?? "",
-          memberId: allMembers.find((m) => m.email.toLowerCase() === (admin.email ?? "").toLowerCase())?.id ?? null,
+          memberId: envAdminMember?.id ?? null,
+          school: envAdminMember?.school ?? null,
         }}
         initialDormAdmins={dormAdminsWithEmail}
       />

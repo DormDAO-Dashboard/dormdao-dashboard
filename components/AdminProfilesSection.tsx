@@ -27,13 +27,14 @@ export function AdminProfilesSection({
   envAdmin,
   initialDormAdmins,
 }: {
-  envAdmin: { name: string; votingUnits: number; email: string; wallet: string; memberId: string | null };
+  envAdmin: { name: string; votingUnits: number; email: string; wallet: string; memberId: string | null; school: string | null };
   initialDormAdmins: AdminProfile[];
 }) {
   const [dormAdmins, setDormAdmins] = useState<AdminProfile[]>(initialDormAdmins);
   const [editTarget, setEditTarget] = useState<AdminProfile | null>(null);
   const [editingEnvAdmin, setEditingEnvAdmin] = useState(false);
   const [envAdminName, setEnvAdminName] = useState(envAdmin.name);
+  const [envAdminSchool, setEnvAdminSchool] = useState(envAdmin.school);
   const [draft, setDraft] = useState<Draft>({ name: "", email: "", walletAddress: "", school: "", votingUnits: 10 });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export function AdminProfilesSection({
       name: envAdminName,
       email: envAdmin.email,
       walletAddress: envAdmin.wallet,
-      school: "",
+      school: envAdminSchool ?? "",
       votingUnits: envAdmin.votingUnits,
     });
     setError(null);
@@ -95,12 +96,14 @@ export function AdminProfilesSection({
             name: draft.name || undefined,
             email: draft.email || undefined,
             walletAddress: draft.walletAddress || undefined,
+            school: draft.school || null,
             votingUnits: draft.votingUnits,
           }),
         });
         const data = await res.json() as { error?: string };
         if (!res.ok) throw new Error(data.error ?? "Failed to update");
         setEnvAdminName(draft.name || envAdminName);
+        setEnvAdminSchool(draft.school || null);
         setEditingEnvAdmin(false);
         return;
       }
@@ -185,7 +188,7 @@ export function AdminProfilesSection({
             <tbody>
               <tr className="border-b border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors">
                 <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{envAdminName}</td>
-                <td className="px-5 py-3 text-gray-700 dark:text-gray-400 text-xs">—</td>
+                <td className="px-5 py-3 text-gray-700 dark:text-gray-400 text-xs">{envAdminSchool ? schoolDisplayName(envAdminSchool) : "—"}</td>
                 <td className="px-5 py-3 text-right font-mono text-primary">{envAdmin.votingUnits}</td>
                 <td className="px-5 py-3 text-gray-700 dark:text-gray-400">{envAdmin.email || "—"}</td>
                 <td className="px-5 py-3 font-mono text-gray-700 dark:text-gray-400 text-xs">
