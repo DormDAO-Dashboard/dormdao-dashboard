@@ -147,8 +147,16 @@ function parseLeaderboardSection(data: string[][], sectionMarker: string): Leade
   return entries;
 }
 
+// No longer active member schools — excluded from the current-season
+// leaderboard (and therefore /schools and the Leaderboard's current-season
+// panels), but intentionally still included via parseSinceInception /
+// parseHistoricalLeaderboard so their past performance keeps showing on
+// historical leaderboard panels.
+const INACTIVE_CURRENT_SCHOOLS = new Set(["uva", "imperial"]);
+
 function parseLeaderboard(data: string[][]): LeaderboardEntry[] {
-  return parseLeaderboardSection(data, "Member School Leaderboard (2025-2026)");
+  return parseLeaderboardSection(data, "Member School Leaderboard (2025-2026)")
+    .filter((e) => !INACTIVE_CURRENT_SCHOOLS.has(e.name.trim().toLowerCase()));
 }
 
 function parseSinceInception(data: string[][]): LeaderboardEntry[] {

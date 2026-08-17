@@ -1,8 +1,13 @@
+// Currently active member schools. UVA and Imperial are no longer active
+// members — removed here so they drop out of signup/admin school pickers and
+// the /schools roster — but they're intentionally kept in SCHOOL_DISPLAY_NAMES
+// / SCHOOL_DOMAINS below, and in lib/sheets.ts historical-season parsing, so
+// their past performance still renders on historical leaderboard panels.
 export const SCHOOL_NAMES = [
   "Berkeley", "Boston College", "Cambridge", "Columbia", "Cornell",
-  "Dartmouth", "Imperial", "Michigan", "NYU", "Oregon",
+  "Dartmouth", "Michigan", "NYU", "Oregon",
   "Penn", "Purdue", "St. Andrews", "Texas", "USC",
-  "UVA", "Vanderbilt", "Villanova", "Waterloo",
+  "Vanderbilt", "Villanova", "Waterloo",
 ] as const;
 
 export type SchoolName = (typeof SCHOOL_NAMES)[number];
