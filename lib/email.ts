@@ -190,32 +190,40 @@ export async function getSchoolRecipients(schoolSlug: string): Promise<Recipient
   return recipients;
 }
 
+// ── Resend response checking ──────────────────────────────────────────────────
+// The Resend SDK does NOT throw on API-level rejections (invalid recipient,
+// unverified domain, sandbox restrictions, etc.) — it resolves with
+// { data: null, error: {...} } instead. Every call site must check this, or a
+// rejected send is indistinguishable from a successful one and fails silently.
+function assertResendOk(result: { error: { message: string } | null }): void {
+  if (result.error) throw new Error(`Resend: ${result.error.message}`);
+}
+
 // ── Batch send helper ─────────────────────────────────────────────────────────
 
 async function batchSend(
   recipients: Recipient[],
   buildEmail: (r: Recipient) => { subject: string; html: string },
 ): Promise<void> {
+  if (!recipients.length) return;
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey || !recipients.length) return;
+  if (!apiKey) throw new Error("RESEND_API_KEY is not set");
   const resend = new Resend(apiKey);
   for (let i = 0; i < recipients.length; i += 50) {
     const slice = recipients.slice(i, i + 50);
-    await resend.batch.send(
+    const result = await resend.batch.send(
       slice.map((r) => {
         const { subject, html } = buildEmail(r);
         return { from: FROM_ADDRESS, to: r.email, subject, html };
       }),
     );
+    assertResendOk(result);
   }
 }
 
 // ── Generic push-triggered blast (existing, preserved) ───────────────────────
 
 export async function sendEmailNotifications(payload: PushPayload): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return;
-
   const service = createServiceClient();
   const { data: profiles } = await service
     .from("profiles")
@@ -233,8 +241,10 @@ export async function sendEmailNotifications(payload: PushPayload): Promise<void
     .map((u) => u.email as string);
   if (!emails.length) return;
 
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error("RESEND_API_KEY is not set");
   const resend = new Resend(apiKey);
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: FROM_ADDRESS,
     to: emails,
     subject: payload.title,
@@ -244,6 +254,7 @@ export async function sendEmailNotifications(payload: PushPayload): Promise<void
       <p style="margin-top:24px;font-size:11px;color:#999">You're receiving this because you enabled email alerts on DormDAO.</p>
     </div>`,
   });
+  assertResendOk(result);
 }
 
 // ── School-scoped emails ──────────────────────────────────────────────────────
@@ -256,7 +267,7 @@ export async function sendInviteEmail(opts: {
   walletAddress?: string;
 }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return;
+  if (!apiKey) throw new Error("RESEND_API_KEY is not set");
   const resend = new Resend(apiKey);
   const schoolLabel = schoolDisplayName(opts.school);
   const walletLast4 = opts.walletAddress ? opts.walletAddress.slice(-4) : null;
@@ -271,7 +282,7 @@ export async function sendInviteEmail(opts: {
   // the {{walletLast4}} token would leave a broken-looking "ending in ." line.
   const walletLine = walletLast4 ? renderMessageHtml(t.walletLine, vars) : "";
 
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: FROM_ADDRESS,
     to: opts.to,
     subject: fillTemplate(t.subject, vars),
@@ -282,6 +293,7 @@ export async function sendInviteEmail(opts: {
       cta: { label: "Join DormDAO →", url: `${APP_URL}/login` },
     }),
   });
+  assertResendOk(result);
 }
 
 export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {

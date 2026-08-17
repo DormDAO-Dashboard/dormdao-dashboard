@@ -24,13 +24,18 @@ export async function POST(
   if (!member.email) return NextResponse.json({ error: "Member has no email on file" }, { status: 400 });
   if (!member.school) return NextResponse.json({ error: "Member has no school on file" }, { status: 400 });
 
-  await sendInviteEmail({
-    to: member.email,
-    name: member.name,
-    school: member.school,
-    invitedBy: user.user_metadata?.full_name as string | undefined,
-    walletAddress: member.walletAddress || undefined,
-  });
+  try {
+    await sendInviteEmail({
+      to: member.email,
+      name: member.name,
+      school: member.school,
+      invitedBy: user.user_metadata?.full_name as string | undefined,
+      walletAddress: member.walletAddress || undefined,
+    });
+  } catch (err) {
+    console.error("[onboarding-email] send failed:", err);
+    return NextResponse.json({ error: (err as Error).message }, { status: 502 });
+  }
 
   return NextResponse.json({ success: true });
 }

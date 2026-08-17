@@ -25,7 +25,7 @@ async function notifyAdmins(name: string, email: string, school: string, wallet:
   const safeMessage = message ? escapeHtml(message) : null;
 
   const resend = new Resend(apiKey);
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: FROM_ADDRESS,
     to: recipients,
     subject: `New DormDAO signup request — ${name} (${school})`,
@@ -45,6 +45,7 @@ async function notifyAdmins(name: string, email: string, school: string, wallet:
       </div>
     `,
   });
+  if (result.error) throw new Error(`Resend: ${result.error.message}`);
 }
 
 export async function POST(req: NextRequest) {
@@ -155,7 +156,7 @@ export async function PATCH(req: NextRequest) {
   if (apiKey && body.action === "reject") {
     after(async () => {
       const resend = new Resend(apiKey);
-      await resend.emails.send({
+      const result = await resend.emails.send({
         from: FROM_ADDRESS,
         to: request.email,
         subject: "Your DormDAO access request",
@@ -163,7 +164,8 @@ export async function PATCH(req: NextRequest) {
           <p style="font-size:15px">Hi ${escapeHtml(request.name)},</p>
           <p style="font-size:14px;color:#444">Your DormDAO request was not approved at this time. Contact your chapter lead for more information.</p>
         </div>`,
-      }).catch(console.error);
+      });
+      if (result.error) console.error(`Resend: ${result.error.message}`);
     });
   }
 
