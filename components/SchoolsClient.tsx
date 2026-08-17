@@ -11,9 +11,11 @@ import { Search } from "lucide-react";
 
 type SortKey = "rank" | "nav" | "usdReturn" | "ethReturn";
 
-function cardClasses(rank: number, isYours: boolean): string {
+function cardClasses(rank: number, isYours: boolean, statsUnavailable: boolean): string {
   const border = isYours
     ? "border-primary/50"
+    : statsUnavailable
+    ? "border-gray-200 dark:border-gray-800"
     : rank === 1
     ? "border-yellow-400/40 dark:border-yellow-400/20"
     : rank === 2
@@ -23,7 +25,9 @@ function cardClasses(rank: number, isYours: boolean): string {
     : "border-gray-200 dark:border-gray-800";
 
   const bg =
-    rank === 1
+    statsUnavailable
+      ? "bg-white dark:bg-gray-900/30"
+      : rank === 1
       ? "bg-yellow-400/20 dark:bg-yellow-400/15"
       : rank === 2
       ? "bg-gray-300/30 dark:bg-gray-400/15"
@@ -34,43 +38,45 @@ function cardClasses(rank: number, isYours: boolean): string {
   return cn("relative rounded-lg border p-4 hover:border-primary/40 transition-all cursor-pointer h-full", border, bg);
 }
 
-function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
+function SchoolCard({ s, isYours, statsUnavailable }: { s: SchoolRow; isYours?: boolean; statsUnavailable?: boolean }) {
   return (
     <Link href={`/schools/${s.slug}`}>
-      <div className={cardClasses(s.rank, !!isYours)}>
+      <div className={cardClasses(s.rank, !!isYours, !!statsUnavailable)}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <SchoolLogo name={s.name} size={32} />
             <div>
-              <div className="text-[11px] font-mono text-gray-700 dark:text-gray-400 mb-0.5">#{s.rank}</div>
+              {!statsUnavailable && (
+                <div className="text-[11px] font-mono text-gray-700 dark:text-gray-400 mb-0.5">#{s.rank}</div>
+              )}
               <h2 className="text-gray-900 dark:text-white font-semibold">{schoolDisplayName(s.name)}</h2>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-gray-700 dark:text-gray-400 font-medium">ETH ROI</span>
-            <span className={`text-sm font-mono font-bold ${s.ethReturn >= 0 ? "text-primary" : "text-danger"}`}>
-              {formatPct(s.ethReturn)}
+            <span className={cn("text-sm font-mono font-bold", statsUnavailable ? "text-gray-700 dark:text-gray-400" : s.ethReturn >= 0 ? "text-primary" : "text-danger")}>
+              {statsUnavailable ? "—" : formatPct(s.ethReturn)}
             </span>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
             <div className="text-gray-700 dark:text-gray-400">NAV</div>
-            <div className="font-mono text-gray-700 dark:text-gray-200">{formatNav(s.nav)}</div>
+            <div className="font-mono text-gray-700 dark:text-gray-200">{statsUnavailable ? "—" : formatNav(s.nav)}</div>
           </div>
           <div>
             <div className="text-gray-700 dark:text-gray-400">USD Return</div>
-            <div className={`font-mono ${s.usdReturn >= 0 ? "text-primary" : "text-danger"}`}>
-              {formatPct(s.usdReturn)}
+            <div className={cn("font-mono", statsUnavailable ? "text-gray-700 dark:text-gray-400" : s.usdReturn >= 0 ? "text-primary" : "text-danger")}>
+              {statsUnavailable ? "—" : formatPct(s.usdReturn)}
             </div>
           </div>
           <div>
             <div className="text-gray-700 dark:text-gray-400">Avg Entry FDV</div>
-            <div className="font-mono text-gray-700 dark:text-gray-400">{formatUSD(s.avgEntryFdv, true)}</div>
+            <div className="font-mono text-gray-700 dark:text-gray-400">{statsUnavailable ? "—" : formatUSD(s.avgEntryFdv, true)}</div>
           </div>
           <div>
             <div className="text-gray-700 dark:text-gray-400">Deployed</div>
-            <div className="font-mono text-gray-700 dark:text-gray-400">{formatPct(s.pctDeployed)}</div>
+            <div className="font-mono text-gray-700 dark:text-gray-400">{statsUnavailable ? "—" : formatPct(s.pctDeployed)}</div>
           </div>
         </div>
         {isYours && (
@@ -83,7 +89,7 @@ function SchoolCard({ s, isYours }: { s: SchoolRow; isYours?: boolean }) {
   );
 }
 
-export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] }) {
+export function SchoolsClient({ initialSchools, statsUnavailable }: { initialSchools: SchoolRow[]; statsUnavailable?: boolean }) {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortKey>("rank");
   const [userSlug, setUserSlug] = useState<string | null>(null);
@@ -127,31 +133,33 @@ export function SchoolsClient({ initialSchools }: { initialSchools: SchoolRow[] 
             className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50"
           />
         </div>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as SortKey)}
-          className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
-        >
-          <option value="rank">Sort: Rank</option>
-          <option value="nav">Sort: NAV</option>
-          <option value="usdReturn">Sort: USD Return</option>
-          <option value="ethReturn">Sort: ETH Return</option>
-        </select>
+        {!statsUnavailable && (
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortKey)}
+            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
+          >
+            <option value="rank">Sort: Rank</option>
+            <option value="nav">Sort: NAV</option>
+            <option value="usdReturn">Sort: USD Return</option>
+            <option value="ethReturn">Sort: ETH Return</option>
+          </select>
+        )}
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filtered.map((s) => (
-          <SchoolCard key={s.slug} s={s} isYours={userSlug === s.slug} />
-        ))}
-      </div>
-
-      {filtered.length === 0 && initialSchools.length === 0 && (
-        <div className="text-center py-16 text-gray-700 dark:text-gray-400">
-          Live data temporarily unavailable. Check back soon.
+      {statsUnavailable && (
+        <div className="mb-4 text-xs text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2">
+          Live portfolio stats are temporarily unavailable — showing member schools only.
         </div>
       )}
 
-      {filtered.length === 0 && initialSchools.length > 0 && (
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {filtered.map((s) => (
+          <SchoolCard key={s.slug} s={s} isYours={userSlug === s.slug} statsUnavailable={statsUnavailable} />
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
         <div className="text-center py-16 text-gray-700 dark:text-gray-400">
           No schools match &quot;{query}&quot;
         </div>
