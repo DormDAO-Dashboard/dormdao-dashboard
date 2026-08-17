@@ -6,7 +6,6 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { VideoModal } from "@/components/VideoModal";
 import campusMapSrc from "@/public/campus-map.png";
-import puddlesTreeCutoutSrc from "@/public/puddles-tree-cutout.png";
 import { SHOWCASE_COLORS } from "@/lib/showcaseColors";
 
 // Native pixel dimensions of public/campus-map.png — the SVG overlay's
@@ -42,13 +41,10 @@ const PUDDLES_ZONE_X = 1087;
 const PUDDLES_ZONE_Y = 593;
 const PUDDLES_ZONE_SIZE = 40; // px (screen-space, scales with map zoom since it's a child of the transformed pan layer)
 
-// Puddles himself. His rendered width/position are expressed in the same
-// image-space units as puddles-tree-cutout.png's placement (x:1050-1120,
-// y:495-650 below), a real crop of that one tree re-composited on top of
-// him — so he's sized to fit, and stays aligned at every zoom level, entirely
-// hidden under it at rest. On hover he steps above the tree patch's z-index
-// and leans out to PUDDLES_REVEAL_X/Y with a right-to-left clip-path wipe
-// (see the JSX below), instead of popping straight up in place.
+// Puddles himself, in the same image-space coords as everything else. At
+// rest a clip-path collapses him to zero width (see the JSX below) — no
+// occlusion image needed, he's just not visible. On hover he leans out to
+// PUDDLES_REVEAL_X/Y with a right-to-left clip-path wipe.
 const PUDDLES_WIDTH_UNITS = 18; // duck-sized against the map's buildings, not building-sized
 const PUDDLES_HIDE_X = 1084;
 const PUDDLES_HIDE_Y = 595;
@@ -194,15 +190,14 @@ export default function MapPage() {
   const [isZoomingActive, setIsZoomingActive] = useState(false);
   const [autzenOKey, setAutzenOKey] = useState<number | null>(null);
   const [puddlesHovered, setPuddlesHovered] = useState(false);
-  // Separate from puddlesHovered: z-index isn't animatable, so dropping him
-  // behind the tree the instant the mouse leaves would make him vanish
-  // mid-animation instead of visibly walking back into hiding. This stays
-  // true until the return transition below has actually finished playing.
-  const [puddlesAboveTree, setPuddlesAboveTree] = useState(false);
-  const puddlesLeaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Bumped on every reveal so the leaf-scatter burst below remounts (and its
   // CSS animation restarts) each time he jumps out, not just the first.
   const [puddlesRevealKey, setPuddlesRevealKey] = useState(0);
+  // Background music — starts muted (autoplay requires it) via the YouTube
+  // iframe API; the toggle button below unmutes it on a real click, which
+  // browsers allow since playback already started.
+  const [musicOn, setMusicOn] = useState(false);
+  const musicIframeRef = useRef<HTMLIFrameElement>(null);
 
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
@@ -347,6 +342,15 @@ export default function MapPage() {
     setIsDragging(false);
   }
 
+  function toggleMusic() {
+    const next = !musicOn;
+    setMusicOn(next);
+    musicIframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func: next ? "unMute" : "mute", args: [] }),
+      "*"
+    );
+  }
+
   function handleZoneEnter(zone: Zone) {
     setHoveredZone(zone);
     if (zone.id === "autzen") setAutzenOKey((k) => (k ?? 0) + 1);
@@ -395,16 +399,38 @@ export default function MapPage() {
             <span className="text-lg">🍜</span>
             <span className="font-sans text-sm" style={{ color: "#ffffff" }}>Campus Map</span>
           </div>
-          <Link
-            href="/leaderboard"
-            className="text-xs transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
-            style={{ color: "#d1d5db" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#d1d5db")}
-          >
-            ← Back to Dashboard
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleMusic}
+              className="text-xs transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+              style={{ color: musicOn ? "#4ade80" : "#d1d5db" }}
+              title={musicOn ? "Mute music" : "Play music"}
+            >
+              {musicOn ? "🔊" : "🔇"}
+            </button>
+            <Link
+              href="/leaderboard"
+              className="text-xs transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+              style={{ color: "#d1d5db" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#d1d5db")}
+            >
+              ← Back to Dashboard
+            </Link>
+          </div>
         </div>
+
+        {/* Background music — YouTube's own embedded player, streamed
+            directly from YouTube (not a hosted audio file). Starts muted
+            because autoplay-with-sound is blocked by browsers; the toggle
+            button above unmutes it on click. */}
+        <iframe
+          ref={musicIframeRef}
+          src="https://www.youtube-nocookie.com/embed/YR7ESYHCEok?autoplay=1&mute=1&loop=1&playlist=YR7ESYHCEok&controls=0&enablejsapi=1&modestbranding=1&rel=0"
+          allow="autoplay"
+          style={{ position: "fixed", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+          aria-hidden="true"
+        />
 
         {/* Pannable + zoomable image and zones */}
         <div
@@ -557,15 +583,10 @@ export default function MapPage() {
               transform: "translate(-50%, -50%)",
             }}
             onMouseEnter={() => {
-              if (puddlesLeaveTimeoutRef.current) clearTimeout(puddlesLeaveTimeoutRef.current);
-              setPuddlesAboveTree(true);
               setPuddlesHovered(true);
               setPuddlesRevealKey((k) => k + 1);
             }}
-            onMouseLeave={() => {
-              setPuddlesHovered(false);
-              puddlesLeaveTimeoutRef.current = setTimeout(() => setPuddlesAboveTree(false), 700);
-            }}
+            onMouseLeave={() => setPuddlesHovered(false)}
           />
 
           {/* Leaf-scatter burst — plays once per reveal, keyed so it remounts
@@ -600,21 +621,17 @@ export default function MapPage() {
             </div>
           )}
 
-          {/* Puddles himself — rests fully hidden under the tree cutout patch
-              (z-21) below at rest. On hover he steps above it (z-22) and
-              leans out to PUDDLES_REVEAL_X/Y with a right-to-left clip-path
-              wipe — the z-index step means he doesn't need to physically
-              clear the patch's edge to become visible, so this small lean
-              stays clear of the surrounding street geometry (lampposts, the
-              building wall) regardless of exactly how far he leans. */}
+          {/* Puddles himself — no occlusion trick needed. At rest the inner
+              clip-path collapses him to zero width (fully invisible on his
+              own, nothing to hide him behind), and on hover it wipes open
+              right-to-left while he leans out to PUDDLES_REVEAL_X/Y. */}
           <div
-            className="absolute pointer-events-none"
+            className="absolute z-20 pointer-events-none"
             style={{
               left: `${((puddlesHovered ? PUDDLES_REVEAL_X : PUDDLES_HIDE_X) / IMAGE_WIDTH) * 100}%`,
               top: `${((puddlesHovered ? PUDDLES_REVEAL_Y : PUDDLES_HIDE_Y) / IMAGE_HEIGHT) * 100}%`,
               width: `${(PUDDLES_WIDTH_UNITS / IMAGE_WIDTH) * 100}%`,
               transform: "translate(-50%, -100%)",
-              zIndex: puddlesAboveTree ? 22 : 20,
               transition: "left 700ms ease, top 700ms ease",
             }}
           >
@@ -637,31 +654,6 @@ export default function MapPage() {
                 draggable={false}
               />
             </div>
-          </div>
-
-          {/* Foreground tree cutout — cloned from the map art and layered above
-              Puddles so the actual tree occludes him instead of him sitting on
-              top. Routed through next/image at the same quality={90} as the
-              main map (below) so it gets identical re-encoding — otherwise
-              this raw crop reads visibly sharper than the compressed map
-              around it. */}
-          <div
-            className="absolute z-[21] pointer-events-none select-none"
-            style={{
-              left: `${(1050 / IMAGE_WIDTH) * 100}%`,
-              top: `${(495 / IMAGE_HEIGHT) * 100}%`,
-              width: `${(70 / IMAGE_WIDTH) * 100}%`,
-              height: `${(155 / IMAGE_HEIGHT) * 100}%`,
-            }}
-          >
-            <Image
-              src={puddlesTreeCutoutSrc}
-              alt=""
-              fill
-              quality={90}
-              className="object-cover"
-              draggable={false}
-            />
           </div>
 
           {/* Ambient particles */}
