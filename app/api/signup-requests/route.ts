@@ -5,9 +5,7 @@ import { isAdminUser } from "@/lib/admin-config";
 import { getMembers } from "@/lib/members-store";
 import { SCHOOL_NAMES } from "@/lib/schoolData";
 import { Resend } from "resend";
-import { sendInviteEmail, escapeHtml } from "@/lib/email";
-
-const FROM_ADDRESS = "onboarding@resend.dev";
+import { sendInviteEmail, escapeHtml, FROM_ADDRESS } from "@/lib/email";
 
 async function notifyAdmins(name: string, email: string, school: string, wallet: string | null, message: string | null) {
   const apiKey = process.env.RESEND_API_KEY;

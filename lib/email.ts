@@ -9,7 +9,9 @@ import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
 import { fillTemplate } from "@/lib/email-templates";
 import { getEffectiveTemplateFields } from "@/lib/email-templates-store";
 
-const FROM_ADDRESS = "onboarding@resend.dev";
+// dormdao.io is verified in Resend — sending from the shared onboarding@resend.dev
+// sandbox address only works when the recipient is the Resend account's own email.
+export const FROM_ADDRESS = "onboarding@dormdao.io";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
 
 // Escapes user-controlled strings before they're interpolated into email HTML.
