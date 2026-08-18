@@ -37,8 +37,13 @@ const BANNER_X_OVERRIDE: Partial<Record<string, number>> = {
 
 // Extra screen-space nudge on top of the above (fixed px, unaffected by
 // zoom) — applied uniformly to every banner, up and to the left.
-const BANNER_EXTRA_UP_PX = 15;
+const BANNER_EXTRA_UP_PX = 20;
 const BANNER_EXTRA_LEFT_PX = 20;
+
+// Per-zone extra upward nudge on top of BANNER_EXTRA_UP_PX.
+const BANNER_Y_OVERRIDE: Partial<Record<string, number>> = {
+  "dorm-catalyst": 8,
+};
 
 // Puddles easter egg — hover trigger zone, centered over the single pine
 // tree left of Dorm Capital he hides behind. Image-space coords (fraction of
@@ -512,9 +517,12 @@ export default function MapPage() {
                 <div
                   className="flex flex-col items-center"
                   style={{
-                    transform: showBelow
-                      ? `translate(calc(-50% - ${BANNER_EXTRA_LEFT_PX}px), ${14 - BANNER_EXTRA_UP_PX}px)`
-                      : `translate(calc(-50% - ${BANNER_EXTRA_LEFT_PX}px), calc(-100% - ${14 + BANNER_EXTRA_UP_PX}px))`,
+                    transform: (() => {
+                      const up = BANNER_EXTRA_UP_PX + (BANNER_Y_OVERRIDE[zone.id] ?? 0);
+                      return showBelow
+                        ? `translate(calc(-50% - ${BANNER_EXTRA_LEFT_PX}px), ${14 - up}px)`
+                        : `translate(calc(-50% - ${BANNER_EXTRA_LEFT_PX}px), calc(-100% - ${14 + up}px))`;
+                    })(),
                   }}
                 >
                   {showBelow && (
