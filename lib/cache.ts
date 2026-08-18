@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { fetchSheetsData, SchoolRowWithHoldings } from "./sheets";
 import { TICKER_TO_COINGECKO } from "./tokens";
 import { SchoolRow } from "./types";
+import { isDataCollectionPaused, getSchoolsSnapshot, saveSchoolsSnapshot } from "./data-collection-store";
 
 export type { SchoolRowWithHoldings } from "./sheets";
 
@@ -27,7 +28,7 @@ export interface PricesCache {
   fetchedAt: string;
 }
 
-export const getSchoolsData = unstable_cache(
+const getSchoolsDataLive = unstable_cache(
   async (): Promise<SchoolsCache> => {
     const { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt } = await fetchSheetsData();
     const len = schools.length || 1;
@@ -51,11 +52,33 @@ export const getSchoolsData = unstable_cache(
       Object.entries(tokenToSchoolSets).map(([ticker, set]) => [ticker, [...set]])
     );
 
-    return { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
+    const result: SchoolsCache = { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
+    await saveSchoolsSnapshot(result);
+    return result;
   },
   ["schools-data-v23"],
   { revalidate: 300 }
 );
+
+function emptySchoolsCache(): SchoolsCache {
+  return {
+    schools: [], sinceInceptionSchools: [], schools2425: [], schools2324: [],
+    daoReturnEth2526: null, daoReturnEthAllTime: null, daoReturnEth2425: null, daoReturnEth2324: null,
+    fetchedAt: new Date().toISOString(),
+    totalNAV: 0, avgUsdReturn: 0, avgEthReturn: 0, avgDeployed: 0, tokenToSchools: {},
+  };
+}
+
+// Admin "Pause Data Collection" switch (Admin Settings) routes through here —
+// while paused this must NEVER call fetchSheetsData(), full stop, so the
+// check happens before getSchoolsDataLive is even reached.
+export async function getSchoolsData(): Promise<SchoolsCache> {
+  if (await isDataCollectionPaused()) {
+    const snapshot = await getSchoolsSnapshot<SchoolsCache>();
+    return snapshot ?? emptySchoolsCache();
+  }
+  return getSchoolsDataLive();
+}
 
 const BATCH_SIZE = 20;
 

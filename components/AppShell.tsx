@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Trophy, GraduationCap, BarChart2, DollarSign, Activity,
   Newspaper, MessagesSquare, BookOpen, Info, Sun, Moon, User,
-  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users, Map, Landmark, Mail,
+  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users, Map, Landmark, Mail, Settings,
 } from "lucide-react";
 import { slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
@@ -53,6 +53,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/main-dao": "Main DAO",
   "/admin/members":  "Members",
   "/admin/email":    "Email Functions",
+  "/admin/settings": "Admin Settings",
 };
 
 function deriveTitle(pathname: string): string {
@@ -289,6 +290,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 { href: "/admin/main-dao", label: "Main DAO",       icon: Landmark },
                 { href: "/admin/members",  label: "Members",        icon: Users },
                 { href: "/admin/email",    label: "Email Functions", icon: Mail },
+                { href: "/admin/settings", label: "Admin Settings", icon: Settings },
               ].map(({ href, label, icon: SubIcon }) => {
                 const subActive = matchesRoute(href, pathname);
                 return (
@@ -536,6 +538,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     )}>
                     <Mail className="w-5 h-5 shrink-0" />
                     <span className="text-sm font-medium">Email Functions</span>
+                  </Link>
+                  <Link href="/admin/settings" onClick={() => setShowMore(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors",
+                      matchesRoute("/admin/settings", pathname)
+                        ? "text-primary bg-primary/10"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                    )}>
+                    <Settings className="w-5 h-5 shrink-0" />
+                    <span className="text-sm font-medium">Admin Settings</span>
                   </Link>
                 </>
               )}
