@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/Toaster";
 import { PushNotificationManager } from "@/components/PushNotificationManager";
+import { BackgroundMusicPlayer } from "@/components/BackgroundMusicPlayer";
 
 export const metadata: Metadata = {
   title: "DormDAO Portfolio Dashboard",
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </AppShell>
             <Toaster />
+            <BackgroundMusicPlayer />
           </PushNotificationManager>
         </ThemeProvider>
       </body>

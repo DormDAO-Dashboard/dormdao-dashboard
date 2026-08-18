@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { VideoModal } from "@/components/VideoModal";
 import campusMapSrc from "@/public/campus-map.png";
 import { SHOWCASE_COLORS } from "@/lib/showcaseColors";
+import { isMusicEnabled, setMusicEnabled, onMusicChange } from "@/lib/mapMusic";
 
 // Native pixel dimensions of public/campus-map.png — the SVG overlay's
 // viewBox matches this exactly so zone polygons stay aligned regardless
@@ -34,6 +35,11 @@ const BANNER_X_OVERRIDE: Partial<Record<string, number>> = {
   "dorm-builders": 10,
 };
 
+// Extra screen-space nudge on top of the above (fixed px, unaffected by
+// zoom) — applied uniformly to every banner, up and to the left.
+const BANNER_EXTRA_UP_PX = 15;
+const BANNER_EXTRA_LEFT_PX = 20;
+
 // Puddles easter egg — hover trigger zone, centered over the single pine
 // tree left of Dorm Capital he hides behind. Image-space coords (fraction of
 // IMAGE_WIDTH/IMAGE_HEIGHT), like everything else positioned over the map art.
@@ -45,7 +51,7 @@ const PUDDLES_ZONE_SIZE = 40; // px (screen-space, scales with map zoom since it
 // rest a clip-path collapses him to zero width (see the JSX below) — no
 // occlusion image needed, he's just not visible. On hover he leans out to
 // PUDDLES_REVEAL_X/Y with a right-to-left clip-path wipe.
-const PUDDLES_WIDTH_UNITS = 18; // duck-sized against the map's buildings, not building-sized
+const PUDDLES_WIDTH_UNITS = 23; // 18 * 1.25 — 25% bigger, still duck-sized against the map's buildings
 const PUDDLES_HIDE_X = 1084;
 const PUDDLES_HIDE_Y = 595;
 const PUDDLES_REVEAL_X = 1075;
@@ -193,11 +199,10 @@ export default function MapPage() {
   // Bumped on every reveal so the leaf-scatter burst below remounts (and its
   // CSS animation restarts) each time he jumps out, not just the first.
   const [puddlesRevealKey, setPuddlesRevealKey] = useState(0);
-  // Background music — starts muted (autoplay requires it) via the YouTube
-  // iframe API; the toggle button below unmutes it on a real click, which
-  // browsers allow since playback already started.
+  // Mirrors the shared preference from lib/mapMusic (the actual player lives
+  // in BackgroundMusicPlayer, mounted once in the root layout) — this is
+  // just local UI state for the toggle button's icon/color.
   const [musicOn, setMusicOn] = useState(false);
-  const musicIframeRef = useRef<HTMLIFrameElement>(null);
 
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
@@ -207,6 +212,20 @@ export default function MapPage() {
 
   useEffect(() => {
     setDebugZones(new URLSearchParams(window.location.search).get("debug") === "zones");
+  }, []);
+
+  // Music: keep the toggle button's icon in sync with the shared preference,
+  // fall back to auto-starting it if the user landed here directly (not via
+  // the splash page's Enter button), and stop it on the way out so it's
+  // scoped to the map experience rather than following you to /leaderboard.
+  useEffect(() => {
+    if (!isMusicEnabled()) setMusicEnabled(true);
+    setMusicOn(isMusicEnabled());
+    const unsubscribe = onMusicChange(setMusicOn);
+    return () => {
+      unsubscribe();
+      setMusicEnabled(false);
+    };
   }, []);
 
   useEffect(() => {
@@ -343,12 +362,7 @@ export default function MapPage() {
   }
 
   function toggleMusic() {
-    const next = !musicOn;
-    setMusicOn(next);
-    musicIframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: "command", func: next ? "unMute" : "mute", args: [] }),
-      "*"
-    );
+    setMusicEnabled(!musicOn);
   }
 
   function handleZoneEnter(zone: Zone) {
@@ -390,47 +404,25 @@ export default function MapPage() {
         className="hidden md:block relative w-screen h-screen overflow-hidden bg-[#0a0a0a]"
         style={{ cursor: isDragging ? "grabbing" : "grab" }}
       >
-        {/* Top bar */}
-        <div
-          className="fixed top-0 inset-x-0 z-30 flex items-center justify-between px-4 border-b border-white/10 backdrop-blur-sm"
-          style={{ height: 44, backgroundColor: "rgba(0,0,0,0.6)" }}
+        {/* No top bar — floating controls instead so the map is fully
+            unobstructed. Music itself plays via BackgroundMusicPlayer,
+            mounted once in the root layout (persists across navigation);
+            this button just flips the shared on/off preference. */}
+        <button
+          onClick={toggleMusic}
+          className="fixed top-4 z-50 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors"
+          style={{ right: 112, backgroundColor: "rgba(0,0,0,0.6)", color: musicOn ? "#4ade80" : "#ffffff" }}
+          title={musicOn ? "Mute music" : "Play music"}
         >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🍜</span>
-            <span className="font-sans text-sm" style={{ color: "#ffffff" }}>Campus Map</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleMusic}
-              className="text-xs transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
-              style={{ color: musicOn ? "#4ade80" : "#d1d5db" }}
-              title={musicOn ? "Mute music" : "Play music"}
-            >
-              {musicOn ? "🔊" : "🔇"}
-            </button>
-            <Link
-              href="/leaderboard"
-              className="text-xs transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
-              style={{ color: "#d1d5db" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#d1d5db")}
-            >
-              ← Back to Dashboard
-            </Link>
-          </div>
-        </div>
-
-        {/* Background music — YouTube's own embedded player, streamed
-            directly from YouTube (not a hosted audio file). Starts muted
-            because autoplay-with-sound is blocked by browsers; the toggle
-            button above unmutes it on click. */}
-        <iframe
-          ref={musicIframeRef}
-          src="https://www.youtube-nocookie.com/embed/YR7ESYHCEok?autoplay=1&mute=1&loop=1&playlist=YR7ESYHCEok&controls=0&enablejsapi=1&modestbranding=1&rel=0"
-          allow="autoplay"
-          style={{ position: "fixed", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-          aria-hidden="true"
-        />
+          {musicOn ? "🔊" : "🔇"}
+        </button>
+        <Link
+          href="/leaderboard"
+          className="fixed top-4 right-4 z-50 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm text-white"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+        >
+          ← Dashboard
+        </Link>
 
         {/* Pannable + zoomable image and zones */}
         <div
@@ -519,7 +511,11 @@ export default function MapPage() {
               >
                 <div
                   className="flex flex-col items-center"
-                  style={{ transform: showBelow ? "translate(-50%, 14px)" : "translate(-50%, calc(-100% - 14px))" }}
+                  style={{
+                    transform: showBelow
+                      ? `translate(calc(-50% - ${BANNER_EXTRA_LEFT_PX}px), ${14 - BANNER_EXTRA_UP_PX}px)`
+                      : `translate(calc(-50% - ${BANNER_EXTRA_LEFT_PX}px), calc(-100% - ${14 + BANNER_EXTRA_UP_PX}px))`,
+                  }}
                 >
                   {showBelow && (
                     <div style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.35))" }}>
@@ -698,7 +694,7 @@ export default function MapPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/collabcurrency-logo.jpeg" alt="" className="w-4 h-4 rounded-full" />
           <span className="text-xs" style={{ color: "#9ca3af" }}>Powered by</span>
-          <span className="text-xs font-semibold" style={{ color: "#ffffff" }}>Collabcurrency</span>
+          <span className="text-xs font-semibold" style={{ color: "#ffffff" }}>Collab+Currency</span>
         </a>
 
         {/* Debug: coordinate tooltip that follows the cursor */}

@@ -1,5 +1,5 @@
-import Link from "next/link";
 import Image from "next/image";
+import { EnterMapButton } from "@/components/EnterMapButton";
 
 // A fresh random background per visit — this route must not be statically
 // cached at build time, or every visitor would get the same fixed image.
@@ -53,12 +53,7 @@ export default function SplashPage() {
               supporting student investment groups
             </span>
           </div>
-          <Link
-            href="/map"
-            className="flex items-center justify-center rounded-xl bg-white px-8 py-3.5 sm:px-10 sm:py-4 font-sans font-semibold text-black text-sm sm:text-lg shadow-xl transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
-          >
-            enter
-          </Link>
+          <EnterMapButton />
         </div>
       </div>
     </div>
