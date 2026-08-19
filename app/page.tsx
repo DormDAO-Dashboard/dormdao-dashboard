@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { EnterMapButton } from "@/components/EnterMapButton";
+import { ArrowUp } from "lucide-react";
 
 // A fresh random background per visit — this route must not be statically
 // cached at build time, or every visitor would get the same fixed image.
@@ -37,23 +38,37 @@ export default function SplashPage() {
             className="font-sans font-extrabold lowercase text-[#fff] text-5xl sm:text-7xl md:text-8xl"
             style={{ textShadow: "0 2px 24px rgba(0,0,0,0.55)" }}
           >
-            dorm dao
+            dorm™
           </h1>
-          <span
-            className="text-5xl sm:text-7xl md:text-8xl select-none"
+          <Image
+            src="/dd-ramen.png"
+            alt=""
+            width={2592}
+            height={1990}
+            className="h-14 sm:h-20 md:h-24 w-auto select-none"
             style={{ filter: "drop-shadow(0 2px 12px rgba(0,0,0,0.45))" }}
-          >
-            🍜
-          </span>
+          />
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch gap-2 sm:gap-3 max-w-[92vw]">
           <div className="flex items-center justify-center rounded-xl bg-black px-6 py-3.5 sm:px-8 sm:py-4 shadow-xl">
             <span className="font-sans font-semibold text-[#fff] text-sm sm:text-lg">
-              supporting student investment groups
+              a platform for college student alpha
             </span>
           </div>
           <EnterMapButton />
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-black">
+        <div className="flex items-center justify-between px-5 sm:px-8 py-4 sm:py-5">
+          <p className="font-sans text-sm sm:text-base text-white">
+            See our <span style={{ color: "#EC7A71" }}>partners</span>,{" "}
+            <span style={{ color: "#BCDF6A" }}>schools</span>, and{" "}
+            <span style={{ color: "#CC9EED" }}>members</span>.
+          </p>
+          <ArrowUp className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0" />
         </div>
       </div>
     </div>
