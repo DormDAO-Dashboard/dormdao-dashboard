@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme')||'dark';document.documentElement.className=t;}catch(e){document.documentElement.className='dark';}})();` }} />
         <link
           rel="icon"
-          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%231D9E75'/><text x='50' y='68' font-family='Arial' font-size='44' font-weight='bold' text-anchor='middle' fill='white'>DD</text></svg>"
+          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='75' font-size='68' text-anchor='middle'>%F0%9F%8D%9C</text></svg>"
         />
       </head>
       <body className="min-h-screen bg-[#0a0a0a] text-gray-700 dark:text-gray-100 antialiased overflow-x-hidden font-sans">

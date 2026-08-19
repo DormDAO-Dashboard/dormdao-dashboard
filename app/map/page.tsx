@@ -415,19 +415,12 @@ export default function MapPage() {
             this button just flips the shared on/off preference. */}
         <button
           onClick={toggleMusic}
-          className="fixed top-4 z-50 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors"
-          style={{ right: 112, backgroundColor: "rgba(0,0,0,0.6)", color: musicOn ? "#4ade80" : "#ffffff" }}
+          className="fixed top-4 right-4 z-50 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)", color: musicOn ? "#4ade80" : "#ffffff" }}
           title={musicOn ? "Mute music" : "Play music"}
         >
           {musicOn ? "🔊" : "🔇"}
         </button>
-        <Link
-          href="/leaderboard"
-          className="fixed top-4 right-4 z-50 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm text-white"
-          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-        >
-          ← Dashboard
-        </Link>
 
         {/* Pannable + zoomable image and zones */}
         <div
