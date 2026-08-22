@@ -7,8 +7,11 @@ import { KpiCard, Skeleton } from "@/components/ui/Card";
 import { SchoolTabs } from "@/components/SchoolTabs";
 import { SyncFooter } from "@/components/SyncFooter";
 import { SchoolLogo } from "@/components/SchoolLogo";
-import { SCHOOL_SOCIALS, schoolDisplayName } from "@/lib/schoolData";
+import { SCHOOL_SOCIALS, schoolDisplayName, schoolNameFromSlug } from "@/lib/schoolData";
 import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { isAdminUser } from "@/lib/admin-config";
+import { canModerate } from "@/lib/auth-utils";
 import { ArrowLeft, Globe, X, Link2, Camera, MessageSquare, Send, Code2 } from "lucide-react";
 
 function SocialLinks({ name }: { name: string }) {
@@ -45,8 +48,20 @@ function SocialLinks({ name }: { name: string }) {
 
 async function SchoolContent({ slug }: { slug: string }) {
   const { schools, fetchedAt } = await getSchoolsData();
-  const school = schools.find((s) => s.slug === slug) ?? null;
-  if (!school) notFound();
+  let school = schools.find((s) => s.slug === slug) ?? null;
+
+  if (!school) {
+    // Sheet-derived `schools` can be empty when the sheet is down and this
+    // school hasn't had any positions entered yet — that's exactly the
+    // bootstrapping case this feature exists to unblock, so fall back to a
+    // placeholder (rather than 404) whenever the slug matches a real school.
+    const name = schoolNameFromSlug(slug);
+    if (!name) notFound();
+    school = {
+      rank: 0, name, slug, nav: 0, usdReturn: 0, ethReturn: 0,
+      avgEntryFdv: 0, pctDeployed: 0, holdings: [], exitedHoldings: [], nftHoldings: [],
+    };
+  }
 
   const colors = getSchoolColors(school.slug);
   const boxBorder = accentBorderColor(colors.primary);
@@ -57,6 +72,22 @@ async function SchoolContent({ slug }: { slug: string }) {
       .filter((s) => s.slug !== slug && s.holdings?.some((oh) => oh.ticker === h.ticker))
       .map((s) => schoolDisplayName(s.name));
     if (others.length > 0) otherSchools[h.ticker] = others;
+  }
+
+  // Positions tab (adding/editing fixed position data) is only for club
+  // leadership of this school, or a DormDAO admin — same canModerate() model
+  // already used for proposal moderation.
+  let canManagePositions = false;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    if (isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) {
+      canManagePositions = true;
+    } else {
+      const service = createServiceClient();
+      const { data: profile } = await service.from("profiles").select("role, school").eq("id", user.id).single();
+      canManagePositions = canModerate(profile ?? { role: null, school: null }, school.name);
+    }
   }
 
   return (
@@ -108,7 +139,7 @@ async function SchoolContent({ slug }: { slug: string }) {
       </div>
 
       {/* Tabbed content */}
-      <SchoolTabs school={school} otherSchools={otherSchools} />
+      <SchoolTabs school={school} otherSchools={otherSchools} canManagePositions={canManagePositions} />
 
       <SyncFooter fetchedAt={fetchedAt} />
     </>

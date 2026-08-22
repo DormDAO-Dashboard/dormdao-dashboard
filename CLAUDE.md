@@ -29,12 +29,14 @@ All panels support light and dark mode. Data revalidates every 5 minutes.
 Grid of school cards. Each shows logo, name, NAV, ETH return, USD return, % deployed. Links to school detail.
 
 ### /schools/[slug] — School Detail
-Five tabs:
-1. **Portfolio** — Active holdings table (Token, Chain, Tokens held, Cost basis, Current value, Return). Sortable by all columns except Token. Also shows Portfolio Insights card with: win rate, avg position age, most valuable hold, best performer, worst performer, total cost basis. Pie chart of portfolio concentration (external labels, no legend, per director feedback). ETH rows intentionally show "—" for Cost (ETH) — the sheet has no cost-basis data for the fund's own ETH balance, since it's idle treasury rather than an acquired position.
+Tabs (Positions only shown to that school's leadership or a DormDAO admin):
+1. **Portfolio** — Active holdings table (Token, Chain, Tokens held, Cost basis, Current value, Return). Sortable by all columns except Token. Also shows Portfolio Insights card with: win rate, avg position age, most valuable hold, best performer, worst performer, total cost basis. Pie chart of portfolio concentration (external labels, no legend, per director feedback). ETH rows intentionally show "—" for Cost (ETH) — no cost-basis data for the fund's own ETH balance, since it's idle treasury rather than an acquired position.
 2. **History** — NAV over time line chart.
-3. **Members** — School member list.
-4. **Documents** — School-specific pitch decks and reports from Supabase Storage.
-5. **Forum** — Forum threads tagged to that school.
+3. **Documents** — School-specific pitch decks and reports from Supabase Storage.
+4. **Members** — School member list.
+5. **Voting** — Active investment proposal voting for this school.
+6. **Forum** — Forum threads tagged to that school.
+7. **Positions** — Add/edit/delete this school's positions table rows (see "Supabase tables" below) — the fixed inputs the internal NAV/return calculation is built from. Gated by `canModerate()` from `lib/auth-utils.ts`.
 
 ### /analytics — Analytics Dashboard
 Period selector tabs (current season / 24-25 / 23-24 / all-time). KPI cards: Total Portfolio NAV, Avg USD Return, Avg ETH Return, Avg Deployment. Portfolio NAV by School bar chart. Deployment % vs NAV scatter chart. ETH Holdings table (live USD values via CoinGecko). Recent Buys feed. Sortable School Leaderboard table with exact dollar NAV. Data revalidates every 5 minutes.
@@ -81,7 +83,7 @@ Lists all 17 member schools with logos, explains the DormDAO model (3 steps: sch
 - scripts/ — Node.js utility scripts
 
 ## Data flow
-1. Portfolio data: Google Sheets CSV → /api/sheets → parsed server-side → cached 5min
+1. Portfolio data: Google Sheets CSV → /api/sheets → parsed server-side → cached 5min. For any school with ≥1 row in the `positions` table, this is overridden entirely — that school's current-season NAV/USD-return/ETH-return/%-deployed are instead computed from `positions` + live CoinGecko prices (see `lib/positions.ts`, `lib/cache.ts`). Historical seasons (24-25, 23-24, Since Inception) and exited/NFT holdings always stay sheet-derived.
 2. Token prices: CoinGecko API → /api/prices → cached 60s in-memory
 3. Research notes: Supabase postgres → /api/notes
 4. Daily snapshots: cron-job.org → POST /api/snapshot → portfolio_snapshots table → fires push + email notifications on changes
@@ -103,6 +105,7 @@ Lists all 17 member schools with logos, explains the DormDAO model (3 steps: sch
 - forum_replies (id, created_at, thread_id, content, school, user_id, author_name, upvotes)
 - forum_thread_votes (id, thread_id, user_id)
 - push_subscriptions (id, user_id, endpoint, p256dh, auth, created_at)
+- positions (id, school, ticker, blockchain, tokens, cost_basis_eth, purchase_price_usd, investment_date, created_at, updated_at) — admin-entered fixed position data; a school with ≥1 row here gets its current-season NAV/USD-return/ETH-return/%-deployed computed internally from these + live CoinGecko prices instead of the Google Sheet (see lib/positions.ts, lib/cache.ts's applyInternallyComputedSchools). ticker "ETH" = idle treasury. Managed via the "Positions" tab on a school's page (visible to that school's leadership or a DormDAO admin, gated by canModerate()).
 
 ## Scripts
 - scripts/upload-pitches.js — bulk uploaded 422 PDFs to Supabase Storage (token-documents bucket). Idempotent, handles 3 folder naming patterns.

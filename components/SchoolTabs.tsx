@@ -15,19 +15,22 @@ import { SchoolPortfolioStats } from "@/components/SchoolPortfolioStats";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ForumClient } from "@/components/ForumClient";
 import { VotingClient } from "@/components/VotingClient";
+import { PositionsManagerSection } from "@/components/PositionsManagerSection";
 
-const TABS = ["Portfolio", "History", "Documents", "Members", "Voting", "Forum"] as const;
+const TABS = ["Portfolio", "History", "Documents", "Members", "Voting", "Forum", "Positions"] as const;
 type Tab = (typeof TABS)[number];
 
 interface Props {
   school: SchoolRowWithHoldings;
   otherSchools: Record<string, string[]>;
+  canManagePositions: boolean;
 }
 
-export function SchoolTabs({ school, otherSchools }: Props) {
+export function SchoolTabs({ school, otherSchools, canManagePositions }: Props) {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") as Tab;
-  const [tab, setTab] = useState<Tab>(TABS.includes(initialTab) ? initialTab : "Portfolio");
+  const visibleTabs: Tab[] = canManagePositions ? [...TABS] : TABS.filter((t) => t !== "Positions");
+  const [tab, setTab] = useState<Tab>(visibleTabs.includes(initialTab) ? initialTab : "Portfolio");
   const [membersCount, setMembersCount] = useState<number | null>(null);
   const colors = getSchoolColors(school.slug);
   const boxBorder = accentBorderColor(colors.primary);
@@ -47,7 +50,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       <div className="relative mb-4">
         <div className="absolute inset-y-0 right-0 w-8 pointer-events-none bg-gradient-to-l from-white dark:from-[#0a0a0a] to-transparent sm:hidden z-10" />
         <div className="flex gap-0 border-b border-gray-200 dark:border-gray-800 overflow-x-auto scrollbar-hide">
-          {TABS.map((t) => (
+          {visibleTabs.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -166,6 +169,11 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {/* Voting tab */}
       {tab === "Voting" && (
         <VotingClient slug={school.slug} schoolName={school.name} pageMode={false} />
+      )}
+
+      {/* Positions tab — only reachable at all when canManagePositions is true */}
+      {tab === "Positions" && canManagePositions && (
+        <PositionsManagerSection schoolSlug={school.slug} />
       )}
     </>
   );

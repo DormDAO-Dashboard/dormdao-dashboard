@@ -1,3 +1,5 @@
+import { slugify } from "./utils";
+
 // Currently active member schools. UVA and Imperial are no longer active
 // members — removed here so they drop out of signup/admin school pickers and
 // the /schools roster — but they're intentionally kept in SCHOOL_DISPLAY_NAMES
@@ -11,6 +13,13 @@ export const SCHOOL_NAMES = [
 ] as const;
 
 export type SchoolName = (typeof SCHOOL_NAMES)[number];
+
+// Resolves a URL slug back to the internal school name, independent of the
+// (possibly currently-broken) sheet data — used by the positions API/tab so
+// "add positions for a school the sheet doesn't currently list" still works.
+export function schoolNameFromSlug(slug: string): SchoolName | null {
+  return SCHOOL_NAMES.find((n) => slugify(n) === slug) ?? null;
+}
 
 // User-facing display names: each school's blockchain club name.
 // Keys are the internal school identifiers used for data matching, logos,

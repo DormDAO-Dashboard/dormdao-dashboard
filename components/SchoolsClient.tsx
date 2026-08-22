@@ -72,7 +72,9 @@ function SchoolCard({ s, isYours, statsUnavailable }: { s: SchoolRow; isYours?: 
           </div>
           <div>
             <div className="text-gray-700 dark:text-gray-400">Avg Entry FDV</div>
-            <div className="font-mono text-gray-700 dark:text-gray-400">{statsUnavailable ? "—" : formatUSD(s.avgEntryFdv, true)}</div>
+            <div className="font-mono text-gray-700 dark:text-gray-400">
+              {statsUnavailable || s.avgEntryFdv <= 0 ? "—" : formatUSD(s.avgEntryFdv, true)}
+            </div>
           </div>
           <div>
             <div className="text-gray-700 dark:text-gray-400">Deployed</div>

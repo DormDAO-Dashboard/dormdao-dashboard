@@ -3,6 +3,9 @@ import { fetchSheetsData, SchoolRowWithHoldings } from "./sheets";
 import { TICKER_TO_COINGECKO } from "./tokens";
 import { SchoolRow } from "./types";
 import { isDataCollectionPaused, getSchoolsSnapshot, saveSchoolsSnapshot } from "./data-collection-store";
+import { getPositionsBySchool, computeSchoolFromPositions } from "./positions";
+import { getPricesForTickers } from "./prices";
+import { getHistoricalEthPrices } from "./eth-price-history";
 
 export type { SchoolRowWithHoldings } from "./sheets";
 
@@ -28,9 +31,46 @@ export interface PricesCache {
   fetchedAt: string;
 }
 
+// Replaces (or adds) a school's current-season row with one computed purely
+// from admin-entered positions + live prices, for any school that has at
+// least one position on file — bypassing the sheet for that school entirely.
+// Schools with no positions entered yet keep whatever the sheet produced.
+async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]): Promise<SchoolRowWithHoldings[]> {
+  const positionsBySchool = await getPositionsBySchool();
+  const migratedSchools = Object.keys(positionsBySchool);
+  if (migratedSchools.length === 0) return schools;
+
+  const allTickers = new Set<string>(["ETH"]);
+  const datesNeedingHistoricalPrice = new Set<string>();
+  for (const positions of Object.values(positionsBySchool)) {
+    for (const p of positions) {
+      allTickers.add(p.ticker.toUpperCase());
+      if (p.purchase_price_usd == null && p.cost_basis_eth > 0) {
+        datesNeedingHistoricalPrice.add(p.investment_date);
+      }
+    }
+  }
+
+  const [prices, historicalEth] = await Promise.all([
+    getPricesForTickers([...allTickers]),
+    getHistoricalEthPrices([...datesNeedingHistoricalPrice]),
+  ]);
+
+  const bySchoolName = new Map(schools.map((s) => [s.name, s]));
+  for (const [schoolName, positions] of Object.entries(positionsBySchool)) {
+    bySchoolName.set(schoolName, computeSchoolFromPositions(schoolName, positions, prices, historicalEth));
+  }
+
+  const merged = [...bySchoolName.values()].sort((a, b) => b.ethReturn - a.ethReturn);
+  merged.forEach((s, i) => { s.rank = i + 1; });
+  return merged;
+}
+
 const getSchoolsDataLive = unstable_cache(
   async (): Promise<SchoolsCache> => {
-    const { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt } = await fetchSheetsData();
+    const sheetsData = await fetchSheetsData();
+    const { sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt } = sheetsData;
+    const schools = await applyInternallyComputedSchools(sheetsData.schools);
     const len = schools.length || 1;
 
     const totalNAV = schools.reduce((s, x) => s + x.nav, 0);
