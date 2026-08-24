@@ -6,6 +6,7 @@ import type { Proposal } from "@/lib/proposals";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
 import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
+import { getAdminEmails } from "@/lib/admin-config";
 import { fillTemplate } from "@/lib/email-templates";
 import { getEffectiveTemplateFields } from "@/lib/email-templates-store";
 
@@ -175,8 +176,11 @@ export async function getSchoolRecipients(schoolSlug: string): Promise<Recipient
     candidateIds.push(p.id);
   }
 
-  if (!candidateIds.length) return [];
-
+  // listUsers is needed even when candidateIds is empty, to resolve the
+  // env-configured admin(s) below (ADMIN_EMAIL/ADMIN_EMAILS) — those admins
+  // aren't necessarily reflected as a profiles.role = 'dorm_admin' row (that
+  // role can't even be granted through the admin members UI), so relying on
+  // the dorm_admin query alone would silently skip them.
   const { data: { users } } = await service.auth.admin.listUsers({ perPage: 1000 });
   const emailById = new Map(users.map((u) => [u.id, u.email ?? null]));
 
@@ -189,6 +193,15 @@ export async function getSchoolRecipients(schoolSlug: string): Promise<Recipient
     emailSeen.add(email);
     recipients.push({ email, userId: id });
   }
+
+  for (const adminEmail of getAdminEmails()) {
+    if (emailSeen.has(adminEmail)) continue;
+    const matched = users.find((u) => u.email?.toLowerCase() === adminEmail);
+    if (!matched?.email) continue; // no real auth account yet — nowhere to send/attach an unsubscribe token
+    emailSeen.add(adminEmail);
+    recipients.push({ email: matched.email, userId: matched.id });
+  }
+
   return recipients;
 }
 

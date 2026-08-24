@@ -3,7 +3,7 @@ import { fetchSheetsData, SchoolRowWithHoldings } from "./sheets";
 import { TICKER_TO_COINGECKO } from "./tokens";
 import { SchoolRow } from "./types";
 import { isDataCollectionPaused, getSchoolsSnapshot, saveSchoolsSnapshot } from "./data-collection-store";
-import { getPositionsBySchool, computeSchoolFromPositions } from "./positions";
+import { getPositionsBySchool, computeSchoolFromPositions, computeSchoolFromHoldings } from "./positions";
 import { getPricesForTickers } from "./prices";
 import { getHistoricalEthPrices } from "./eth-price-history";
 
@@ -31,14 +31,26 @@ export interface PricesCache {
   fetchedAt: string;
 }
 
-// Replaces (or adds) a school's current-season row with one computed purely
-// from admin-entered positions + live prices, for any school that has at
-// least one position on file — bypassing the sheet for that school entirely.
-// Schools with no positions entered yet keep whatever the sheet produced.
+// Two independent sources can override a school's sheet-trusted current-
+// season row, in priority order:
+//   1. Admin-entered `positions` table rows (highest priority — an explicit
+//      manual override).
+//   2. This school's own parsed holdings, when the LEADERBOARD tab's
+//      aggregate for it is broken (nav <= 0) but its own tab isn't — no
+//      reason to show a blank school when we already have its real
+//      positions, just not the sheet's own (broken) aggregate of them.
+// Schools with a healthy LEADERBOARD row and no admin override pass through
+// unchanged. Rank is always recomputed across the full merged list so
+// trusted and computed schools sort on one consistent basis.
 async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]): Promise<SchoolRowWithHoldings[]> {
   const positionsBySchool = await getPositionsBySchool();
-  const migratedSchools = Object.keys(positionsBySchool);
-  if (migratedSchools.length === 0) return schools;
+  const needsHoldingsFallback = schools.filter(
+    (s) => s.nav <= 0 && (s.holdings?.length ?? 0) > 0 && !positionsBySchool[s.name]
+  );
+
+  if (Object.keys(positionsBySchool).length === 0 && needsHoldingsFallback.length === 0) {
+    return schools;
+  }
 
   const allTickers = new Set<string>(["ETH"]);
   const datesNeedingHistoricalPrice = new Set<string>();
@@ -50,15 +62,41 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
       }
     }
   }
+  for (const school of needsHoldingsFallback) {
+    for (const h of school.holdings ?? []) {
+      allTickers.add(h.ticker.toUpperCase());
+      if (h.costBasisEth > 0) datesNeedingHistoricalPrice.add(h.investmentDate);
+    }
+  }
 
   const [prices, historicalEth] = await Promise.all([
     getPricesForTickers([...allTickers]),
     getHistoricalEthPrices([...datesNeedingHistoricalPrice]),
   ]);
 
+  // Quarterly figures come from a fixed cell in each school's own tab,
+  // independent of whichever source ends up driving NAV/return below —
+  // preserve them across the override either way.
+  const quarterlyByName = new Map(schools.map((s) => [s.name, { quarterlyUsdReturn: s.quarterlyUsdReturn, quarterlyEthReturn: s.quarterlyEthReturn }]));
+
   const bySchoolName = new Map(schools.map((s) => [s.name, s]));
+
+  for (const school of needsHoldingsFallback) {
+    bySchoolName.set(
+      school.name,
+      computeSchoolFromHoldings(school.name, school.holdings ?? [], school.exitedHoldings ?? [], school.nftHoldings ?? [], prices, historicalEth)
+    );
+  }
   for (const [schoolName, positions] of Object.entries(positionsBySchool)) {
     bySchoolName.set(schoolName, computeSchoolFromPositions(schoolName, positions, prices, historicalEth));
+  }
+
+  for (const s of bySchoolName.values()) {
+    const q = quarterlyByName.get(s.name);
+    if (q) {
+      s.quarterlyUsdReturn ??= q.quarterlyUsdReturn;
+      s.quarterlyEthReturn ??= q.quarterlyEthReturn;
+    }
   }
 
   const merged = [...bySchoolName.values()].sort((a, b) => b.ethReturn - a.ethReturn);

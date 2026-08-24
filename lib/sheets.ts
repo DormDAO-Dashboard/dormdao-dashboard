@@ -2,6 +2,7 @@ import Papa from "papaparse";
 import { SchoolRow, Holding, ExitedHolding } from "@/lib/types";
 export type { Holding, ExitedHolding } from "@/lib/types";
 import { slugify } from "@/lib/utils";
+import { SCHOOL_NAMES } from "@/lib/schoolData";
 
 const SHEET_ID = "1wA8KoPlhZ1YYv6auM5yYlzjYCBRnG9en9i_qLsrlVZs";
 
@@ -583,18 +584,18 @@ export async function fetchSheetsData(): Promise<{
     }
   }
 
-  // Historical seasons live on their own tabs, independent of the current-season
-  // LEADERBOARD tab, so parse them regardless of whether the current season is broken.
-  if (leaderboardEntries.length === 0) {
-    const schools2425 = buildHistoricalRows(data2425, new Map());
-    const schools2324 = buildHistoricalRows(data2324, new Map());
-    return { schools: [], sinceInceptionSchools: [], schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt: new Date().toISOString() };
-  }
+  // 2. Fetch every active school's own tab in parallel — NOT gated behind a
+  // valid LEADERBOARD row for that school. The LEADERBOARD tab's aggregate
+  // NAV/Return/Rank cells are computed by formulas that can break
+  // independently of the per-school tabs' own Liquid Positions data (Token,
+  // Chain, Tokens, Cost Basis, Date), which is directly entered and far more
+  // reliable. Previously a broken LEADERBOARD row meant that school's own
+  // (perfectly fine) holdings were never even fetched.
+  const leaderboardByName = new Map(leaderboardEntries.map((e) => [tabToDisplayName(e.name).toLowerCase(), e]));
 
-  // 2. Fetch holdings for each school in parallel
   const schoolsWithHoldings = await Promise.all(
-    leaderboardEntries.map(async (entry) => {
-      const tabData = await fetchSchoolTabCsv(entry.name);
+    SCHOOL_NAMES.map(async (schoolName) => {
+      const tabData = await fetchSchoolTabCsv(schoolName);
       const holdings = parseHoldings(tabData);
       const exitedHoldings = parseExitedHoldings(tabData);
       const nftHoldings = parseNftHoldings(tabData);
@@ -603,22 +604,28 @@ export async function fetchSheetsData(): Promise<{
       // Index 12 col M = spreadsheet M22 = Quarterly Sub DAO Outperformance (ETH).
       const quarterlyUsdReturn = isValue(tabData[10]?.[12]) ? parseNumber(tabData[10][12]) : 0;
       const quarterlyEthReturn = isValue(tabData[12]?.[12]) ? parseNumber(tabData[12][12]) : 0;
-      return { ...entry, holdings, exitedHoldings, nftHoldings, quarterlyUsdReturn, quarterlyEthReturn };
+      const entry = leaderboardByName.get(schoolName.toLowerCase());
+      return { schoolName, entry, holdings, exitedHoldings, nftHoldings, quarterlyUsdReturn, quarterlyEthReturn };
     })
   );
 
-  // 3. Build school rows using leaderboard values directly — no recalculation
+  // 3. Build school rows. Use the LEADERBOARD tab's own rank/NAV/return/%
+  // deployed when that school's row parsed successfully (trusted — it may
+  // reflect adjustments beyond raw position math, e.g. fees or realized
+  // gains). Otherwise leave them zeroed here; lib/cache.ts fills NAV/return/
+  // %deployed in from the holdings above + live prices as a fallback, and
+  // recomputes rank for the whole list either way.
   const schools: SchoolRowWithHoldings[] = schoolsWithHoldings.map((s) => {
-    const displayName = tabToDisplayName(s.name);
+    const displayName = s.entry ? tabToDisplayName(s.entry.name) : s.schoolName;
     return {
-      rank: s.rank,
+      rank: s.entry?.rank ?? 0,
       name: displayName,
       slug: slugify(displayName),
-      nav: s.nav,
-      usdReturn: s.usdReturn,
-      ethReturn: s.ethReturn,
-      avgEntryFdv: s.avgEntryFdv,
-      pctDeployed: s.pctDeployed,
+      nav: s.entry?.nav ?? 0,
+      usdReturn: s.entry?.usdReturn ?? 0,
+      ethReturn: s.entry?.ethReturn ?? 0,
+      avgEntryFdv: s.entry?.avgEntryFdv ?? 0,
+      pctDeployed: s.entry?.pctDeployed ?? 0,
       quarterlyUsdReturn: s.quarterlyUsdReturn,
       quarterlyEthReturn: s.quarterlyEthReturn,
       holdings: s.holdings,

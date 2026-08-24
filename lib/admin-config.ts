@@ -17,7 +17,7 @@ export function getAdminConfig(): AdminMember {
 }
 
 /** Returns the full set of admin emails (primary + ADMIN_EMAILS list). */
-function getAdminEmails(): string[] {
+export function getAdminEmails(): string[] {
   const primary = (process.env.ADMIN_EMAIL ?? "jack@dormdao.io").toLowerCase();
   const extra = (process.env.ADMIN_EMAILS ?? "")
     .split(",")
