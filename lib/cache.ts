@@ -6,6 +6,7 @@ import { isDataCollectionPaused, getSchoolsSnapshot, saveSchoolsSnapshot } from 
 import { getPositionsBySchool, computeSchoolFromPositions, computeSchoolFromHoldings } from "./positions";
 import { getPricesForTickers } from "./prices";
 import { getHistoricalEthPrices } from "./eth-price-history";
+import { SEASON_START_NAV_USD, SEASON_START_ETH_USD } from "./seasonBaseline";
 
 export type { SchoolRowWithHoldings } from "./sheets";
 
@@ -31,24 +32,45 @@ export interface PricesCache {
   fetchedAt: string;
 }
 
+// A school's USD/ETH return since each position's own purchase date
+// conflates all-time return with season return (a position bought in 2023
+// and still held would show its 2023-to-now return on the "Current Season"
+// panel). When we have a season-start NAV baseline for this school, use
+// season-to-date NAV growth instead — conceptually correct, and sidesteps
+// CoinGecko's 365-day historical-price limit for older positions entirely
+// (SEASON_START_ETH_USD was provided directly, not fetched).
+function applySeasonBaselineReturn(row: SchoolRowWithHoldings, ethPriceUsdNow: number): SchoolRowWithHoldings {
+  const baselineNavUsd = SEASON_START_NAV_USD[row.name];
+  if (baselineNavUsd == null || baselineNavUsd <= 0) return row;
+
+  const usdReturn = ((row.nav - baselineNavUsd) / baselineNavUsd) * 100;
+  const baselineNavEth = baselineNavUsd / SEASON_START_ETH_USD;
+  const currentNavEth = ethPriceUsdNow > 0 ? row.nav / ethPriceUsdNow : null;
+  const ethReturn = currentNavEth !== null ? ((currentNavEth - baselineNavEth) / baselineNavEth) * 100 : row.ethReturn;
+
+  return { ...row, usdReturn, ethReturn };
+}
+
 // Two independent sources can override a school's sheet-trusted current-
 // season row, in priority order:
 //   1. Admin-entered `positions` table rows (highest priority — an explicit
-//      manual override).
-//   2. This school's own parsed holdings, when the LEADERBOARD tab's
-//      aggregate for it is broken (nav <= 0) but its own tab isn't — no
-//      reason to show a blank school when we already have its real
-//      positions, just not the sheet's own (broken) aggregate of them.
-// Schools with a healthy LEADERBOARD row and no admin override pass through
-// unchanged. Rank is always recomputed across the full merged list so
-// trusted and computed schools sort on one consistent basis.
+//      manual override, including per-position purchase price).
+//   2. This school's own parsed holdings — NAV is always recomputed from
+//      live prices when holdings data exists (more current than whatever
+//      the sheet last synced, and robust to the LEADERBOARD tab's aggregate
+//      cells breaking), and USD/ETH return is season-baseline-derived
+//      whenever we have a baseline for that school (applySeasonBaselineReturn
+//      above), else falls back to a since-purchase calculation.
+// A school with holdings data missing entirely (fetch failure) passes
+// through with whatever the sheet produced. Rank is always recomputed
+// across the full merged list so every school sorts on one consistent basis.
 async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]): Promise<SchoolRowWithHoldings[]> {
   const positionsBySchool = await getPositionsBySchool();
-  const needsHoldingsFallback = schools.filter(
-    (s) => s.nav <= 0 && (s.holdings?.length ?? 0) > 0 && !positionsBySchool[s.name]
+  const needsComputedNav = schools.filter(
+    (s) => (s.holdings?.length ?? 0) > 0 && !positionsBySchool[s.name]
   );
 
-  if (Object.keys(positionsBySchool).length === 0 && needsHoldingsFallback.length === 0) {
+  if (Object.keys(positionsBySchool).length === 0 && needsComputedNav.length === 0) {
     return schools;
   }
 
@@ -62,10 +84,14 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
       }
     }
   }
-  for (const school of needsHoldingsFallback) {
+  for (const school of needsComputedNav) {
     for (const h of school.holdings ?? []) {
       allTickers.add(h.ticker.toUpperCase());
-      if (h.costBasisEth > 0) datesNeedingHistoricalPrice.add(h.investmentDate);
+      // Only need a per-position historical price when this school has no
+      // season baseline to fall back on instead.
+      if (h.costBasisEth > 0 && SEASON_START_NAV_USD[school.name] == null) {
+        datesNeedingHistoricalPrice.add(h.investmentDate);
+      }
     }
   }
 
@@ -73,6 +99,7 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
     getPricesForTickers([...allTickers]),
     getHistoricalEthPrices([...datesNeedingHistoricalPrice]),
   ]);
+  const ethPriceUsdNow = prices.ETH?.usd ?? 0;
 
   // Quarterly figures come from a fixed cell in each school's own tab,
   // independent of whichever source ends up driving NAV/return below —
@@ -81,11 +108,9 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
 
   const bySchoolName = new Map(schools.map((s) => [s.name, s]));
 
-  for (const school of needsHoldingsFallback) {
-    bySchoolName.set(
-      school.name,
-      computeSchoolFromHoldings(school.name, school.holdings ?? [], school.exitedHoldings ?? [], school.nftHoldings ?? [], prices, historicalEth)
-    );
+  for (const school of needsComputedNav) {
+    const computed = computeSchoolFromHoldings(school.name, school.holdings ?? [], school.exitedHoldings ?? [], school.nftHoldings ?? [], prices, historicalEth);
+    bySchoolName.set(school.name, applySeasonBaselineReturn(computed, ethPriceUsdNow));
   }
   for (const [schoolName, positions] of Object.entries(positionsBySchool)) {
     bySchoolName.set(schoolName, computeSchoolFromPositions(schoolName, positions, prices, historicalEth));
@@ -134,7 +159,7 @@ const getSchoolsDataLive = unstable_cache(
     await saveSchoolsSnapshot(result);
     return result;
   },
-  ["schools-data-v23"],
+  ["schools-data-v24"],
   { revalidate: 300 }
 );
 

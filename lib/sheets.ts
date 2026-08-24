@@ -84,9 +84,17 @@ async function fetchGvizCsv(sheetName: string): Promise<string[][]> {
 async function fetchSchoolTabCsv(name: string): Promise<string[][]> {
   for (const candidate of tabNameCandidates(name)) {
     const data = await fetchGvizCsv(candidate);
-    // Validate: a real school tab starts with "Sub DAO Summary" or similar in col[1]
-    if (data.length > 0 && data[0]?.[1]?.trim().toLowerCase().includes("sub dao")) {
-      return data;
+    // Validate + normalize: a real school tab has "Sub DAO Summary" (or
+    // similar) in col[1] — but not always at row 0. Some tabs (seen on a
+    // newly-added school) have a stray leading row (e.g. a scratch price
+    // reference cell) pushing everything down by one, which silently broke
+    // every downstream positional parser (all of which assume "Sub DAO
+    // Summary" is row 0). Scan the first few rows instead of just row 0, and
+    // slice off anything before the match so the rest of this file can keep
+    // assuming a fixed layout starting at "Sub DAO Summary".
+    const headerIdx = data.slice(0, 5).findIndex((row) => row?.[1]?.trim().toLowerCase().includes("sub dao"));
+    if (headerIdx !== -1) {
+      return data.slice(headerIdx);
     }
   }
   return [];
