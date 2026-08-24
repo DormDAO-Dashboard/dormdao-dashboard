@@ -61,6 +61,16 @@ function isValue(s: string | undefined): boolean {
   return true;
 }
 
+// Pulls a 4-digit year out of a date cell regardless of field order
+// ("10/1/2024" vs "2025/10/1") — used for the "Sub DAO Opening" cell, which
+// is directly entered (not formula-derived) and reliable even when the
+// LEADERBOARD tab is broken.
+function extractYear(dateStr: string | undefined): number | null {
+  if (!dateStr) return null;
+  const match = dateStr.match(/\b(20\d{2})\b/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
 // Normalize a school name to a gviz-compatible tab name.
 // Returns candidate names to try in order (first match wins).
 function tabNameCandidates(name: string): string[] {
@@ -559,6 +569,7 @@ export async function fetchSheetsData(): Promise<{
   daoReturnEthAllTime: number | null;
   daoReturnEth2425: number | null;
   daoReturnEth2324: number | null;
+  subDaoOpeningYearByName: Record<string, number | null>;
   fetchedAt: string;
 }> {
   // 1. Fetch leaderboard tabs in parallel
@@ -612,8 +623,12 @@ export async function fetchSheetsData(): Promise<{
       // Index 12 col M = spreadsheet M22 = Quarterly Sub DAO Outperformance (ETH).
       const quarterlyUsdReturn = isValue(tabData[10]?.[12]) ? parseNumber(tabData[10][12]) : 0;
       const quarterlyEthReturn = isValue(tabData[12]?.[12]) ? parseNumber(tabData[12][12]) : 0;
+      // Index 1 col E = spreadsheet row "Sub DAO Opening" — directly entered,
+      // reliable regardless of the LEADERBOARD tab's health. Used to bucket
+      // schools into inception-capital cohorts for the All-Time panel.
+      const openingYear = isValue(tabData[1]?.[4]) ? extractYear(tabData[1][4]) : null;
       const entry = leaderboardByName.get(schoolName.toLowerCase());
-      return { schoolName, entry, holdings, exitedHoldings, nftHoldings, quarterlyUsdReturn, quarterlyEthReturn };
+      return { schoolName, entry, holdings, exitedHoldings, nftHoldings, quarterlyUsdReturn, quarterlyEthReturn, openingYear };
     })
   );
 
@@ -642,6 +657,13 @@ export async function fetchSheetsData(): Promise<{
     };
   });
 
+  // Built before sort() reorders `schools` — schoolsWithHoldings and schools
+  // are still index-aligned here.
+  const subDaoOpeningYearByName: Record<string, number | null> = {};
+  schools.forEach((school, i) => {
+    subDaoOpeningYearByName[school.name] = schoolsWithHoldings[i].openingYear;
+  });
+
   schools.sort((a, b) => a.rank - b.rank);
 
   // 4. Build since inception rows (stats only, reuse same display names)
@@ -665,5 +687,5 @@ export async function fetchSheetsData(): Promise<{
   const schools2425 = buildHistoricalRows(data2425, nameToDisplay);
   const schools2324 = buildHistoricalRows(data2324, nameToDisplay);
 
-  return { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt: new Date().toISOString() };
+  return { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, subDaoOpeningYearByName, fetchedAt: new Date().toISOString() };
 }

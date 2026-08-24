@@ -30,3 +30,32 @@ export const SEASON_START_NAV_USD: Record<string, number> = {
   "Villanova": 165769.00,
   "St. Andrews": 165769.00,
 };
+
+// All-Time (Since Inception) baselines, grouped by cohort — how much ETH
+// (and its USD cost at time of contribution) a school started with, based on
+// when its Sub DAO opened (each school's own "Sub DAO Opening" cell, which
+// is directly entered and reliable regardless of the LEADERBOARD tab's
+// health — see lib/sheets.ts's extractYear). Both the ETH amount and USD
+// cost are given directly, so All-Time return needs no historical price
+// lookup or conversion at all, unlike the season baseline above.
+export const INCEPTION_BASELINE_PRE_2024 = {
+  // 25 ETH @ $1,670.998956 + 15 ETH @ $2,597.341152
+  ethAmount: 40,
+  usdCost: 80735.09118,
+};
+
+export const INCEPTION_BASELINE_2024 = {
+  // 40 ETH @ $2,597.341152
+  ethAmount: 40,
+  usdCost: 103893.646067,
+};
+
+// Schools whose Sub DAO opened in 2025 (USC, Villanova, St. Andrews) have no
+// separate inception baseline — they joined this season, so their All-Time
+// performance is defined to equal their Current Season performance.
+export function inceptionBaselineForYear(year: number | null): { ethAmount: number; usdCost: number } | null {
+  if (year == null) return null;
+  if (year < 2024) return INCEPTION_BASELINE_PRE_2024;
+  if (year === 2024) return INCEPTION_BASELINE_2024;
+  return null;
+}

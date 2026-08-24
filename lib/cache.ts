@@ -6,7 +6,7 @@ import { isDataCollectionPaused, getSchoolsSnapshot, saveSchoolsSnapshot } from 
 import { getPositionsBySchool, computeSchoolFromPositions, computeSchoolFromHoldings } from "./positions";
 import { getPricesForTickers } from "./prices";
 import { getHistoricalEthPrices } from "./eth-price-history";
-import { SEASON_START_NAV_USD, SEASON_START_ETH_USD } from "./seasonBaseline";
+import { SEASON_START_NAV_USD, SEASON_START_ETH_USD, inceptionBaselineForYear } from "./seasonBaseline";
 
 export type { SchoolRowWithHoldings } from "./sheets";
 
@@ -129,11 +129,56 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
   return merged;
 }
 
+// Builds the All-Time (Since Inception) panel from the already-live-computed
+// `schools` NAV, using each school's inception-cohort baseline (its own
+// "Sub DAO Opening" year — see lib/sheets.ts) instead of the LEADERBOARD
+// tab's broken "Since Inception" section. Both the baseline ETH amount and
+// USD cost are given directly (lib/seasonBaseline.ts), so no historical
+// price lookup is needed at all. Schools with no cohort baseline (joined
+// this season, or an unrecognized opening date) mirror their Current Season
+// return exactly, per the same rule for the 2025-cohort schools.
+function computeSinceInceptionSchools(
+  schools: SchoolRowWithHoldings[],
+  openingYearByName: Record<string, number | null>,
+  ethPriceUsdNow: number
+): SchoolRow[] {
+  const rows: SchoolRow[] = schools.map((school) => {
+    const baseline = inceptionBaselineForYear(openingYearByName[school.name] ?? null);
+    let usdReturn = school.usdReturn;
+    let ethReturn = school.ethReturn;
+
+    if (baseline) {
+      usdReturn = baseline.usdCost > 0 ? ((school.nav - baseline.usdCost) / baseline.usdCost) * 100 : 0;
+      const currentNavEth = ethPriceUsdNow > 0 ? school.nav / ethPriceUsdNow : null;
+      ethReturn = currentNavEth !== null && baseline.ethAmount > 0
+        ? ((currentNavEth - baseline.ethAmount) / baseline.ethAmount) * 100
+        : school.ethReturn;
+    }
+
+    return {
+      rank: 0, // reassigned below
+      name: school.name,
+      slug: school.slug,
+      nav: school.nav,
+      usdReturn,
+      ethReturn,
+      avgEntryFdv: 0,
+      pctDeployed: school.pctDeployed,
+    };
+  });
+
+  rows.sort((a, b) => b.ethReturn - a.ethReturn);
+  rows.forEach((r, i) => { r.rank = i + 1; });
+  return rows;
+}
+
 const getSchoolsDataLive = unstable_cache(
   async (): Promise<SchoolsCache> => {
     const sheetsData = await fetchSheetsData();
-    const { sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt } = sheetsData;
+    const { schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, subDaoOpeningYearByName } = sheetsData;
     const schools = await applyInternallyComputedSchools(sheetsData.schools);
+    const ethPriceUsdNow = (await getPricesForTickers(["ETH"])).ETH?.usd ?? 0;
+    const sinceInceptionSchools = computeSinceInceptionSchools(schools, subDaoOpeningYearByName, ethPriceUsdNow);
     const len = schools.length || 1;
 
     const totalNAV = schools.reduce((s, x) => s + x.nav, 0);
