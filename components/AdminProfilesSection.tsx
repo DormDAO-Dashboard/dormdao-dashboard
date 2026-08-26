@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { MailPlus, Pencil, X, Loader2, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { MailPlus, Pencil, ShieldMinus, X, Loader2, AlertCircle } from "lucide-react";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 
 interface AdminProfile {
@@ -30,7 +31,11 @@ export function AdminProfilesSection({
   envAdmin: { name: string; votingUnits: number; email: string; wallet: string; memberId: string | null; school: string | null };
   initialDormAdmins: AdminProfile[];
 }) {
+  const router = useRouter();
   const [dormAdmins, setDormAdmins] = useState<AdminProfile[]>(initialDormAdmins);
+  const [removeTarget, setRemoveTarget] = useState<AdminProfile | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<AdminProfile | null>(null);
   const [editingEnvAdmin, setEditingEnvAdmin] = useState(false);
   const [envAdminName, setEnvAdminName] = useState(envAdmin.name);
@@ -164,6 +169,24 @@ export function AdminProfilesSection({
     setEditingEnvAdmin(false);
   }
 
+  async function handleRemove() {
+    if (!removeTarget) return;
+    setRemoving(true);
+    setRemoveError(null);
+    try {
+      const res = await fetch(`/api/admin/profiles/${removeTarget.id}`, { method: "DELETE" });
+      const data = await res.json() as { success?: boolean; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to remove admin");
+      setDormAdmins((prev) => prev.filter((da) => da.id !== removeTarget.id));
+      setRemoveTarget(null);
+      router.refresh(); // moves them back into the Members table below
+    } catch (err) {
+      setRemoveError((err as Error).message);
+    } finally {
+      setRemoving(false);
+    }
+  }
+
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] overflow-hidden">
@@ -225,6 +248,9 @@ export function AdminProfilesSection({
                       )}
                       <button onClick={() => openEdit(da)} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Edit admin">
                         <Pencil className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => { setRemoveTarget(da); setRemoveError(null); }} className="text-gray-700 dark:text-gray-400 hover:text-danger transition-colors" title="Remove admin access">
+                        <ShieldMinus className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -321,6 +347,35 @@ export function AdminProfilesSection({
               <button type="button" onClick={handleSendOnboarding} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                 {onboardSending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {removeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !removing && setRemoveTarget(null)} />
+          <div className="relative w-full max-w-sm bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Remove Admin Access</h3>
+              <button onClick={() => setRemoveTarget(null)} disabled={removing} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-400">
+              Revoke DormDAO admin access from <span className="text-gray-900 dark:text-white font-medium">{removeTarget.display_name || "this admin"}</span>?
+              They&apos;ll drop back to a regular member.
+            </p>
+            {removeError && (
+              <div className="mt-3 flex items-start gap-2 text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                {removeError}
+              </div>
+            )}
+            <div className="flex gap-3 pt-5">
+              <button type="button" onClick={() => setRemoveTarget(null)} disabled={removing} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors disabled:opacity-40">Cancel</button>
+              <button type="button" onClick={handleRemove} disabled={removing} className="flex-1 py-2.5 rounded-lg bg-danger/20 border border-danger/40 text-danger hover:bg-danger/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+                {removing && <Loader2 className="w-4 h-4 animate-spin" />}
+                Remove
               </button>
             </div>
           </div>

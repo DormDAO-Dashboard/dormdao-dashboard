@@ -1,8 +1,9 @@
 "use client";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import Papa from "papaparse";
-import { UserPlus, Upload, FilePlus, X, Trash2, Pencil, MailPlus, AlertCircle, CheckCircle2, Loader2, Landmark } from "lucide-react";
+import { UserPlus, Upload, FilePlus, X, Trash2, Pencil, MailPlus, ShieldPlus, AlertCircle, CheckCircle2, Loader2, Landmark } from "lucide-react";
 import { cn, formatLastSignIn } from "@/lib/utils";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { SchoolLogo } from "@/components/SchoolLogo";
@@ -51,6 +52,7 @@ const ROLE_BADGE: Record<string, string> = {
 const EMPTY_DRAFT: MemberDraft = { name: "", votingUnits: 10, email: "", walletAddress: "", school: null, role: "member" };
 
 export function AdminMembersSection({ initialMembers }: { initialMembers: Member[] }) {
+  const router = useRouter();
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const [schoolFilter, setSchoolFilter] = useState("");
   const [open, setOpen] = useState(false);
@@ -76,6 +78,10 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
   const [onboardTarget, setOnboardTarget] = useState<Member | null>(null);
   const [onboardSending, setOnboardSending] = useState(false);
   const [onboardError, setOnboardError] = useState<string | null>(null);
+
+  const [promoteTarget, setPromoteTarget] = useState<Member | null>(null);
+  const [promoting, setPromoting] = useState(false);
+  const [promoteError, setPromoteError] = useState<string | null>(null);
 
   function resetModal() {
     setMode("manual");
@@ -206,6 +212,24 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
       setOnboardError((err as Error).message);
     } finally {
       setOnboardSending(false);
+    }
+  }
+
+  async function handlePromote() {
+    if (!promoteTarget) return;
+    setPromoting(true);
+    setPromoteError(null);
+    try {
+      const res = await fetch(`/api/admin/members/${promoteTarget.id}/promote`, { method: "POST" });
+      const data = await res.json() as { success?: boolean; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to promote member");
+      setMembers((prev) => prev.filter((m) => m.id !== promoteTarget.id));
+      setPromoteTarget(null);
+      router.refresh(); // moves them into the Admins panel above
+    } catch (err) {
+      setPromoteError((err as Error).message);
+    } finally {
+      setPromoting(false);
     }
   }
 
@@ -420,6 +444,14 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                 </td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => { setPromoteTarget(m); setPromoteError(null); }}
+                      disabled={!m.email}
+                      className="text-gray-700 dark:text-gray-400 hover:text-primary transition-colors disabled:opacity-30 disabled:hover:text-gray-700 dark:disabled:hover:text-gray-400"
+                      title={m.email ? "Promote to DormDAO admin" : "Add an email before promoting"}
+                    >
+                      <ShieldPlus className="w-4 h-4" />
+                    </button>
                     <button onClick={() => { setOnboardTarget(m); setOnboardError(null); }} className="text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" title="Send onboarding email">
                       <MailPlus className="w-4 h-4" />
                     </button>
@@ -500,6 +532,30 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               <button type="button" onClick={handleSendOnboarding} disabled={onboardSending} className="flex-1 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                 {onboardSending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {promoteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !promoting && setPromoteTarget(null)} />
+          <div className="relative w-full max-w-sm bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Promote to Admin</h3>
+              <button onClick={() => setPromoteTarget(null)} disabled={promoting} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-400">
+              Grant <span className="text-gray-900 dark:text-white font-medium">{promoteTarget.name}</span> full DormDAO admin access?
+              This lets them manage members, admins, and every school — not just their own.
+            </p>
+            {promoteError && <div className="mt-3"><ErrorBanner>{promoteError}</ErrorBanner></div>}
+            <div className="flex gap-3 pt-5">
+              <button type="button" onClick={() => setPromoteTarget(null)} disabled={promoting} className="flex-1 py-2.5 rounded-lg border border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors disabled:opacity-40">Cancel</button>
+              <button type="button" onClick={handlePromote} disabled={promoting} className="flex-1 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+                {promoting && <Loader2 className="w-4 h-4 animate-spin" />}
+                Promote
               </button>
             </div>
           </div>

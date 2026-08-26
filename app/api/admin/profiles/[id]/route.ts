@@ -42,3 +42,23 @@ export async function PATCH(
 
   return NextResponse.json({ success: true });
 }
+
+// Revoke dorm_admin status, dropping the profile back to a regular member.
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const requester = await requireAdmin();
+  if (!requester) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  if (id === requester.id) {
+    return NextResponse.json({ error: "You can't remove your own admin access." }, { status: 400 });
+  }
+
+  const service = createServiceClient();
+  const { error } = await service.from("profiles").update({ role: "member" }).eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ success: true });
+}
