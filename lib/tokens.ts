@@ -24,7 +24,7 @@ export const TOKEN_META: Record<string, TokenMeta> = {
   ENA:               { name: "Ethena",                  geckoId: "ethena" },
   ETH:               { name: "Ethereum",                geckoId: "ethereum" },
   FET:               { name: "Fetch.ai",                geckoId: "fetch-ai" },
-  FOREST:            { name: "Forest Protocol",         geckoId: "forest-protocol" },
+  FOREST:            { name: "Forest",                  geckoId: "forest" },
   GRAIL:             { name: "Camelot",                 geckoId: "camelot-token" },
   GRASS:             { name: "Grass",                   geckoId: "grass" },
   HNT:               { name: "Helium",                  geckoId: "helium" },
