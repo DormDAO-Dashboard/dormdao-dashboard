@@ -32,8 +32,23 @@ export interface RawPosition {
 
 export async function getPositionsBySchool(): Promise<Record<string, PositionRow[]>> {
   const service = createServiceClient();
-  const { data, error } = await service.from("positions").select("*");
-  if (error || !data) return {};
+
+  let data: PositionRow[] | null = null;
+  for (let attempt = 0; attempt < 2 && !data; attempt++) {
+    const res = await service.from("positions").select("*");
+    if (res.error) {
+      console.warn("[positions] fetch failed" + (attempt === 0 ? ", retrying" : "") + ":", res.error.message);
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
+      continue;
+    }
+    data = res.data as PositionRow[];
+  }
+  // Still failed after a retry — every positions-managed school's whole
+  // portfolio is computed from this map (see applyInternallyComputedSchools),
+  // so returning {} here reads as "no school has positions" rather than
+  // "this fetch failed," and would zero out every one of them. lib/cache.ts's
+  // snapshot fallback is the real safety net for that; this is best-effort.
+  if (!data) return {};
 
   const bySchool: Record<string, PositionRow[]> = {};
   for (const row of data as PositionRow[]) {

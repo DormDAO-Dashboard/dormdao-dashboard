@@ -83,12 +83,24 @@ function tabNameCandidates(name: string): string[] {
 
 async function fetchGvizCsv(sheetName: string): Promise<string[][]> {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=out:csv`;
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) return [];
-  const text = await res.text();
-  if (text.trimStart().startsWith("<")) return [];
-  const { data } = Papa.parse<string[]>(text);
-  return data;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`gviz ${res.status}`);
+      const text = await res.text();
+      if (text.trimStart().startsWith("<")) throw new Error("gviz returned HTML, not CSV");
+      const { data } = Papa.parse<string[]>(text);
+      return data;
+    } catch (err) {
+      if (attempt === 0) {
+        console.warn(`[sheets] fetch failed for "${sheetName}", retrying:`, err);
+        await new Promise((r) => setTimeout(r, 500));
+      } else {
+        console.warn(`[sheets] fetch failed for "${sheetName}" after retry:`, err);
+      }
+    }
+  }
+  return [];
 }
 
 async function fetchSchoolTabCsv(name: string): Promise<string[][]> {

@@ -172,13 +172,64 @@ function computeSinceInceptionSchools(
   return rows;
 }
 
+// Last line of defense against a transient upstream failure (Google Sheets
+// gviz, Supabase positions, CoinGecko — all three retry on their own, but
+// none of them can guarantee success every cycle) blanking out data we
+// already know. A school legitimately at $0 NAV (new, no positions yet) has
+// no prior nonzero snapshot to match against, so it's left alone; only a
+// school that HAD real data and this cycle came back completely empty gets
+// backfilled from the last known-good snapshot.
+function patchZeroedFromSnapshot<T extends { name: string; nav: number }>(
+  rows: T[],
+  previous: T[] | undefined,
+  isBroken: (row: T) => boolean
+): T[] {
+  if (!previous?.length) return rows;
+  const prevByName = new Map(previous.map((r) => [r.name, r]));
+  return rows.map((row) => {
+    if (!isBroken(row)) return row;
+    const prev = prevByName.get(row.name);
+    return prev && prev.nav > 0 ? prev : row;
+  });
+}
+
+function rerank<T extends { rank: number; ethReturn: number }>(rows: T[]): T[] {
+  const sorted = [...rows].sort((a, b) => b.ethReturn - a.ethReturn);
+  sorted.forEach((r, i) => { r.rank = i + 1; });
+  return sorted;
+}
+
 const getSchoolsDataLive = unstable_cache(
   async (): Promise<SchoolsCache> => {
+    const previous = await getSchoolsSnapshot<SchoolsCache>();
+
     const sheetsData = await fetchSheetsData();
-    const { schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, subDaoOpeningYearByName } = sheetsData;
-    const schools = await applyInternallyComputedSchools(sheetsData.schools);
+    let { schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324 } = sheetsData;
+    const { fetchedAt, subDaoOpeningYearByName } = sheetsData;
+    let schools = await applyInternallyComputedSchools(sheetsData.schools);
+
+    // A school whose NAV and holdings both came back empty this cycle is
+    // exactly the "whole portfolio missing" failure mode — either its sheet
+    // tab or its positions-table fetch didn't come through — vs. a school
+    // that's simply, legitimately unfunded. Only the former gets patched.
+    schools = rerank(
+      patchZeroedFromSnapshot(schools, previous?.schools, (s) => s.nav === 0 && (s.holdings?.length ?? 0) === 0)
+    );
+    schools2425 = patchZeroedFromSnapshot(schools2425, previous?.schools2425, (s) => s.nav === 0);
+    schools2324 = patchZeroedFromSnapshot(schools2324, previous?.schools2324, (s) => s.nav === 0);
+    daoReturnEth2526 ??= previous?.daoReturnEth2526 ?? null;
+    daoReturnEthAllTime ??= previous?.daoReturnEthAllTime ?? null;
+    daoReturnEth2425 ??= previous?.daoReturnEth2425 ?? null;
+    daoReturnEth2324 ??= previous?.daoReturnEth2324 ?? null;
+
     const ethPriceUsdNow = (await getPricesForTickers(["ETH"])).ETH?.usd ?? 0;
-    const sinceInceptionSchools = computeSinceInceptionSchools(schools, subDaoOpeningYearByName, ethPriceUsdNow);
+    const sinceInceptionSchools = rerank(
+      patchZeroedFromSnapshot(
+        computeSinceInceptionSchools(schools, subDaoOpeningYearByName, ethPriceUsdNow),
+        previous?.sinceInceptionSchools,
+        (s) => s.nav === 0
+      )
+    );
     const len = schools.length || 1;
 
     const totalNAV = schools.reduce((s, x) => s + x.nav, 0);
