@@ -7,6 +7,8 @@ import { getPositionsBySchool, computeSchoolFromPositions, computeSchoolFromHold
 import { getPricesForTickers } from "./prices";
 import { getHistoricalEthPrices } from "./eth-price-history";
 import { SEASON_START_NAV_USD, SEASON_START_ETH_USD, inceptionBaselineForYear } from "./seasonBaseline";
+import { HYPERLIQUID_VAULT_POSITIONS } from "./hyperliquidVaults";
+import { getVaultUserEquityUsd } from "./hyperliquid";
 
 export type { SchoolRowWithHoldings } from "./sheets";
 
@@ -95,11 +97,31 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
     }
   }
 
-  const [prices, historicalEth] = await Promise.all([
+  // Schools with a holding that's actually a depositor's slice of a shared
+  // Hyperliquid vault (see lib/hyperliquidVaults.ts) need their equity looked
+  // up per-user, not priced by ticker like a normal token.
+  const vaultLookups: { schoolName: string; ticker: string; vaultAddress: string; userAddress: string }[] = [];
+  for (const schoolName of new Set([...needsComputedNav.map((s) => s.name), ...Object.keys(positionsBySchool)])) {
+    for (const [ticker, { vaultAddress, userAddress }] of Object.entries(HYPERLIQUID_VAULT_POSITIONS[schoolName] ?? {})) {
+      vaultLookups.push({ schoolName, ticker, vaultAddress, userAddress });
+    }
+  }
+
+  const [prices, historicalEth, vaultEquityResults] = await Promise.all([
     getPricesForTickers([...allTickers]),
     getHistoricalEthPrices([...datesNeedingHistoricalPrice]),
+    Promise.all(vaultLookups.map(async (l) => ({ ...l, usd: await getVaultUserEquityUsd(l.vaultAddress, l.userAddress) }))),
   ]);
   const ethPriceUsdNow = prices.ETH?.usd ?? 0;
+
+  const vaultEquityBySchool: Record<string, Record<string, number>> = {};
+  for (const v of vaultEquityResults) {
+    // null means the lookup failed with nothing cached to fall back on —
+    // leave it unset so computeSchoolMetrics falls through to tokens*price
+    // (today's behavior) rather than asserting a wrong $0.
+    if (v.usd == null) continue;
+    (vaultEquityBySchool[v.schoolName] ??= {})[v.ticker] = v.usd;
+  }
 
   // Quarterly figures come from a fixed cell in each school's own tab,
   // independent of whichever source ends up driving NAV/return below —
@@ -109,11 +131,11 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
   const bySchoolName = new Map(schools.map((s) => [s.name, s]));
 
   for (const school of needsComputedNav) {
-    const computed = computeSchoolFromHoldings(school.name, school.holdings ?? [], school.exitedHoldings ?? [], school.nftHoldings ?? [], prices, historicalEth);
+    const computed = computeSchoolFromHoldings(school.name, school.holdings ?? [], school.exitedHoldings ?? [], school.nftHoldings ?? [], prices, historicalEth, vaultEquityBySchool[school.name]);
     bySchoolName.set(school.name, applySeasonBaselineReturn(computed, ethPriceUsdNow));
   }
   for (const [schoolName, positions] of Object.entries(positionsBySchool)) {
-    bySchoolName.set(schoolName, computeSchoolFromPositions(schoolName, positions, prices, historicalEth));
+    bySchoolName.set(schoolName, computeSchoolFromPositions(schoolName, positions, prices, historicalEth, vaultEquityBySchool[schoolName]));
   }
 
   for (const s of bySchoolName.values()) {

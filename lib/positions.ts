@@ -70,7 +70,15 @@ export function computeSchoolMetrics(
   positions: RawPosition[],
   prices: PriceMap,
   historicalEth: Record<string, number>,
-  extras?: { exitedHoldings?: ExitedHolding[]; nftHoldings?: Holding[] }
+  extras?: {
+    exitedHoldings?: ExitedHolding[];
+    nftHoldings?: Holding[];
+    // Live USD value for a specific ticker on this school, e.g. a
+    // depositor's slice of a Hyperliquid vault (see lib/hyperliquidVaults.ts)
+    // — overrides tokens * price entirely, since "tokens" doesn't apply to
+    // a vault equity balance the way it does to a market-priced token.
+    vaultEquityUsdByTicker?: Record<string, number>;
+  }
 ): SchoolRowWithHoldings {
   const ethPriceUsd = prices.ETH?.usd ?? 0;
 
@@ -84,7 +92,8 @@ export function computeSchoolMetrics(
   const holdings: Holding[] = positions.map((p) => {
     const ticker = p.ticker.toUpperCase();
     const currentPriceUsd = prices[ticker]?.usd ?? 0;
-    const currentValueUsd = p.tokens * currentPriceUsd;
+    const vaultEquityUsd = extras?.vaultEquityUsdByTicker?.[ticker];
+    const currentValueUsd = vaultEquityUsd ?? p.tokens * currentPriceUsd;
     nav += currentValueUsd;
 
     if (ticker === "ETH") {
@@ -170,7 +179,8 @@ export function computeSchoolFromPositions(
   name: string,
   positions: PositionRow[],
   prices: PriceMap,
-  historicalEth: Record<string, number>
+  historicalEth: Record<string, number>,
+  vaultEquityUsdByTicker?: Record<string, number>
 ): SchoolRowWithHoldings {
   const raw: RawPosition[] = positions.map((p) => ({
     ticker: p.ticker,
@@ -180,7 +190,7 @@ export function computeSchoolFromPositions(
     purchasePriceUsd: p.purchase_price_usd,
     investmentDate: p.investment_date,
   }));
-  return computeSchoolMetrics(name, raw, prices, historicalEth);
+  return computeSchoolMetrics(name, raw, prices, historicalEth, { vaultEquityUsdByTicker });
 }
 
 // Fallback path for a school whose LEADERBOARD row is currently broken but
@@ -192,7 +202,8 @@ export function computeSchoolFromHoldings(
   exitedHoldings: ExitedHolding[],
   nftHoldings: Holding[],
   prices: PriceMap,
-  historicalEth: Record<string, number>
+  historicalEth: Record<string, number>,
+  vaultEquityUsdByTicker?: Record<string, number>
 ): SchoolRowWithHoldings {
   const raw: RawPosition[] = holdings.map((h) => ({
     ticker: h.ticker,
@@ -202,5 +213,5 @@ export function computeSchoolFromHoldings(
     purchasePriceUsd: null,
     investmentDate: h.investmentDate,
   }));
-  return computeSchoolMetrics(name, raw, prices, historicalEth, { exitedHoldings, nftHoldings });
+  return computeSchoolMetrics(name, raw, prices, historicalEth, { exitedHoldings, nftHoldings, vaultEquityUsdByTicker });
 }
