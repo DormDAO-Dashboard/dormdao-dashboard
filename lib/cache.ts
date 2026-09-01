@@ -228,8 +228,6 @@ export async function getSchoolsData(): Promise<SchoolsCache> {
   return getSchoolsDataLive();
 }
 
-const BATCH_SIZE = 20;
-
 export const getAllPrices = unstable_cache(
   async (): Promise<PricesCache> => {
     // Log any tickers that still lack a geckoId (and aren't intentional vault/premarket)
@@ -240,46 +238,13 @@ export const getAllPrices = unstable_cache(
       console.warn("[prices] Tickers without CoinGecko ID:", noPriceTickers.join(", "));
     }
 
-    const allGeckoIds = [...new Set(Object.values(TICKER_TO_COINGECKO))];
-
-    const batches: string[][] = [];
-    for (let i = 0; i < allGeckoIds.length; i += BATCH_SIZE) {
-      batches.push(allGeckoIds.slice(i, i + BATCH_SIZE));
-    }
-
-    const results = await Promise.all(
-      batches.map(async (batch) => {
-        try {
-          const res = await fetch(
-            `https://api.coingecko.com/api/v3/simple/price?ids=${batch.join(",")}&vs_currencies=usd&include_24hr_change=true`
-          );
-          if (!res.ok) return {};
-          return res.json() as Promise<Record<string, { usd: number; usd_24h_change: number }>>;
-        } catch {
-          return {};
-        }
-      })
-    );
-
-    const raw: Record<string, { usd: number; usd_24h_change: number }> = Object.assign({}, ...results);
-
-    const prices: Record<string, { usd: number; usd_24h_change: number }> = {};
-    for (const [ticker, geckoId] of Object.entries(TICKER_TO_COINGECKO)) {
-      if (raw[geckoId]) {
-        prices[ticker] = {
-          usd: raw[geckoId].usd ?? 0,
-          usd_24h_change: raw[geckoId].usd_24h_change ?? 0,
-        };
-      }
-    }
-
-    // Auto-resolve prices for tokens that have no geckoId in TOKEN_META
-    const unknownTickers = noGeckoTickers.map(([t]) => t);
-    if (unknownTickers.length > 0) {
-      const { resolveUnknownPrices } = await import("./gecko-search");
-      const discovered = await resolveUnknownPrices(unknownTickers);
-      Object.assign(prices, discovered);
-    }
+    // Shares getPricesForTickers's per-id cache and stale-on-failure
+    // fallback, so a transient CoinGecko error here can't wipe out a price
+    // that a page render elsewhere just successfully cached (or vice versa).
+    const prices = await getPricesForTickers([
+      ...Object.keys(TICKER_TO_COINGECKO),
+      ...noGeckoTickers.map(([t]) => t),
+    ]);
 
     return { prices, fetchedAt: new Date().toISOString() };
   },
