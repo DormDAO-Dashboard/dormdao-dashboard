@@ -305,7 +305,7 @@ export async function sendInviteEmail(opts: {
       title: renderField(t.heading, vars),
       schoolLabel,
       bodyHtml: invitedLine + renderMessageHtml(t.message, vars) + walletLine,
-      cta: { label: "Join DormDAO →", url: `${APP_URL}/login` },
+      cta: { label: "Click Here to Register →", url: `${APP_URL}/login` },
     }),
   });
   assertResendOk(result);
