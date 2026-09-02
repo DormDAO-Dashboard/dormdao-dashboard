@@ -3,7 +3,7 @@ import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import { sendPushNotifications } from "@/lib/push";
-import { sendEmailNotifications, sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl } from "@/lib/email";
+import { sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl } from "@/lib/email";
 import { isAdminUser } from "@/lib/admin-config";
 import { TOKEN_META } from "@/lib/tokens";
 import { MAIN_DAO_SLUG, isMainDaoAuthorized } from "@/lib/main-dao";
@@ -178,7 +178,6 @@ export async function POST(req: NextRequest) {
       url: proposalVoteUrl(school),
     };
     await sendPushNotifications(payload).catch(console.error);
-    await sendEmailNotifications(payload).catch(console.error);
     await sendNewProposalEmail(created).catch(console.error);
   });
 

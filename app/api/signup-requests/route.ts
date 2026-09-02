@@ -5,7 +5,7 @@ import { isAdminUser } from "@/lib/admin-config";
 import { getMembers } from "@/lib/members-store";
 import { SCHOOL_NAMES } from "@/lib/schoolData";
 import { Resend } from "resend";
-import { sendInviteEmail, escapeHtml, FROM_ADDRESS } from "@/lib/email";
+import { sendInviteEmail, escapeHtml, ONBOARDING_EMAIL } from "@/lib/email";
 
 async function notifyAdmins(name: string, email: string, school: string, wallet: string | null, message: string | null) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -24,7 +24,7 @@ async function notifyAdmins(name: string, email: string, school: string, wallet:
 
   const resend = new Resend(apiKey);
   const result = await resend.emails.send({
-    from: FROM_ADDRESS,
+    from: ONBOARDING_EMAIL,
     to: recipients,
     subject: `New DormDAO signup request — ${name} (${school})`,
     html: `
@@ -155,7 +155,7 @@ export async function PATCH(req: NextRequest) {
     after(async () => {
       const resend = new Resend(apiKey);
       const result = await resend.emails.send({
-        from: FROM_ADDRESS,
+        from: ONBOARDING_EMAIL,
         to: request.email,
         subject: "Your DormDAO access request",
         html: `<div style="font-family:sans-serif;max-width:480px">

@@ -10,9 +10,13 @@ import { getAdminEmails } from "@/lib/admin-config";
 import { fillTemplate } from "@/lib/email-templates";
 import { getEffectiveTemplateFields } from "@/lib/email-templates-store";
 
-// dormdao.io is verified in Resend — sending from the shared onboarding@resend.dev
-// sandbox address only works when the recipient is the Resend account's own email.
-export const FROM_ADDRESS = "onboarding@dormdao.io";
+// Both domains must be verified in Resend before these will send from
+// dormdao.io. Until RESEND_DOMAIN_VERIFIED=true, fall back to the shared
+// onboarding@resend.dev sandbox address (works only when the recipient is
+// the Resend account's own email).
+const DOMAIN_VERIFIED = process.env.RESEND_DOMAIN_VERIFIED === "true";
+export const ONBOARDING_EMAIL = DOMAIN_VERIFIED ? "onboarding@dormdao.io" : "onboarding@resend.dev";
+export const NOTIFICATIONS_EMAIL = DOMAIN_VERIFIED ? "notifications@dormdao.io" : "onboarding@resend.dev";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
 
 // Escapes user-controlled strings before they're interpolated into email HTML.
@@ -205,6 +209,34 @@ export async function getSchoolRecipients(schoolSlug: string): Promise<Recipient
   return recipients;
 }
 
+// Safety net against future regressions: re-checks that every recipient
+// returned by getSchoolRecipients() actually belongs to the target school
+// (or is a dorm_admin) right before a send goes out. Warns rather than
+// throws — a mismatch should be investigated, not block a legitimate send
+// to the correctly-scoped recipients still in the list.
+async function assertRecipientsScopedToSchool(schoolSlug: string, recipients: Recipient[]): Promise<void> {
+  if (schoolSlug === MAIN_DAO_SLUG || recipients.length === 0) return;
+  const schoolName = (SCHOOL_NAMES as readonly string[]).find((n) => slugify(n) === schoolSlug);
+  if (!schoolName) return;
+
+  const service = createServiceClient();
+  const { data: rows } = await service
+    .from("profiles")
+    .select("id, school, role")
+    .in("id", recipients.map((r) => r.userId));
+  const profileById = new Map((rows ?? []).map((p) => [p.id, p]));
+
+  for (const r of recipients) {
+    const profile = profileById.get(r.userId);
+    if (!profile || profile.role === "dorm_admin") continue; // admin-config env emails or dorm_admins are exempt
+    if (profile.school !== schoolName) {
+      console.warn(
+        `[email] school-scope mismatch: recipient ${r.userId} (${r.email}) has profile school "${profile.school}" but was about to receive a "${schoolName}" (${schoolSlug}) email`,
+      );
+    }
+  }
+}
+
 // ── Resend response checking ──────────────────────────────────────────────────
 // The Resend SDK does NOT throw on API-level rejections (invalid recipient,
 // unverified domain, sandbox restrictions, etc.) — it resolves with
@@ -219,6 +251,7 @@ function assertResendOk(result: { error: { message: string } | null }): void {
 async function batchSend(
   recipients: Recipient[],
   buildEmail: (r: Recipient) => { subject: string; html: string },
+  from: string,
 ): Promise<void> {
   if (!recipients.length) return;
   const apiKey = process.env.RESEND_API_KEY;
@@ -229,14 +262,33 @@ async function batchSend(
     const result = await resend.batch.send(
       slice.map((r) => {
         const { subject, html } = buildEmail(r);
-        return { from: FROM_ADDRESS, to: r.email, subject, html };
+        return { from, to: r.email, subject, html };
       }),
     );
     assertResendOk(result);
   }
 }
 
-// ── Generic push-triggered blast (existing, preserved) ───────────────────────
+// ── School-scoped push-triggered blast (trades, buys/sells) ──────────────────
+// Same HTML shape as sendEmailNotifications below, but scoped to one school's
+// recipients — used for trade/position-change notifications, which must
+// never cross schools.
+export async function sendSchoolEmailNotifications(schoolSlug: string, payload: PushPayload): Promise<void> {
+  const recipients = await getSchoolRecipients(schoolSlug);
+  await assertRecipientsScopedToSchool(schoolSlug, recipients);
+
+  await batchSend(recipients, (r) => ({
+    subject: payload.title,
+    html: buildTemplate({
+      title: payload.title,
+      bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">${payload.body}</p>`,
+      cta: { label: "View on DormDAO →", url: payload.url },
+      userId: r.userId,
+    }),
+  }), NOTIFICATIONS_EMAIL);
+}
+
+// ── Generic push-triggered blast (site-wide — forum, non-school-scoped) ──────
 
 export async function sendEmailNotifications(payload: PushPayload): Promise<void> {
   const service = createServiceClient();
@@ -260,7 +312,7 @@ export async function sendEmailNotifications(payload: PushPayload): Promise<void
   if (!apiKey) throw new Error("RESEND_API_KEY is not set");
   const resend = new Resend(apiKey);
   const result = await resend.emails.send({
-    from: FROM_ADDRESS,
+    from: NOTIFICATIONS_EMAIL,
     to: emails,
     subject: payload.title,
     html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
@@ -298,7 +350,7 @@ export async function sendInviteEmail(opts: {
   const walletLine = walletLast4 ? renderMessageHtml(t.walletLine, vars) : "";
 
   const result = await resend.emails.send({
-    from: FROM_ADDRESS,
+    from: ONBOARDING_EMAIL,
     to: opts.to,
     subject: fillTemplate(t.subject, vars),
     html: buildTemplate({
@@ -313,6 +365,7 @@ export async function sendInviteEmail(opts: {
 
 export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
+  await assertRecipientsScopedToSchool(proposal.school, recipients);
   const schoolLabel = proposalSchoolLabel(proposal.school);
   const deadline = new Date(proposal.voting_deadline).toLocaleString("en-US", {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
@@ -341,11 +394,12 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
       cta: { label: "Cast your vote →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
-  }));
+  }), NOTIFICATIONS_EMAIL);
 }
 
 export async function send12HourWarningEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
+  await assertRecipientsScopedToSchool(proposal.school, recipients);
   const schoolLabel = proposalSchoolLabel(proposal.school);
   const total = proposal.yes_votes + proposal.no_votes;
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
@@ -367,12 +421,13 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
       cta: { label: "Vote now →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
-  }));
+  }), NOTIFICATIONS_EMAIL);
 }
 
 export async function sendProposalResultEmail(proposal: Proposal): Promise<void> {
   if (proposal.status !== "passed" && proposal.status !== "rejected") return;
   const recipients = await getSchoolRecipients(proposal.school);
+  await assertRecipientsScopedToSchool(proposal.school, recipients);
   const schoolLabel = proposalSchoolLabel(proposal.school);
   const passed = proposal.status === "passed";
   const total = proposal.yes_votes + proposal.no_votes;
@@ -399,11 +454,12 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
       cta: { label: "View results →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
-  }));
+  }), NOTIFICATIONS_EMAIL);
 }
 
 export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
+  await assertRecipientsScopedToSchool(proposal.school, recipients);
   const schoolLabel = proposalSchoolLabel(proposal.school);
   const ticker = escapeHtml(proposal.token_ticker);
   const title = escapeHtml(proposal.title);
@@ -424,5 +480,5 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
       cta: { label: "View portfolio →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
-  }));
+  }), NOTIFICATIONS_EMAIL);
 }

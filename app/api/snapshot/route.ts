@@ -5,7 +5,7 @@ import { getSchoolsData } from "@/lib/cache";
 import { Holding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
 import {
-  sendEmailNotifications, send12HourWarningEmail, sendProposalResultEmail,
+  sendSchoolEmailNotifications, send12HourWarningEmail, sendProposalResultEmail,
   sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl,
 } from "@/lib/email";
 import { slugify } from "@/lib/utils";
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
             url: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app"}/activity`,
           };
           await sendPushNotifications(tradePayload).catch(console.error);
-          await sendEmailNotifications(tradePayload).catch(console.error);
+          await sendSchoolEmailNotifications(slugify(change.school_name), tradePayload).catch(console.error);
         }
       }
       // Send 12-hour warning for proposals expiring within 13h that haven't been warned yet
@@ -215,7 +215,6 @@ export async function POST(req: NextRequest) {
                 url: proposalVoteUrl(MAIN_DAO_SLUG),
               };
               await sendPushNotifications(payload).catch(console.error);
-              await sendEmailNotifications(payload).catch(console.error);
               await sendNewProposalEmail(reposted).catch(console.error);
             }
           }
