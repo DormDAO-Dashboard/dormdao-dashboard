@@ -83,39 +83,45 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
         const { data: { user: u } } = await supabase.auth.getUser();
         setUser(u ?? null);
 
-        if (u) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("school, role")
-            .eq("id", u.id)
-            .single();
-          setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
-          setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
-          setUserRole((profile?.role as MemberRole) ?? null);
-
-          try {
-            const res = await apiFetch("/api/admin/check");
-            const json = await res.json() as { isAdmin: boolean };
-            setIsAdmin(json.isAdmin ?? false);
-          } catch {
-            setIsAdmin(false);
-          }
-        } else {
-          setIsAdmin(false);
-        }
-
-        const { count } = isMainDao
-          ? await supabase
-              .from("profiles")
-              .select("id", { count: "exact", head: true })
-              .or(`role.eq.dorm_admin,school.eq."${MAIN_DAO_VOTER}"`)
-          : await supabase
-              .from("profiles")
-              .select("id", { count: "exact", head: true })
-              .eq("school", schoolName);
-        setMemberCount(count ?? 0);
-
-        await fetchProposals();
+        // None of these actually depend on each other — /api/proposals does
+        // its own server-side auth check independently, and the member-count
+        // query doesn't need `u` at all. Running them sequentially meant a
+        // single slow step (each individually timeout-bounded, but stacked
+        // one after another) could keep the panel on its loading skeleton
+        // for the sum of all of them; in parallel it's bounded by the
+        // slowest single one instead. Each branch keeps its own fallback so
+        // one failing doesn't block the others from completing.
+        await Promise.all([
+          u
+            ? supabase
+                .from("profiles")
+                .select("school, role")
+                .eq("id", u.id)
+                .single()
+                .then(({ data: profile }) => {
+                  setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+                  setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
+                  setUserRole((profile?.role as MemberRole) ?? null);
+                })
+            : Promise.resolve(),
+          u
+            ? apiFetch("/api/admin/check")
+                .then((res) => res.json() as Promise<{ isAdmin: boolean }>)
+                .then((json) => setIsAdmin(json.isAdmin ?? false))
+                .catch(() => setIsAdmin(false))
+            : Promise.resolve().then(() => setIsAdmin(false)),
+          (isMainDao
+            ? supabase
+                .from("profiles")
+                .select("id", { count: "exact", head: true })
+                .or(`role.eq.dorm_admin,school.eq."${MAIN_DAO_VOTER}"`)
+            : supabase
+                .from("profiles")
+                .select("id", { count: "exact", head: true })
+                .eq("school", schoolName)
+          ).then(({ count }) => setMemberCount(count ?? 0)),
+          fetchProposals(),
+        ]);
       } catch (err) {
         if (!isRetry) {
           await new Promise((r) => setTimeout(r, 1000));
