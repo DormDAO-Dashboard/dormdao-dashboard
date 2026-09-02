@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { Check, Clock, ChevronDown, ChevronUp, Lock, Loader2, ExternalLink, Trash2, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Proposal, type ProposalDocument, deadlineLabel, votePercents, isActive } from "@/lib/proposals";
@@ -33,6 +33,23 @@ export function ProposalCard({
   proposal, colors, isMember, isLoggedIn, isClubLeader, isAdmin, memberCount, schoolName, onVote, votingInProgress, onExecuted, onDelete,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
+  // Whether the clamped description is actually being visually cut off —
+  // a character-count threshold doesn't track this (a short description
+  // full of long words can still wrap to more than 3 lines in a narrow
+  // card, showing the CSS ellipsis with no way to expand it, which is
+  // exactly the "clicking the ... does nothing" bug).
+  const [isTruncated, setIsTruncated] = useState(false);
+  const descRef = useRef<HTMLParagraphElement>(null);
+
+  useLayoutEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    const check = () => setIsTruncated(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [proposal.description]);
   const [showExecuteModal, setShowExecuteModal] = useState(false);
   const [executeTx, setExecuteTx] = useState("");
   const [tradeOutput, setTradeOutput] = useState("");
@@ -134,13 +151,18 @@ export function ProposalCard({
           {/* Description */}
           {proposal.description && (
             <div className="mb-4">
-              <p className={cn(
-                "text-sm text-gray-700 dark:text-gray-400 leading-relaxed",
-                !expanded && "line-clamp-3"
-              )}>
+              <p
+                ref={descRef}
+                onClick={() => { if (isTruncated) setExpanded(true); }}
+                className={cn(
+                  "text-sm text-gray-700 dark:text-gray-400 leading-relaxed",
+                  !expanded && "line-clamp-3",
+                  isTruncated && !expanded && "cursor-pointer"
+                )}
+              >
                 {proposal.description}
               </p>
-              {proposal.description.length > 180 && (
+              {(isTruncated || expanded) && (
                 <button
                   onClick={() => setExpanded((v) => !v)}
                   className="mt-1 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 transition-colors"
