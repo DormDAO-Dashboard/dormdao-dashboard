@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/apiFetch";
 import { slugify, cn } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
 import { type Proposal, isActive } from "@/lib/proposals";
@@ -56,7 +57,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
 
   const fetchProposals = useCallback(async () => {
     try {
-      const res = await fetch(`/api/proposals?school=${slug}`);
+      const res = await apiFetch(`/api/proposals?school=${slug}`);
       if (!res.ok) {
         console.error(`[fetchProposals] ${res.status} for school=${slug}`);
         showToast("Couldn't refresh proposals — retrying shortly");
@@ -73,7 +74,10 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
   useEffect(() => {
     const supabase = createClient();
 
-    async function init() {
+    // A transient failure partway through (network blip, a stalled request)
+    // must not leave the page stuck on the loading skeleton forever — retry
+    // once before giving up, so only a genuinely broken load renders that way.
+    async function init(isRetry = false) {
       setLoading(true);
       try {
         const { data: { user: u } } = await supabase.auth.getUser();
@@ -90,7 +94,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
           setUserRole((profile?.role as MemberRole) ?? null);
 
           try {
-            const res = await fetch("/api/admin/check");
+            const res = await apiFetch("/api/admin/check");
             const json = await res.json() as { isAdmin: boolean };
             setIsAdmin(json.isAdmin ?? false);
           } catch {
@@ -112,6 +116,13 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
         setMemberCount(count ?? 0);
 
         await fetchProposals();
+      } catch (err) {
+        if (!isRetry) {
+          await new Promise((r) => setTimeout(r, 1000));
+          return init(true);
+        }
+        console.error("[VotingClient] failed to load:", err);
+        showToast("Couldn't load this page — please refresh");
       } finally {
         setLoading(false);
       }
@@ -136,7 +147,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
         setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
         setUserRole((profile?.role as MemberRole) ?? null);
         try {
-          const res = await fetch("/api/admin/check");
+          const res = await apiFetch("/api/admin/check");
           const json = await res.json() as { isAdmin: boolean };
           setIsAdmin(json.isAdmin ?? false);
         } catch {
@@ -173,7 +184,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
   async function handleVote(proposalId: string, vote: "yes" | "no") {
     setVotingFor(proposalId);
     try {
-      const res = await fetch(`/api/proposals/${proposalId}/vote`, {
+      const res = await apiFetch(`/api/proposals/${proposalId}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vote }),
@@ -216,7 +227,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
   }
 
   async function handleDelete(proposalId: string) {
-    const res = await fetch(`/api/proposals/${proposalId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/proposals/${proposalId}`, { method: "DELETE" });
     const data = await res.json() as { error?: string };
     if (!res.ok) throw new Error(data.error ?? "Failed to delete proposal");
     setProposals((prev) => prev.filter((p) => p.id !== proposalId));

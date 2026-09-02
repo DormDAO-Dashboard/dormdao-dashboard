@@ -12,6 +12,7 @@ import { slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
 import { useTheme } from "@/components/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/apiFetch";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { BellButton } from "@/components/BellButton";
 import { SchoolLogo } from "@/components/SchoolLogo";
@@ -121,7 +122,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           );
           setUserSchool((p?.school as string | null) ?? null);
           try {
-            const res = await fetch("/api/admin/check");
+            const res = await apiFetch("/api/admin/check");
             const json = await res.json() as { isAdmin: boolean };
             setIsAdmin(json.isAdmin ?? false);
           } catch {
