@@ -104,26 +104,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient();
-    async function load() {
-      const { data } = await supabase.auth.getUser();
-      const u = data.user ?? null;
-      setUser(u);
-      if (u) {
-        const { data: p } = await supabase
-          .from("profiles").select("avatar_url, school").eq("id", u.id).single();
-        setAvatarSrc(
-          p?.avatar_url ?? (u.user_metadata?.avatar_url as string | undefined) ?? null
-        );
-        setUserSchool((p?.school as string | null) ?? null);
-        try {
-          const res = await fetch("/api/admin/check");
-          const json = await res.json() as { isAdmin: boolean };
-          setIsAdmin(json.isAdmin ?? false);
-        } catch {
+    // A transient failure here (network blip, a stalled request) must not
+    // silently leave the sidebar looking logged-out — retry once before
+    // giving up, so only a genuinely broken/logged-out session renders that
+    // way rather than every temporary hiccup.
+    async function load(isRetry = false) {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const u = data.user ?? null;
+        setUser(u);
+        if (u) {
+          const { data: p } = await supabase
+            .from("profiles").select("avatar_url, school").eq("id", u.id).single();
+          setAvatarSrc(
+            p?.avatar_url ?? (u.user_metadata?.avatar_url as string | undefined) ?? null
+          );
+          setUserSchool((p?.school as string | null) ?? null);
+          try {
+            const res = await fetch("/api/admin/check");
+            const json = await res.json() as { isAdmin: boolean };
+            setIsAdmin(json.isAdmin ?? false);
+          } catch {
+            setIsAdmin(false);
+          }
+        } else {
           setIsAdmin(false);
         }
-      } else {
-        setIsAdmin(false);
+      } catch (err) {
+        if (!isRetry) {
+          await new Promise((r) => setTimeout(r, 1000));
+          return load(true);
+        }
+        console.error("[AppShell] failed to load auth state:", err);
       }
     }
     load();
