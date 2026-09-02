@@ -3,6 +3,13 @@ import { SchoolRow, Holding, ExitedHolding } from "@/lib/types";
 export type { Holding, ExitedHolding } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 import { SCHOOL_NAMES } from "@/lib/schoolData";
+import { withFetchTimeout } from "@/lib/fetchWithTimeout";
+
+// fetchSheetsData fans out ~20 of these in parallel (one per school tab) —
+// without a timeout, a single stalled Google Sheets response blocks every
+// page that depends on schools data (leaderboard, schools, vote pages, ...)
+// indefinitely instead of just that one tab failing.
+const sheetsFetch = withFetchTimeout(8_000);
 
 const SHEET_ID = "1wA8KoPlhZ1YYv6auM5yYlzjYCBRnG9en9i_qLsrlVZs";
 
@@ -85,7 +92,7 @@ async function fetchGvizCsv(sheetName: string): Promise<string[][]> {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=out:csv`;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await sheetsFetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`gviz ${res.status}`);
       const text = await res.text();
       if (text.trimStart().startsWith("<")) throw new Error("gviz returned HTML, not CSV");

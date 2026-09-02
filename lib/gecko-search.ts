@@ -1,6 +1,9 @@
 // Auto-resolves CoinGecko IDs for tickers not in TOKEN_META.
 // Results are cached in-memory for the lifetime of the server process
 // so searches only fire once per ticker (not on every request).
+import { withFetchTimeout } from "@/lib/fetchWithTimeout";
+
+const coingeckoFetch = withFetchTimeout(8_000);
 
 interface Resolved {
   geckoId: string;
@@ -23,7 +26,7 @@ export async function resolveGeckoId(ticker: string): Promise<Resolved | null> {
   if (cache.has(ticker)) return cache.get(ticker) ?? null;
 
   try {
-    const res = await fetch(
+    const res = await coingeckoFetch(
       `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(ticker)}`,
       { cache: "no-store" }
     );
@@ -73,7 +76,7 @@ export async function resolveUnknownPrices(
 
   const ids = [...new Set(resolved.map((r) => r.geckoId))].join(",");
   try {
-    const res = await fetch(
+    const res = await coingeckoFetch(
       `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
       { cache: "no-store" }
     );

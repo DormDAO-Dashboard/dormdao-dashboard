@@ -1,4 +1,7 @@
 import { TICKER_TO_COINGECKO } from "@/lib/tokens";
+import { withFetchTimeout } from "@/lib/fetchWithTimeout";
+
+const coingeckoFetch = withFetchTimeout(8_000);
 
 interface PriceEntry {
   usd: number;
@@ -23,7 +26,7 @@ const BATCH_SIZE = 20;
 async function fetchBatch(ids: string[]): Promise<Record<string, PriceEntry> | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(
+      const res = await coingeckoFetch(
         `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(",")}&vs_currencies=usd&include_24hr_change=true`
       );
       if (res.ok) return await res.json();

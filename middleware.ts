@@ -1,8 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { withFetchTimeout } from "@/lib/fetchWithTimeout";
 
 const SCHOOL_OK_COOKIE = "ddo-school-ok";
 const ONE_YEAR = 60 * 60 * 24 * 365;
+
+// This middleware runs on nearly every request (see matcher below) and its
+// auth.getUser() call below is unconditional — it runs even for exempt paths
+// like /login, before isExempt is checked. Without a timeout, a single
+// stalled Supabase response here doesn't just break one page, it blocks
+// every page on the site until it resolves — the single biggest source of
+// "sometimes instant, sometimes hangs forever" across otherwise-unrelated
+// pages (login, Main DAO, vote pages, ...).
+const supabaseFetch = withFetchTimeout(6_000);
 
 function isExempt(pathname: string): boolean {
   if (pathname === "/profile" || pathname === "/login") return true;
@@ -19,6 +29,7 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: { fetch: supabaseFetch },
       cookies: {
         getAll() {
           return request.cookies.getAll();

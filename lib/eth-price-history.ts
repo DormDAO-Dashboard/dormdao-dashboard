@@ -1,5 +1,10 @@
+import { withFetchTimeout } from "@/lib/fetchWithTimeout";
+
 // Historical ETH prices never change — cache indefinitely in memory
 const priceCache = new Map<string, number>();
+// Dates are fetched sequentially below, so a single stalled request here
+// blocks every date after it — a timeout keeps that bounded per-date.
+const coingeckoFetch = withFetchTimeout(8_000);
 
 // Convert sheet date formats to CoinGecko's DD-MM-YYYY. Sheet dates aren't
 // zero-padded (e.g. "2026/5/8"), so month/day must accept 1-2 digits — a
@@ -31,7 +36,7 @@ export async function getHistoricalEthPrices(dates: string[]): Promise<Record<st
 
     try {
       const url = `https://api.coingecko.com/api/v3/coins/ethereum/history?date=${geckoDate}&localization=false`;
-      const r = await fetch(url, { cache: "no-store" });
+      const r = await coingeckoFetch(url, { cache: "no-store" });
       if (!r.ok) continue;
       const d = await r.json();
       const price: number = d?.market_data?.current_price?.usd ?? 0;

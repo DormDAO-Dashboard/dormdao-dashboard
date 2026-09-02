@@ -3,6 +3,9 @@
 // vault", not "some tokens at a market price" (see lib/hyperliquidVaults.ts).
 // Hyperliquid vaults are USDC-denominated, so "equity" from the API is
 // already the USD value — no separate price lookup needed.
+import { withFetchTimeout } from "@/lib/fetchWithTimeout";
+
+const hyperliquidFetch = withFetchTimeout(8_000);
 
 interface CacheEntry {
   usd: number;
@@ -21,7 +24,7 @@ async function fetchUserVaultEquities(
 ): Promise<Array<{ vaultAddress: string; equity: string }> | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch("https://api.hyperliquid.xyz/info", {
+      const res = await hyperliquidFetch("https://api.hyperliquid.xyz/info", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "userVaultEquities", user: userAddress }),
