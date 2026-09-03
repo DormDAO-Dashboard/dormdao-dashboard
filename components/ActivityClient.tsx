@@ -39,6 +39,7 @@ export function ActivityClient({ schools, yearStart, yearEnd }: { schools: Schoo
         setPrices(d.prices ?? {});
         setEthPrice(d.prices?.ETH?.usd ?? 0);
       })
+      .catch(console.error)
       .finally(() => setLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

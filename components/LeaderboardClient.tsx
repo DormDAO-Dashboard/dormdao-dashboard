@@ -365,7 +365,7 @@ export function LeaderboardClient({
       const { data: p } = await supabase
         .from("profiles").select("school").eq("id", data.user.id).single();
       if (p?.school) setUserSlug(slugify(p.school));
-    });
+    }).catch(console.error);
   }, []);
 
   const activeSchools =
@@ -396,7 +396,7 @@ export function LeaderboardClient({
           <span>Synced {syncLabel}</span>
           {" · "}
           <button
-            onClick={async () => { await fetch("/api/revalidate", { method: "POST" }); window.location.reload(); }}
+            onClick={async () => { await fetch("/api/revalidate", { method: "POST" }).catch(console.error); window.location.reload(); }}
             className="text-primary hover:underline"
           >
             Refresh

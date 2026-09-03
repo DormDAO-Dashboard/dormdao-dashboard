@@ -18,7 +18,13 @@ The app uses a collapsible left sidebar on desktop (icon-only at 64px, expands t
 
 ## Pages
 
-### / — Leaderboard
+### / — Splash
+Landing page reached first (random background image, "Enter" button). Links into `/map`, the real front door of the site.
+
+### /map — Interactive Campus Map
+777-line interactive campus map (`app/map/page.tsx`) — the actual hub reached from the splash page's "Enter" button, linking out to Dorm Builders, Dorm Catalyst, and Dorm Summit.
+
+### /leaderboard — Leaderboard
 No-scroll layout that fills full viewport height. Three-panel side-by-side layout:
 - Left panel: Quarterly performance table (SCHOOL / USD / ETH, sortable). Shows all schools with current-quarter returns.
 - Middle panel: Current Season table — Rank, School, NAV (exact dollars), Return USD %, Return ETH %, % Deployed. Sortable by all columns. Season tabs at top (25–26 / 24–25 / 23–24). Yellow accent border distinguishes it as the primary panel. Sticky headers.
@@ -69,10 +75,25 @@ Google OAuth via Supabase. Redirects to `/auth/callback` then back to app.
 Edit display name, school (dropdown of 17 schools), avatar (Pudgy Penguin NFT picker). Auth required, redirects to login if not signed in.
 
 ### /users/[id] — Public Profile
-Page exists in codebase (`app/users/[id]/page.tsx`) but not yet committed/deployed.
+Page committed and live (`app/users/[id]/page.tsx`).
 
 ### /about — Static Info
 Lists all 17 member schools with logos, explains the DormDAO model (3 steps: schools join → pitch tokens → compete).
+
+### /admin — Admin Panel
+Gated by `requireAdmin()` (`lib/admin-guard.ts`). Four sections: Settings (`/admin/settings` — includes the "Pause Data Collection" kill switch for outbound Google Sheets calls), Members (`/admin/members` — import/manage member accounts, promote/demote), Email (`/admin/email` — edit the copy/subject/heading of every automated email template), Main DAO (`/admin/main-dao` — manage Main DAO proposals).
+
+### /main-dao — Main DAO Voting
+DormDAO-wide investment proposals, voted on by DormDAO admins and Main DAO voters. Renders `VotingClient` in `pageMode`/`isMainDao` mode, keyed to the synthetic Main DAO "school" (`lib/main-dao.ts`).
+
+### /join — Signup Request
+Public form (name, email, school, wallet, grad year, major, LinkedIn, Telegram) that inserts into `signup_requests` for an admin to approve/reject from `/admin/members`. No auth required to submit.
+
+### /members — Members Directory
+Public directory of member profiles, respecting each profile's own `public_fields` opt-in list (bio/school/graduation_year/major/twitter/linkedin/telegram only shown if the member chose to make that field public).
+
+### /dorm-builders, /dorm-catalyst, /dorm-summit — Showcase Pages
+Static marketing/showcase pages for DormDAO's sub-programs, each with a hero + content sections (`components/showcase/*`). Dorm Builders has a real Season 01 program spotlight; Dorm Catalyst and Dorm Summit are intentionally lightweight shells with placeholder sections awaiting real content.
 
 ## Project structure
 - app/ — Next.js pages and API routes
@@ -142,7 +163,6 @@ RESEND_API_KEY
 
 ## Known issues to fix
 1. /compare page stub exists but has no implementation yet
-2. /users/[id] public profile exists locally but not committed
 
 ## Coding conventions
 - Use TypeScript strictly, no `any` types
