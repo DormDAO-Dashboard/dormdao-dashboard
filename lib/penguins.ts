@@ -1,4 +1,8 @@
-const BASE = "https://ipfs.io/ipfs/QmNf1UsmdGaMbpatQ6toXSkzDpizaGmC9zfunCyoz1enD5/penguin";
+// Self-hosted in Supabase Storage (public "pudgy-avatars" bucket) — was
+// previously ipfs.io directly, which multiple users hit real failures
+// against (Opera's built-in IPFS resolver breaking, Node/browser fetches
+// hitting the gateway's rate limiting). See scripts/migrate-pudgy-avatars.mjs.
+const BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/pudgy-avatars`;
 
 // 300 IDs evenly spaced across the full 0–8887 collection
 export const PUDGY_AVATARS = [

@@ -11,6 +11,11 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "ipfs.io" },
+      // Self-hosted Pudgy Penguin avatars (public "pudgy-avatars" bucket) —
+      // see lib/penguins.ts, scripts/migrate-pudgy-avatars.mjs.
+      ...(process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? [{ protocol: "https", hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname }]
+        : []),
     ],
   },
   // No Content-Security-Policy here yet — this app's actual script/style/
