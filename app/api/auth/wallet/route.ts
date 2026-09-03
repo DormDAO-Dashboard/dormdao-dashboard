@@ -41,6 +41,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Signature address mismatch." }, { status: 400 });
   }
 
+  const supabase = createServiceClient();
+
+  // Claim the nonce — the primary key's uniqueness makes this atomic under
+  // concurrent requests, so the exact same signed (address, signature,
+  // nonce) payload can be redeemed exactly once, not just "within 10
+  // minutes." Runs after signature verification (above) so an invalid
+  // signature attempt never burns a nonce a legitimate retry would need.
+  // Fails closed (not open) on any DB error, including the migration not
+  // having been run yet — see supabase-wallet-nonce-migration.sql.
+  const { error: nonceError } = await supabase.from("wallet_login_nonces").insert({ nonce });
+  if (nonceError) {
+    if (nonceError.code === "23505") {
+      return NextResponse.json({ error: "This login request was already used — please try again." }, { status: 400 });
+    }
+    console.error("[wallet-auth] nonce claim failed:", nonceError.message);
+    return NextResponse.json({ error: "Login temporarily unavailable — please try again." }, { status: 500 });
+  }
+
   // Gate: only registered admins/members may sign in
   const allowed = await isRegisteredUser(undefined, address);
   if (!allowed) {
@@ -51,7 +69,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase   = createServiceClient();
   const admin      = getAdminConfig();
   const adminMatch = isAdminUser(undefined, address);
 
