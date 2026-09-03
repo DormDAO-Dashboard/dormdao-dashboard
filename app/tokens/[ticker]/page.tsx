@@ -10,7 +10,7 @@ import { PriceLineChart } from "@/components/charts/PriceLineChart";
 import { FundDocuments } from "@/components/FundDocuments";
 import { ForumClient } from "@/components/ForumClient";
 import { ArrowLeft, TrendingUp, TrendingDown, Upload } from "lucide-react";
-import { ADMIN_SECRET } from "@/lib/admin";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 
 const BASE = "https://classic.artemis.ai/asset/";
 const ARTEMIS_URL: Record<string, string> = {
@@ -61,7 +61,7 @@ interface SchoolPosition {
 }
 
 function AdminDocUpload({ ticker, onUploaded }: { ticker: string; onUploaded: () => void }) {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -69,10 +69,6 @@ function AdminDocUpload({ ticker, onUploaded }: { ticker: string; onUploaded: ()
     title: "", school: "", document_date: "", document_type: "report",
   });
   const [file, setFile] = useState<File | null>(null);
-
-  useEffect(() => {
-    setIsAdmin(new URLSearchParams(window.location.search).has("admin"));
-  }, []);
 
   if (!isAdmin) return null;
 
@@ -91,7 +87,6 @@ function AdminDocUpload({ ticker, onUploaded }: { ticker: string; onUploaded: ()
     try {
       const res = await fetch("/api/documents/upload", {
         method: "POST",
-        headers: { Authorization: `Bearer ${ADMIN_SECRET}` },
         body: fd,
       });
       const data = await res.json();
@@ -190,11 +185,6 @@ export default function TokenDetailPage() {
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [docsKey, setDocsKey] = useState(0);
-  const [adminSecret, setAdminSecret] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("admin")) setAdminSecret(ADMIN_SECRET);
-  }, []);
 
   useEffect(() => {
     // Fetch token price + ETH price together so cost basis can be converted to USD

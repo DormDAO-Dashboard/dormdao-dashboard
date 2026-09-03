@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { canModerate } from "@/lib/auth-utils";
 import { schoolNameFromSlug } from "@/lib/schoolData";
+import { validatePositionFields } from "@/lib/position-validation";
 
 export async function GET(
   _req: NextRequest,
@@ -55,6 +56,8 @@ export async function POST(
 
   if (!body.ticker?.trim()) return NextResponse.json({ error: "ticker is required" }, { status: 400 });
   if (!body.investmentDate?.trim()) return NextResponse.json({ error: "investmentDate is required" }, { status: 400 });
+  const validationError = validatePositionFields(body);
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
 
   const { data, error } = await service
     .from("positions")

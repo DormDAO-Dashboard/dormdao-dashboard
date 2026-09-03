@@ -9,16 +9,6 @@ export async function DELETE(
   const { id } = await params;
   const service = createServiceClient();
 
-  // Admin path: bearer token
-  const secret = process.env.CRON_SECRET;
-  const auth = req.headers.get("authorization");
-  if (secret && auth === `Bearer ${secret}`) {
-    const { error } = await service.from("research_notes").delete().eq("id", id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ success: true });
-  }
-
-  // User path: proper auth
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

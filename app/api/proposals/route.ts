@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getDocumentAccessContext, applyDocumentVisibility } from "@/lib/document-access";
 import { slugify } from "@/lib/utils";
 import { sendPushNotifications } from "@/lib/push";
 import { sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl } from "@/lib/email";
@@ -71,9 +72,10 @@ export async function GET(req: NextRequest) {
   if (allDocIds.length > 0) {
     const { data: docs } = await service
       .from("token_documents")
-      .select("id, title, file_url")
+      .select("id, title, file_url, document_type, visibility, school")
       .in("id", allDocIds);
-    for (const d of docs ?? []) docsById.set(d.id, d);
+    const ctx = await getDocumentAccessContext();
+    for (const d of applyDocumentVisibility(docs ?? [], ctx)) docsById.set(d.id, d);
   }
   const rowsWithDocs = rows.map((p) => ({
     ...p,

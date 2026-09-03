@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { KpiCard } from "@/components/ui/Card";
 import { NavBarChart } from "@/components/charts/NavBarChart";
 import { EthReturnChart } from "@/components/charts/EthReturnChart";
@@ -9,7 +9,7 @@ import { SortableLeaderboard } from "@/components/SortableLeaderboard";
 import { RecentBuysFeed } from "@/components/RecentBuysFeed";
 import { EthHoldingsTable } from "@/components/EthHoldingsTable";
 import { SchoolRow } from "@/lib/types";
-import { ADMIN_SECRET } from "@/lib/admin";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 import { formatNav, formatUSD, formatPct } from "@/lib/utils";
 import Link from "next/link";
 import { ArrowRight, Camera, TrendingUp, TrendingDown } from "lucide-react";
@@ -22,13 +22,9 @@ function stdDev(values: number[]): number {
 }
 
 function AdminPanel() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = useIsAdmin();
   const [snapping, setSnapping] = useState(false);
   const [snapResult, setSnapResult] = useState<string | null>(null);
-
-  useEffect(() => {
-    setIsAdmin(new URLSearchParams(window.location.search).has("admin"));
-  }, []);
 
   if (!isAdmin) return null;
 
@@ -36,10 +32,7 @@ function AdminPanel() {
     setSnapping(true);
     setSnapResult(null);
     try {
-      const res = await fetch("/api/snapshot", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${ADMIN_SECRET}` },
-      });
+      const res = await fetch("/api/snapshot", { method: "POST" });
       const data = await res.json();
       if (data.error) {
         setSnapResult(`Error: ${data.error}`);

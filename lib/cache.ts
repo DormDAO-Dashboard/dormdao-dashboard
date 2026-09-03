@@ -135,7 +135,8 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
     bySchoolName.set(school.name, applySeasonBaselineReturn(computed, ethPriceUsdNow));
   }
   for (const [schoolName, positions] of Object.entries(positionsBySchool)) {
-    bySchoolName.set(schoolName, computeSchoolFromPositions(schoolName, positions, prices, historicalEth, vaultEquityBySchool[schoolName]));
+    const computed = computeSchoolFromPositions(schoolName, positions, prices, historicalEth, vaultEquityBySchool[schoolName]);
+    bySchoolName.set(schoolName, applySeasonBaselineReturn(computed, ethPriceUsdNow));
   }
 
   for (const s of bySchoolName.values()) {

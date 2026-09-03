@@ -49,12 +49,12 @@ function LinkPreviewCard({ url }: { url: string }) {
 interface NoteCardProps {
   note: ResearchNote;
   currentUserId?: string;
-  adminSecret?: string;
+  isAdmin?: boolean;
   onDelete?: (id: string) => void;
   onUpvote?: (id: string) => void;
 }
 
-export function NoteCard({ note, currentUserId, adminSecret, onDelete, onUpvote }: NoteCardProps) {
+export function NoteCard({ note, currentUserId, isAdmin, onDelete, onUpvote }: NoteCardProps) {
   const [upvotes, setUpvotes] = useState(note.upvotes);
   const [voted, setVoted] = useState(false);
   const [upvoting, setUpvoting] = useState(false);
@@ -81,15 +81,9 @@ export function NoteCard({ note, currentUserId, adminSecret, onDelete, onUpvote 
     if (!confirm("Delete this note? This cannot be undone.")) return;
     setDeleting(true);
     try {
+      if (!isAdmin && !currentUserId) return;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      let body: string | undefined;
-      if (adminSecret) {
-        headers["Authorization"] = `Bearer ${adminSecret}`;
-      } else if (currentUserId) {
-        body = JSON.stringify({ user_id: currentUserId });
-      } else {
-        return;
-      }
+      const body = currentUserId ? JSON.stringify({ user_id: currentUserId }) : undefined;
       const res = await fetch(`/api/notes/${note.id}`, { method: "DELETE", headers, body });
       if (res.ok) onDelete?.(note.id);
     } finally {
@@ -97,7 +91,7 @@ export function NoteCard({ note, currentUserId, adminSecret, onDelete, onUpvote 
     }
   };
 
-  const canDelete = adminSecret || (currentUserId && note.user_id === currentUserId);
+  const canDelete = isAdmin || (currentUserId && note.user_id === currentUserId);
 
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 flex flex-col gap-3">

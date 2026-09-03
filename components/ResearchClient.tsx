@@ -6,7 +6,7 @@ import { AddNoteForm } from "@/components/notes/AddNoteForm";
 import { Skeleton } from "@/components/ui/Card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ADMIN_SECRET } from "@/lib/admin";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 import { schoolDisplayName } from "@/lib/schoolData";
 
 const SENTIMENTS: Array<{ label: string; value: string }> = [
@@ -37,11 +37,7 @@ export function ResearchClient({ initialTickers, hideHeader }: { initialTickers:
   const [page, setPage] = useState(1);
   const [tokenFilter, setTokenFilter] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("");
-  const [adminSecret, setAdminSecret] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("admin")) setAdminSecret(ADMIN_SECRET);
-  }, []);
+  const isAdmin = useIsAdmin();
 
   const fetchNotes = useCallback(async () => {
     setLoading(true);
@@ -138,7 +134,7 @@ export function ResearchClient({ initialTickers, hideHeader }: { initialTickers:
               <NoteCard
                 key={note.id}
                 note={note}
-                adminSecret={adminSecret}
+                isAdmin={isAdmin}
                 onDelete={(id) => setNotes((prev) => prev.filter((n) => n.id !== id))}
               />
             ))}

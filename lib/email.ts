@@ -35,7 +35,8 @@ export function escapeHtml(input: string): string {
 // ── Unsubscribe token (HMAC-SHA256 keyed with CRON_SECRET) ───────────────────
 
 function makeUnsubToken(userId: string): string {
-  const secret = process.env.CRON_SECRET ?? "dormDAO-unsub-fallback";
+  const secret = process.env.CRON_SECRET;
+  if (!secret) throw new Error("CRON_SECRET is not set");
   return createHmac("sha256", secret).update(userId).digest("hex");
 }
 

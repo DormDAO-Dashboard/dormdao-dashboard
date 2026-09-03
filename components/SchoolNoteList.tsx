@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ResearchNote } from "@/lib/types";
 import { NoteCard } from "@/components/notes/NoteCard";
-import { ADMIN_SECRET } from "@/lib/admin";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 import { schoolDisplayName } from "@/lib/schoolData";
 
 export function SchoolNoteList({
@@ -13,11 +13,7 @@ export function SchoolNoteList({
   schoolName: string;
 }) {
   const [notes, setNotes] = useState(initialNotes);
-  const [adminSecret, setAdminSecret] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("admin")) setAdminSecret(ADMIN_SECRET);
-  }, []);
+  const isAdmin = useIsAdmin();
 
   if (notes.length === 0) {
     return (
@@ -33,7 +29,7 @@ export function SchoolNoteList({
         <NoteCard
           key={note.id}
           note={note}
-          adminSecret={adminSecret}
+          isAdmin={isAdmin}
           onDelete={(id) => setNotes((prev) => prev.filter((n) => n.id !== id))}
         />
       ))}

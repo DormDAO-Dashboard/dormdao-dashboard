@@ -54,6 +54,33 @@ function extractMeta(html: string, property: string): string {
 
 const cache = new Map<string, { data: object; expires: number }>();
 
+const MAX_REDIRECTS = 3;
+
+// Follows redirects manually so every hop — not just the initial URL — gets
+// re-checked against the private-IP allowlist. The default `redirect:
+// "follow"` would let a public host 302 to an internal address (cloud
+// metadata endpoint, localhost service) and this fetch would happily follow
+// it, since only the first URL was ever validated.
+async function safeFetch(startUrl: string): Promise<Response> {
+  let currentUrl = startUrl;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const res = await fetch(currentUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; DormDAO/1.0)" },
+      redirect: "manual",
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (res.status < 300 || res.status >= 400) return res;
+
+    const location = res.headers.get("location");
+    if (!location) throw new Error("Redirect with no Location header");
+    const nextUrl = new URL(location, currentUrl).toString();
+    if (!(await isSafeUrl(nextUrl))) throw new Error("Redirect target not allowed");
+    currentUrl = nextUrl;
+  }
+  throw new Error("Too many redirects");
+}
+
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -71,10 +98,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; DormDAO/1.0)" },
-      signal: AbortSignal.timeout(5000),
-    });
+    const res = await safeFetch(url);
     const html = await res.text();
 
     const title = extractMeta(html, "title")
@@ -82,7 +106,7 @@ export async function GET(req: NextRequest) {
       || "";
     const description = extractMeta(html, "description");
     const image = extractMeta(html, "image");
-    const siteName = extractMeta(html, "site_name") || new URL(url).hostname.replace("www.", "");
+    const siteName = extractMeta(html, "site_name") || new URL(res.url || url).hostname.replace("www.", "");
 
     const data = { title: title.trim(), description: description.trim(), image: image.trim(), siteName };
     cache.set(url, { data, expires: Date.now() + 3_600_000 });

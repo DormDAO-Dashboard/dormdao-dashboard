@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { isAdminUser } from "@/lib/admin-config";
 import { getSchoolsData } from "@/lib/cache";
 import { Holding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
@@ -19,10 +20,27 @@ interface StoredHolding {
   costBasisEth: number;
 }
 
-export async function POST(req: NextRequest) {
+// Called by the cron-job.org scheduler (Bearer CRON_SECRET, no session) and
+// by an admin's "Capture Snapshot" button in the dashboard (browser session,
+// no header at all — the client must never hold a bearer credential that
+// could be confused with the real CRON_SECRET).
+async function isAuthorized(req: NextRequest): Promise<boolean> {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
-  if (!secret || auth !== `Bearer ${secret}`) {
+  if (secret && auth === `Bearer ${secret}`) return true;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  if (isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) return true;
+
+  const service = createServiceClient();
+  const { data: profile } = await service.from("profiles").select("role").eq("id", user.id).single();
+  return profile?.role === "dorm_admin";
+}
+
+export async function POST(req: NextRequest) {
+  if (!(await isAuthorized(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

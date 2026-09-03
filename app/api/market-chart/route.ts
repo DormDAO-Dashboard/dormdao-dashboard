@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const geckoId = searchParams.get("id");
-  const days = searchParams.get("days") || "7";
+  const daysRaw = searchParams.get("days") || "7";
+  const days = /^\d+$/.test(daysRaw) && Number(daysRaw) >= 1 && Number(daysRaw) <= 365 ? daysRaw : "7";
 
   if (!geckoId) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${geckoId}/market_chart?vs_currency=usd&days=${days}`,
+      `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(geckoId)}/market_chart?vs_currency=usd&days=${days}`,
       { next: { revalidate: days === "7" ? 300 : 3600 } }
     );
 

@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { canModerate } from "@/lib/auth-utils";
 import { schoolNameFromSlug } from "@/lib/schoolData";
+import { validatePositionFields } from "@/lib/position-validation";
 
 async function requireModerator(school: string) {
   const supabase = await createClient();
@@ -40,6 +41,9 @@ export async function PATCH(
     purchasePriceUsd?: number | null;
     investmentDate?: string;
   };
+
+  const validationError = validatePositionFields(body);
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
 
   const { data, error } = await service
     .from("positions")

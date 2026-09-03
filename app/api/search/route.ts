@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getDocumentAccessContext, applyDocumentVisibility } from "@/lib/document-access";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -19,13 +20,15 @@ export async function GET(req: NextRequest) {
       .limit(3),
     supabase
       .from("token_documents")
-      .select("id, title, token_ticker, file_url, document_type")
+      .select("id, title, token_ticker, file_url, document_type, visibility, school")
       .ilike("title", `%${q}%`)
       .limit(3),
   ]);
 
+  const ctx = await getDocumentAccessContext();
+
   return NextResponse.json({
     threads: threadsRes.data ?? [],
-    documents: docsRes.data ?? [],
+    documents: applyDocumentVisibility(docsRes.data ?? [], ctx),
   });
 }
