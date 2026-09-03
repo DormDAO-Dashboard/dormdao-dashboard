@@ -124,7 +124,13 @@ export async function POST(request: NextRequest) {
 
   const res = NextResponse.json({ token_hash: linkData.properties.hashed_token });
   if (member?.school && userId) {
-    res.cookies.set("ddo-school-ok", "1", { path: "/", httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 30 });
+    res.cookies.set("ddo-school-ok", "1", {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30,
+      secure: process.env.NODE_ENV === "production",
+    });
   }
   return res;
 }

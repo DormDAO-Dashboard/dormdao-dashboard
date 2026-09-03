@@ -69,11 +69,14 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Stamp cache cookie so next request skips the DB call
+    // Stamp cache cookie so next request skips the DB call. Attributes match
+    // the other place this cookie is set (app/api/auth/wallet/route.ts).
     supabaseResponse.cookies.set(SCHOOL_OK_COOKIE, "1", {
       path: "/",
       maxAge: ONE_YEAR,
       sameSite: "lax",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
     });
   }
 
