@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    qualities: [90],
+    // 75 is Next's default quality, requested by every next/image usage in
+    // the app that doesn't pass an explicit `quality` prop (all but one,
+    // app/map/page.tsx:442, which passes 90) — restricting this list to
+    // [90] alone made every one of those requests 400
+    // (INVALID_IMAGE_OPTIMIZE_REQUEST), breaking most images site-wide,
+    // avatars included. Confirmed live against production.
+    qualities: [75, 90],
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "ipfs.io" },
