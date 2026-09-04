@@ -61,6 +61,33 @@ export function ProposalCard({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [viewingDoc, setViewingDoc] = useState<ProposalDocument | null>(null);
 
+  const [showVoters, setShowVoters] = useState(false);
+  const [voters, setVoters] = useState<{ id: string; display_name: string }[] | null>(null);
+  const [votersLoading, setVotersLoading] = useState(false);
+  const [votersError, setVotersError] = useState<string | null>(null);
+
+  async function toggleVoters() {
+    const next = !showVoters;
+    setShowVoters(next);
+    if (next && voters === null && !votersLoading) {
+      setVotersLoading(true);
+      setVotersError(null);
+      try {
+        const res = await fetch(`/api/proposals/${proposal.id}/voters`);
+        const data = await res.json() as { voters?: { id: string; display_name: string }[]; error?: string };
+        if (!res.ok) {
+          setVotersError(data.error ?? "Failed to load voters");
+        } else {
+          setVoters(data.voters ?? []);
+        }
+      } catch {
+        setVotersError("Network error — please try again");
+      } finally {
+        setVotersLoading(false);
+      }
+    }
+  }
+
   const active = isActive(proposal);
   const { yesPct, noPct } = votePercents(proposal.yes_votes, proposal.no_votes);
   const totalVotes = proposal.yes_votes + proposal.no_votes;
@@ -219,9 +246,15 @@ export function ProposalCard({
               />
             </div>
             <div className="flex justify-between items-center mt-1.5">
-              <span className="text-xs text-gray-700 dark:text-gray-400">
+              <button
+                type="button"
+                onClick={toggleVoters}
+                aria-expanded={showVoters}
+                className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300 transition-colors"
+              >
                 {totalVotes} of {memberCount > 0 ? memberCount : "?"} {schoolDisplayName(schoolName)} members voted
-              </span>
+                {showVoters ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
               {active && (
                 <span className="text-xs text-gray-700 dark:text-gray-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
@@ -229,6 +262,29 @@ export function ProposalCard({
                 </span>
               )}
             </div>
+
+            {showVoters && (
+              <div className="mt-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 px-3 py-2">
+                {votersLoading && (
+                  <p className="text-xs text-gray-700 dark:text-gray-400">Loading…</p>
+                )}
+                {!votersLoading && votersError && (
+                  <p className="text-xs text-red-500">{votersError}</p>
+                )}
+                {!votersLoading && !votersError && voters?.length === 0 && (
+                  <p className="text-xs text-gray-700 dark:text-gray-400">No votes yet.</p>
+                )}
+                {!votersLoading && !votersError && voters && voters.length > 0 && (
+                  <ul className="flex flex-wrap gap-x-4 gap-y-1">
+                    {voters.map((v) => (
+                      <li key={v.id} className="text-xs text-gray-700 dark:text-gray-300">
+                        {v.display_name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Vote buttons */}
