@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSchoolsData } from "@/lib/cache";
 
-export const revalidate = 300;
+export const revalidate = 600;
 
 export type { Holding, SchoolRowWithHoldings } from "@/lib/sheets";
 

@@ -29,7 +29,7 @@ No-scroll layout that fills full viewport height. Three-panel side-by-side layou
 - Left panel: Quarterly performance table (SCHOOL / USD / ETH, sortable). Shows all schools with current-quarter returns.
 - Middle panel: Current Season table — Rank, School, NAV (exact dollars), Return USD %, Return ETH %, % Deployed. Sortable by all columns. Season tabs at top (25–26 / 24–25 / 23–24). Yellow accent border distinguishes it as the primary panel. Sticky headers.
 - Right panel: All-Time performance (Rank, School, USD %, ETH %).
-All panels support light and dark mode. Data revalidates every 5 minutes.
+All panels support light and dark mode. Data revalidates every 10 minutes.
 
 ### /schools — School Portfolios
 Grid of school cards. Each shows logo, name, NAV, ETH return, USD return, % deployed. Links to school detail.
@@ -45,7 +45,7 @@ Tabs (Positions only shown to that school's leadership or a DormDAO admin):
 7. **Positions** — Add/edit/delete this school's positions table rows (see "Supabase tables" below) — the fixed inputs the internal NAV/return calculation is built from. Gated by `canModerate()` from `lib/auth-utils.ts`.
 
 ### /analytics — Analytics Dashboard
-Period selector tabs (current season / 24-25 / 23-24 / all-time). KPI cards: Total Portfolio NAV, Avg USD Return, Avg ETH Return, Avg Deployment. Portfolio NAV by School bar chart. Deployment % vs NAV scatter chart. ETH Holdings table (live USD values via CoinGecko). Recent Buys feed. Sortable School Leaderboard table with exact dollar NAV. Data revalidates every 5 minutes.
+Period selector tabs (current season / 24-25 / 23-24 / all-time). KPI cards: Total Portfolio NAV, Avg USD Return, Avg ETH Return, Avg Deployment. Portfolio NAV by School bar chart. Deployment % vs NAV scatter chart. ETH Holdings table (live USD values via CoinGecko). Recent Buys feed. Sortable School Leaderboard table with exact dollar NAV. Data revalidates every 10 minutes.
 
 ### /tokens — Token Index
 All tokens held across 17 schools, aggregated. Shows ticker, name, live price, number of schools holding, total tokens, blockchains.
@@ -104,7 +104,7 @@ Static marketing/showcase pages for DormDAO's sub-programs, each with a hero + c
 - scripts/ — Node.js utility scripts
 
 ## Data flow
-1. Portfolio data: Google Sheets CSV → /api/sheets → parsed server-side → cached 5min. For any school with ≥1 row in the `positions` table, this is overridden entirely — that school's current-season NAV/USD-return/ETH-return/%-deployed are instead computed from `positions` + live CoinGecko prices (see `lib/positions.ts`, `lib/cache.ts`). Historical seasons (24-25, 23-24, Since Inception) and exited/NFT holdings always stay sheet-derived.
+1. Portfolio data: Google Sheets CSV → /api/sheets → parsed server-side → cached 10min. For any school with ≥1 row in the `positions` table, this is overridden entirely — that school's current-season NAV/USD-return/ETH-return/%-deployed are instead computed from `positions` + live CoinGecko prices (see `lib/positions.ts`, `lib/cache.ts`). Historical seasons (24-25, 23-24, Since Inception) and exited/NFT holdings always stay sheet-derived.
 2. Token prices: CoinGecko API → /api/prices → cached 60s in-memory
 3. Research notes: Supabase postgres → /api/notes
 4. Daily snapshots: cron-job.org → POST /api/snapshot → portfolio_snapshots table → fires push + email notifications on changes

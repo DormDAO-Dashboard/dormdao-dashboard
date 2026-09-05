@@ -1,7 +1,7 @@
 import { getSchoolsData } from "@/lib/cache";
 import { LeaderboardClient } from "@/components/LeaderboardClient";
 
-export const revalidate = 300;
+export const revalidate = 600;
 
 export default async function LeaderboardPage() {
   const { schools, sinceInceptionSchools, schools2425, schools2324, fetchedAt } = await getSchoolsData();

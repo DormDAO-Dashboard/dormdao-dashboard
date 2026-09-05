@@ -279,7 +279,7 @@ const getSchoolsDataLive = unstable_cache(
     return result;
   },
   ["schools-data-v24"],
-  { revalidate: 300 }
+  { revalidate: 600 }
 );
 
 function emptySchoolsCache(): SchoolsCache {

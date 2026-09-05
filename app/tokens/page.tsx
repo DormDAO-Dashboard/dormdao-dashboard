@@ -2,7 +2,7 @@ import { getSchoolsData, getAllPrices } from "@/lib/cache";
 import { TokensClient } from "@/components/TokensClient";
 import type { TokenInfo } from "@/components/TokensClient";
 
-export const revalidate = 300;
+export const revalidate = 600;
 
 export default async function TokensPage() {
   const [{ schools, tokenToSchools }, { prices }] = await Promise.all([

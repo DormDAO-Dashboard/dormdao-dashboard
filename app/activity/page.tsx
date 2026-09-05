@@ -2,7 +2,7 @@ import { getSchoolsData } from "@/lib/cache";
 import { ActivityTabs } from "@/components/ActivityTabs";
 import { SyncFooter } from "@/components/SyncFooter";
 
-export const revalidate = 300;
+export const revalidate = 600;
 
 export default async function ActivityPage() {
   const { schools, fetchedAt } = await getSchoolsData();
