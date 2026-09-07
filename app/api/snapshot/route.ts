@@ -111,6 +111,20 @@ export async function POST(req: NextRequest) {
         return;
       }
 
+      // Final authoritative check for admin-tracked positions: whatever
+      // upstream computation produced this cycle's `schools.holdings`
+      // (Sheets parsing, CoinGecko price resolution, positions-table read —
+      // any of which can drop a row without the position actually having
+      // changed, see the sell-detection comment below), the `positions`
+      // table itself is the real source of truth for a school managed that
+      // way. A fresh, direct read of it here means a ticker that still has
+      // a row there can never be reported as sold, regardless of what bug
+      // might exist further up the computation chain.
+      const { data: livePositionRows } = await supabase.from("positions").select("school, ticker");
+      const stillInPositionsTable = new Set(
+        (livePositionRows ?? []).map((r) => `${r.school}::${r.ticker.toUpperCase()}`)
+      );
+
       const detectedAt = new Date().toISOString();
       const changeRows: Array<{
         school_name: string;
@@ -129,6 +143,17 @@ export async function POST(req: NextRequest) {
         const prevMap = new Map(prev.map((h: StoredHolding) => [h.ticker, h]));
         const currHoldings = school.holdings ?? [];
         const currMap = new Map(currHoldings.map((h: Holding) => [h.ticker, h]));
+
+        // Log every first-cycle disappearance, confirmed or not — if this
+        // keeps naming the same ticker+school every cycle instead of
+        // resolving one way or the other within a run or two, that's the
+        // signature of a persistent upstream bug (not a one-off glitch) and
+        // points straight at which school/ticker to dig into next.
+        for (const ticker of prevMap.keys()) {
+          if (!currMap.has(ticker)) {
+            console.warn(`[snapshot] ${school.name} ${ticker} missing from this cycle's live holdings (was present last stored cycle)`);
+          }
+        }
 
         for (const [ticker, h] of currMap) {
           const prevH = prevMap.get(ticker);
@@ -156,17 +181,25 @@ export async function POST(req: NextRequest) {
         // gone. Schools without two full cycles of history yet (twoAgo
         // unavailable) fall back to firing on the first miss, so exit
         // detection isn't blocked while that history builds up.
+        const recordSell = (ticker: string, oldQuantity: number) => {
+          if (stillInPositionsTable.has(`${school.name}::${ticker}`)) {
+            console.warn(`[snapshot] suppressed false "sell" for ${school.name} ${ticker} — still has a positions-table row`);
+            return;
+          }
+          changeRows.push({ school_name: school.name, change_type: "sell", token_ticker: ticker, old_quantity: oldQuantity, detected_at: detectedAt });
+        };
+
         const twoAgo = twoAgoBySchool[school.name];
         if (twoAgo && twoAgo.length > 0) {
           for (const h of twoAgo) {
             if (prevMap.has(h.ticker)) continue; // still present as of last stored cycle — not a candidate yet
             if (currMap.has(h.ticker)) continue; // reappeared — last cycle's drop was itself a glitch
-            changeRows.push({ school_name: school.name, change_type: "sell", token_ticker: h.ticker, old_quantity: h.tokens, detected_at: detectedAt });
+            recordSell(h.ticker, h.tokens);
           }
         } else {
           for (const [ticker, prevH] of prevMap) {
             if (!currMap.has(ticker)) {
-              changeRows.push({ school_name: school.name, change_type: "sell", token_ticker: ticker, old_quantity: prevH.tokens, detected_at: detectedAt });
+              recordSell(ticker, prevH.tokens);
             }
           }
         }
