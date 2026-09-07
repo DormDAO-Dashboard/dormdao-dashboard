@@ -34,7 +34,11 @@ export async function GET(
     .eq("id", user.id)
     .single();
 
-  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
+  // Must include profiles.role === "dorm_admin", not just the env-configured
+  // ADMIN_EMAIL/ADMIN_EMAILS — otherwise a promoted admin outside that env
+  // list gets treated as a regular member here (see GET /api/proposals).
+  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)
+    || profile?.role === "dorm_admin";
   if (p.school === MAIN_DAO_SLUG) {
     if (!isMainDaoAuthorized(isAdmin, profile?.role, profile?.school)) {
       return NextResponse.json({ error: "Access restricted to DormDAO admins and Main DAO voters" }, { status: 403 });

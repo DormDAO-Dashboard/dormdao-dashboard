@@ -10,6 +10,7 @@ import { SchoolLogo } from "@/components/SchoolLogo";
 import { VotingClient } from "@/components/VotingClient";
 import { schoolDisplayName } from "@/lib/schoolData";
 import { isAdminUser } from "@/lib/admin-config";
+import { isDormAdmin } from "@/lib/auth-utils";
 import { MAIN_DAO_VOTER } from "@/lib/main-dao";
 
 async function VotingPageContent({ slug }: { slug: string }) {
@@ -51,13 +52,18 @@ async function VotingPageContent({ slug }: { slug: string }) {
   const service = createServiceClient();
   const { data: profile } = await service
     .from("profiles")
-    .select("school")
+    .select("school, role")
     .eq("id", user.id)
     .single();
 
   const isMainDaoVoter = profile?.school === MAIN_DAO_VOTER;
   const userSchoolSlug = profile?.school && !isMainDaoVoter ? slugify(profile.school) : null;
-  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
+  // Must include profiles.role === "dorm_admin" (set via the admin promote
+  // panel), not just the env-configured ADMIN_EMAIL/ADMIN_EMAILS — otherwise
+  // a promoted admin outside that env list gets walled off every school's
+  // voting page except their own, same gap /api/proposals GET had.
+  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)
+    || isDormAdmin({ role: profile?.role ?? null, school: null });
 
   if (userSchoolSlug !== slug && !isAdmin) {
     return (

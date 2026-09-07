@@ -27,15 +27,21 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ proposals: [] });
 
-    const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
-    if (!isAdmin) {
-      const service = createServiceClient();
-      const { data: profile } = await service
-        .from("profiles")
-        .select("school, role")
-        .eq("id", user.id)
-        .single();
+    const service = createServiceClient();
+    const { data: profile } = await service
+      .from("profiles")
+      .select("school, role")
+      .eq("id", user.id)
+      .single();
 
+    // Admin status must include profiles.role === "dorm_admin" (set when a
+    // member is promoted via the admin panel), not just the env-configured
+    // ADMIN_EMAIL/ADMIN_EMAILS — otherwise a promoted admin who isn't in
+    // that env list gets treated as a regular member and only sees their
+    // own school's proposals, same bug isMainDaoAuthorized already avoids.
+    const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)
+      || profile?.role === "dorm_admin";
+    if (!isAdmin) {
       if (school === MAIN_DAO_SLUG) {
         if (!isMainDaoAuthorized(isAdmin, profile?.role, profile?.school)) {
           return NextResponse.json({ error: "Access restricted to DormDAO admins and Main DAO voters" }, { status: 403 });
@@ -114,7 +120,8 @@ export async function POST(req: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined);
+  const isAdmin = isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)
+    || profile?.role === "dorm_admin";
 
   const body = await req.json() as {
     school?: string;

@@ -91,12 +91,19 @@ export function computeSchoolMetrics(
 
   const holdings: Holding[] = positions.map((p) => {
     const ticker = p.ticker.toUpperCase();
+    // prices[ticker] is only ever absent, not zero, when CoinGecko has no
+    // live quote right now (rate-limited, cold cache, or an unmapped/renamed
+    // id — see getPricesForTickers's stale-over-zero caching). Treating that
+    // as a literal $0 price fabricates a false "-100%" total-loss return for
+    // a position that hasn't actually moved, so it's tracked separately from
+    // a token that's genuinely quoted at ~$0.
+    const hasLivePrice = prices[ticker] != null;
     const currentPriceUsd = prices[ticker]?.usd ?? 0;
     const vaultEquityUsd = extras?.vaultEquityUsdByTicker?.[ticker];
-    const currentValueUsd = vaultEquityUsd ?? p.tokens * currentPriceUsd;
-    nav += currentValueUsd;
 
     if (ticker === "ETH") {
+      const currentValueUsd = vaultEquityUsd ?? p.tokens * currentPriceUsd;
+      nav += currentValueUsd;
       idleEthValueUsd += currentValueUsd;
       return {
         ticker,
@@ -119,6 +126,15 @@ export function computeSchoolMetrics(
         ? (p.costBasisEth * historicalEth[p.investmentDate]) / p.tokens
         : null);
     const costBasisUsd = purchasePriceUsd != null ? p.tokens * purchasePriceUsd : null;
+
+    // No live price right now: hold the position at cost (flat, 0% return)
+    // instead of $0 (a fabricated -100%) — an honest "unchanged" beats an
+    // alarming, wrong "total loss".
+    const currentValueUsd = vaultEquityUsd ?? (hasLivePrice
+      ? p.tokens * currentPriceUsd
+      : costBasisUsd ?? 0);
+    nav += currentValueUsd;
+
     const gainUsd = costBasisUsd != null ? currentValueUsd - costBasisUsd : undefined;
     const roiUsdPct =
       costBasisUsd && costBasisUsd > 0 ? ((currentValueUsd - costBasisUsd) / costBasisUsd) * 100 : undefined;

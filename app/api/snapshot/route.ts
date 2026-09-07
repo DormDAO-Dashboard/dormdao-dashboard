@@ -63,17 +63,27 @@ export async function POST(req: NextRequest) {
 
       const { schools } = await getSchoolsData();
 
+      // Fetch two stored cycles per school (not just the last one) — sell
+      // detection below needs both to require a disappearance to be
+      // confirmed across two independent computations before treating it as
+      // real, rather than reacting to a single glitchy read.
       const { data: prevSnapshots } = await supabase
         .from("portfolio_snapshots")
         .select("school_name, holdings, captured_at")
         .order("captured_at", { ascending: false })
-        .limit(schools.length * 3);
+        .limit(schools.length * 6);
 
       const prevBySchool: Record<string, StoredHolding[]> = {};
+      const twoAgoBySchool: Record<string, StoredHolding[]> = {};
       if (prevSnapshots) {
+        const seenCount: Record<string, number> = {};
         for (const snap of prevSnapshots) {
-          if (!prevBySchool[snap.school_name]) {
+          const n = (seenCount[snap.school_name] ?? 0) + 1;
+          seenCount[snap.school_name] = n;
+          if (n === 1) {
             prevBySchool[snap.school_name] = (snap.holdings as StoredHolding[]) ?? [];
+          } else if (n === 2) {
+            twoAgoBySchool[snap.school_name] = (snap.holdings as StoredHolding[]) ?? [];
           }
         }
       }
@@ -131,9 +141,33 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        for (const [ticker, prevH] of prevMap) {
-          if (!currMap.has(ticker)) {
-            changeRows.push({ school_name: school.name, change_type: "sell", token_ticker: ticker, old_quantity: prevH.tokens, detected_at: detectedAt });
+        // Sell detection needs to be skeptical of a single missing row: a
+        // transient Sheets/CoinGecko/Supabase read glitch can drop one
+        // ticker from a live computation without the position actually
+        // having been sold (see lib/positions.ts and lib/cache.ts's
+        // patchZeroedFromSnapshot for the same class of bug at the
+        // whole-school level). So a ticker that just disappeared THIS cycle
+        // (present last stored cycle, missing now) is never reported here —
+        // that only gets recorded next cycle, if it's still gone by then.
+        // What we fire on now is the CONFIRMED case: a ticker present two
+        // stored cycles ago that had already dropped out of the last stored
+        // snapshot AND is still absent from this cycle's live holdings —
+        // two independent computations, one cycle apart, agreeing it's
+        // gone. Schools without two full cycles of history yet (twoAgo
+        // unavailable) fall back to firing on the first miss, so exit
+        // detection isn't blocked while that history builds up.
+        const twoAgo = twoAgoBySchool[school.name];
+        if (twoAgo && twoAgo.length > 0) {
+          for (const h of twoAgo) {
+            if (prevMap.has(h.ticker)) continue; // still present as of last stored cycle — not a candidate yet
+            if (currMap.has(h.ticker)) continue; // reappeared — last cycle's drop was itself a glitch
+            changeRows.push({ school_name: school.name, change_type: "sell", token_ticker: h.ticker, old_quantity: h.tokens, detected_at: detectedAt });
+          }
+        } else {
+          for (const [ticker, prevH] of prevMap) {
+            if (!currMap.has(ticker)) {
+              changeRows.push({ school_name: school.name, change_type: "sell", token_ticker: ticker, old_quantity: prevH.tokens, detected_at: detectedAt });
+            }
           }
         }
       }
