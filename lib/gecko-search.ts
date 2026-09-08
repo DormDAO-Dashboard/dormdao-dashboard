@@ -42,7 +42,7 @@ export async function resolveGeckoId(ticker: string): Promise<Resolved | null> {
   // "no match" — this endpoint has no persistent cache backing it up the
   // way lib/prices.ts's fetchBatch does, so a single unlucky rate-limit hit
   // used to read identically to the ticker genuinely not existing.
-  let data: { coins?: Array<{ id: string; symbol: string; name: string }> } | null = null;
+  let data: { coins?: Array<{ id: string; symbol: string; name: string; market_cap_rank: number | null }> } | null = null;
   for (let attempt = 0; attempt < 2 && !data; attempt++) {
     try {
       const res = await coingeckoFetch(
@@ -62,8 +62,21 @@ export async function resolveGeckoId(ticker: string): Promise<Resolved | null> {
 
   const coins = data.coins ?? [];
 
-  // Prefer exact symbol match; fall back to first result that passes the loose check
-  const exact = coins.find((c) => c.symbol.toUpperCase() === ticker.toUpperCase());
+  // Ticker symbols aren't unique — CoinGecko search for "PUMP" also turns up
+  // several unrelated micro-cap coins squatting the same symbol alongside
+  // the real Pump.fun token. Taking the first exact-symbol match trusted the
+  // search endpoint's relevance ordering to always put the real token first,
+  // which isn't a documented guarantee. Among every exact-symbol match,
+  // explicitly pick the one with the best (lowest) market cap rank instead —
+  // an unranked/unlisted squatter loses to any ranked coin automatically.
+  const exactMatches = coins.filter((c) => c.symbol.toUpperCase() === ticker.toUpperCase());
+  const exact = exactMatches.length > 0
+    ? exactMatches.reduce((best, c) => {
+        if (best.market_cap_rank == null) return c.market_cap_rank != null ? c : best;
+        if (c.market_cap_rank == null) return best;
+        return c.market_cap_rank < best.market_cap_rank ? c : best;
+      })
+    : undefined;
   const loose = coins.find((c) => symbolMatches(c.symbol, ticker));
   const match = exact ?? loose ?? null;
 
