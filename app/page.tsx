@@ -6,7 +6,7 @@ import { LandingRevealBar } from "@/components/LandingRevealBar";
 // cached at build time, or every visitor would get the same fixed image.
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "DormDAO" };
+export const metadata = { title: "Dorm™" };
 
 const LANDING_IMAGES = Array.from({ length: 7 }, (_, i) => `/landing/landing-${i + 1}.jpg`);
 

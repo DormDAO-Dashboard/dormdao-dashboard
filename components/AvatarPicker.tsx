@@ -37,7 +37,7 @@ export function AvatarPicker({ current, onSelect }: Props) {
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
               <div>
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Choose your Pudgy</h2>
-                <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">Pick a penguin to represent you across DormDAO.</p>
+                <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">Pick a penguin to represent you across Dorm™.</p>
               </div>
               <button
                 onClick={() => setOpen(false)}

@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { VotingClient } from "@/components/VotingClient";
 import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
 
-export const metadata = { title: "Main DAO — Admin — DormDAO" };
+export const metadata = { title: "Main DAO — Admin — Dorm™" };
 
 export default async function AdminMainDaoPage() {
   await requireAdmin();
@@ -12,7 +12,7 @@ export default async function AdminMainDaoPage() {
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Main DAO</h1>
         <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">
-          DormDAO-wide investment proposals. Proposals that pass at an individual school are
+          Dorm™-wide investment proposals. Proposals that pass at an individual school are
           automatically reposted here for a Main DAO vote.
         </p>
       </div>

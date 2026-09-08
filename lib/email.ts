@@ -75,7 +75,7 @@ function buildTemplate(opts: {
 
   return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
   <div style="background:#111827;padding:18px 24px;border-radius:12px 12px 0 0">
-    <span style="font-size:16px;font-weight:700;color:#fff">DormDAO</span>
+    <span style="font-size:16px;font-weight:700;color:#fff">Dorm™</span>
   </div>
   <div style="background:#fff;padding:28px 24px;border:1px solid #e5e7eb;border-top:none">
     ${schoolBadge}
@@ -84,7 +84,7 @@ function buildTemplate(opts: {
     ${ctaBtn}
   </div>
   <div style="background:#f9fafb;padding:14px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;font-size:11px;color:#9ca3af">
-    You received this from DormDAO &middot; ${footerLink}
+    You received this from Dorm™ &middot; ${footerLink}
   </div>
 </div>`;
 }
@@ -368,7 +368,7 @@ export async function sendSchoolEmailNotifications(schoolSlug: string, payload: 
     html: buildTemplate({
       title: payload.title,
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">${payload.body}</p>`,
-      cta: { label: "View on DormDAO →", url: payload.url },
+      cta: { label: "View on Dorm™ →", url: payload.url },
       userId: r.userId,
     }),
   }), NOTIFICATIONS_EMAIL);
@@ -403,8 +403,8 @@ export async function sendEmailNotifications(payload: PushPayload): Promise<void
     subject: payload.title,
     html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
       <p style="font-size:15px;color:#111">${payload.body}</p>
-      <a href="${payload.url}" style="display:inline-block;margin-top:12px;padding:10px 20px;background:#1D9E75;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">View on DormDAO →</a>
-      <p style="margin-top:24px;font-size:11px;color:#999">You're receiving this because you enabled email alerts on DormDAO.</p>
+      <a href="${payload.url}" style="display:inline-block;margin-top:12px;padding:10px 20px;background:#1D9E75;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">View on Dorm™ →</a>
+      <p style="margin-top:24px;font-size:11px;color:#999">You're receiving this because you enabled email alerts on Dorm™.</p>
     </div>`,
   });
   assertResendOk(result);
@@ -428,7 +428,7 @@ export async function sendInviteEmail(opts: {
   const t = await getEffectiveTemplateFields("onboarding_invite");
 
   const invitedLine = opts.invitedBy
-    ? `<p style="font-size:14px;color:#374151;line-height:1.6"><strong>${escapeHtml(opts.invitedBy)}</strong> invited you to join DormDAO.</p>`
+    ? `<p style="font-size:14px;color:#374151;line-height:1.6"><strong>${escapeHtml(opts.invitedBy)}</strong> invited you to join Dorm™.</p>`
     : "";
 
   // Only rendered when the member actually has a wallet on file — otherwise

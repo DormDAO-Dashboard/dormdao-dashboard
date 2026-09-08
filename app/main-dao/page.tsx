@@ -1,7 +1,7 @@
 import { VotingClient } from "@/components/VotingClient";
 import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
 
-export const metadata = { title: "Main DAO — DormDAO" };
+export const metadata = { title: "Main DAO — Dorm™" };
 
 export default function MainDaoPage() {
   return (
@@ -9,7 +9,7 @@ export default function MainDaoPage() {
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Main DAO</h1>
         <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">
-          DormDAO-wide investment proposals, voted on by DormDAO admins and Main DAO voters.
+          Dorm™-wide investment proposals, voted on by Dorm™ admins and Main DAO voters.
         </p>
       </div>
 

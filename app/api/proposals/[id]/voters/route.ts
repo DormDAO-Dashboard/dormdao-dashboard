@@ -41,7 +41,7 @@ export async function GET(
     || profile?.role === "dorm_admin";
   if (p.school === MAIN_DAO_SLUG) {
     if (!isMainDaoAuthorized(isAdmin, profile?.role, profile?.school)) {
-      return NextResponse.json({ error: "Access restricted to DormDAO admins and Main DAO voters" }, { status: 403 });
+      return NextResponse.json({ error: "Access restricted to Dorm™ admins and Main DAO voters" }, { status: 403 });
     }
   } else if (!isAdmin) {
     const userSchoolSlug = profile?.school ? slugify(profile.school) : null;

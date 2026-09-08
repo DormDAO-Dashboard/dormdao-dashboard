@@ -375,7 +375,7 @@ export function ForumClient({ school, ticker }: Props) {
               <MessagesSquare className="w-5 h-5 text-primary" />
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">DAO Forum</h1>
             </div>
-            <p className="text-sm text-gray-700 dark:text-gray-400">Discuss pitches, strategies, and ideas across the DormDAO network</p>
+            <p className="text-sm text-gray-700 dark:text-gray-400">Discuss pitches, strategies, and ideas across the Dorm™ network</p>
           </div>
           {user && userSchool && (
             <button

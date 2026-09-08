@@ -403,7 +403,7 @@ export function ResearchTabs({ initialTickers: _ }: { initialTickers: string[] }
           <FileText className="w-5 h-5 text-primary" />
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">DormDocs</h1>
         </div>
-        <p className="text-gray-700 dark:text-gray-400 text-sm ml-8">Investment pitches and research from the DormDAO ecosystem</p>
+        <p className="text-gray-700 dark:text-gray-400 text-sm ml-8">Investment pitches and research from the Dorm™ ecosystem</p>
       </div>
       <DormDocsGrid />
     </div>

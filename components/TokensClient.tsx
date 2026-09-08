@@ -88,7 +88,7 @@ export function TokensClient({ initialTokens, initialPrices }: Props) {
       {/* DormDAO Top Picks */}
       {topPicks.length > 0 && !search && !chainFilter && (
         <div className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">DormDAO Top Picks</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">Dorm™ Top Picks</h2>
           <div className="flex flex-wrap gap-2">
             {topPicks.map((token) => {
               const price = initialPrices[token.ticker];

@@ -107,8 +107,8 @@ function SetupCard({
       <div className="w-full max-w-lg">
         <div className="rounded-xl border border-gray-800 bg-[#111] shadow-2xl p-8">
           <div className="text-center mb-8">
-            <Image src="/logo.jpg" width={48} height={48} alt="DormDAO" className="rounded-xl mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome to DormDAO 🎉</h1>
+            <Image src="/logo.jpg" width={48} height={48} alt="Dorm™" className="rounded-xl mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome to Dorm™ 🎉</h1>
             <p className="text-gray-700 dark:text-gray-400 text-sm mt-2">Let&apos;s set up your profile before you get started</p>
           </div>
 
@@ -118,7 +118,7 @@ function SetupCard({
                 <SchoolLogo name={school} size={18} />
                 <span className="text-sm text-gray-900 dark:text-white font-medium">{schoolDisplayName(school)}</span>
                 <Lock className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 ml-auto shrink-0" />
-                <span className="text-xs text-gray-700 dark:text-gray-400">Assigned by DormDAO admin</span>
+                <span className="text-xs text-gray-700 dark:text-gray-400">Assigned by Dorm™ admin</span>
               </div>
             )}
 
@@ -573,7 +573,7 @@ function NormalProfile({
         <label className="flex items-center justify-between gap-4 cursor-pointer">
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">Show my profile in the members directory</p>
-            <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">When on, other DormDAO members can find your profile</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">When on, other Dorm™ members can find your profile</p>
           </div>
           <button type="button" role="switch" aria-checked={isPublic} onClick={() => setIsPublic((v) => !v)}
             className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${isPublic ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"}`}>

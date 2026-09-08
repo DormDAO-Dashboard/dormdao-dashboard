@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { isDataCollectionPaused } from "@/lib/data-collection-store";
 import { AdminSettingsSection } from "@/components/AdminSettingsSection";
 
-export const metadata = { title: "Admin Settings — Admin — DormDAO" };
+export const metadata = { title: "Admin Settings — Admin — Dorm™" };
 
 export default async function AdminSettingsPage() {
   await requireAdmin();

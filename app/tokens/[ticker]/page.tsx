@@ -366,7 +366,7 @@ export default function TokenDetailPage() {
         return (
           <div className={`rounded-lg border p-5 mb-6 ${isProfitable === true ? "border-primary/30 bg-primary/5" : isProfitable === false ? "border-danger/30 bg-danger/5" : "border-gray-800 bg-gray-900/30"}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Aggregate DormDAO Position</h2>
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Aggregate Dorm™ Position</h2>
               <div className="flex items-center gap-2">
                 {isProfitable !== null && (
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isProfitable ? "bg-primary/20 text-primary" : "bg-danger/20 text-danger"}`}>
@@ -410,7 +410,7 @@ export default function TokenDetailPage() {
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-gray-800">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Held by DormDAO ({loadingSchools ? "…" : schoolPositions.length} school{schoolPositions.length !== 1 ? "s" : ""})
+            Held by Dorm™ ({loadingSchools ? "…" : schoolPositions.length} school{schoolPositions.length !== 1 ? "s" : ""})
           </h2>
         </div>
         {loadingSchools ? (
@@ -418,7 +418,7 @@ export default function TokenDetailPage() {
             {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
         ) : schoolPositions.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-gray-700 dark:text-gray-400">No DormDAO school holds ${tickerUpper}.</p>
+          <p className="px-5 py-6 text-sm text-gray-700 dark:text-gray-400">No Dorm™ school holds ${tickerUpper}.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -503,7 +503,7 @@ export default function TokenDetailPage() {
                     ? (totalPnl / totalCostUsd) * 100 : null;
                   return (
                     <tr className="bg-gray-800/30 font-semibold">
-                      <td className="px-5 py-3 text-xs text-gray-700 dark:text-gray-400 uppercase tracking-wide">DormDAO Total</td>
+                      <td className="px-5 py-3 text-xs text-gray-700 dark:text-gray-400 uppercase tracking-wide">Dorm™ Total</td>
                       <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
                         {totalTokens !== 0 ? totalTokens.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "—"}
                       </td>

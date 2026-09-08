@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/admin-guard";
 import { AdminEmailFunctionsSection } from "@/components/AdminEmailFunctionsSection";
 
-export const metadata = { title: "Email Functions — Admin — DormDAO" };
+export const metadata = { title: "Email Functions — Admin — Dorm™" };
 
 export default async function AdminEmailFunctionsPage() {
   await requireAdmin();
@@ -11,7 +11,7 @@ export default async function AdminEmailFunctionsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Email Functions</h1>
         <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">
-          View and edit the copy in every automated email DormDAO sends.
+          View and edit the copy in every automated email Dorm™ sends.
         </p>
       </div>
 

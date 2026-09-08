@@ -26,7 +26,7 @@ export const ROLE_LABELS: Record<MemberRole, string> = {
   club_admin: 'Admin',
   director:   'Director',
   president:  'President',
-  dorm_admin: 'DormDAO Admin',
+  dorm_admin: 'Dorm™ Admin',
 };
 
 export const ROLE_OPTIONS = [

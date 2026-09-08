@@ -106,7 +106,7 @@ export function AdminEmailFunctionsSection() {
           Email Functions
           <span className="ml-2 text-xs text-gray-700 dark:text-gray-400 font-normal">{templates.length} automated email{templates.length !== 1 ? "s" : ""}</span>
         </h2>
-        <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">Every automated email DormDAO sends, and when it fires.</p>
+        <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">Every automated email Dorm™ sends, and when it fires.</p>
       </div>
 
       {loading ? (
@@ -151,7 +151,7 @@ export function AdminEmailFunctionsSection() {
 
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
               <div className="bg-gray-900 px-5 py-3">
-                <span className="text-sm font-bold text-white">DormDAO</span>
+                <span className="text-sm font-bold text-white">Dorm™</span>
               </div>
               <div className="bg-white px-5 py-5">
                 <p className="text-[11px] text-gray-700 dark:text-gray-400 uppercase tracking-wide mb-3">

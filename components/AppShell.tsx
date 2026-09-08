@@ -63,7 +63,7 @@ function deriveTitle(pathname: string): string {
   if (pathname.startsWith("/tokens/"))  return "Token";
   if (pathname.startsWith("/forum/"))   return "Thread";
   if (pathname.startsWith("/users/"))   return "Profile";
-  return "DormDAO";
+  return "Dorm™";
 }
 
 function matchesRoute(href: string, pathname: string): boolean {

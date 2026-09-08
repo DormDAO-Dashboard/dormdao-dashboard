@@ -10,7 +10,7 @@ import { DORM_SUMMIT_TAGLINE, DORM_SUMMIT_INTRO, DORM_SUMMIT_YEARS } from "@/lib
 
 const COLLATERAL_ICONS = [MessageSquare, ImageIcon];
 
-export const metadata = { title: "Dorm Summit — DormDAO" };
+export const metadata = { title: "Dorm Summit — Dorm™" };
 
 export default function DormSummitPage() {
   const accent = SHOWCASE_COLORS.dormSummit;
@@ -27,7 +27,7 @@ export default function DormSummitPage() {
 
       <div className="mb-8">
         <PlaceholderNote className="max-w-2xl mx-auto">
-          Year sections below are a shell — swap in real years, headlines, and recaps sourced from Zack&apos;s Twitter, DormDAO&apos;s feed, and prior Summit threads.
+          Year sections below are a shell — swap in real years, headlines, and recaps sourced from Zack&apos;s Twitter, Dorm™&apos;s feed, and prior Summit threads.
         </PlaceholderNote>
       </div>
 

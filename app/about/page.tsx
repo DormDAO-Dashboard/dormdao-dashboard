@@ -28,7 +28,7 @@ const STEPS = [
   {
     num: "1",
     title: "Schools Join",
-    desc: "University blockchain clubs apply and join DormDAO, committing ETH to the shared treasury.",
+    desc: "University blockchain clubs apply and join Dorm™, committing ETH to the shared treasury.",
   },
   {
     num: "2",
@@ -52,11 +52,11 @@ export default function AboutPage() {
             src="/logo.jpg"
             width={96}
             height={96}
-            alt="DormDAO"
+            alt="Dorm™"
             style={{ borderRadius: "16px" }}
           />
         </div>
-        <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 dark:text-white mb-4">DormDAO</h1>
+        <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 dark:text-white mb-4">Dorm™</h1>
         <p className="text-lg text-gray-700 dark:text-gray-400 mb-8">
           The world&apos;s first multi-university crypto investment DAO
         </p>
@@ -66,7 +66,7 @@ export default function AboutPage() {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 transition-colors font-medium"
         >
-          Visit DormDAO.io <ExternalLink className="w-4 h-4" />
+          Visit Dorm™.io <ExternalLink className="w-4 h-4" />
         </a>
       </div>
 
@@ -87,9 +87,9 @@ export default function AboutPage() {
 
       {/* What is DormDAO */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-8 mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">What is DormDAO?</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">What is Dorm™?</h2>
         <p className="text-gray-700 dark:text-gray-400 leading-relaxed mb-4">
-          DormDAO is a student-run investment DAO uniting 17 university blockchain clubs across the United States, Canada, and the UK. Founded in October 2023, it gives student investors hands-on experience managing real crypto portfolios and competing against each other in a transparent, on-chain leaderboard.
+          Dorm™ is a student-run investment DAO uniting 17 university blockchain clubs across the United States, Canada, and the UK. Founded in October 2023, it gives student investors hands-on experience managing real crypto portfolios and competing against each other in a transparent, on-chain leaderboard.
         </p>
         <p className="text-gray-700 dark:text-gray-400 leading-relaxed">
           Each member school operates as an independent sub-DAO with its own ETH allocation. Schools research, debate, and vote on investments—gaining practical experience in DeFi, token analysis, and decentralized governance while managing real capital.
@@ -138,7 +138,7 @@ export default function AboutPage() {
       {/* Footer CTA */}
       <div className="text-center pb-16">
         <p className="text-gray-700 dark:text-gray-400 text-sm mb-4">
-          Learn more about DormDAO and get involved
+          Learn more about Dorm™ and get involved
         </p>
         <a
           href="https://www.dormdao.io"

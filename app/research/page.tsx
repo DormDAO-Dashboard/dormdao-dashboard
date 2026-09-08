@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { ResearchTabs } from "@/components/ResearchTabs";
 
 export const metadata: Metadata = {
-  title: "DormDocs — DormDAO",
-  description: "Investment pitches and research from the DormDAO ecosystem",
+  title: "DormDocs — Dorm™",
+  description: "Investment pitches and research from the Dorm™ ecosystem",
 };
 
 export default function ResearchPage() {

@@ -57,10 +57,10 @@ export default function JoinPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-5">
-            <Image src="/logo.jpg" width={52} height={52} alt="DormDAO" className="rounded-xl mx-auto" />
+            <Image src="/logo.jpg" width={52} height={52} alt="Dorm™" className="rounded-xl mx-auto" />
           </Link>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Request Access</h1>
-          <p className="text-sm text-gray-700 dark:text-gray-400">DormDAO is invitation-only. Submit a request and we'll review your application.</p>
+          <p className="text-sm text-gray-700 dark:text-gray-400">Dorm™ is invitation-only. Submit a request and we'll review your application.</p>
         </div>
 
         <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] p-6">
@@ -159,7 +159,7 @@ export default function JoinPage() {
                 </label>
                 <textarea value={message} onChange={(e) => setMessage(e.target.value)}
                   rows={3} maxLength={500}
-                  placeholder="Tell us about your interest in crypto investing and DormDAO…"
+                  placeholder="Tell us about your interest in crypto investing and Dorm™…"
                   className={inputClass + " resize-none"} />
               </div>
 

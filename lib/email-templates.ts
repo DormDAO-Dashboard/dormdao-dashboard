@@ -28,11 +28,11 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     trigger: "Sent when an admin imports a member with “Send email to members” checked, clicks the onboarding-email button next to a member, or approves a signup request.",
     variables: ["name", "school", "walletLast4"],
     fields: [
-      { key: "subject", label: "Subject", default: "You're invited to DormDAO — {{school}}" },
-      { key: "heading", label: "Heading", default: "Welcome to DormDAO, {{name}}!" },
+      { key: "subject", label: "Subject", default: "You're invited to Dorm™ — {{school}}" },
+      { key: "heading", label: "Heading", default: "Welcome to Dorm™, {{name}}!" },
       {
         key: "message", label: "Message", multiline: true,
-        default: "Your account is open — you've been invited to join the {{school}} chapter on DormDAO, where university crypto clubs manage portfolios and vote on investments.\n\nYou can sign in with your email or your connected wallet to set up your profile and start participating.",
+        default: "Your account is open — you've been invited to join the {{school}} chapter on Dorm™, where university crypto clubs manage portfolios and vote on investments.\n\nYou can sign in with your email or your connected wallet to set up your profile and start participating.",
       },
       {
         key: "walletLine", label: "Wallet-on-file line (only shown when the member has a wallet)", multiline: true,

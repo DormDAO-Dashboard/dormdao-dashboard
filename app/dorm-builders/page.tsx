@@ -18,7 +18,7 @@ import {
 
 const COLLATERAL_ICONS = [MessageSquare, FileText, Link2];
 
-export const metadata = { title: "Dorm Builders — DormDAO" };
+export const metadata = { title: "Dorm Builders — Dorm™" };
 
 export default function DormBuildersPage() {
   const accent = SHOWCASE_COLORS.dormBuilders;

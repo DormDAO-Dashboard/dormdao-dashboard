@@ -362,7 +362,7 @@ export function AdminProfilesSection({
               <button onClick={() => setRemoveTarget(null)} disabled={removing} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
             </div>
             <p className="text-sm text-gray-700 dark:text-gray-400">
-              Revoke DormDAO admin access from <span className="text-gray-900 dark:text-white font-medium">{removeTarget.display_name || "this admin"}</span>?
+              Revoke Dorm™ admin access from <span className="text-gray-900 dark:text-white font-medium">{removeTarget.display_name || "this admin"}</span>?
               They&apos;ll drop back to a regular member.
             </p>
             {removeError && (

@@ -31,7 +31,7 @@ export function LandingRevealBar() {
           <div className="relative inline-block">
             <Image
               src="/landing-reveal.png"
-              alt="DormDAO partners, members, and schools"
+              alt="Dorm™ partners, members, and schools"
               width={3840}
               height={2160}
               className="w-auto h-auto max-w-full max-h-[calc(100dvh-18px)] sm:max-h-[calc(100dvh-22px)] block"

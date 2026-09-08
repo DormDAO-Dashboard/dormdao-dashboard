@@ -26,7 +26,7 @@ async function notifyAdmins(name: string, email: string, school: string, wallet:
   const result = await resend.emails.send({
     from: ONBOARDING_EMAIL,
     to: recipients,
-    subject: `New DormDAO signup request — ${name} (${school})`,
+    subject: `New Dorm™ signup request — ${name} (${school})`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto">
         <h2 style="font-size:18px;margin-bottom:4px">New Signup Request</h2>
@@ -157,10 +157,10 @@ export async function PATCH(req: NextRequest) {
       const result = await resend.emails.send({
         from: ONBOARDING_EMAIL,
         to: request.email,
-        subject: "Your DormDAO access request",
+        subject: "Your Dorm™ access request",
         html: `<div style="font-family:sans-serif;max-width:480px">
           <p style="font-size:15px">Hi ${escapeHtml(request.name)},</p>
-          <p style="font-size:14px;color:#444">Your DormDAO request was not approved at this time. Contact your chapter lead for more information.</p>
+          <p style="font-size:14px;color:#444">Your Dorm™ request was not approved at this time. Contact your chapter lead for more information.</p>
         </div>`,
       });
       if (result.error) console.error(`Resend: ${result.error.message}`);

@@ -6,7 +6,7 @@ import { AdminMembersSection } from "@/components/AdminMembersSection";
 import { AdminProfilesSection } from "@/components/AdminProfilesSection";
 import { SignupRequestsSection } from "@/components/SignupRequestsSection";
 
-export const metadata = { title: "Members — Admin — DormDAO" };
+export const metadata = { title: "Members — Admin — Dorm™" };
 
 export default async function AdminMembersPage() {
   await requireAdmin();
@@ -91,7 +91,7 @@ export default async function AdminMembersPage() {
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Members</h1>
         <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">
-          Manage DormDAO admin members and registered members.
+          Manage Dorm™ admin members and registered members.
         </p>
       </div>
 

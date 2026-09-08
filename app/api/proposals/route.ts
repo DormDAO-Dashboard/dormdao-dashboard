@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     if (!isAdmin) {
       if (school === MAIN_DAO_SLUG) {
         if (!isMainDaoAuthorized(isAdmin, profile?.role, profile?.school)) {
-          return NextResponse.json({ error: "Access restricted to DormDAO admins and Main DAO voters" }, { status: 403 });
+          return NextResponse.json({ error: "Access restricted to Dorm™ admins and Main DAO voters" }, { status: 403 });
         }
       } else {
         const userSchoolSlug = profile?.school ? slugify(profile.school) : null;
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
   if (school === MAIN_DAO_SLUG) {
     if (!isMainDaoAuthorized(isAdmin, profile?.role)) {
-      return NextResponse.json({ error: "Only DormDAO admins can submit Main DAO proposals" }, { status: 403 });
+      return NextResponse.json({ error: "Only Dorm™ admins can submit Main DAO proposals" }, { status: 403 });
     }
   } else {
     if (!isAdmin && !profile?.school) {

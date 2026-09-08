@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Recover the signer address from the signature
-  const message = `Sign in to DormDAO Dashboard\n\nNonce: ${nonce}`;
+  const message = `Sign in to Dorm™ Dashboard\n\nNonce: ${nonce}`;
   let recoveredAddress: string;
   try {
     recoveredAddress = await recoverMessageAddress({
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   if (!allowed) {
     await logLoginAttempt({ walletAddress: address, reason: "not_registered" });
     return NextResponse.json(
-      { error: "Wallet not registered. Contact a DormDAO admin to get access." },
+      { error: "Wallet not registered. Contact a Dorm™ admin to get access." },
       { status: 403 },
     );
   }
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   const accountEmail = (member?.email ?? (adminMatch ? admin.email : undefined))?.toLowerCase();
   if (!accountEmail) {
     return NextResponse.json(
-      { error: "Wallet is registered but no account email is on file — contact a DormDAO admin." },
+      { error: "Wallet is registered but no account email is on file — contact a Dorm™ admin." },
       { status: 500 },
     );
   }

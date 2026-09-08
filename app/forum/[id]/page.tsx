@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ForumThreadClient } from "@/components/ForumThreadClient";
 
 export const metadata: Metadata = {
-  title: "DAO Forum — DormDAO",
+  title: "DAO Forum — Dorm™",
 };
 
 export default async function ForumThreadPage({

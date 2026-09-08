@@ -16,7 +16,7 @@ export interface DormSummitYear {
 export const DORM_SUMMIT_TAGLINE = "Annual Summit";
 
 export const DORM_SUMMIT_INTRO =
-  "The DormDAO annual summit and events — bringing member schools together to showcase a year of building and investing.";
+  "The Dorm™ annual summit and events — bringing member schools together to showcase a year of building and investing.";
 
 export const DORM_SUMMIT_YEARS: DormSummitYear[] = [1, 2, 3, 4].map((n) => ({
   id: `year-${n}`,

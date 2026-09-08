@@ -65,8 +65,8 @@ export function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <Image src="/logo.jpg" width={28} height={28} alt="DormDAO" className="rounded-md" />
-              <span className="font-semibold text-gray-900 dark:text-white text-sm hidden sm:block tracking-tight">DormDAO</span>
+              <Image src="/logo.jpg" width={28} height={28} alt="Dorm™" className="rounded-md" />
+              <span className="font-semibold text-gray-900 dark:text-white text-sm hidden sm:block tracking-tight">Dorm™</span>
             </Link>
 
             {/* Desktop nav — text links with underline indicator */}

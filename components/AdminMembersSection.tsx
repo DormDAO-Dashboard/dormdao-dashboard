@@ -448,7 +448,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
                       onClick={() => { setPromoteTarget(m); setPromoteError(null); }}
                       disabled={!m.email}
                       className="text-gray-700 dark:text-gray-400 hover:text-primary transition-colors disabled:opacity-30 disabled:hover:text-gray-700 dark:disabled:hover:text-gray-400"
-                      title={m.email ? "Promote to DormDAO admin" : "Add an email before promoting"}
+                      title={m.email ? "Promote to Dorm™ admin" : "Add an email before promoting"}
                     >
                       <ShieldPlus className="w-4 h-4" />
                     </button>
@@ -547,7 +547,7 @@ export function AdminMembersSection({ initialMembers }: { initialMembers: Member
               <button onClick={() => setPromoteTarget(null)} disabled={promoting} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
             </div>
             <p className="text-sm text-gray-700 dark:text-gray-400">
-              Grant <span className="text-gray-900 dark:text-white font-medium">{promoteTarget.name}</span> full DormDAO admin access?
+              Grant <span className="text-gray-900 dark:text-white font-medium">{promoteTarget.name}</span> full Dorm™ admin access?
               This lets them manage members, admins, and every school — not just their own.
             </p>
             {promoteError && <div className="mt-3"><ErrorBanner>{promoteError}</ErrorBanner></div>}

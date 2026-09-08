@@ -125,7 +125,7 @@ const ZONES: Zone[] = [
     action: "navigate",
     href: "/dorm-summit",
     color: SHOWCASE_COLORS.dormSummit,
-    description: "The DormDAO annual summit and events",
+    description: "The Dorm™ annual summit and events",
   },
   {
     id: "dorm-capital",
@@ -436,7 +436,7 @@ export default function MapPage() {
         >
           <Image
             src={campusMapSrc}
-            alt="DormDAO campus map"
+            alt="Dorm™ campus map"
             fill
             priority
             quality={90}
@@ -749,7 +749,7 @@ export default function MapPage() {
             >
               {comingSoonZone.label}
             </h2>
-            <p className="text-sm mt-1" style={{ color: "#9ca3af" }}>Coming soon to DormDAO</p>
+            <p className="text-sm mt-1" style={{ color: "#9ca3af" }}>Coming soon to Dorm™</p>
             <p className="text-sm mt-4" style={{ color: "#d1d5db" }}>{comingSoonZone.description}</p>
             <Link
               href="/leaderboard"

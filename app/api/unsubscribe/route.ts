@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unsubscribed — DormDAO</title>
+  <title>Unsubscribed — Dorm™</title>
   <style>
     body { font-family: sans-serif; background: #0a0a0a; color: #e5e7eb; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
     .card { max-width: 400px; text-align: center; padding: 40px 32px; background: #111; border: 1px solid #1f2937; border-radius: 16px; }
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 <body>
   <div class="card">
     <h1>You've been unsubscribed</h1>
-    <p>You won't receive proposal or trade emails from DormDAO anymore.</p>
+    <p>You won't receive proposal or trade emails from Dorm™ anymore.</p>
     <p>Changed your mind? You can re-enable email notifications anytime from your profile settings.</p>
     <a href="${appUrl}/profile">Go to Profile Settings →</a>
   </div>

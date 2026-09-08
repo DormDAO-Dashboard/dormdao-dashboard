@@ -67,7 +67,7 @@ export function ResearchClient({ initialTickers, hideHeader }: { initialTickers:
         </div>
       )}
       <p className="text-gray-700 dark:text-gray-400 mb-4 text-sm">
-        {loading ? "Loading…" : `${total} note${total !== 1 ? "s" : ""} from DormDAO analysts`}
+        {loading ? "Loading…" : `${total} note${total !== 1 ? "s" : ""} from Dorm™ analysts`}
       </p>
       <AddNoteForm onSuccess={fetchNotes} />
 

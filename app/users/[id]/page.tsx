@@ -116,7 +116,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {canShow("display_name") ? profile.display_name : "DormDAO Member"}
+              {canShow("display_name") ? profile.display_name : "Dorm™ Member"}
             </h1>
 
             {canShow("school") && profile.school === MAIN_DAO_VOTER && (

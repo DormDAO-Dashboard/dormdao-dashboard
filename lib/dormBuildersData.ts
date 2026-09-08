@@ -23,7 +23,7 @@ export const DORM_BUILDERS_TAGLINE = "Web3 Development";
 // Sourced from Zack Rosenblatt's Season 01 announcement thread:
 // https://x.com/zackrosenblatt_/status/1881404089478861310
 export const DORM_BUILDERS_INTRO =
-  "Dorm Builders is a student hackathon operated by Collab+Currency x DormDAO, giving students at the world's top universities the chance to build real crypto x AI products — with a $10,000 grant per team.";
+  "Dorm Builders is a student hackathon operated by Collab+Currency x Dorm™, giving students at the world's top universities the chance to build real crypto x AI products — with a $10,000 grant per team.";
 
 // Season 01 ran January–April 2025 (announced 2025/01/20, teams selected
 // 2025/02/10, demo day 2025/04/25-27) per the source tweets — not 2024 as

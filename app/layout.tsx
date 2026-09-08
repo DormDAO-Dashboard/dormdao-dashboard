@@ -7,11 +7,11 @@ import { PushNotificationManager } from "@/components/PushNotificationManager";
 import { BackgroundMusicPlayer } from "@/components/BackgroundMusicPlayer";
 
 export const metadata: Metadata = {
-  title: "DormDAO Portfolio Dashboard",
-  description: "Crypto investment portfolio tracker for the DormDAO student investment DAO across 17 universities",
+  title: "Dorm™ Portfolio Dashboard",
+  description: "Crypto investment portfolio tracker for the Dorm™ student investment DAO across 17 universities",
   openGraph: {
-    title: "DormDAO Portfolio Dashboard",
-    description: "Track DormDAO crypto portfolio performance across 17 universities",
+    title: "Dorm™ Portfolio Dashboard",
+    description: "Track Dorm™ crypto portfolio performance across 17 universities",
     type: "website",
   },
 };

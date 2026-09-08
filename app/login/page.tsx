@@ -21,7 +21,7 @@ export default function LoginPage() {
   const errorCode = searchParams.get("error");
   const errorMsg =
     errorCode === "not_member" || errorCode === "not_registered"
-      ? "Your account is not registered. Contact a DormDAO admin to get access."
+      ? "Your account is not registered. Contact a Dorm™ admin to get access."
       : errorCode
       ? "Something went wrong. Please try again."
       : null;
@@ -54,7 +54,7 @@ export default function LoginPage() {
 
       // Build a nonce from current timestamp so the server can verify freshness
       const nonce = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const message = `Sign in to DormDAO Dashboard\n\nNonce: ${nonce}`;
+      const message = `Sign in to Dorm™ Dashboard\n\nNonce: ${nonce}`;
 
       // Ask MetaMask to sign the message
       const signature = await window.ethereum.request({
@@ -98,9 +98,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Image src="/logo.jpg" width={56} height={56} alt="DormDAO" className="rounded-xl" />
+            <Image src="/logo.jpg" width={56} height={56} alt="Dorm™" className="rounded-xl" />
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Sign in to DormDAO</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Sign in to Dorm™</h1>
           <p className="text-gray-700 dark:text-gray-400 text-sm">Connect with your school and join the community.</p>
         </div>
 
@@ -153,10 +153,10 @@ export default function LoginPage() {
           </button>
 
           <p className="text-xs text-gray-700 dark:text-gray-400 text-center">
-            By signing in you agree to use this for DormDAO community purposes only.
+            By signing in you agree to use this for Dorm™ community purposes only.
           </p>
           <p className="text-xs text-gray-700 dark:text-gray-400 text-center">
-            DormDAO is invitation-only. Access is granted by your school&apos;s admin.
+            Dorm™ is invitation-only. Access is granted by your school&apos;s admin.
           </p>
           <p className="text-xs text-gray-700 dark:text-gray-400 text-center pt-1">
             Not registered?{" "}

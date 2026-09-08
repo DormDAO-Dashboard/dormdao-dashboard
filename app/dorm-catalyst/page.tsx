@@ -12,7 +12,7 @@ import {
   DORM_CATALYST_CTA_URL,
 } from "@/lib/dormCatalystData";
 
-export const metadata = { title: "Dorm Catalyst — DormDAO" };
+export const metadata = { title: "Dorm Catalyst — Dorm™" };
 
 export default function DormCatalystPage() {
   const accent = SHOWCASE_COLORS.dormCatalyst;

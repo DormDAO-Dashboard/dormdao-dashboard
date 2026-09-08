@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { ForumClient } from "@/components/ForumClient";
 
 export const metadata: Metadata = {
-  title: "DAO Forum — DormDAO",
-  description: "Discuss pitches, strategies, and ideas across the DormDAO network",
+  title: "DAO Forum — Dorm™",
+  description: "Discuss pitches, strategies, and ideas across the Dorm™ network",
 };
 
 export default function ForumPage() {
