@@ -47,7 +47,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     trigger: "Sent to all opted-in members of a school when a new token proposal is created for a vote.",
     variables: ["ticker", "tokenName", "school", "title"],
     fields: [
-      { key: "subject", label: "Subject", default: "🗳️ New proposal: {{ticker}} — {{school}}" },
+      { key: "subject", label: "Subject", default: "New proposal: {{ticker}} — {{school}}" },
       { key: "heading", label: "Heading", default: "New proposal: {{title}}" },
       { key: "message", label: "Message (optional, shown below the proposal details)", multiline: true, default: "" },
     ],
@@ -59,7 +59,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     trigger: "Sent when a proposal has about 12 hours left before its voting deadline closes.",
     variables: ["ticker", "school", "title"],
     fields: [
-      { key: "subject", label: "Subject", default: "⏰ 12h left to vote: {{ticker}} — {{school}}" },
+      { key: "subject", label: "Subject", default: "12h left to vote: {{ticker}} — {{school}}" },
       { key: "heading", label: "Heading", default: "12 hours left: {{title}}" },
       { key: "message", label: "Message (shown below the current vote tally)", multiline: true, default: "If you haven't voted yet, now is the time." },
     ],
@@ -69,14 +69,14 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     key: "proposal_result",
     label: "Proposal Result (Passed / Rejected)",
     trigger: "Sent when a proposal's voting deadline passes and it resolves as passed or rejected.",
-    variables: ["ticker", "school", "title", "resultLabel", "resultEmoji"],
+    variables: ["ticker", "school", "title", "resultLabel"],
     fields: [
-      { key: "subject", label: "Subject", default: "{{resultEmoji}} {{resultLabel}}: {{ticker}} — {{school}}" },
-      { key: "heading", label: "Heading", default: "{{resultEmoji}} Proposal {{resultLabel}}: {{title}}" },
+      { key: "subject", label: "Subject", default: "{{resultLabel}}: {{ticker}} — {{school}}" },
+      { key: "heading", label: "Heading", default: "Proposal {{resultLabel}}: {{title}}" },
       { key: "messagePassed", label: "Message when passed", multiline: true, default: "Club leadership will review and execute the trade if approved." },
       { key: "messageRejected", label: "Message when rejected", multiline: true, default: "This proposal did not receive enough votes to pass." },
     ],
-    sampleVars: { ticker: "ETH", school: "Blockchain at Berkeley", title: "Add ETH to treasury", resultLabel: "Passed", resultEmoji: "✅" },
+    sampleVars: { ticker: "ETH", school: "Blockchain at Berkeley", title: "Add ETH to treasury", resultLabel: "Passed" },
   },
   {
     key: "trade_executed",
@@ -84,7 +84,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     trigger: "Sent when club leadership marks an approved proposal's trade as executed.",
     variables: ["ticker", "school", "title"],
     fields: [
-      { key: "subject", label: "Subject", default: "🚀 Trade executed: {{ticker}} — {{school}}" },
+      { key: "subject", label: "Subject", default: "Trade executed: {{ticker}} — {{school}}" },
       { key: "heading", label: "Heading", default: "Trade executed: {{title}}" },
       { key: "message", label: "Message (optional, shown below the trade summary)", multiline: true, default: "" },
     ],

@@ -20,6 +20,20 @@ export const ONBOARDING_EMAIL = DOMAIN_VERIFIED ? "onboarding@dormdao.io" : "onb
 export const NOTIFICATIONS_EMAIL = DOMAIN_VERIFIED ? "notifications@dormdao.io" : "onboarding@resend.dev";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
 
+// Trade/position-change notification titles (built in app/api/snapshot/route.ts)
+// carry a leading emoji (🟢/🔴) meant for the browser push notification —
+// that string is reused as this email's subject line too, but a subject is
+// plain text and can't render the emoji as the ramen mark the way the
+// rendered title (via buildTemplate's titleIcon) can, so it's stripped here
+// rather than shown as a raw glyph in the inbox.
+function stripLeadingEmoji(str: string): string {
+  // \u{FE0F} = variation selector-16 (emoji-style presentation, e.g. the
+  // trailing mark in "ballot box + VS16"), \u{200D} = zero-width joiner
+  // (compound emoji sequences) — both can trail \p{Extended_Pictographic}
+  // in a real emoji, written as escapes here rather than literal glyphs.
+  return str.replace(/^[\p{Extended_Pictographic}\u{FE0F}\u{200D}]+\s*/u, "");
+}
+
 // Escapes user-controlled strings before they're interpolated into email HTML.
 // Every proposal title/description, display name, and signup-form field that
 // reaches an email template is attacker-influenced (proposal fields by any
@@ -101,6 +115,12 @@ function buildTemplate(opts: {
   // aren't tied to one school (site-wide notifications, Main DAO — which
   // isn't a real school and has no color of its own).
   schoolSlug?: string;
+  // Emails that used to lead their subject with an emoji (🗳️/⏰/🚀/✅/❌/🟢/🔴)
+  // now strip it there — a subject line is plain text, no email client can
+  // render an <img> in it — and show the ramen mark next to the title
+  // instead, since that's the one place in the email an image actually can
+  // stand in for what the emoji used to signal.
+  titleIcon?: boolean;
 }): string {
   const headerColors = opts.schoolSlug ? getSchoolColors(opts.schoolSlug) : DEFAULT_HEADER_COLORS;
   const headerImage = opts.schoolSlug ? SCHOOL_HEADER_IMAGES[opts.schoolSlug] : undefined;
@@ -108,6 +128,9 @@ function buildTemplate(opts: {
     ? `<img src="${APP_URL}/email-headers/${headerImage.file}" width="${headerImage.width}" height="${headerImage.height}" alt="Dorm™ · ${opts.schoolLabel ?? ""}" style="display:block;border:0" />`
     : `<img src="${APP_URL}/dd-ramen.png" width="28" height="22" alt="" style="vertical-align:middle;display:inline-block;margin-right:8px;border:0" />
     <span style="font-size:16px;font-weight:700;color:${headerColors.text};vertical-align:middle">Dorm™</span>`;
+  const titleIconImg = opts.titleIcon
+    ? `<img src="${APP_URL}/dd-ramen.png" width="20" height="15" alt="" style="vertical-align:middle;margin-right:7px;border:0" />`
+    : "";
   const schoolBadge = opts.schoolLabel
     ? `<p style="font-size:11px;color:#6b7280;margin:0 0 10px;text-transform:uppercase;letter-spacing:.07em">${opts.schoolLabel}</p>`
     : "";
@@ -124,7 +147,7 @@ function buildTemplate(opts: {
   </div>
   <div style="background:#fff;padding:28px 24px;border:1px solid #e5e7eb;border-top:none">
     ${schoolBadge}
-    <h2 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 14px">${opts.title}</h2>
+    <h2 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 14px">${titleIconImg}${opts.title}</h2>
     ${opts.bodyHtml}
     ${ctaBtn}
   </div>
@@ -408,14 +431,17 @@ export async function sendSchoolEmailNotifications(schoolSlug: string, payload: 
   const recipients = await getSchoolRecipients(schoolSlug);
   await assertRecipientsScopedToSchool(schoolSlug, recipients);
 
+  const emailTitle = stripLeadingEmoji(payload.title);
+
   await batchSend(recipients, (r) => ({
-    subject: payload.title,
+    subject: emailTitle,
     html: buildTemplate({
-      title: payload.title,
+      title: emailTitle,
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">${payload.body}</p>`,
       cta: { label: "View on Dorm™ →", url: payload.url },
       userId: r.userId,
       schoolSlug: schoolSlug === MAIN_DAO_SLUG ? undefined : schoolSlug,
+      titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL);
 }
@@ -529,6 +555,7 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
       cta: { label: "Cast your vote →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
       schoolSlug: emailSchoolSlug,
+      titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
@@ -563,6 +590,7 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
       cta: { label: "Vote now →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
       schoolSlug: emailSchoolSlug,
+      titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
@@ -579,8 +607,7 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
   const ticker = escapeHtml(proposal.token_ticker);
   const title = escapeHtml(proposal.title);
   const resultLabel = passed ? "Passed" : "Rejected";
-  const resultEmoji = passed ? "✅" : "❌";
-  const vars = { ticker, school: schoolLabel, title, resultLabel, resultEmoji };
+  const vars = { ticker, school: schoolLabel, title, resultLabel };
   const t = await getEffectiveTemplateFields("proposal_result");
   const message = passed ? t.messagePassed : t.messageRejected;
   const [attachments, voters] = await Promise.all([
@@ -603,6 +630,7 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
       cta: { label: "View results →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
       schoolSlug: emailSchoolSlug,
+      titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
@@ -631,6 +659,7 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
       cta: { label: "View portfolio →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
       schoolSlug: emailSchoolSlug,
+      titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL);
 }
