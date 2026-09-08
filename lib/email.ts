@@ -62,6 +62,33 @@ export function verifyUnsubToken(userId: string, token: string): boolean {
 // matches the original fixed dark header exactly.
 const DEFAULT_HEADER_COLORS = { primary: "#111827", text: "#fff" };
 
+// Per-school "dorm [ramen] | <school>" wordmark lockups (public/email-headers/
+// <slug>.png) — white artwork designed to sit on that school's own primary
+// color, so they're only used together with the matching header background
+// above. Dimensions are each image's own natural aspect ratio at a fixed
+// 28px display height (files are 2x/retina, i.e. 56px tall). A school not
+// in this map (or no schoolSlug at all) falls back to the generic ramen
+// icon + "Dorm™" text header below.
+const SCHOOL_HEADER_IMAGES: Record<string, { file: string; width: number; height: number }> = {
+  "berkeley":       { file: "berkeley.png",       width: 132, height: 28 },
+  "boston-college": { file: "boston-college.png", width: 91,  height: 28 },
+  "cambridge":      { file: "cambridge.png",      width: 146, height: 28 },
+  "columbia":       { file: "columbia.png",       width: 135, height: 28 },
+  "cornell":        { file: "cornell.png",        width: 120, height: 28 },
+  "dartmouth":      { file: "dartmouth.png",      width: 98,  height: 28 },
+  "michigan":       { file: "michigan.png",       width: 135, height: 28 },
+  "nyu":            { file: "nyu.png",            width: 100, height: 28 },
+  "oregon":         { file: "oregon.png",         width: 122, height: 28 },
+  "penn":           { file: "penn.png",           width: 153, height: 28 },
+  "purdue":         { file: "purdue.png",         width: 121, height: 28 },
+  "st-andrews":     { file: "st-andrews.png",     width: 150, height: 28 },
+  "texas":          { file: "texas.png",          width: 111, height: 28 },
+  "usc":            { file: "usc.png",            width: 100, height: 28 },
+  "vanderbilt":     { file: "vanderbilt.png",     width: 143, height: 28 },
+  "villanova":      { file: "villanova.png",      width: 133, height: 28 },
+  "waterloo":       { file: "waterloo.png",       width: 133, height: 28 },
+};
+
 function buildTemplate(opts: {
   title: string;
   schoolLabel?: string;
@@ -76,6 +103,11 @@ function buildTemplate(opts: {
   schoolSlug?: string;
 }): string {
   const headerColors = opts.schoolSlug ? getSchoolColors(opts.schoolSlug) : DEFAULT_HEADER_COLORS;
+  const headerImage = opts.schoolSlug ? SCHOOL_HEADER_IMAGES[opts.schoolSlug] : undefined;
+  const headerMark = headerImage
+    ? `<img src="${APP_URL}/email-headers/${headerImage.file}" width="${headerImage.width}" height="${headerImage.height}" alt="Dorm™ · ${opts.schoolLabel ?? ""}" style="display:block;border:0" />`
+    : `<img src="${APP_URL}/dd-ramen.png" width="28" height="22" alt="" style="vertical-align:middle;display:inline-block;margin-right:8px;border:0" />
+    <span style="font-size:16px;font-weight:700;color:${headerColors.text};vertical-align:middle">Dorm™</span>`;
   const schoolBadge = opts.schoolLabel
     ? `<p style="font-size:11px;color:#6b7280;margin:0 0 10px;text-transform:uppercase;letter-spacing:.07em">${opts.schoolLabel}</p>`
     : "";
@@ -88,8 +120,7 @@ function buildTemplate(opts: {
 
   return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
   <div style="background:${headerColors.primary};padding:16px 24px;border-radius:12px 12px 0 0">
-    <img src="${APP_URL}/dd-ramen.png" width="28" height="22" alt="" style="vertical-align:middle;display:inline-block;margin-right:8px;border:0" />
-    <span style="font-size:16px;font-weight:700;color:${headerColors.text};vertical-align:middle">Dorm™</span>
+    ${headerMark}
   </div>
   <div style="background:#fff;padding:28px 24px;border:1px solid #e5e7eb;border-top:none">
     ${schoolBadge}
