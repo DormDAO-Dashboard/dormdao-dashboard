@@ -71,10 +71,13 @@ export function SchoolTabs({ school, otherSchools }: Props) {
   }, []);
 
   // The sheet sometimes lists the same ticker as multiple rows when a club
-  // bought it in separate tranches — merge those for portfolio-level views
-  // (table, chart, stats) so each token shows as a single position. The
-  // Activity/Recent-Buys feeds read school.holdings directly elsewhere and
-  // are unaffected, so a fresh tranche still shows up as its own recent buy.
+  // bought it in separate tranches — merge those for aggregate views (the
+  // concentration chart, portfolio stats) so each token contributes one
+  // slice/figure there. The Active Holdings table itself deliberately stays
+  // unmerged below: each tranche is its own position (own buy date, cost
+  // basis, purchase price) and collapsing e.g. Oregon's two separate $HYPE
+  // buys into one row hid that distinction. The Activity/Recent-Buys feeds
+  // read school.holdings directly elsewhere and are unaffected either way.
   const mergedHoldings = holdings ? mergeHoldingsByTicker(holdings) : undefined;
   const mergedNftHoldings = school.nftHoldings ? mergeHoldingsByTicker(school.nftHoldings) : undefined;
 
@@ -148,7 +151,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
           >
             <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between gap-3">
               <SectionHeading color={colors.primary}>
-                Active Holdings ({mergedHoldings?.length ?? 0})
+                Active Holdings ({holdings.length})
               </SectionHeading>
               {canManagePositions && (
                 <button
@@ -160,9 +163,9 @@ export function SchoolTabs({ school, otherSchools }: Props) {
                 </button>
               )}
             </div>
-            {mergedHoldings && mergedHoldings.length > 0 ? (
+            {holdings.length > 0 ? (
               <HoldingsTableClient
-                holdings={mergedHoldings}
+                holdings={holdings}
                 otherSchools={otherSchools}
                 schoolName={school.name}
               />
