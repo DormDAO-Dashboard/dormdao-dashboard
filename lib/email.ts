@@ -5,6 +5,7 @@ import type { PushPayload } from "@/lib/push";
 import type { Proposal } from "@/lib/proposals";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
+import { getSchoolColors } from "@/lib/schoolColors";
 import { MAIN_DAO_SLUG, MAIN_DAO_NAME } from "@/lib/main-dao";
 import { getAdminEmails } from "@/lib/admin-config";
 import { fillTemplate } from "@/lib/email-templates";
@@ -56,13 +57,25 @@ export function verifyUnsubToken(userId: string, token: string): boolean {
 
 // ── Base HTML template ────────────────────────────────────────────────────────
 
+// Header colors for emails not tied to one school (site-wide notifications,
+// Main DAO — which isn't a real school and has no color of its own) —
+// matches the original fixed dark header exactly.
+const DEFAULT_HEADER_COLORS = { primary: "#111827", text: "#fff" };
+
 function buildTemplate(opts: {
   title: string;
   schoolLabel?: string;
   bodyHtml: string;
   cta?: { label: string; url: string };
   userId?: string;
+  // The school this email is "for" — drives the header bar's background to
+  // that school's own main color (same one used across their pages, via
+  // getSchoolColors), instead of the flat dark default. Omit for emails that
+  // aren't tied to one school (site-wide notifications, Main DAO — which
+  // isn't a real school and has no color of its own).
+  schoolSlug?: string;
 }): string {
+  const headerColors = opts.schoolSlug ? getSchoolColors(opts.schoolSlug) : DEFAULT_HEADER_COLORS;
   const schoolBadge = opts.schoolLabel
     ? `<p style="font-size:11px;color:#6b7280;margin:0 0 10px;text-transform:uppercase;letter-spacing:.07em">${opts.schoolLabel}</p>`
     : "";
@@ -74,8 +87,9 @@ function buildTemplate(opts: {
     : `<a href="${APP_URL}/profile" style="color:#9ca3af;text-decoration:underline">Manage preferences</a>`;
 
   return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-  <div style="background:#111827;padding:18px 24px;border-radius:12px 12px 0 0">
-    <span style="font-size:16px;font-weight:700;color:#fff">Dorm™</span>
+  <div style="background:${headerColors.primary};padding:16px 24px;border-radius:12px 12px 0 0">
+    <img src="${APP_URL}/dd-ramen.png" width="28" height="22" alt="" style="vertical-align:middle;display:inline-block;margin-right:8px;border:0" />
+    <span style="font-size:16px;font-weight:700;color:${headerColors.text};vertical-align:middle">Dorm™</span>
   </div>
   <div style="background:#fff;padding:28px 24px;border:1px solid #e5e7eb;border-top:none">
     ${schoolBadge}
@@ -370,6 +384,7 @@ export async function sendSchoolEmailNotifications(schoolSlug: string, payload: 
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">${payload.body}</p>`,
       cta: { label: "View on Dorm™ →", url: payload.url },
       userId: r.userId,
+      schoolSlug: schoolSlug === MAIN_DAO_SLUG ? undefined : schoolSlug,
     }),
   }), NOTIFICATIONS_EMAIL);
 }
@@ -444,6 +459,7 @@ export async function sendInviteEmail(opts: {
       schoolLabel,
       bodyHtml: invitedLine + renderMessageHtml(t.message, vars) + walletLine,
       cta: { label: "Click Here to Register →", url: `${APP_URL}/login` },
+      schoolSlug: slugify(opts.school),
     }),
   });
   assertResendOk(result);
@@ -453,6 +469,7 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
   await assertRecipientsScopedToSchool(proposal.school, recipients);
   const schoolLabel = proposalSchoolLabel(proposal.school);
+  const emailSchoolSlug = proposal.school === MAIN_DAO_SLUG ? undefined : proposal.school;
   const deadline = new Date(proposal.voting_deadline).toLocaleString("en-US", {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
   });
@@ -480,6 +497,7 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
       ${renderMessageHtml(t.message, vars)}`,
       cta: { label: "Cast your vote →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
+      schoolSlug: emailSchoolSlug,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
@@ -488,6 +506,7 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
   const recipients = await getSchoolRecipients(proposal.school);
   await assertRecipientsScopedToSchool(proposal.school, recipients);
   const schoolLabel = proposalSchoolLabel(proposal.school);
+  const emailSchoolSlug = proposal.school === MAIN_DAO_SLUG ? undefined : proposal.school;
   const total = proposal.yes_votes + proposal.no_votes;
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
   const ticker = escapeHtml(proposal.token_ticker);
@@ -512,6 +531,7 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
       ${renderMessageHtml(t.message, vars)}`,
       cta: { label: "Vote now →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
+      schoolSlug: emailSchoolSlug,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
@@ -521,6 +541,7 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
   const recipients = await getSchoolRecipients(proposal.school);
   await assertRecipientsScopedToSchool(proposal.school, recipients);
   const schoolLabel = proposalSchoolLabel(proposal.school);
+  const emailSchoolSlug = proposal.school === MAIN_DAO_SLUG ? undefined : proposal.school;
   const passed = proposal.status === "passed";
   const total = proposal.yes_votes + proposal.no_votes;
   const yesPct = total > 0 ? Math.round((proposal.yes_votes / total) * 100) : 0;
@@ -550,6 +571,7 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
       ${renderMessageHtml(message, vars)}`,
       cta: { label: "View results →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
+      schoolSlug: emailSchoolSlug,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
@@ -558,6 +580,7 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
   const recipients = await getSchoolRecipients(proposal.school);
   await assertRecipientsScopedToSchool(proposal.school, recipients);
   const schoolLabel = proposalSchoolLabel(proposal.school);
+  const emailSchoolSlug = proposal.school === MAIN_DAO_SLUG ? undefined : proposal.school;
   const ticker = escapeHtml(proposal.token_ticker);
   const title = escapeHtml(proposal.title);
   const executionNotes = proposal.execution_notes ? escapeHtml(proposal.execution_notes) : null;
@@ -576,6 +599,7 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
       ${renderMessageHtml(t.message, vars)}`,
       cta: { label: "View portfolio →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
+      schoolSlug: emailSchoolSlug,
     }),
   }), NOTIFICATIONS_EMAIL);
 }
