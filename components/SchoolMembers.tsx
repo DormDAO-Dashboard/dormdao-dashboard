@@ -2,26 +2,10 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { ExternalLink } from "lucide-react";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { schoolDisplayName } from "@/lib/schoolData";
-
-interface MemberRow {
-  id: string;
-  display_name: string;
-  avatar_url: string | null;
-  bio: string | null;
-  school: string | null;
-  graduation_year: number | null;
-  major: string | null;
-  twitter: string | null;
-  linkedin: string | null;
-  telegram: string | null;
-  is_public: boolean;
-  public_fields: string[] | null;
-  created_at: string;
-}
+import { slugify } from "@/lib/utils";
 
 interface FilteredMember {
   id: string;
@@ -34,26 +18,6 @@ interface FilteredMember {
   twitter: string | null;
   linkedin: string | null;
   telegram: string | null;
-}
-
-// Same-school viewers can see every member of their school in this list (even
-// ones who haven't gone public), but the fields shown are still masked by each
-// member's own public_fields choice — matching the individual profile page and
-// the global directory, so a clubmate never sees more than the member opted into.
-function filterMemberFields(member: MemberRow): FilteredMember {
-  const pf = Array.isArray(member.public_fields) ? member.public_fields : [];
-  return {
-    id: member.id,
-    display_name: member.display_name,
-    avatar_url: member.avatar_url,
-    bio: pf.includes("bio") ? member.bio : null,
-    school: pf.includes("school") ? member.school : null,
-    graduation_year: pf.includes("graduation_year") ? member.graduation_year : null,
-    major: pf.includes("major") ? member.major : null,
-    twitter: pf.includes("twitter") ? member.twitter : null,
-    linkedin: pf.includes("linkedin") ? member.linkedin : null,
-    telegram: pf.includes("telegram") ? member.telegram : null,
-  };
 }
 
 const AVATAR_COLORS = [
@@ -161,50 +125,33 @@ export function SchoolMembers({
   onCountLoad?: (n: number) => void;
 }) {
   const [members, setMembers] = useState<FilteredMember[]>([]);
-  const [isSameSchool, setIsSameSchool] = useState(false);
+  const [hasFullAccess, setHasFullAccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
-
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      let viewerIsSameSchool = false;
-      if (user) {
-        const { data: vp, error: vpErr } = await supabase
-          .from("profiles")
-          .select("school")
-          .eq("id", user.id)
-          .single();
-        if (vpErr) console.error("Failed to load viewer profile:", vpErr.message);
-        viewerIsSameSchool = vp?.school === schoolName;
-      }
-
-      setIsSameSchool(viewerIsSameSchool);
-
-      const query = supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, bio, school, graduation_year, major, twitter, linkedin, telegram, is_public, public_fields, created_at")
-        .eq("school", schoolName)
-        .not("display_name", "is", null)
-        .order("created_at", { ascending: true });
-
-      if (!viewerIsSameSchool) {
-        query.eq("is_public", true);
-      }
-
-      const { data, error: membersErr } = await query;
-      if (membersErr) {
-        console.error("Failed to load school members:", membersErr.message);
+      // Routed through a server API (service-role client) rather than
+      // querying Supabase directly from the browser — dorm_admins need
+      // full visibility into every school's roster, not just their own,
+      // and that has to be enforced server-side rather than hoped for
+      // from client-side query shape (see the route for why).
+      try {
+        const res = await fetch(`/api/schools/${slugify(schoolName)}/members`);
+        const data = await res.json() as { members?: FilteredMember[]; hasFullAccess?: boolean; error?: string };
+        if (!res.ok) {
+          console.error("Failed to load school members:", data.error);
+          setLoading(false);
+          return;
+        }
+        const filtered = data.members ?? [];
+        setHasFullAccess(data.hasFullAccess ?? false);
+        setMembers(filtered);
+        onCountLoad?.(filtered.length);
+      } catch (err) {
+        console.error("Failed to load school members:", (err as Error).message);
+      } finally {
         setLoading(false);
-        return;
       }
-      const rows = (data as MemberRow[]) ?? [];
-      const filtered = rows.map((m) => filterMemberFields(m));
-      setMembers(filtered);
-      onCountLoad?.(filtered.length);
-      setLoading(false);
     }
 
     load();
@@ -226,7 +173,7 @@ export function SchoolMembers({
   if (members.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 py-16 text-center text-gray-700 dark:text-gray-400 text-sm">
-        {isSameSchool
+        {hasFullAccess
           ? <>No members have joined yet.<div className="mt-2 text-xs text-gray-700 dark:text-gray-400">Members set their school on their profile page.</div></>
           : <>No public members yet.<div className="mt-2 text-xs text-gray-700 dark:text-gray-400">Members can make their profile public from their profile settings.</div></>}
       </div>
