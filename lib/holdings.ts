@@ -38,6 +38,15 @@ export function mergeHoldingsByTicker(holdings: Holding[]): Holding[] {
 
     const gains = rows.map((r) => r.gainUsd).filter((g): g is number => g !== undefined);
     const marketValues = rows.map((r) => r.marketValueUsd).filter((v): v is number => v !== undefined);
+    // Token-weighted average purchase price across whichever tranches have
+    // one — mixing tranches bought at different prices into one number.
+    // positionId is deliberately never carried through here: once tranches
+    // are merged there's no single row left to target an edit at.
+    const pricedRows = rows.filter((r) => r.purchasePriceUsd != null && r.tokens > 0);
+    const pricedTokens = pricedRows.reduce((s, r) => s + r.tokens, 0);
+    const avgPurchasePriceUsd = pricedTokens > 0
+      ? pricedRows.reduce((s, r) => s + r.purchasePriceUsd! * r.tokens, 0) / pricedTokens
+      : undefined;
 
     const dated = rows.filter((r) => r.investmentDate);
     const earliestDate = dated.length > 0
@@ -60,6 +69,7 @@ export function mergeHoldingsByTicker(holdings: Holding[]): Holding[] {
       ...(rows.some((r) => r.roiEthPct !== undefined)
         ? { roiEthPct: rows.reduce((s, r) => s + (r.roiEthPct ?? 0) * weight(r), 0) }
         : {}),
+      ...(avgPurchasePriceUsd !== undefined ? { purchasePriceUsd: avgPurchasePriceUsd } : {}),
     };
   });
 }

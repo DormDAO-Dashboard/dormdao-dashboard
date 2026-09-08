@@ -124,12 +124,21 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
     }
   }
 
-  // USD price per token at the time it was bought, derived from the ETH cost
-  // basis and that day's historical ETH price. Unlike the pnl fallback, this
-  // does NOT fall back to the current ETH price when the historical price is
-  // unavailable — a "purchase price" built from today's rate would be wrong,
-  // not just approximate, so it shows "—" instead.
+  // USD price per token at the time it was bought. The server already
+  // computes this correctly — an admin-entered fixed override if one
+  // exists, else derived from the ETH cost basis and that day's historical
+  // ETH price (lib/positions.ts) — but never sent it to the client, which
+  // used to blindly redo the historical-price derivation itself with no
+  // way to know a fixed override existed. That's why this showed "—" even
+  // for positions with a real, stored purchase price: any CoinGecko gap
+  // (rate limit, or the position is simply older than its 365-day free-tier
+  // history) silently overrode a fixed value that was sitting right there.
+  // Only holdings computed from admin-entered positions (not sheet rows)
+  // carry h.purchasePriceUsd at all, so sheet-driven schools still fall
+  // back to the historical-ETH derivation below, same as before — and
+  // still show "—" rather than guess when that lookup comes up empty.
   function purchasePriceOf(h: Holding): number | null {
+    if (h.purchasePriceUsd != null) return h.purchasePriceUsd;
     if (h.costBasisEth <= 0 || h.tokens <= 0) return null;
     const ethAtPurchase = historicalEth[h.investmentDate];
     if (!ethAtPurchase) return null;

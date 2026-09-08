@@ -28,6 +28,10 @@ export interface RawPosition {
   costBasisEth: number;
   purchasePriceUsd: number | null;
   investmentDate: string;
+  // Only present for admin-entered `positions` table rows — lets the
+  // client target a PATCH to that exact row to override purchasePriceUsd.
+  // Sheet-parsed holdings have no such row, so this stays undefined there.
+  id?: string;
 }
 
 export async function getPositionsBySchool(): Promise<Record<string, PositionRow[]>> {
@@ -177,6 +181,8 @@ export function computeSchoolMetrics(
       roiUsdPct,
       roiEthPct,
       marketValueUsd: currentValueUsd,
+      purchasePriceUsd,
+      positionId: p.id,
     };
   });
 
@@ -215,6 +221,7 @@ export function computeSchoolFromPositions(
   vaultEquityUsdByTicker?: Record<string, number>
 ): SchoolRowWithHoldings {
   const raw: RawPosition[] = positions.map((p) => ({
+    id: p.id,
     ticker: p.ticker,
     blockchain: p.blockchain,
     tokens: p.tokens,

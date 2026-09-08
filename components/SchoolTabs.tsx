@@ -1,7 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/apiFetch";
 import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
 import { mergeHoldingsByTicker } from "@/lib/holdings";
 import { SchoolRowWithHoldings } from "@/lib/cache";
@@ -15,6 +18,7 @@ import { SchoolPortfolioStats } from "@/components/SchoolPortfolioStats";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ForumClient } from "@/components/ForumClient";
 import { VotingClient } from "@/components/VotingClient";
+import { PurchasePriceEditorModal } from "@/components/PurchasePriceEditorModal";
 
 const TABS = ["Portfolio", "Voting", "History", "Documents", "Members", "Forum"] as const;
 type Tab = (typeof TABS)[number];
@@ -32,13 +36,63 @@ export function SchoolTabs({ school, otherSchools }: Props) {
   const colors = getSchoolColors(school.slug);
   const boxBorder = accentBorderColor(colors.primary);
 
+  // Local, mutable copy of the server-provided holdings — lets the purchase
+  // price editor below update the displayed table immediately after a save
+  // instead of waiting on a full server round-trip (which, on top of that,
+  // would still serve the cached getSchoolsData() result for up to its
+  // 10-minute revalidate window).
+  const [holdings, setHoldings] = useState(school.holdings ?? []);
+  const [canManagePositions, setCanManagePositions] = useState(false);
+  const [showPriceEditor, setShowPriceEditor] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+
+    // Dorm-wide admins only — deliberately not club leadership, even though
+    // the underlying PATCH endpoint itself still allows a school's own
+    // leadership too (canModerate, shared with position delete/other admin
+    // actions there). This is just the pencil icon's visibility gate.
+    async function check() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+
+      try {
+        const res = await apiFetch("/api/admin/check");
+        const { isAdmin } = await res.json() as { isAdmin: boolean };
+        if (!cancelled) setCanManagePositions(isAdmin);
+      } catch {
+        // leave canManagePositions false
+      }
+    }
+
+    check();
+    return () => { cancelled = true; };
+  }, []);
+
   // The sheet sometimes lists the same ticker as multiple rows when a club
   // bought it in separate tranches — merge those for portfolio-level views
   // (table, chart, stats) so each token shows as a single position. The
   // Activity/Recent-Buys feeds read school.holdings directly elsewhere and
   // are unaffected, so a fresh tranche still shows up as its own recent buy.
-  const mergedHoldings = school.holdings ? mergeHoldingsByTicker(school.holdings) : undefined;
+  const mergedHoldings = holdings ? mergeHoldingsByTicker(holdings) : undefined;
   const mergedNftHoldings = school.nftHoldings ? mergeHoldingsByTicker(school.nftHoldings) : undefined;
+
+  const editableHoldings = holdings
+    .filter((h): h is typeof h & { positionId: string } => h.positionId != null)
+    .map((h) => ({ positionId: h.positionId, ticker: h.ticker, investmentDate: h.investmentDate, purchasePriceUsd: h.purchasePriceUsd }));
+
+  function handlePriceSaved(positionId: string, newPrice: number | null) {
+    setHoldings((prev) => prev.map((h) => {
+      if (h.positionId !== positionId) return h;
+      const costBasisUsd = newPrice != null ? h.tokens * newPrice : null;
+      const gainUsd = costBasisUsd != null && h.marketValueUsd != null ? h.marketValueUsd - costBasisUsd : undefined;
+      const roiUsdPct = costBasisUsd && costBasisUsd > 0 && h.marketValueUsd != null
+        ? ((h.marketValueUsd - costBasisUsd) / costBasisUsd) * 100
+        : undefined;
+      return { ...h, purchasePriceUsd: newPrice, gainUsd, roiUsdPct };
+    }));
+  }
 
   return (
     <>
@@ -92,10 +146,19 @@ export function SchoolTabs({ school, otherSchools }: Props) {
             className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden"
             style={{ borderColor: boxBorder }}
           >
-            <div className="px-5 py-4 border-b border-gray-800">
+            <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between gap-3">
               <SectionHeading color={colors.primary}>
                 Active Holdings ({mergedHoldings?.length ?? 0})
               </SectionHeading>
+              {canManagePositions && (
+                <button
+                  onClick={() => setShowPriceEditor(true)}
+                  title="Edit purchase prices"
+                  className="shrink-0 p-1.5 rounded-lg text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
             </div>
             {mergedHoldings && mergedHoldings.length > 0 ? (
               <HoldingsTableClient
@@ -166,6 +229,15 @@ export function SchoolTabs({ school, otherSchools }: Props) {
       {/* Voting tab */}
       {tab === "Voting" && (
         <VotingClient slug={school.slug} schoolName={school.name} pageMode={false} />
+      )}
+
+      {showPriceEditor && (
+        <PurchasePriceEditorModal
+          schoolSlug={school.slug}
+          rows={editableHoldings}
+          onClose={() => setShowPriceEditor(false)}
+          onSaved={handlePriceSaved}
+        />
       )}
     </>
   );

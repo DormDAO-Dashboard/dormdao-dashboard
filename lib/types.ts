@@ -10,6 +10,16 @@ export interface Holding {
   roiUsdPct?: number;
   roiEthPct?: number;
   marketValueUsd?: number;
+  // The server already computes this (explicit override if the admin set
+  // one, else derived from cost basis + that day's historical ETH price —
+  // see lib/positions.ts) but never used to send it to the client, which
+  // recomputed it independently and had no way to know an override existed.
+  // Null/undefined means genuinely unknown, not "go derive it yourself".
+  purchasePriceUsd?: number | null;
+  // The underlying `positions` table row id, only present for admin-entered
+  // positions (not sheet-parsed holdings) — lets the client target a PATCH
+  // to override purchasePriceUsd for this specific holding.
+  positionId?: string;
 }
 
 export interface SchoolRow {
