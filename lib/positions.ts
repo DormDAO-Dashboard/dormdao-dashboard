@@ -129,7 +129,14 @@ export function computeSchoolMetrics(
 
     // No live price right now: hold the position at cost (flat, 0% return)
     // instead of $0 (a fabricated -100%) — an honest "unchanged" beats an
-    // alarming, wrong "total loss".
+    // alarming, wrong "total loss". A brand-new position can lack BOTH a
+    // live price AND a derivable USD cost basis at once (its historical
+    // ETH/USD price for today often hasn't backfilled yet) — costBasisUsd
+    // is then also null, so this still bottoms out at a literal $0. That's
+    // fine for NAV (there's genuinely no number to show), but it must not
+    // be treated as a real observation for return math below — hence
+    // hasReliableValue, tracked separately from the $0 itself.
+    const hasReliableValue = vaultEquityUsd != null || hasLivePrice || costBasisUsd != null;
     const currentValueUsd = vaultEquityUsd ?? (hasLivePrice
       ? p.tokens * currentPriceUsd
       : costBasisUsd ?? 0);
@@ -138,15 +145,24 @@ export function computeSchoolMetrics(
     const gainUsd = costBasisUsd != null ? currentValueUsd - costBasisUsd : undefined;
     const roiUsdPct =
       costBasisUsd && costBasisUsd > 0 ? ((currentValueUsd - costBasisUsd) / costBasisUsd) * 100 : undefined;
-    const currentValueEth = ethPriceUsd > 0 ? currentValueUsd / ethPriceUsd : null;
+    // Same "don't fabricate a return from an unpriced $0" rule applies to
+    // the ETH side — without it, a position with no reliable USD value
+    // still produced a false "-100%" ETH return, since roiEthPct's own
+    // guard only checked costBasisEth/currentValueEth, not whether
+    // currentValueUsd was ever a real observation to begin with.
+    const currentValueEth = hasReliableValue && ethPriceUsd > 0 ? currentValueUsd / ethPriceUsd : null;
     const roiEthPct =
-      p.costBasisEth > 0 && currentValueEth !== null
+      hasReliableValue && p.costBasisEth > 0 && currentValueEth !== null
         ? ((currentValueEth - p.costBasisEth) / p.costBasisEth) * 100
         : undefined;
 
     if (costBasisUsd != null) totalCostBasisUsd += costBasisUsd;
     totalCurrentValueUsdNonIdle += currentValueUsd;
-    if (p.costBasisEth > 0) totalCostBasisEth += p.costBasisEth;
+    // Only count this position's ETH cost basis toward the school-wide ETH
+    // return once we have a matching reliable current value for it — else
+    // it would drag the aggregate down as if it were a total loss, same
+    // asymmetry as the per-position bug just above.
+    if (hasReliableValue && p.costBasisEth > 0) totalCostBasisEth += p.costBasisEth;
     if (currentValueEth !== null) totalCurrentValueEthNonIdle += currentValueEth;
 
     return {
