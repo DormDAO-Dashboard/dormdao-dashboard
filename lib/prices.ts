@@ -75,14 +75,23 @@ export async function getPricesForTickers(
         return;
       }
       for (const id of batch) {
-        if (data[id]) {
+        // CoinGecko's simple/price can return the id key present but with
+        // no "usd" field (or a literal 0) for a thinly-traded/newly-listed
+        // coin during a brief data gap — most visible on a token bought a
+        // few days ago, since an established one rarely hits this. Treating
+        // that as a real $0 quote used to bake a false price straight into
+        // the cache for a full CACHE_TTL, which every school holding that
+        // token would then see as a genuine "-100%" position for up to a
+        // minute. Require an actual positive number before trusting it;
+        // anything else is handled exactly like the id being absent —
+        // leave whatever's already cached alone.
+        const usd = data[id]?.usd;
+        if (typeof usd === "number" && usd > 0) {
           priceCache.set(id, {
-            price: { usd: data[id].usd ?? 0, usd_24h_change: data[id].usd_24h_change ?? 0 },
+            price: { usd, usd_24h_change: data[id].usd_24h_change ?? 0 },
             expiresAt: now + CACHE_TTL,
           });
         }
-        // id genuinely absent from a successful response (bad/renamed
-        // CoinGecko id) — leave whatever's cached alone rather than assume 0.
       }
     });
   }

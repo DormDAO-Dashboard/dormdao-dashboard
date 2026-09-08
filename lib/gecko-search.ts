@@ -85,9 +85,18 @@ export async function resolveUnknownPrices(
 
     const prices: Record<string, { usd: number; usd_24h_change: number }> = {};
     for (const { ticker, geckoId } of resolved) {
-      if (data[geckoId]) {
+      // Same gap as getPricesForTickers: CoinGecko can return the id key
+      // present with no "usd" field for a thin-liquidity/newly-listed coin.
+      // This path has no cache to smooth that over — it's re-fetched fresh
+      // on every call for any ticker not in TOKEN_META — so a stray $0 here
+      // used to surface immediately as a fabricated "-100%" position (worst
+      // for a token just bought, before it settles into TOKEN_META). Only
+      // trust an actual positive number; otherwise leave the ticker out of
+      // the result entirely, same as a resolution failure.
+      const usd = data[geckoId]?.usd;
+      if (typeof usd === "number" && usd > 0) {
         prices[ticker] = {
-          usd: data[geckoId].usd ?? 0,
+          usd,
           usd_24h_change: data[geckoId].usd_24h_change ?? 0,
         };
       }
