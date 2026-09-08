@@ -158,10 +158,6 @@ export default function LoginPage() {
           <p className="text-xs text-gray-700 dark:text-gray-400 text-center">
             Dorm™ is invitation-only. Access is granted by your school&apos;s admin.
           </p>
-          <p className="text-xs text-gray-700 dark:text-gray-400 text-center pt-1">
-            Not registered?{" "}
-            <a href="/join" className="text-primary hover:underline">Request access →</a>
-          </p>
         </div>
       </div>
     </div>
