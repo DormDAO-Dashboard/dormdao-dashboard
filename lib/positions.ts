@@ -73,7 +73,6 @@ export function computeSchoolMetrics(
   name: string,
   positions: RawPosition[],
   prices: PriceMap,
-  historicalEth: Record<string, number>,
   extras?: {
     exitedHoldings?: ExitedHolding[];
     nftHoldings?: Holding[];
@@ -121,14 +120,15 @@ export function computeSchoolMetrics(
       };
     }
 
-    // Purchase price: explicit override if provided, else derived from the
-    // ETH cost basis + that day's historical ETH/USD price — same math
-    // already used client-side in HoldingsTableClient's purchasePriceOf().
-    const purchasePriceUsd =
-      p.purchasePriceUsd ??
-      (p.costBasisEth > 0 && historicalEth[p.investmentDate] && p.tokens > 0
-        ? (p.costBasisEth * historicalEth[p.investmentDate]) / p.tokens
-        : null);
+    // Purchase price: exclusively the fixed value provided (column R in the
+    // sheet, or a positions-table override) — never derived from the ETH
+    // cost basis + a historical ETH/USD price lookup. That derivation used
+    // to silently stand in for a missing fixed price, which meant P&L/ROI
+    // could be built on a guessed number instead of the real one whenever
+    // the historical-price lookup had a gap. No fixed price now means no
+    // cost basis, and gainUsd/roiUsdPct below correctly fall through to
+    // undefined ("—") rather than compute from an estimate.
+    const purchasePriceUsd = p.purchasePriceUsd ?? null;
     const costBasisUsd = purchasePriceUsd != null ? p.tokens * purchasePriceUsd : null;
 
     // No live price right now: hold the position at cost (flat, 0% return)
@@ -217,7 +217,6 @@ export function computeSchoolFromPositions(
   name: string,
   positions: PositionRow[],
   prices: PriceMap,
-  historicalEth: Record<string, number>,
   vaultEquityUsdByTicker?: Record<string, number>
 ): SchoolRowWithHoldings {
   const raw: RawPosition[] = positions.map((p) => ({
@@ -229,7 +228,7 @@ export function computeSchoolFromPositions(
     purchasePriceUsd: p.purchase_price_usd,
     investmentDate: p.investment_date,
   }));
-  return computeSchoolMetrics(name, raw, prices, historicalEth, { vaultEquityUsdByTicker });
+  return computeSchoolMetrics(name, raw, prices, { vaultEquityUsdByTicker });
 }
 
 // Fallback path for a school whose LEADERBOARD row is currently broken but
@@ -241,7 +240,6 @@ export function computeSchoolFromHoldings(
   exitedHoldings: ExitedHolding[],
   nftHoldings: Holding[],
   prices: PriceMap,
-  historicalEth: Record<string, number>,
   vaultEquityUsdByTicker?: Record<string, number>
 ): SchoolRowWithHoldings {
   const raw: RawPosition[] = holdings.map((h) => ({
@@ -256,5 +254,5 @@ export function computeSchoolFromHoldings(
     purchasePriceUsd: h.purchasePriceUsd ?? null,
     investmentDate: h.investmentDate,
   }));
-  return computeSchoolMetrics(name, raw, prices, historicalEth, { exitedHoldings, nftHoldings, vaultEquityUsdByTicker });
+  return computeSchoolMetrics(name, raw, prices, { exitedHoldings, nftHoldings, vaultEquityUsdByTicker });
 }

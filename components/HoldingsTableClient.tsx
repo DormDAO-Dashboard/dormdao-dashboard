@@ -81,8 +81,6 @@ interface HoldingsTableClientProps {
 
 export function HoldingsTableClient({ holdings, otherSchools, schoolName = "school" }: HoldingsTableClientProps) {
   const [prices, setPrices] = useState<Record<string, { usd: number }>>({});
-  const [ethPrice, setEthPrice] = useState(0);
-  const [historicalEth, setHistoricalEth] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("value");
   const [asc, setAsc] = useState(false);
@@ -91,31 +89,11 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
     const tickers = Array.from(new Set(holdings.map((h) => h.ticker).concat("ETH"))).join(",");
     fetch(`/api/prices?tickers=${encodeURIComponent(tickers)}`)
       .then((r) => r.json())
-      .then((d) => {
-        setPrices(d.prices ?? {});
-        setEthPrice(d.prices?.ETH?.usd ?? 0);
-      })
+      .then((d) => setPrices(d.prices ?? {}))
       .finally(() => setLoading(false));
   }, [holdings]);
 
   useEffect(() => { fetchPrices(); }, [fetchPrices]);
-
-  useEffect(() => {
-    // Only needed for the pnl fallback (holdings without a sheet-provided
-    // gainUsd). The Purchase Price column is intentionally exclusive to
-    // h.purchasePriceUsd (column R in the sheet, or a positions-table
-    // override) — see purchasePriceOf below — so it never depends on this.
-    const datesNeeded = Array.from(new Set(
-      holdings
-        .filter((h) => h.investmentDate && h.costBasisEth > 0 && h.gainUsd === undefined)
-        .map((h) => h.investmentDate)
-    ));
-    if (datesNeeded.length === 0) return;
-    fetch(`/api/eth-price-history?dates=${encodeURIComponent(datesNeeded.join(","))}`)
-      .then((r) => r.json())
-      .then((d) => setHistoricalEth(d.prices ?? {}))
-      .catch(() => {});
-  }, [holdings]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setAsc((v) => !v);
@@ -155,13 +133,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
         return h.marketValueUsd && h.tokens > 0 ? h.marketValueUsd / h.tokens : null;
       }
       case "value": return currentValue;
-      case "pnl": {
-        if (h.gainUsd !== undefined) return h.gainUsd;
-        const ethAtPurchase = historicalEth[h.investmentDate] || ethPrice;
-        const costUsd = ethAtPurchase > 0 && h.costBasisEth > 0
-          ? h.costBasisEth * ethAtPurchase : null;
-        return currentValue !== null && costUsd !== null ? currentValue - costUsd : null;
-      }
+      case "pnl": return h.gainUsd ?? null;
       case "roiEth": return h.roiEthPct ?? null;
       case "pctPort": return h.pctOfPortfolio > 0 ? h.pctOfPortfolio : null;
       case "date": return parseDateMs(h.investmentDate);
@@ -234,20 +206,12 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 : null;
             const others = otherSchools[h.ticker] ?? [];
 
-            let pnl: number | null = null;
-            let pnlPct: number | null = null;
-
-            if (h.gainUsd !== undefined) {
-              pnl = h.gainUsd;
-              pnlPct = h.roiUsdPct ?? null;
-            } else {
-              const ethAtPurchase = historicalEth[h.investmentDate] || ethPrice;
-              const costUsd = ethAtPurchase > 0 && h.costBasisEth > 0
-                ? h.costBasisEth * ethAtPurchase : null;
-              pnl = currentValue !== null && costUsd !== null ? currentValue - costUsd : null;
-              pnlPct = pnl !== null && costUsd !== null && costUsd > 0
-                ? (pnl / costUsd) * 100 : null;
-            }
+            // P&L is exclusively h.gainUsd — server-computed strictly from a
+            // fixed purchase price and live token price (lib/positions.ts's
+            // computeSchoolMetrics), never a derived guess. No fixed
+            // purchase price means no P&L to show, not an estimated one.
+            const pnl: number | null = h.gainUsd ?? null;
+            const pnlPct: number | null = h.roiUsdPct ?? null;
 
             const roiEthPct = h.roiEthPct ?? null;
             const purchasePrice = purchasePriceOf(h);

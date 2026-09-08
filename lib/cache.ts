@@ -5,7 +5,6 @@ import { SchoolRow } from "./types";
 import { isDataCollectionPaused, getSchoolsSnapshot, saveSchoolsSnapshot } from "./data-collection-store";
 import { getPositionsBySchool, computeSchoolFromPositions, computeSchoolFromHoldings } from "./positions";
 import { getPricesForTickers } from "./prices";
-import { getHistoricalEthPrices } from "./eth-price-history";
 import { SEASON_START_NAV_USD, SEASON_START_ETH_USD, inceptionBaselineForYear } from "./seasonBaseline";
 import { HYPERLIQUID_VAULT_POSITIONS } from "./hyperliquidVaults";
 import { getVaultUserEquityUsd } from "./hyperliquid";
@@ -77,26 +76,14 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
   }
 
   const allTickers = new Set<string>(["ETH"]);
-  const datesNeedingHistoricalPrice = new Set<string>();
   for (const positions of Object.values(positionsBySchool)) {
     for (const p of positions) {
       allTickers.add(p.ticker.toUpperCase());
-      if (p.purchase_price_usd == null && p.cost_basis_eth > 0) {
-        datesNeedingHistoricalPrice.add(p.investment_date);
-      }
     }
   }
   for (const school of needsComputedNav) {
     for (const h of school.holdings ?? []) {
       allTickers.add(h.ticker.toUpperCase());
-      // Only need a per-position historical price when this school has no
-      // season baseline to fall back on instead, and there's no fixed
-      // purchase price already provided (positions table override, or the
-      // sheet's own Purchase Price column — see parseHoldings) to derive
-      // the cost basis from directly instead.
-      if (h.costBasisEth > 0 && h.purchasePriceUsd == null && SEASON_START_NAV_USD[school.name] == null) {
-        datesNeedingHistoricalPrice.add(h.investmentDate);
-      }
     }
   }
 
@@ -110,9 +97,8 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
     }
   }
 
-  const [prices, historicalEth, vaultEquityResults] = await Promise.all([
+  const [prices, vaultEquityResults] = await Promise.all([
     getPricesForTickers([...allTickers]),
-    getHistoricalEthPrices([...datesNeedingHistoricalPrice]),
     Promise.all(vaultLookups.map(async (l) => ({ ...l, usd: await getVaultUserEquityUsd(l.vaultAddress, l.userAddress) }))),
   ]);
   const ethPriceUsdNow = prices.ETH?.usd ?? 0;
@@ -134,11 +120,11 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
   const bySchoolName = new Map(schools.map((s) => [s.name, s]));
 
   for (const school of needsComputedNav) {
-    const computed = computeSchoolFromHoldings(school.name, school.holdings ?? [], school.exitedHoldings ?? [], school.nftHoldings ?? [], prices, historicalEth, vaultEquityBySchool[school.name]);
+    const computed = computeSchoolFromHoldings(school.name, school.holdings ?? [], school.exitedHoldings ?? [], school.nftHoldings ?? [], prices, vaultEquityBySchool[school.name]);
     bySchoolName.set(school.name, applySeasonBaselineReturn(computed, ethPriceUsdNow));
   }
   for (const [schoolName, positions] of Object.entries(positionsBySchool)) {
-    const computed = computeSchoolFromPositions(schoolName, positions, prices, historicalEth, vaultEquityBySchool[schoolName]);
+    const computed = computeSchoolFromPositions(schoolName, positions, prices, vaultEquityBySchool[schoolName]);
     bySchoolName.set(schoolName, applySeasonBaselineReturn(computed, ethPriceUsdNow));
   }
 
