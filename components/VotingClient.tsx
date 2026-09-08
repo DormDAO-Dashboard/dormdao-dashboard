@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { apiFetch } from "@/lib/apiFetch";
 import { slugify, cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [memberCount, setMemberCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "past">("active");
   const [showModal, setShowModal] = useState(false);
   const [votingFor, setVotingFor] = useState<string | null>(null);
@@ -71,69 +72,89 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
     }
   }, [slug, showToast]);
 
-  useEffect(() => {
-    const supabase = createClient();
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  if (!supabaseRef.current) supabaseRef.current = createClient();
 
-    // A transient failure partway through (network blip, a stalled request)
-    // must not leave the page stuck on the loading skeleton forever — retry
-    // once before giving up, so only a genuinely broken load renders that way.
-    async function init(isRetry = false) {
-      setLoading(true);
-      try {
-        const { data: { user: u } } = await supabase.auth.getUser();
-        setUser(u ?? null);
+  // A transient failure partway through (network blip, a stalled request)
+  // must not leave the page stuck on the loading skeleton forever — retry
+  // once before giving up, so only a genuinely broken load renders that way.
+  // Every individual fetch below is already timeout-bounded (apiFetch /
+  // the Supabase client's own patched fetch — see lib/fetchWithTimeout),
+  // but that guarantee only holds for requests that actually reach fetch();
+  // an unresolved promise anywhere upstream of that (a Supabase SDK
+  // internal await, a slow auth refresh) wouldn't be caught by those alone.
+  // The outer Promise.race here is the hard ceiling that makes the whole
+  // load bounded no matter which piece stalls — this is exactly the
+  // "empty bubbles that never resolve" symptom a reminder-email click
+  // reported: whatever the precise stall was, it must not be able to
+  // leave loading stuck true forever the way it could before.
+  const init = useCallback(async (isRetry = false) => {
+    const supabase = supabaseRef.current!;
+    setLoading(true);
+    if (!isRetry) setLoadError(false);
 
-        // None of these actually depend on each other — /api/proposals does
-        // its own server-side auth check independently, and the member-count
-        // query doesn't need `u` at all. Running them sequentially meant a
-        // single slow step (each individually timeout-bounded, but stacked
-        // one after another) could keep the panel on its loading skeleton
-        // for the sum of all of them; in parallel it's bounded by the
-        // slowest single one instead. Each branch keeps its own fallback so
-        // one failing doesn't block the others from completing.
-        await Promise.all([
-          u
-            ? supabase
-                .from("profiles")
-                .select("school, role")
-                .eq("id", u.id)
-                .single()
-                .then(({ data: profile }) => {
-                  setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
-                  setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
-                  setUserRole((profile?.role as MemberRole) ?? null);
-                })
-            : Promise.resolve(),
-          u
-            ? apiFetch("/api/admin/check")
-                .then((res) => res.json() as Promise<{ isAdmin: boolean }>)
-                .then((json) => setIsAdmin(json.isAdmin ?? false))
-                .catch(() => setIsAdmin(false))
-            : Promise.resolve().then(() => setIsAdmin(false)),
-          (isMainDao
-            ? supabase
-                .from("profiles")
-                .select("id", { count: "exact", head: true })
-                .or(`role.eq.dorm_admin,school.eq."${MAIN_DAO_VOTER}"`)
-            : supabase
-                .from("profiles")
-                .select("id", { count: "exact", head: true })
-                .eq("school", schoolName)
-          ).then(({ count }) => setMemberCount(count ?? 0)),
-          fetchProposals(),
-        ]);
-      } catch (err) {
-        if (!isRetry) {
-          await new Promise((r) => setTimeout(r, 1000));
-          return init(true);
-        }
-        console.error("[VotingClient] failed to load:", err);
-        showToast("Couldn't load this page — please refresh");
-      } finally {
-        setLoading(false);
+    const attempt = (async () => {
+      const { data: { user: u } } = await supabase.auth.getUser();
+      setUser(u ?? null);
+
+      // None of these actually depend on each other — /api/proposals does
+      // its own server-side auth check independently, and the member-count
+      // query doesn't need `u` at all. Running them in parallel bounds the
+      // whole batch by the slowest single one instead of their sum. Each
+      // branch keeps its own fallback so one failing doesn't block the rest.
+      await Promise.all([
+        u
+          ? supabase
+              .from("profiles")
+              .select("school, role")
+              .eq("id", u.id)
+              .single()
+              .then(({ data: profile }) => {
+                setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+                setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
+                setUserRole((profile?.role as MemberRole) ?? null);
+              })
+          : Promise.resolve(),
+        u
+          ? apiFetch("/api/admin/check")
+              .then((res) => res.json() as Promise<{ isAdmin: boolean }>)
+              .then((json) => setIsAdmin(json.isAdmin ?? false))
+              .catch(() => setIsAdmin(false))
+          : Promise.resolve().then(() => setIsAdmin(false)),
+        (isMainDao
+          ? supabase
+              .from("profiles")
+              .select("id", { count: "exact", head: true })
+              .or(`role.eq.dorm_admin,school.eq."${MAIN_DAO_VOTER}"`)
+          : supabase
+              .from("profiles")
+              .select("id", { count: "exact", head: true })
+              .eq("school", schoolName)
+        ).then(({ count }) => setMemberCount(count ?? 0)),
+        fetchProposals(),
+      ]);
+    })();
+
+    const ceiling = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("VotingClient init timed out")), 15000);
+    });
+
+    try {
+      await Promise.race([attempt, ceiling]);
+      setLoading(false);
+    } catch (err) {
+      if (!isRetry) {
+        await new Promise((r) => setTimeout(r, 1000));
+        return init(true);
       }
+      console.error("[VotingClient] failed to load:", err);
+      setLoadError(true);
+      setLoading(false);
     }
+  }, [schoolName, isMainDao, fetchProposals]);
 
+  useEffect(() => {
+    const supabase = supabaseRef.current!;
     init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
@@ -164,7 +185,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
     });
 
     return () => subscription.unsubscribe();
-  }, [slug, schoolName, fetchProposals, isMainDao]);
+  }, [slug, schoolName, fetchProposals, isMainDao, init]);
 
   // Silent background poll so members already on the page see vote tally
   // updates without refreshing. schedulePoll (re)arms a single timeout
@@ -252,6 +273,27 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
             className="rounded-xl border border-gray-200 dark:border-gray-800 h-48 animate-pulse bg-gray-100 dark:bg-gray-900/50"
           />
         ))}
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-danger/10">
+          <AlertCircle className="w-7 h-7 text-danger" />
+        </div>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Couldn&apos;t load this page</h2>
+        <p className="text-sm text-gray-700 dark:text-gray-400 max-w-sm mb-4">
+          Something stalled while loading proposals — this usually clears up on a retry.
+        </p>
+        <button
+          onClick={() => init()}
+          style={{ backgroundColor: colors.primary, color: colors.text }}
+          className="px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+        >
+          Try again
+        </button>
       </div>
     );
   }
