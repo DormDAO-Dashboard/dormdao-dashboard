@@ -15,14 +15,14 @@ function formatDocDate(dateStr: string | null): string {
 
 function TypeBadge({ type }: { type: string }) {
   if (type === "pitch_deck")
-    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-600 text-[#fff] border border-blue-700">Pitch Deck</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-600 text-[#fff] border border-blue-700">Pitch Deck</span>;
   if (type === "report")
-    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-600 text-[#fff] border border-emerald-700">Fund Report</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-600 text-[#fff] border border-emerald-700">Fund Report</span>;
   if (type === "thesis")
-    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-600 text-[#fff] border border-purple-700">Investment Thesis</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-600 text-[#fff] border border-purple-700">Investment Thesis</span>;
   if (type === "video")
-    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-600 text-[#fff] border border-amber-700">Video</span>;
-  return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-500 text-[#fff] border border-gray-600">Document</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-600 text-[#fff] border border-amber-700">Video</span>;
+  return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-gray-500 text-[#fff] border border-gray-600">Document</span>;
 }
 
 function UploadForm({ schoolName, onUploaded }: { schoolName: string; onUploaded: () => void }) {
@@ -190,20 +190,20 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
             {docs.map((doc) => {
               if (doc.locked) {
                 return (
-                  <div key={doc.id} className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 px-4 py-3.5 opacity-60">
-                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
-                      <Lock className="w-5 h-5 text-white dark:text-gray-900" />
+                  <div key={doc.id} className="flex items-center gap-4 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/60 px-5 py-4 opacity-60">
+                    <div className="shrink-0 w-14 h-14 rounded-xl bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
+                      <Lock className="w-6 h-6 text-white dark:text-gray-900" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-base font-bold text-gray-700 dark:text-gray-400 truncate">{doc.title}</div>
+                      <div className="text-lg font-bold text-gray-700 dark:text-gray-400 truncate">{doc.title}</div>
                       <div className="flex items-center flex-wrap gap-2 mt-1.5">
                         <TypeBadge type={doc.document_type} />
                         {doc.document_date && (
-                          <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                         )}
                       </div>
                     </div>
-                    <span className="shrink-0 text-xs text-gray-700 dark:text-gray-400">
+                    <span className="shrink-0 text-xs font-bold text-gray-700 dark:text-gray-400">
                       {getLockReason(doc.visibility, doc.school)}
                     </span>
                   </div>
@@ -212,24 +212,24 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
 
               if (doc.document_type === "video" && doc.file_url) {
                 return (
-                  <div key={doc.id} className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 px-4 py-3.5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
-                      <Play className="w-5 h-5 text-white dark:text-gray-900" />
+                  <div key={doc.id} className="flex items-center gap-4 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/60 px-5 py-4 shadow-sm dark:shadow-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                    <div className="shrink-0 w-14 h-14 rounded-xl bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
+                      <Play className="w-6 h-6 text-white dark:text-gray-900" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-base font-bold text-gray-900 dark:text-white truncate">{doc.title}</div>
+                      <div className="text-lg font-bold text-gray-900 dark:text-white truncate">{doc.title}</div>
                       <div className="flex items-center flex-wrap gap-2 mt-1.5">
                         <TypeBadge type={doc.document_type} />
                         {doc.document_date && (
-                          <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={() => setPlayingDoc(doc)}
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border border-gray-700 text-gray-700 dark:text-gray-400 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold border-2 border-gray-700 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-900 dark:hover:border-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
-                      <Play className="w-3.5 h-3.5" />
+                      <Play className="w-4 h-4" />
                       Watch
                     </button>
                   </div>
@@ -237,16 +237,16 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
               }
 
               return (
-                <div key={doc.id} className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 px-4 py-3.5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-                  <div className="shrink-0 w-12 h-12 rounded-xl bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-white dark:text-gray-900" />
+                <div key={doc.id} className="flex items-center gap-4 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/60 px-5 py-4 shadow-sm dark:shadow-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                  <div className="shrink-0 w-14 h-14 rounded-xl bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-white dark:text-gray-900" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-base font-bold text-gray-900 dark:text-white truncate">{doc.title}</div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white truncate">{doc.title}</div>
                     <div className="flex items-center flex-wrap gap-2 mt-1.5">
                       <TypeBadge type={doc.document_type} />
                       {doc.document_date && (
-                        <span className="text-xs text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-400">{formatDocDate(doc.document_date)}</span>
                       )}
                     </div>
                   </div>
@@ -254,9 +254,9 @@ export function SchoolDocuments({ schoolName }: { schoolName: string }) {
                     href={doc.file_url!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border border-gray-700 text-gray-700 dark:text-gray-400 hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold border-2 border-gray-700 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-900 dark:hover:border-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <Download className="w-4 h-4" />
                     View
                   </a>
                 </div>
