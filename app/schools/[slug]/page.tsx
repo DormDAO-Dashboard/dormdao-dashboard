@@ -135,7 +135,7 @@ async function SchoolContent({ slug }: { slug: string }) {
           positive={school.ethReturn >= 0}
           accentColor={boxBorder}
         />
-        <KpiCard label="% Deployed" value={formatPct(school.pctDeployed)} accentColor={boxBorder} />
+        <KpiCard label="% Deployed" value={formatPct(school.pctDeployed, false)} accentColor={boxBorder} />
       </div>
 
       {/* Tabbed content */}

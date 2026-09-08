@@ -171,6 +171,19 @@ function parseLeaderboardSection(data: string[][], sectionMarker: string): Leade
     const lower = name.toLowerCase();
     if (lower.includes("average") || lower.includes("total") || lower === "sub dao") continue;
 
+    // A broken formula cell (#VALUE!/#REF!/#ERROR!) must not silently
+    // become a real "0.00%" return — parseNumber alone can't tell the two
+    // apart (parseFloat("#VALUE!") is NaN, which it already maps to 0), so
+    // check isValue() on the core numbers first and skip the whole row
+    // rather than publish a fabricated flat return for it. For the current
+    // season this just zeroes s.entry in fetchSheetsData below, which is
+    // exactly what already routes that school through
+    // applyInternallyComputedSchools's live-holdings recompute; for
+    // historical seasons (schools2425/schools2324, which have no such
+    // recompute fallback) it drops the row rather than show a fake flat
+    // return — missing beats wrong.
+    if (!isValue(row[3]) || !isValue(row[4]) || !isValue(row[5])) continue;
+
     const rank = parseNumber(row[2]);
     const nav = parseNumber(row[3]);
     const usdReturn = parseNumber(row[4]);

@@ -78,7 +78,7 @@ function SchoolCard({ s, isYours, statsUnavailable }: { s: SchoolRow; isYours?: 
           </div>
           <div>
             <div className="text-gray-700 dark:text-gray-400">Deployed</div>
-            <div className="font-mono text-gray-700 dark:text-gray-400">{statsUnavailable ? "—" : formatPct(s.pctDeployed)}</div>
+            <div className="font-mono text-gray-700 dark:text-gray-400">{statsUnavailable ? "—" : formatPct(s.pctDeployed, false)}</div>
           </div>
         </div>
         {isYours && (

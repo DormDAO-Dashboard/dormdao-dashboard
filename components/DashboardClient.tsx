@@ -251,7 +251,7 @@ export function DashboardClient({
           value={formatPct(avgEthReturn)}
           positive={avgEthReturn >= 0}
         />
-        <KpiCard label="Avg Deployment" value={formatPct(avgDeployed)} />
+        <KpiCard label="Avg Deployment" value={formatPct(avgDeployed, false)} />
       </div>
 
       {/* DAO-Wide Metrics — current season only */}
