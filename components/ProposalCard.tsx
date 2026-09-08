@@ -363,16 +363,18 @@ export function ProposalCard({
 
           {/* Attached documents */}
           {proposal.documents && proposal.documents.length > 0 && (
-            <div className="mt-3 flex flex-col items-start gap-1.5">
+            <div className="mt-3 flex flex-col gap-2">
               {proposal.documents.map((doc) => (
                 <button
                   key={doc.id}
                   onClick={() => setViewingDoc(doc)}
                   title={doc.title}
-                  className="flex items-center gap-1.5 max-w-[200px] px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/60 shadow-sm dark:shadow-none hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
                 >
-                  <FileText className="w-3.5 h-3.5 text-gray-700 dark:text-gray-400 shrink-0" />
-                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{doc.title}</span>
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white dark:text-gray-900" />
+                  </div>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{doc.title}</span>
                 </button>
               ))}
             </div>
