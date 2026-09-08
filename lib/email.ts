@@ -1,5 +1,5 @@
 import { createHmac } from "crypto";
-import { Resend } from "resend";
+import { Resend, type Attachment } from "resend";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { PushPayload } from "@/lib/push";
 import type { Proposal } from "@/lib/proposals";
@@ -253,6 +253,7 @@ async function batchSend(
   recipients: Recipient[],
   buildEmail: (r: Recipient) => { subject: string; html: string },
   from: string,
+  attachments?: Attachment[],
 ): Promise<void> {
   if (!recipients.length) return;
   const apiKey = process.env.RESEND_API_KEY;
@@ -263,11 +264,95 @@ async function batchSend(
     const result = await resend.batch.send(
       slice.map((r) => {
         const { subject, html } = buildEmail(r);
-        return { from, to: r.email, subject, html };
+        return { from, to: r.email, subject, html, ...(attachments?.length ? { attachments } : {}) };
       }),
     );
     assertResendOk(result);
   }
+}
+
+// ── Proposal document attachments ─────────────────────────────────────────────
+// "Pitch Materials" for a proposal are exactly the token_documents rows it was
+// created with (proposal.document_ids) — Resend fetches each from its
+// (public, stable — see /api/documents/upload) Storage URL itself via `path`,
+// so we never download/base64-encode the PDFs ourselves. "video" is the one
+// document_type that isn't a PDF (see getDefaultVisibility) and would arrive
+// as garbage as an attachment, so it's excluded.
+function attachmentFilename(title: string, fileUrl: string): string {
+  const urlExt = fileUrl.split(/[?#]/)[0].split(".").pop();
+  const ext = urlExt && urlExt.length <= 5 && /^[a-zA-Z0-9]+$/.test(urlExt) ? `.${urlExt}` : ".pdf";
+  const base = (title.trim().replace(/[\\/:*?"<>|]/g, "-").slice(0, 100)) || "document";
+  return base.toLowerCase().endsWith(ext.toLowerCase()) ? base : `${base}${ext}`;
+}
+
+async function getProposalAttachments(documentIds: string[] | null | undefined): Promise<Attachment[]> {
+  if (!documentIds?.length) return [];
+  const service = createServiceClient();
+  const { data: docs } = await service
+    .from("token_documents")
+    .select("title, file_url, document_type")
+    .in("id", documentIds);
+
+  return (docs ?? [])
+    .filter((d) => d.file_url && d.document_type !== "video")
+    .map((d) => ({
+      path: d.file_url as string,
+      filename: attachmentFilename(d.title as string, d.file_url as string),
+    }));
+}
+
+// ── Proposal voter list ───────────────────────────────────────────────────────
+// Always fetched with vote choice included — which fields actually get
+// rendered into an email's HTML (name only vs. name + choice) is decided by
+// each call site below, not by this query. Nothing here is exposed to a
+// client; it's assembled straight into the outgoing email body server-side.
+interface ProposalVoter {
+  name: string;
+  vote: "yes" | "no";
+}
+
+async function getProposalVoters(proposalId: string): Promise<ProposalVoter[]> {
+  const service = createServiceClient();
+  const { data: votes } = await service
+    .from("proposal_votes")
+    .select("user_id, vote")
+    .eq("proposal_id", proposalId);
+  if (!votes?.length) return [];
+
+  const userIds = [...new Set(votes.map((v) => v.user_id as string))];
+  const { data: profiles } = await service
+    .from("profiles")
+    .select("id, display_name")
+    .in("id", userIds);
+  const nameById = new Map(
+    (profiles ?? []).map((p) => [p.id as string, (p.display_name as string | null) ?? "Anonymous"]),
+  );
+
+  return votes
+    .map((v) => ({ name: nameById.get(v.user_id as string) ?? "Anonymous", vote: v.vote as "yes" | "no" }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Names only — used on the 12h-warning email, where the vote itself must
+// stay confidential while voting is still active.
+function renderVoterNamesHtml(voters: ProposalVoter[]): string {
+  if (voters.length === 0) return "";
+  const names = voters.map((v) => escapeHtml(v.name)).join(", ");
+  return `<p style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.6"><strong style="color:#374151">Voted so far:</strong> ${names}</p>`;
+}
+
+// Names with their choice — used only on the final passed/failed email,
+// once voting has closed and the result is already public.
+function renderVotersWithChoiceHtml(voters: ProposalVoter[]): string {
+  if (voters.length === 0) return "";
+  const rows = voters
+    .map((v) => {
+      const isYes = v.vote === "yes";
+      const color = isYes ? "#1D9E75" : "#ef4444";
+      return `<span style="display:inline-block;margin:2px 10px 2px 0;font-size:12px;color:#374151">${escapeHtml(v.name)} <strong style="color:${color}">${isYes ? "YES" : "NO"}</strong></span>`;
+    })
+    .join("");
+  return `<div style="margin-top:14px"><p style="font-size:12px;color:#6b7280;margin:0 0 6px"><strong style="color:#374151">Individual votes:</strong></p>${rows}</div>`;
 }
 
 // ── School-scoped push-triggered blast (trades, buys/sells) ──────────────────
@@ -378,6 +463,7 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
   const description = proposal.description ? escapeHtml(proposal.description) : null;
   const vars = { ticker, tokenName, school: schoolLabel, title };
   const t = await getEffectiveTemplateFields("new_proposal");
+  const attachments = await getProposalAttachments(proposal.document_ids);
 
   await batchSend(recipients, (r) => ({
     subject: fillTemplate(t.subject, vars),
@@ -395,7 +481,7 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
       cta: { label: "Cast your vote →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
-  }), NOTIFICATIONS_EMAIL);
+  }), NOTIFICATIONS_EMAIL, attachments);
 }
 
 export async function send12HourWarningEmail(proposal: Proposal): Promise<void> {
@@ -408,6 +494,10 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
   const title = escapeHtml(proposal.title);
   const vars = { ticker, school: schoolLabel, title };
   const t = await getEffectiveTemplateFields("proposal_reminder_12h");
+  const [attachments, voters] = await Promise.all([
+    getProposalAttachments(proposal.document_ids),
+    getProposalVoters(proposal.id),
+  ]);
 
   await batchSend(recipients, (r) => ({
     subject: fillTemplate(t.subject, vars),
@@ -418,11 +508,12 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
         The vote on <strong>${ticker}</strong> closes in ~12 hours.
         Current tally: <strong>${proposal.yes_votes} yes / ${proposal.no_votes} no</strong>${total > 0 ? ` (${yesPct}% in favor)` : ""}.
       </p>
+      ${renderVoterNamesHtml(voters)}
       ${renderMessageHtml(t.message, vars)}`,
       cta: { label: "Vote now →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
-  }), NOTIFICATIONS_EMAIL);
+  }), NOTIFICATIONS_EMAIL, attachments);
 }
 
 export async function sendProposalResultEmail(proposal: Proposal): Promise<void> {
@@ -440,6 +531,10 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
   const vars = { ticker, school: schoolLabel, title, resultLabel, resultEmoji };
   const t = await getEffectiveTemplateFields("proposal_result");
   const message = passed ? t.messagePassed : t.messageRejected;
+  const [attachments, voters] = await Promise.all([
+    getProposalAttachments(proposal.document_ids),
+    getProposalVoters(proposal.id),
+  ]);
 
   await batchSend(recipients, (r) => ({
     subject: fillTemplate(t.subject, vars),
@@ -451,11 +546,12 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
         <tr><td style="padding:5px 0;color:#6b7280;width:110px">Result</td><td style="padding:5px 0"><strong style="color:${passed ? "#1D9E75" : "#ef4444"}">${resultLabel}</strong></td></tr>
         <tr><td style="padding:5px 0;color:#6b7280">Final vote</td><td style="padding:5px 0">${proposal.yes_votes} yes / ${proposal.no_votes} no (${yesPct}% in favor)</td></tr>
       </table>
+      ${renderVotersWithChoiceHtml(voters)}
       ${renderMessageHtml(message, vars)}`,
       cta: { label: "View results →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
     }),
-  }), NOTIFICATIONS_EMAIL);
+  }), NOTIFICATIONS_EMAIL, attachments);
 }
 
 export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
