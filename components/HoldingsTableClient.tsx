@@ -101,16 +101,13 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
   useEffect(() => { fetchPrices(); }, [fetchPrices]);
 
   useEffect(() => {
-    // Needed for the pnl fallback (holdings without a sheet-provided
-    // gainUsd) and for the Purchase Price column when a holding has no
-    // fixed price of its own (positions-table override, or the sheet's own
-    // Purchase Price column — see lib/sheets.ts's parseHoldings). A holding
-    // that already has both purchasePriceUsd and gainUsd needs neither, so
-    // it's excluded here — no point calling this API for a date nothing on
-    // the page still depends on.
+    // Only needed for the pnl fallback (holdings without a sheet-provided
+    // gainUsd). The Purchase Price column is intentionally exclusive to
+    // h.purchasePriceUsd (column R in the sheet, or a positions-table
+    // override) — see purchasePriceOf below — so it never depends on this.
     const datesNeeded = Array.from(new Set(
       holdings
-        .filter((h) => h.investmentDate && h.costBasisEth > 0 && (h.purchasePriceUsd == null || h.gainUsd === undefined))
+        .filter((h) => h.investmentDate && h.costBasisEth > 0 && h.gainUsd === undefined)
         .map((h) => h.investmentDate)
     ));
     if (datesNeeded.length === 0) return;
@@ -128,25 +125,18 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
     }
   }
 
-  // USD price per token at the time it was bought. The server already
-  // computes this correctly — an admin-entered fixed override if one
-  // exists, else derived from the ETH cost basis and that day's historical
-  // ETH price (lib/positions.ts) — but never sent it to the client, which
-  // used to blindly redo the historical-price derivation itself with no
-  // way to know a fixed override existed. That's why this showed "—" even
-  // for positions with a real, stored purchase price: any CoinGecko gap
-  // (rate limit, or the position is simply older than its 365-day free-tier
-  // history) silently overrode a fixed value that was sitting right there.
-  // Only holdings computed from admin-entered positions (not sheet rows)
-  // carry h.purchasePriceUsd at all, so sheet-driven schools still fall
-  // back to the historical-ETH derivation below, same as before — and
-  // still show "—" rather than guess when that lookup comes up empty.
+  // USD price per token at the time it was bought — exclusively the fixed
+  // value from h.purchasePriceUsd (column R in the sheet, via
+  // lib/sheets.ts's parseHoldings, or a positions-table override). This
+  // deliberately never falls back to deriving a price from the ETH cost
+  // basis + a CoinGecko historical lookup: that fallback used to silently
+  // stand in for a real fixed price whenever the historical-price API had a
+  // gap (rate limit, or the position predates its 365-day free-tier
+  // history), so the column looked like it was "still calling an API"
+  // instead of showing the manually-entered spreadsheet value. Missing a
+  // fixed price now shows "—" rather than an API-derived guess.
   function purchasePriceOf(h: Holding): number | null {
-    if (h.purchasePriceUsd != null) return h.purchasePriceUsd;
-    if (h.costBasisEth <= 0 || h.tokens <= 0) return null;
-    const ethAtPurchase = historicalEth[h.investmentDate];
-    if (!ethAtPurchase) return null;
-    return (h.costBasisEth * ethAtPurchase) / h.tokens;
+    return h.purchasePriceUsd ?? null;
   }
 
   function getSortValue(h: Holding): number | string | null {
