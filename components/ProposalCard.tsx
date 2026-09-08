@@ -369,12 +369,12 @@ export function ProposalCard({
                   key={doc.id}
                   onClick={() => setViewingDoc(doc)}
                   title={doc.title}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/60 shadow-sm dark:shadow-none hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
+                  className="flex items-center gap-4 w-full px-5 py-4 rounded-xl border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/60 shadow-sm dark:shadow-none hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
                 >
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-white dark:text-gray-900" />
+                  <div className="shrink-0 w-14 h-14 rounded-xl bg-gray-800 dark:bg-gray-100 flex items-center justify-center">
+                    <FileText className="w-7 h-7 text-white dark:text-gray-900" />
                   </div>
-                  <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{doc.title}</span>
+                  <span className="text-lg font-extrabold text-gray-900 dark:text-white truncate">{doc.title}</span>
                 </button>
               ))}
             </div>
