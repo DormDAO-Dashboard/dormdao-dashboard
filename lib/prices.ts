@@ -50,6 +50,25 @@ export async function getPricesForTickers(
     if (id) idsForTicker.set(t, id);
   }
 
+  // A ticker not in the static TOKEN_META map (a school just bought
+  // something new) gets its CoinGecko id discovered here, then folded into
+  // the exact same batched/retried/cached fetch below as every statically
+  // mapped ticker. This used to run through a separate, simpler price fetch
+  // in gecko-search.ts with no retry and no persistent cache — reliable for
+  // an established ticker (this file's fetchBatch retries once and caches
+  // for CACHE_TTL) but not for a freshly discovered one, which silently
+  // re-hit CoinGecko from scratch on every single call and had no fallback
+  // if that one attempt got rate-limited. That's exactly why only recently
+  // opened positions kept intermittently showing no price.
+  const unmappedTickers = tickers.filter((t) => !idsForTicker.has(t));
+  if (unmappedTickers.length > 0) {
+    const { resolveGeckoId } = await import("@/lib/gecko-search");
+    for (const t of unmappedTickers) {
+      const resolved = await resolveGeckoId(t);
+      if (resolved) idsForTicker.set(t, resolved.geckoId);
+    }
+  }
+
   const now = Date.now();
   const allIds = [...new Set(idsForTicker.values())];
   const staleIds = allIds.filter((id) => {
@@ -100,14 +119,6 @@ export async function getPricesForTickers(
   for (const [ticker, id] of idsForTicker) {
     const cached = priceCache.get(id);
     if (cached) prices[ticker] = cached.price;
-  }
-
-  // Auto-resolve any tickers not in TICKER_TO_COINGECKO
-  const unknownTickers = tickers.filter((t) => !idsForTicker.has(t));
-  if (unknownTickers.length > 0) {
-    const { resolveUnknownPrices } = await import("@/lib/gecko-search");
-    const discovered = await resolveUnknownPrices(unknownTickers);
-    Object.assign(prices, discovered);
   }
 
   return prices;

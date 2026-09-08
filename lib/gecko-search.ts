@@ -38,84 +38,44 @@ export async function resolveGeckoId(ticker: string): Promise<Resolved | null> {
     return cached.result;
   }
 
-  try {
-    const res = await coingeckoFetch(
-      `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(ticker)}`,
-      { cache: "no-store" }
-    );
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const coins: Array<{ id: string; symbol: string; name: string; market_cap_rank: number | null }> =
-      data.coins ?? [];
-
-    // Prefer exact symbol match; fall back to first result that passes the loose check
-    const exact = coins.find((c) => c.symbol.toUpperCase() === ticker.toUpperCase());
-    const loose = coins.find((c) => symbolMatches(c.symbol, ticker));
-    const match = exact ?? loose ?? null;
-
-    const result: Resolved | null = match
-      ? { geckoId: match.id, symbol: match.symbol.toUpperCase(), name: match.name }
-      : null;
-
-    cache.set(ticker, { result, expiresAt: result ? null : Date.now() + NEGATIVE_CACHE_TTL_MS });
-    if (result) {
-      console.log(`[gecko-search] ${ticker} → ${result.geckoId} (${result.name})`);
-    } else {
-      console.log(`[gecko-search] ${ticker} → no match`);
-    }
-    return result;
-  } catch {
-    return null;
-  }
-}
-
-export async function resolveUnknownPrices(
-  unknownTickers: string[]
-): Promise<Record<string, { usd: number; usd_24h_change: number }>> {
-  if (unknownTickers.length === 0) return {};
-
-  // Resolve IDs — sequential with small delay to respect free-tier rate limits.
-  // Results are in-memory cached so subsequent calls are instant.
-  const resolved: Array<{ ticker: string; geckoId: string }> = [];
-  for (const ticker of unknownTickers) {
-    const r = await resolveGeckoId(ticker);
-    if (r) resolved.push({ ticker, geckoId: r.geckoId });
-    // Only sleep when we actually hit the network (cache miss)
-    if (!cache.has(ticker)) await new Promise((r) => setTimeout(r, 350));
-  }
-
-  if (resolved.length === 0) return {};
-
-  const ids = [...new Set(resolved.map((r) => r.geckoId))].join(",");
-  try {
-    const res = await coingeckoFetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
-      { cache: "no-store" }
-    );
-    if (!res.ok) return {};
-    const data = await res.json();
-
-    const prices: Record<string, { usd: number; usd_24h_change: number }> = {};
-    for (const { ticker, geckoId } of resolved) {
-      // Same gap as getPricesForTickers: CoinGecko can return the id key
-      // present with no "usd" field for a thin-liquidity/newly-listed coin.
-      // This path has no cache to smooth that over — it's re-fetched fresh
-      // on every call for any ticker not in TOKEN_META — so a stray $0 here
-      // used to surface immediately as a fabricated "-100%" position (worst
-      // for a token just bought, before it settles into TOKEN_META). Only
-      // trust an actual positive number; otherwise leave the ticker out of
-      // the result entirely, same as a resolution failure.
-      const usd = data[geckoId]?.usd;
-      if (typeof usd === "number" && usd > 0) {
-        prices[ticker] = {
-          usd,
-          usd_24h_change: data[geckoId].usd_24h_change ?? 0,
-        };
+  // Retry once on a transient failure (429/5xx/timeout) before accepting
+  // "no match" — this endpoint has no persistent cache backing it up the
+  // way lib/prices.ts's fetchBatch does, so a single unlucky rate-limit hit
+  // used to read identically to the ticker genuinely not existing.
+  let data: { coins?: Array<{ id: string; symbol: string; name: string }> } | null = null;
+  for (let attempt = 0; attempt < 2 && !data; attempt++) {
+    try {
+      const res = await coingeckoFetch(
+        `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(ticker)}`,
+        { cache: "no-store" }
+      );
+      if (res.ok) {
+        data = await res.json();
+        break;
       }
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 750));
+    } catch {
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 750));
     }
-    return prices;
-  } catch {
-    return {};
   }
+  if (!data) return null; // both attempts failed — leave uncached, retry next call
+
+  const coins = data.coins ?? [];
+
+  // Prefer exact symbol match; fall back to first result that passes the loose check
+  const exact = coins.find((c) => c.symbol.toUpperCase() === ticker.toUpperCase());
+  const loose = coins.find((c) => symbolMatches(c.symbol, ticker));
+  const match = exact ?? loose ?? null;
+
+  const result: Resolved | null = match
+    ? { geckoId: match.id, symbol: match.symbol.toUpperCase(), name: match.name }
+    : null;
+
+  cache.set(ticker, { result, expiresAt: result ? null : Date.now() + NEGATIVE_CACHE_TTL_MS });
+  if (result) {
+    console.log(`[gecko-search] ${ticker} → ${result.geckoId} (${result.name})`);
+  } else {
+    console.log(`[gecko-search] ${ticker} → no match`);
+  }
+  return result;
 }
