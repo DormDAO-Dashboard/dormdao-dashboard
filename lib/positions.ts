@@ -249,7 +249,11 @@ export function computeSchoolFromHoldings(
     blockchain: h.blockchain,
     tokens: h.tokens,
     costBasisEth: h.costBasisEth,
-    purchasePriceUsd: null,
+    // A manually-entered fixed price from the sheet's Purchase Price column
+    // (see parseHoldings) carries through here too — this path only
+    // recomputes nav/return when the LEADERBOARD row is broken, it
+    // shouldn't also silently drop a real admin-provided override.
+    purchasePriceUsd: h.purchasePriceUsd ?? null,
     investmentDate: h.investmentDate,
   }));
   return computeSchoolMetrics(name, raw, prices, historicalEth, { exitedHoldings, nftHoldings, vaultEquityUsdByTicker });

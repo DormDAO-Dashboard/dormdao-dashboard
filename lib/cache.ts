@@ -90,8 +90,11 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
     for (const h of school.holdings ?? []) {
       allTickers.add(h.ticker.toUpperCase());
       // Only need a per-position historical price when this school has no
-      // season baseline to fall back on instead.
-      if (h.costBasisEth > 0 && SEASON_START_NAV_USD[school.name] == null) {
+      // season baseline to fall back on instead, and there's no fixed
+      // purchase price already provided (positions table override, or the
+      // sheet's own Purchase Price column — see parseHoldings) to derive
+      // the cost basis from directly instead.
+      if (h.costBasisEth > 0 && h.purchasePriceUsd == null && SEASON_START_NAV_USD[school.name] == null) {
         datesNeedingHistoricalPrice.add(h.investmentDate);
       }
     }

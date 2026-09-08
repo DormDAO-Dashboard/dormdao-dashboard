@@ -101,12 +101,16 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
   useEffect(() => { fetchPrices(); }, [fetchPrices]);
 
   useEffect(() => {
-    // Needed both for the pnl fallback (holdings without a sheet-provided
-    // gainUsd) and for the Purchase Price column, which every holding with
-    // a cost basis needs regardless of whether gainUsd is present.
+    // Needed for the pnl fallback (holdings without a sheet-provided
+    // gainUsd) and for the Purchase Price column when a holding has no
+    // fixed price of its own (positions-table override, or the sheet's own
+    // Purchase Price column — see lib/sheets.ts's parseHoldings). A holding
+    // that already has both purchasePriceUsd and gainUsd needs neither, so
+    // it's excluded here — no point calling this API for a date nothing on
+    // the page still depends on.
     const datesNeeded = Array.from(new Set(
       holdings
-        .filter((h) => h.investmentDate && h.costBasisEth > 0)
+        .filter((h) => h.investmentDate && h.costBasisEth > 0 && (h.purchasePriceUsd == null || h.gainUsd === undefined))
         .map((h) => h.investmentDate)
     ));
     if (datesNeeded.length === 0) return;

@@ -43,6 +43,19 @@ function parseNumber(raw: string | undefined): number {
   return isNaN(n) ? 0 : n;
 }
 
+// Like parseNumber, but a blank/unparseable cell means "no value provided"
+// (null) rather than a literal 0 — for fields like a manually-entered
+// purchase price override, where 0 would fabricate a $0 cost basis and a
+// false "-100%" return instead of correctly falling through to the
+// historical-ETH-price derivation.
+function parseOptionalNumber(raw: string | undefined): number | null {
+  if (!raw || !isValue(raw)) return null;
+  const cleaned = raw.replace(/[$,%\s]/g, "").replace(/,/g, "");
+  if (!cleaned) return null;
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? null : n;
+}
+
 // Like parseNumber but respects K/M/B/T suffixes (e.g. "$8,791M" → 8_791_000_000)
 function parseSuffixedNumber(raw: string | undefined): number {
   if (!raw) return 0;
@@ -320,6 +333,16 @@ function parseHoldings(data: string[][]): Holding[] {
   const foundDate = headers.findIndex((h) => h.includes("investment date"));
   if (foundDate !== -1) dateIdx = foundDate;
 
+  // Optional manually-entered fixed purchase price (USD/token), one column
+  // right of Gain (USD) — column R in the positional-default layout. Tracks
+  // gainIdx rather than a separate hardcoded index so it stays aligned in
+  // the header-detected branch above too. No header label is expected here
+  // (font color is irrelevant either way — gviz's CSV export carries only
+  // cell values, never formatting), so this is purely positional.
+  const purchasePriceIdx = gainIdx + 1;
+  const foundPurchasePrice = headers.findIndex((h) => h.includes("purchase price"));
+  const purchasePriceColIdx = foundPurchasePrice !== -1 ? foundPurchasePrice : purchasePriceIdx;
+
   const holdings: Holding[] = [];
 
   for (let i = colHeaderIdx + 1; i < data.length; i++) {
@@ -356,6 +379,7 @@ function parseHoldings(data: string[][]): Holding[] {
       ...(validGain   ? { gainUsd:    parseNumber(gainRaw!) }   : {}),
       ...(validRoi    ? { roiUsdPct:  parseNumber(roiRaw!) }    : {}),
       ...(validRoiEth ? { roiEthPct:  parseNumber(roiEthRaw!) } : {}),
+      purchasePriceUsd: parseOptionalNumber(row[purchasePriceColIdx]),
     });
   }
 
