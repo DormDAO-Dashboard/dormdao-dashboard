@@ -180,7 +180,11 @@ export function computeSchoolMetrics(
       gainUsd,
       roiUsdPct,
       roiEthPct,
-      marketValueUsd: currentValueUsd,
+      // Same honesty rule as gainUsd/roiUsdPct above: a position with
+      // neither a live price nor a fixed purchase price has no real value
+      // to report, so this stays undefined ("—" client-side) instead of a
+      // literal 0 that reads as "worth nothing" rather than "unknown".
+      marketValueUsd: hasReliableValue ? currentValueUsd : undefined,
       purchasePriceUsd,
       positionId: p.id,
     };

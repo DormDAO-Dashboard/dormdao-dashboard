@@ -11,7 +11,17 @@ interface Resolved {
   name: string;
 }
 
-const cache = new Map<string, Resolved | null>();
+// A "no match" result gets a short TTL rather than caching forever like a
+// found one does — the whole point of this file is resolving tickers for
+// tokens a school JUST bought, which are disproportionately likely to be so
+// new they aren't listed on CoinGecko yet. Caching that "no match" for the
+// life of the server process meant a token that listed a few hours or days
+// later stayed permanently stuck showing "—" until a cold start happened to
+// clear it — exactly the "recently opened positions" pattern this was
+// reported against. A real match, once found, can't un-list, so it's still
+// cached indefinitely.
+const NEGATIVE_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const cache = new Map<string, { result: Resolved | null; expiresAt: number | null }>();
 // Tickers confirmed to have no CoinGecko listing — skip re-searching
 const KNOWN_UNLISTED = new Set(["HYPERLIQUID VAULT"]);
 
@@ -23,7 +33,10 @@ function symbolMatches(coinSymbol: string, ticker: string): boolean {
 
 export async function resolveGeckoId(ticker: string): Promise<Resolved | null> {
   if (KNOWN_UNLISTED.has(ticker)) return null;
-  if (cache.has(ticker)) return cache.get(ticker) ?? null;
+  const cached = cache.get(ticker);
+  if (cached && (cached.expiresAt === null || Date.now() < cached.expiresAt)) {
+    return cached.result;
+  }
 
   try {
     const res = await coingeckoFetch(
@@ -45,7 +58,7 @@ export async function resolveGeckoId(ticker: string): Promise<Resolved | null> {
       ? { geckoId: match.id, symbol: match.symbol.toUpperCase(), name: match.name }
       : null;
 
-    cache.set(ticker, result);
+    cache.set(ticker, { result, expiresAt: result ? null : Date.now() + NEGATIVE_CACHE_TTL_MS });
     if (result) {
       console.log(`[gecko-search] ${ticker} → ${result.geckoId} (${result.name})`);
     } else {

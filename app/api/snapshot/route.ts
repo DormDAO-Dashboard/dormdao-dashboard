@@ -140,9 +140,34 @@ export async function POST(req: NextRequest) {
         const prev = prevBySchool[school.name];
         if (!prev || prev.length === 0) continue;
 
-        const prevMap = new Map(prev.map((h: StoredHolding) => [h.ticker, h]));
+        // A school can hold the same ticker across multiple tranches (e.g.
+        // two separate HYPE buys on different dates — see lib/holdings.ts).
+        // Building a Map keyed by ticker straight from the holdings array
+        // silently drops every tranche but the last one sharing a ticker,
+        // which corrupted quantity comparisons below for any multi-tranche
+        // position. Aggregate to one total-tokens figure per ticker first —
+        // this file only needs "how much of this ticker does the school
+        // hold," never the per-tranche breakdown the Active Holdings table
+        // (unmerged, deliberately) shows.
+        const aggregateByTicker = (rows: StoredHolding[]): Map<string, StoredHolding> => {
+          const out = new Map<string, StoredHolding>();
+          for (const h of rows) {
+            const existing = out.get(h.ticker);
+            if (existing) {
+              existing.tokens += h.tokens;
+              existing.costBasisEth += h.costBasisEth;
+            } else {
+              out.set(h.ticker, { ticker: h.ticker, tokens: h.tokens, costBasisEth: h.costBasisEth });
+            }
+          }
+          return out;
+        };
+
+        const prevMap = aggregateByTicker(prev);
         const currHoldings = school.holdings ?? [];
-        const currMap = new Map(currHoldings.map((h: Holding) => [h.ticker, h]));
+        const currMap = aggregateByTicker(
+          currHoldings.map((h: Holding) => ({ ticker: h.ticker, tokens: h.tokens, costBasisEth: h.costBasisEth }))
+        );
 
         // Log every first-cycle disappearance, confirmed or not — if this
         // keeps naming the same ticker+school every cycle instead of
@@ -181,26 +206,42 @@ export async function POST(req: NextRequest) {
         // gone. Schools without two full cycles of history yet (twoAgo
         // unavailable) fall back to firing on the first miss, so exit
         // detection isn't blocked while that history builds up.
-        const recordSell = (ticker: string, oldQuantity: number) => {
-          if (stillInPositionsTable.has(`${school.name}::${ticker}`)) {
-            console.warn(`[snapshot] suppressed false "sell" for ${school.name} ${ticker} — still has a positions-table row`);
-            return;
-          }
-          changeRows.push({ school_name: school.name, change_type: "sell", token_ticker: ticker, old_quantity: oldQuantity, detected_at: detectedAt });
-        };
-
+        const sellCandidates: Array<{ ticker: string; oldQuantity: number }> = [];
         const twoAgo = twoAgoBySchool[school.name];
         if (twoAgo && twoAgo.length > 0) {
-          for (const h of twoAgo) {
-            if (prevMap.has(h.ticker)) continue; // still present as of last stored cycle — not a candidate yet
-            if (currMap.has(h.ticker)) continue; // reappeared — last cycle's drop was itself a glitch
-            recordSell(h.ticker, h.tokens);
+          for (const [ticker, h] of aggregateByTicker(twoAgo)) {
+            if (prevMap.has(ticker)) continue; // still present as of last stored cycle — not a candidate yet
+            if (currMap.has(ticker)) continue; // reappeared — last cycle's drop was itself a glitch
+            sellCandidates.push({ ticker, oldQuantity: h.tokens });
           }
         } else {
           for (const [ticker, prevH] of prevMap) {
             if (!currMap.has(ticker)) {
-              recordSell(ticker, prevH.tokens);
+              sellCandidates.push({ ticker, oldQuantity: prevH.tokens });
             }
+          }
+        }
+
+        // More than one ticker confirmed "sold" for the same school in the
+        // same cycle is exactly the shape of a shared upstream glitch (a
+        // Sheets/gviz hiccup dropping several rows for two cycles running)
+        // rather than a real, deliberate multi-position exit — clubs don't
+        // typically liquidate several distinct tokens in the same ~hour
+        // window. A single confirmed sell still fires normally; a burst
+        // gets held back and logged loudly for manual review instead of
+        // auto-posting false EXIT entries and sell notifications.
+        if (sellCandidates.length > 1) {
+          console.error(
+            `[snapshot] suppressed ${sellCandidates.length} simultaneous "sell" candidates for ${school.name} ` +
+            `(${sellCandidates.map((c) => c.ticker).join(", ")}) — looks like an upstream data glitch, not a real mass exit`
+          );
+        } else {
+          for (const { ticker, oldQuantity } of sellCandidates) {
+            if (stillInPositionsTable.has(`${school.name}::${ticker}`)) {
+              console.warn(`[snapshot] suppressed false "sell" for ${school.name} ${ticker} — still has a positions-table row`);
+              continue;
+            }
+            changeRows.push({ school_name: school.name, change_type: "sell", token_ticker: ticker, old_quantity: oldQuantity, detected_at: detectedAt });
           }
         }
       }
