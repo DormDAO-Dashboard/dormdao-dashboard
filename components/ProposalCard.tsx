@@ -62,7 +62,7 @@ export function ProposalCard({
   const [viewingDoc, setViewingDoc] = useState<ProposalDocument | null>(null);
 
   const [showVoters, setShowVoters] = useState(false);
-  const [voters, setVoters] = useState<{ id: string; display_name: string }[] | null>(null);
+  const [voters, setVoters] = useState<{ id: string; display_name: string; vote?: "yes" | "no" }[] | null>(null);
   const [votersLoading, setVotersLoading] = useState(false);
   const [votersError, setVotersError] = useState<string | null>(null);
 
@@ -74,7 +74,7 @@ export function ProposalCard({
       setVotersError(null);
       try {
         const res = await fetch(`/api/proposals/${proposal.id}/voters`);
-        const data = await res.json() as { voters?: { id: string; display_name: string }[]; error?: string };
+        const data = await res.json() as { voters?: { id: string; display_name: string; vote?: "yes" | "no" }[]; error?: string };
         if (!res.ok) {
           setVotersError(data.error ?? "Failed to load voters");
         } else {
@@ -275,10 +275,18 @@ export function ProposalCard({
                   <p className="text-xs text-gray-700 dark:text-gray-400">No votes yet.</p>
                 )}
                 {!votersLoading && !votersError && voters && voters.length > 0 && (
-                  <ul className="flex flex-wrap gap-x-4 gap-y-1">
+                  <ul className="flex flex-col gap-1">
                     {voters.map((v) => (
                       <li key={v.id} className="text-xs text-gray-700 dark:text-gray-300">
                         {v.display_name}
+                        {!active && v.vote && (
+                          <span className={cn(
+                            "ml-1 font-medium",
+                            v.vote === "yes" ? "text-green-600 dark:text-green-400" : "text-red-500"
+                          )}>
+                            ({v.vote === "yes" ? "yes" : "no"})
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ul>
