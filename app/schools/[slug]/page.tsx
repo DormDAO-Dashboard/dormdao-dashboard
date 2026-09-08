@@ -9,9 +9,6 @@ import { SyncFooter } from "@/components/SyncFooter";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { SCHOOL_SOCIALS, schoolDisplayName, schoolNameFromSlug } from "@/lib/schoolData";
 import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { isAdminUser } from "@/lib/admin-config";
-import { canModerate } from "@/lib/auth-utils";
 import { ArrowLeft, Globe, X, Link2, Camera, MessageSquare, Send, Code2 } from "lucide-react";
 
 function SocialLinks({ name }: { name: string }) {
@@ -74,22 +71,6 @@ async function SchoolContent({ slug }: { slug: string }) {
     if (others.length > 0) otherSchools[h.ticker] = others;
   }
 
-  // Positions tab (adding/editing fixed position data) is only for club
-  // leadership of this school, or a DormDAO admin — same canModerate() model
-  // already used for proposal moderation.
-  let canManagePositions = false;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    if (isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) {
-      canManagePositions = true;
-    } else {
-      const service = createServiceClient();
-      const { data: profile } = await service.from("profiles").select("role, school").eq("id", user.id).single();
-      canManagePositions = canModerate(profile ?? { role: null, school: null }, school.name);
-    }
-  }
-
   return (
     <>
       {/* Branded accent bar — visible to every visitor, logged in or not */}
@@ -139,7 +120,7 @@ async function SchoolContent({ slug }: { slug: string }) {
       </div>
 
       {/* Tabbed content */}
-      <SchoolTabs school={school} otherSchools={otherSchools} canManagePositions={canManagePositions} />
+      <SchoolTabs school={school} otherSchools={otherSchools} />
 
       <SyncFooter fetchedAt={fetchedAt} />
     </>
