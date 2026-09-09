@@ -28,7 +28,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     trigger: "Sent when an admin imports a member with “Send email to members” checked, clicks the onboarding-email button next to a member, or approves a signup request.",
     variables: ["name", "school", "walletLast4"],
     fields: [
-      { key: "subject", label: "Subject", default: "You're invited to Dorm™ — {{school}}" },
+      { key: "subject", label: "Subject", default: "🍜 You're invited to Dorm™ — {{school}}" },
       { key: "heading", label: "Heading", default: "Welcome to Dorm™, {{name}}!" },
       {
         key: "message", label: "Message", multiline: true,
@@ -47,8 +47,8 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     trigger: "Sent to all opted-in members of a school when a new token proposal is created for a vote.",
     variables: ["ticker", "tokenName", "school", "title"],
     fields: [
-      { key: "subject", label: "Subject", default: "New proposal: {{ticker}} — {{school}}" },
-      { key: "heading", label: "Heading", default: "New proposal: {{title}}" },
+      { key: "subject", label: "Subject", default: "🍜 New proposal: ${{ticker}} — {{school}}" },
+      { key: "heading", label: "Heading", default: "New proposal: ${{ticker}} — {{school}}" },
       { key: "message", label: "Message (optional, shown below the proposal details)", multiline: true, default: "" },
     ],
     sampleVars: { ticker: "ETH", tokenName: "Ethereum", school: "Blockchain at Berkeley", title: "Add ETH to treasury" },
@@ -59,8 +59,8 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     trigger: "Sent when a proposal has about 12 hours left before its voting deadline closes.",
     variables: ["ticker", "school", "title"],
     fields: [
-      { key: "subject", label: "Subject", default: "12h left to vote: {{ticker}} — {{school}}" },
-      { key: "heading", label: "Heading", default: "12 hours left: {{title}}" },
+      { key: "subject", label: "Subject", default: "🍜 12 Hours Left to Vote: ${{ticker}} — {{school}}" },
+      { key: "heading", label: "Heading", default: "12 Hours Left to Vote: ${{ticker}} — {{school}}" },
       { key: "message", label: "Message (shown below the current vote tally)", multiline: true, default: "If you haven't voted yet, now is the time." },
     ],
     sampleVars: { ticker: "ETH", school: "Blockchain at Berkeley", title: "Add ETH to treasury" },
@@ -71,8 +71,8 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     trigger: "Sent when a proposal's voting deadline passes and it resolves as passed or rejected.",
     variables: ["ticker", "school", "title", "resultLabel"],
     fields: [
-      { key: "subject", label: "Subject", default: "{{resultLabel}}: {{ticker}} — {{school}}" },
-      { key: "heading", label: "Heading", default: "Proposal {{resultLabel}}: {{title}}" },
+      { key: "subject", label: "Subject", default: "🍜 Proposal {{resultLabel}}: ${{ticker}} — {{school}}" },
+      { key: "heading", label: "Heading", default: "Proposal {{resultLabel}}: ${{ticker}} — {{school}}" },
       { key: "messagePassed", label: "Message when passed", multiline: true, default: "Club leadership will review and execute the trade if approved." },
       { key: "messageRejected", label: "Message when rejected", multiline: true, default: "This proposal did not receive enough votes to pass." },
     ],

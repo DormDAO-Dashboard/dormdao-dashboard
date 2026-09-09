@@ -567,7 +567,6 @@ export async function sendNewProposalEmail(proposal: Proposal): Promise<void> {
       cta: { label: "Cast your vote →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
       schoolSlug: emailSchoolSlug,
-      titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
@@ -602,7 +601,6 @@ export async function send12HourWarningEmail(proposal: Proposal): Promise<void> 
       cta: { label: "Vote now →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
       schoolSlug: emailSchoolSlug,
-      titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
@@ -642,7 +640,6 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
       cta: { label: "View results →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
       schoolSlug: emailSchoolSlug,
-      titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
 }
