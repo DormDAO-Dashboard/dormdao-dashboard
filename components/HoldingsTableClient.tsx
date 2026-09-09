@@ -236,7 +236,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 <td className="px-5 py-3">
                   <Link
                     href={`/tokens/${h.ticker.toLowerCase()}`}
-                    className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors flex items-center gap-1"
+                    className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors flex items-center gap-1 whitespace-nowrap"
                   >
                     {isEthTreasury ? "$ETH Treasury" : `$${h.ticker}`}
                     <ExternalLink className="w-3 h-3 opacity-40" />
@@ -248,8 +248,8 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                     ? h.tokens.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : "—"}
                 </td>
-                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
-                  {h.costBasisEth > 0 ? `${h.costBasisEth} ETH` : "—"}
+                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 whitespace-nowrap">
+                  {h.costBasisEth > 0 ? `${h.costBasisEth.toFixed(2)} ETH` : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {purchasePrice !== null ? formatUSD2(purchasePrice) : "—"}
@@ -260,7 +260,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {loading ? "…" : currentValue !== null ? formatUSD2(currentValue) : "—"}
                 </td>
-                <td className="px-5 py-3 text-right font-mono">
+                <td className="px-5 py-3 text-right font-mono whitespace-nowrap">
                   {loading ? (
                     <span className="text-gray-700 dark:text-gray-400">…</span>
                   ) : pnl !== null ? (
