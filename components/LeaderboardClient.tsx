@@ -143,10 +143,10 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
             School <SortIconNeutral col="name" sortKey={sortKey} asc={asc} />
           </th>
           <th className={cn(th, "text-right w-[24%] whitespace-normal leading-tight")} onClick={() => toggle("quarterlyUsd")}>
-            Absolute Performance (USD) <SortIconNeutral col="quarterlyUsd" sortKey={sortKey} asc={asc} />
+            Performance vs USD <SortIconNeutral col="quarterlyUsd" sortKey={sortKey} asc={asc} />
           </th>
           <th className={cn(th, "text-right w-[24%] whitespace-normal leading-tight")} onClick={() => toggle("quarterlyEth")}>
-            Relative Performance (ETH) <SortIconNeutral col="quarterlyEth" sortKey={sortKey} asc={asc} />
+            Performance vs ETH <SortIconNeutral col="quarterlyEth" sortKey={sortKey} asc={asc} />
           </th>
         </tr>
       </thead>
@@ -225,10 +225,10 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
             NAV <SortIconNeutral col="nav" sortKey={sortKey} asc={asc} yellow />
           </th>
           <th className={th("usdReturn", "text-right w-[15%] whitespace-normal leading-tight")} onClick={() => toggle("usdReturn")}>
-            Absolute Performance (USD) <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
+            Performance vs USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
           <th className={th("ethReturn", "text-right w-[15%] whitespace-normal leading-tight")} onClick={() => toggle("ethReturn")}>
-            Relative Performance (ETH) <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
+            Performance vs ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
           <th className={th("pctDeployed", "text-right w-[13%]")} onClick={() => toggle("pctDeployed")}>
             Deployed <SortIconNeutral col="pctDeployed" sortKey={sortKey} asc={asc} yellow />
@@ -300,10 +300,10 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
           </th>
           <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-700 dark:text-gray-400">School</th>
           <th className={cn(th, "text-right w-[22%] whitespace-normal leading-tight")} onClick={() => toggle("usdReturn")}>
-            Absolute Performance (USD) <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
+            Performance vs USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
           </th>
           <th className={cn(th, "text-right w-[22%] whitespace-normal leading-tight")} onClick={() => toggle("ethReturn")}>
-            Relative Performance (ETH) <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} />
+            Performance vs ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} />
           </th>
         </tr>
       </thead>
