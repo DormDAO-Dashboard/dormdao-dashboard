@@ -140,7 +140,14 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
     }
   }
 
-  const sortedHoldings = [...holdings].sort((a, b) => {
+  // ETH is the fund's idle treasury balance, not an acquired position — it's
+  // the baseline everything else's performance gets measured against, so it
+  // stays pinned to the top row regardless of whatever column the table is
+  // currently sorted by, rather than sorting in alongside real positions.
+  const ethRows = holdings.filter((h) => h.ticker === "ETH");
+  const otherHoldings = holdings.filter((h) => h.ticker !== "ETH");
+
+  const sortedHoldings = [...ethRows, ...otherHoldings.sort((a, b) => {
     const aVal = getSortValue(a);
     const bVal = getSortValue(b);
     if (aVal === null && bVal === null) return 0;
@@ -151,7 +158,7 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
       return aVal.localeCompare(bVal) * mult;
     }
     return ((aVal as number) - (bVal as number)) * mult;
-  });
+  })];
 
   const thClass = "px-5 py-3 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors";
 
@@ -215,15 +222,23 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
 
             const roiEthPct = h.roiEthPct ?? null;
             const purchasePrice = purchasePriceOf(h);
+            const isEthTreasury = h.ticker === "ETH";
 
             return (
-              <tr key={`${h.ticker}-${h.investmentDate}-${i}`} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+              <tr
+                key={`${h.ticker}-${h.investmentDate}-${i}`}
+                className={
+                  isEthTreasury
+                    ? "border-b border-gray-800/50 bg-black/[0.03] dark:bg-white/[0.045] hover:bg-black/[0.05] dark:hover:bg-white/[0.07]"
+                    : "border-b border-gray-800/50 hover:bg-gray-800/30"
+                }
+              >
                 <td className="px-5 py-3">
                   <Link
                     href={`/tokens/${h.ticker.toLowerCase()}`}
                     className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors flex items-center gap-1"
                   >
-                    ${h.ticker}
+                    {isEthTreasury ? "$ETH Treasury" : `$${h.ticker}`}
                     <ExternalLink className="w-3 h-3 opacity-40" />
                   </Link>
                 </td>
