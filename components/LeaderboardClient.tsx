@@ -142,11 +142,11 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
           <th className={cn(th, "text-left")} onClick={() => toggle("name")}>
             School <SortIconNeutral col="name" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right w-[24%]")} onClick={() => toggle("quarterlyUsd")}>
-            USD <SortIconNeutral col="quarterlyUsd" sortKey={sortKey} asc={asc} />
+          <th className={cn(th, "text-right w-[24%] whitespace-normal leading-tight")} onClick={() => toggle("quarterlyUsd")}>
+            Absolute Performance (USD) <SortIconNeutral col="quarterlyUsd" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right w-[24%]")} onClick={() => toggle("quarterlyEth")}>
-            ETH <SortIconNeutral col="quarterlyEth" sortKey={sortKey} asc={asc} />
+          <th className={cn(th, "text-right w-[24%] whitespace-normal leading-tight")} onClick={() => toggle("quarterlyEth")}>
+            Relative Performance (ETH) <SortIconNeutral col="quarterlyEth" sortKey={sortKey} asc={asc} />
           </th>
         </tr>
       </thead>
@@ -224,11 +224,11 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
           <th className={th("nav", "text-right w-[14%]")} onClick={() => toggle("nav")}>
             NAV <SortIconNeutral col="nav" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("usdReturn", "text-right w-[13%]")} onClick={() => toggle("usdReturn")}>
-            USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
+          <th className={th("usdReturn", "text-right w-[15%] whitespace-normal leading-tight")} onClick={() => toggle("usdReturn")}>
+            Absolute Performance (USD) <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
-          <th className={th("ethReturn", "text-right w-[13%]")} onClick={() => toggle("ethReturn")}>
-            ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
+          <th className={th("ethReturn", "text-right w-[15%] whitespace-normal leading-tight")} onClick={() => toggle("ethReturn")}>
+            Relative Performance (ETH) <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} yellow />
           </th>
           <th className={th("pctDeployed", "text-right w-[13%]")} onClick={() => toggle("pctDeployed")}>
             Deployed <SortIconNeutral col="pctDeployed" sortKey={sortKey} asc={asc} yellow />
@@ -299,11 +299,11 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
             # <SortIconNeutral col="rank" sortKey={sortKey} asc={asc} />
           </th>
           <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-700 dark:text-gray-400">School</th>
-          <th className={cn(th, "text-right w-[22%]")} onClick={() => toggle("usdReturn")}>
-            USD <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
+          <th className={cn(th, "text-right w-[22%] whitespace-normal leading-tight")} onClick={() => toggle("usdReturn")}>
+            Absolute Performance (USD) <SortIconNeutral col="usdReturn" sortKey={sortKey} asc={asc} />
           </th>
-          <th className={cn(th, "text-right w-[22%]")} onClick={() => toggle("ethReturn")}>
-            ETH <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} />
+          <th className={cn(th, "text-right w-[22%] whitespace-normal leading-tight")} onClick={() => toggle("ethReturn")}>
+            Relative Performance (ETH) <SortIconNeutral col="ethReturn" sortKey={sortKey} asc={asc} />
           </th>
         </tr>
       </thead>
