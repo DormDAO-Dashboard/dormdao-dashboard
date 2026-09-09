@@ -78,111 +78,175 @@ function Pill({ active, onClick, children }: {
   );
 }
 
-function LockedDocumentCard({ doc }: { doc: TokenDocument }) {
-  const reason = getLockReason(doc.visibility, doc.school);
-  return (
-    <div className="flex flex-col rounded-xl border border-gray-200/60 dark:border-gray-800/60 bg-gray-50/50 dark:bg-gray-900/30 p-3.5 opacity-60 h-full">
-      <div className="flex items-start justify-between gap-1.5 mb-2">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-400 leading-snug line-clamp-2">
-          {doc.title}
-        </h3>
-        <Lock className="w-3 h-3 text-gray-700 dark:text-gray-400 shrink-0 mt-0.5" />
-      </div>
-      <span className={cn(
-        "inline-flex items-center self-start px-1.5 py-0.5 rounded text-[10px] font-medium mb-1.5",
-        docTypeBadgeClass(doc.document_type)
-      )}>
-        {formatDocType(doc.document_type)}
-      </span>
-      <p className="text-xs text-gray-700 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
-      <p className="text-xs text-gray-700 dark:text-gray-400 mt-auto pt-2">{reason}</p>
-    </div>
-  );
+// A "pitch" is every document sharing the same school + token + pitch date —
+// e.g. Oregon's $HYPE pitch deck, exec summary, and fund report from the same
+// 10/25/2025 pitch all belong to one group/card. If Oregon pitches $HYPE
+// again later, that's a different document_date and gets its own group. Docs
+// missing a school or date (older/manually-added rows) fall back to grouping
+// by id alone, so they never get incorrectly merged with an unrelated doc.
+interface PitchGroup {
+  key: string;
+  ticker: string;
+  title: string;
+  school: string | null;
+  date: string | null;
+  docs: TokenDocument[];
 }
 
-function VideoDocumentCard({ doc, onPlay }: { doc: TokenDocument; onPlay: () => void }) {
-  return (
-    <button
-      onClick={onPlay}
-      className="group flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-3.5 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-all cursor-pointer h-full text-left w-full"
-    >
-      <div className="flex items-start justify-between gap-1.5 mb-2">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2">
-          {doc.title}
-        </h3>
-        <Play className="w-3 h-3 text-gray-700 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-400 shrink-0 mt-0.5 transition-colors" />
-      </div>
-      <span className={cn(
-        "inline-flex items-center self-start px-1.5 py-0.5 rounded text-[10px] font-medium mb-1.5",
-        docTypeBadgeClass(doc.document_type)
-      )}>
-        {formatDocType(doc.document_type)}
-      </span>
-      <p className="text-xs text-gray-700 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
-      <p className="text-xs text-gray-700 dark:text-gray-400 mt-auto pt-2">{formatDocMonth(doc.document_date)}</p>
-    </button>
-  );
+function pitchTitle(doc: TokenDocument): string {
+  // Uploaded titles are "{{tokenName}} — {{Doc Type Label}}" (see
+  // scripts/upload-pitches.js) — strip the trailing " — Type" so the group
+  // card shows just the pitch's own name, not one material's label.
+  const idx = doc.title.lastIndexOf(" — ");
+  return idx === -1 ? doc.title : doc.title.slice(0, idx);
 }
 
-function DocumentCard({ doc, compareMode, selected, onToggle, disabled }: {
+function groupIntoPitches(docs: TokenDocument[]): PitchGroup[] {
+  const order: string[] = [];
+  const groups = new Map<string, TokenDocument[]>();
+  for (const doc of docs) {
+    const key = doc.school && doc.document_date
+      ? `${doc.school}|${doc.token_ticker}|${doc.document_date}`
+      : `solo:${doc.id}`;
+    if (!groups.has(key)) { order.push(key); groups.set(key, []); }
+    groups.get(key)!.push(doc);
+  }
+  return order.map((key) => {
+    const members = groups.get(key)!;
+    return {
+      key,
+      ticker: members[0].token_ticker,
+      title: pitchTitle(members[0]),
+      school: members[0].school,
+      date: members[0].document_date,
+      docs: members,
+    };
+  });
+}
+
+function MaterialRow({ doc, compareMode, selected, onToggle, disabled, onPlay }: {
   doc: TokenDocument;
   compareMode: boolean;
   selected: boolean;
   onToggle: () => void;
   disabled: boolean;
+  onPlay: () => void;
+}) {
+  const rowClass = "group/row flex items-center gap-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors";
+
+  if (doc.locked) {
+    return (
+      <div className={cn(rowClass, "opacity-60 cursor-not-allowed")} title={getLockReason(doc.visibility, doc.school)}>
+        <Lock className="w-3 h-3 text-gray-700 dark:text-gray-400 shrink-0" />
+        <span className="text-xs text-gray-700 dark:text-gray-400 flex-1 truncate">{formatDocType(doc.document_type)}</span>
+      </div>
+    );
+  }
+
+  const isVideo = doc.document_type === "video";
+  const icon = isVideo
+    ? <Play className="w-3 h-3 text-gray-700 dark:text-gray-400 group-hover/row:text-primary transition-colors shrink-0" />
+    : <FileText className="w-3 h-3 text-gray-700 dark:text-gray-400 group-hover/row:text-primary transition-colors shrink-0" />;
+
+  const content = (
+    <>
+      {compareMode && !isVideo ? (
+        <div className={cn(
+          "w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0",
+          selected ? "bg-primary border-primary" : "border-gray-400 dark:border-gray-500"
+        )}>
+          {selected && (
+            <svg className="w-2 h-2 text-black" fill="none" viewBox="0 0 10 8">
+              <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
+      ) : icon}
+      <span className="text-xs text-gray-900 dark:text-white flex-1 truncate group-hover/row:text-primary transition-colors">
+        {formatDocType(doc.document_type)}
+      </span>
+      {!compareMode && (isVideo
+        ? <Play className="w-3 h-3 text-gray-700 dark:text-gray-400 opacity-0 group-hover/row:opacity-100 transition-opacity shrink-0" />
+        : <ExternalLink className="w-3 h-3 text-gray-700 dark:text-gray-400 opacity-0 group-hover/row:opacity-100 transition-opacity shrink-0" />)}
+    </>
+  );
+
+  if (compareMode) {
+    if (isVideo || !doc.file_url) {
+      return <div className={cn(rowClass, "opacity-40 cursor-not-allowed")}>{content}</div>;
+    }
+    return (
+      <button
+        onClick={onToggle}
+        disabled={disabled}
+        className={cn(rowClass, "text-left w-full", disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100 dark:hover:bg-gray-800/60 cursor-pointer")}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  if (isVideo) {
+    return (
+      <button onClick={onPlay} className={cn(rowClass, "text-left w-full hover:bg-gray-100 dark:hover:bg-gray-800/60 cursor-pointer")}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <a
+      href={doc.file_url!}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(rowClass, "hover:bg-gray-100 dark:hover:bg-gray-800/60 cursor-pointer")}
+    >
+      {content}
+    </a>
+  );
+}
+
+function PitchGroupCard({ group, compareMode, selectedDocs, onToggleDoc, onPlay }: {
+  group: PitchGroup;
+  compareMode: boolean;
+  selectedDocs: TokenDocument[];
+  onToggleDoc: (doc: TokenDocument) => void;
+  onPlay: (doc: TokenDocument) => void;
 }) {
   return (
-    <div className={cn(
-      "relative",
-      compareMode && selected && "ring-2 ring-primary/50 rounded-xl",
-      compareMode && disabled && "opacity-40"
-    )}>
-      {compareMode && (
-        <>
-          <div
-            className={cn("absolute inset-0 z-10 rounded-xl", disabled ? "cursor-not-allowed" : "cursor-pointer")}
-            onClick={disabled ? undefined : onToggle}
-          />
-          <div className="absolute top-2.5 left-2.5 z-20 pointer-events-none">
-            <div className={cn(
-              "w-4 h-4 rounded border-2 flex items-center justify-center",
-              selected
-                ? "bg-primary border-primary"
-                : "border-gray-400 dark:border-gray-500 bg-white/80 dark:bg-gray-900/80"
-            )}>
-              {selected && (
-                <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 10 8">
-                  <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-      <a
-        href={doc.file_url!}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-3.5 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-all cursor-pointer h-full"
-      >
-        <div className="flex items-start justify-between gap-1.5 mb-2">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2">
-            {doc.title}
-          </h3>
-          <ExternalLink className="w-3 h-3 text-gray-700 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-400 shrink-0 mt-0.5 transition-colors" />
-        </div>
-        <span className={cn(
-          "inline-flex items-center self-start px-1.5 py-0.5 rounded text-[10px] font-medium mb-1.5",
-          docTypeBadgeClass(doc.document_type)
-        )}>
-          {formatDocType(doc.document_type)}
-        </span>
-        <p className="text-xs text-gray-700 dark:text-gray-400 truncate">{doc.school ? schoolDisplayName(doc.school) : "—"}</p>
-        {doc.token_ticker && !/^school$/i.test(doc.token_ticker) && (
-          <p className="text-xs text-gray-700 dark:text-gray-400 font-mono">${doc.token_ticker}</p>
+    <div className="flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-3.5 h-full">
+      <div className="flex items-start justify-between gap-1.5 mb-1.5">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2">
+          {group.title}
+        </h3>
+        {group.docs.length > 1 && (
+          <span className="shrink-0 mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400">
+            {group.docs.length} files
+          </span>
         )}
-        <p className="text-xs text-gray-700 dark:text-gray-400 mt-auto pt-2">{formatDocMonth(doc.document_date)}</p>
-      </a>
+      </div>
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <p className="text-xs text-gray-700 dark:text-gray-400 truncate">{group.school ? schoolDisplayName(group.school) : "—"}</p>
+        {group.ticker && !/^school$/i.test(group.ticker) && (
+          <p className="text-xs text-gray-700 dark:text-gray-400 font-mono">${group.ticker}</p>
+        )}
+      </div>
+      <div className="flex flex-col gap-0.5 flex-1">
+        {group.docs.map((doc) => (
+          <MaterialRow
+            key={doc.id}
+            doc={doc}
+            compareMode={compareMode}
+            selected={selectedDocs.some((d) => d.id === doc.id)}
+            onToggle={() => onToggleDoc(doc)}
+            disabled={compareMode && !selectedDocs.some((d) => d.id === doc.id) && selectedDocs.length >= 2}
+            onPlay={() => onPlay(doc)}
+          />
+        ))}
+      </div>
+      <p className="text-xs text-gray-700 dark:text-gray-400 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800/60">
+        {formatDocMonth(group.date)}
+      </p>
     </div>
   );
 }
@@ -236,6 +300,8 @@ function DormDocsGrid() {
       return (a.token_ticker ?? "").localeCompare(b.token_ticker ?? "");
     });
   }, [docs, typeFilter, schoolFilter, yearFilter, tokenSearch, sort]);
+
+  const pitchGroups = useMemo(() => groupIntoPitches(filtered), [filtered]);
 
   function toggleDoc(doc: TokenDocument) {
     setSelectedDocs((prev) =>
@@ -317,11 +383,11 @@ function DormDocsGrid() {
       {/* Result count */}
       {!loading && (
         <p className="text-xs text-gray-700 dark:text-gray-400 mb-3">
-          {filtered.length} document{filtered.length !== 1 ? "s" : ""}
+          {pitchGroups.length} pitch{pitchGroups.length !== 1 ? "es" : ""} &middot; {filtered.length} document{filtered.length !== 1 ? "s" : ""}
         </p>
       )}
 
-      {/* Document grid */}
+      {/* Pitch grid — one card per school+token+date pitch, grouping every material from that pitch together */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {[...Array(8)].map((_, i) => (
@@ -334,26 +400,16 @@ function DormDocsGrid() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filtered.map((doc) => {
-            if (doc.locked) {
-              return <LockedDocumentCard key={doc.id} doc={doc} />;
-            }
-            if (doc.document_type === "video" && doc.file_url) {
-              return <VideoDocumentCard key={doc.id} doc={doc} onPlay={() => setPlayingDoc(doc)} />;
-            }
-            const isSelected = selectedDocs.some((d) => d.id === doc.id);
-            const isDisabled = compareMode && !isSelected && selectedDocs.length >= 2;
-            return (
-              <DocumentCard
-                key={doc.id}
-                doc={doc}
-                compareMode={compareMode}
-                selected={isSelected}
-                onToggle={() => toggleDoc(doc)}
-                disabled={isDisabled}
-              />
-            );
-          })}
+          {pitchGroups.map((group) => (
+            <PitchGroupCard
+              key={group.key}
+              group={group}
+              compareMode={compareMode}
+              selectedDocs={selectedDocs}
+              onToggleDoc={toggleDoc}
+              onPlay={(doc) => setPlayingDoc(doc)}
+            />
+          ))}
         </div>
       )}
 
