@@ -76,6 +76,17 @@ export function verifyUnsubToken(userId: string, token: string): boolean {
 // matches the original fixed dark header exactly.
 const DEFAULT_HEADER_COLORS = { primary: "#111827", text: "#fff" };
 
+// Per-school override for the email header background specifically —
+// intentionally separate from getSchoolColors' `primary`, which also drives
+// that school's color everywhere on the website (borders, buttons, etc.). A
+// school wanting a different accent in emails than its site-wide color goes
+// here instead of changing schoolColors.ts.
+const EMAIL_HEADER_BG_OVERRIDE: Record<string, string> = {
+  "berkeley": "#FDB515",
+  "michigan": "#FFCB05",
+  "cambridge": "#85B09A",
+};
+
 // Per-school "dorm [ramen] | <school>" wordmark lockups (public/email-headers/
 // <slug>.png) — white artwork designed to sit on that school's own primary
 // color, so they're only used together with the matching header background
@@ -123,6 +134,7 @@ function buildTemplate(opts: {
   titleIcon?: boolean;
 }): string {
   const headerColors = opts.schoolSlug ? getSchoolColors(opts.schoolSlug) : DEFAULT_HEADER_COLORS;
+  const headerBg = (opts.schoolSlug && EMAIL_HEADER_BG_OVERRIDE[opts.schoolSlug]) || headerColors.primary;
   const headerImage = opts.schoolSlug ? SCHOOL_HEADER_IMAGES[opts.schoolSlug] : undefined;
   const headerMark = headerImage
     ? `<img src="${APP_URL}/email-headers/${headerImage.file}" width="${headerImage.width}" height="${headerImage.height}" alt="Dorm™ · ${opts.schoolLabel ?? ""}" style="display:block;border:0" />`
@@ -142,7 +154,7 @@ function buildTemplate(opts: {
     : `<a href="${APP_URL}/profile" style="color:#9ca3af;text-decoration:underline">Manage preferences</a>`;
 
   return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-  <div style="background:${headerColors.primary};padding:16px 24px;border-radius:12px 12px 0 0">
+  <div style="background:${headerBg};padding:16px 24px;border-radius:12px 12px 0 0">
     ${headerMark}
   </div>
   <div style="background:#fff;padding:28px 24px;border:1px solid #e5e7eb;border-top:none">
