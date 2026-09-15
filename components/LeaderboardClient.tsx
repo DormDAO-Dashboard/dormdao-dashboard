@@ -214,7 +214,15 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
   );
 
   return (
-    <table className="w-full table-fixed text-xs" style={{ height: '100%' }}>
+    // No height:100% here (unlike the other two panels) — this table is
+    // reused for 24-25/23-24 via the season tabs, which can have fewer
+    // schools than fit the panel (e.g. schools that joined a later season
+    // aren't in an older one). Forcing the table to fill the panel height
+    // with fewer rows stretched every <tr> taller instead of leaving the
+    // leftover space blank below a normal-height table, so row height
+    // matched Quarterly/All-Time only when the season happened to have a
+    // full row count.
+    <table className="w-full table-fixed text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
           <th className={th("rank", "text-left w-[8%]")} onClick={() => toggle("rank")}>
