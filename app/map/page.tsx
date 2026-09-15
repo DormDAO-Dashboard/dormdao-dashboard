@@ -92,6 +92,10 @@ interface Zone {
   color: string;
   isEasterEgg?: boolean;
   description?: string;
+  // Building + name banner stay visible on the map, but the zone stops
+  // responding to hover/click entirely (no glow, no cursor, no navigation)
+  // — used to pull a destination off the map without editing the artwork.
+  disabled?: boolean;
 }
 
 // Coordinates are in campus-map.png pixel space (3264x1312). Estimated from
@@ -106,6 +110,7 @@ const ZONES: Zone[] = [
     action: "navigate",
     href: "/dorm-builders",
     color: SHOWCASE_COLORS.dormBuilders,
+    disabled: true,
   },
   {
     id: "dorm-catalyst",
@@ -116,6 +121,7 @@ const ZONES: Zone[] = [
     href: "/dorm-catalyst",
     color: SHOWCASE_COLORS.dormCatalyst,
     description: "Accelerating the next generation of crypto founders",
+    disabled: true,
   },
   {
     id: "dorm-summit",
@@ -126,6 +132,7 @@ const ZONES: Zone[] = [
     href: "/dorm-summit",
     color: SHOWCASE_COLORS.dormSummit,
     description: "The Dorm™ annual summit and events",
+    disabled: true,
   },
   {
     id: "dorm-capital",
@@ -371,6 +378,7 @@ export default function MapPage() {
   }
 
   function handleZoneEnter(zone: Zone) {
+    if (zone.disabled) return;
     setHoveredZone(zone);
     if (zone.id === "autzen") setAutzenOKey((k) => (k ?? 0) + 1);
   }
@@ -380,6 +388,7 @@ export default function MapPage() {
   }
 
   function handleZoneClick(zone: Zone) {
+    if (zone.disabled) return;
     if (draggedRef.current) return; // suppress click-through after a real drag
     if (zone.action === "navigate" && zone.href) router.push(zone.href);
     else if (zone.action === "external" && zone.href) window.open(zone.href, "_blank", "noopener,noreferrer");
@@ -463,7 +472,7 @@ export default function MapPage() {
                   stroke={isHovered ? `rgba(${rgb}, ${isAnimalHouse ? 0.15 : 1})` : debugZones ? zone.color : "none"}
                   strokeWidth={isHovered ? (isAnimalHouse ? 1 : 2) : debugZones ? 1.5 : 0}
                   style={{
-                    cursor: zone.isEasterEgg ? "crosshair" : "pointer",
+                    cursor: zone.disabled ? "default" : zone.isEasterEgg ? "crosshair" : "pointer",
                     transition: "all 150ms ease",
                     filter: isHovered && !isAnimalHouse ? `drop-shadow(0 0 8px rgba(${rgb}, 0.6))` : "none",
                   }}
