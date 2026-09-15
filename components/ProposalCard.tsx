@@ -167,14 +167,16 @@ export function ProposalCard({
                   </span>
                 )}
               </div>
-              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{proposal.title}</p>
+              {proposal.recommended_size_eth != null && (
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                  {proposal.proposal_type === "sell" ? "Sell" : "Buy"} {proposal.recommended_size_eth} ETH
+                </p>
+              )}
             </div>
             <div className="shrink-0 flex flex-col items-end gap-1 text-right">
-              {proposal.recommended_size_eth != null && (
-                <span className="text-xs text-gray-700 dark:text-gray-400 font-mono whitespace-nowrap">
-                  {proposal.proposal_type === "sell" ? "Sell" : "Buy"} {proposal.recommended_size_eth} ETH
-                </span>
-              )}
+              <span className="text-xs text-gray-700 dark:text-gray-400 font-mono whitespace-nowrap">
+                {proposal.title}
+              </span>
               {proposal.price_target != null && (
                 <span className="text-xs text-gray-700 dark:text-gray-400 font-mono whitespace-nowrap">
                   Target ${proposal.price_target.toLocaleString()}
