@@ -7,14 +7,13 @@ import { KpiCard, Skeleton } from "@/components/ui/Card";
 import { SchoolTabs } from "@/components/SchoolTabs";
 import { SyncFooter } from "@/components/SyncFooter";
 import { SchoolLogo } from "@/components/SchoolLogo";
-import { SCHOOL_SOCIALS, schoolDisplayName, schoolNameFromSlug } from "@/lib/schoolData";
+import { SchoolSocialsEditor } from "@/components/SchoolSocialsEditor";
+import { schoolDisplayName, schoolNameFromSlug, type SchoolSocials } from "@/lib/schoolData";
+import { getEffectiveSchoolSocials } from "@/lib/school-socials-store";
 import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
 import { ArrowLeft, Globe, X, Link2, Camera, MessageSquare, Send, Code2 } from "lucide-react";
 
-function SocialLinks({ name }: { name: string }) {
-  const socials = SCHOOL_SOCIALS[name];
-  if (!socials) return null;
-
+function SocialLinks({ socials }: { socials: SchoolSocials }) {
   const links: { href: string; icon: React.ReactNode; label: string }[] = [];
   if (socials.website)   links.push({ href: socials.website,   icon: <Globe className="w-3.5 h-3.5" />,         label: "Website" });
   if (socials.twitter)   links.push({ href: socials.twitter,   icon: <X className="w-3.5 h-3.5" />,             label: "Twitter" });
@@ -62,6 +61,7 @@ async function SchoolContent({ slug }: { slug: string }) {
 
   const colors = getSchoolColors(school.slug);
   const boxBorder = accentBorderColor(colors.primary);
+  const socials = await getEffectiveSchoolSocials(school.name);
 
   const otherSchools: Record<string, string[]> = {};
   for (const h of school.holdings ?? []) {
@@ -84,22 +84,30 @@ async function SchoolContent({ slug }: { slug: string }) {
       </Link>
 
       {/* Header */}
-      <div className="flex items-center gap-4 mb-4">
-        <div
-          className="rounded-full p-[3px] border-2 border-gray-300 dark:border-gray-700"
-          style={{ backgroundColor: colors.secondary }}
-        >
-          <div className="rounded-full p-0.5" style={{ backgroundColor: colors.primary }}>
-            <SchoolLogo name={school.name} size={48} />
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex items-center gap-4">
+          <div
+            className="rounded-full p-[3px] border-2 border-gray-300 dark:border-gray-700"
+            style={{ backgroundColor: colors.secondary }}
+          >
+            <div className="rounded-full p-0.5" style={{ backgroundColor: colors.primary }}>
+              <SchoolLogo name={school.name} size={48} />
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-mono text-gray-700 dark:text-gray-400 mb-1">Rank #{school.rank}</div>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{schoolDisplayName(school.name)}</h1>
           </div>
         </div>
-        <div>
-          <div className="text-xs font-mono text-gray-700 dark:text-gray-400 mb-1">Rank #{school.rank}</div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{schoolDisplayName(school.name)}</h1>
-        </div>
+        <SchoolSocialsEditor
+          schoolSlug={school.slug}
+          schoolName={schoolDisplayName(school.name)}
+          colors={colors}
+          initialSocials={socials}
+        />
       </div>
 
-      <SocialLinks name={school.name} />
+      <SocialLinks socials={socials} />
 
       {/* KPI cards — always visible above tabs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
