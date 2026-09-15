@@ -153,6 +153,14 @@ export function ProposalCard({
                   ${proposal.token_ticker}
                 </span>
                 <span className="text-sm text-gray-700 dark:text-gray-400">{proposal.token_name}</span>
+                <span className={cn(
+                  "text-xs px-2 py-0.5 rounded font-medium",
+                  proposal.proposal_type === "sell"
+                    ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
+                    : "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                )}>
+                  {proposal.proposal_type === "sell" ? "SELL" : "BUY"}
+                </span>
                 {!active && (
                   <span className={cn("text-xs px-2 py-0.5 rounded font-medium", badge.className)}>
                     {badge.label}
@@ -164,7 +172,7 @@ export function ProposalCard({
             <div className="shrink-0 flex flex-col items-end gap-1 text-right">
               {proposal.recommended_size_eth != null && (
                 <span className="text-xs text-gray-700 dark:text-gray-400 font-mono whitespace-nowrap">
-                  Buy {proposal.recommended_size_eth} ETH
+                  {proposal.proposal_type === "sell" ? "Sell" : "Buy"} {proposal.recommended_size_eth} ETH
                 </span>
               )}
               {proposal.price_target != null && (

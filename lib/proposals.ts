@@ -10,6 +10,7 @@ export interface Proposal {
   school: string; // slug, e.g. "oregon"
   token_ticker: string;
   token_name: string;
+  proposal_type: "buy" | "sell";
   title: string;
   description: string | null;
   proposed_by: string | null;

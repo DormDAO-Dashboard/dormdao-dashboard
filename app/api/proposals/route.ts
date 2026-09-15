@@ -126,6 +126,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json() as {
     school?: string;
     token_ticker?: string;
+    proposal_type?: string;
     title?: string;
     description?: string;
     recommended_size_eth?: number;
@@ -134,6 +135,7 @@ export async function POST(req: NextRequest) {
   };
 
   const { school, token_ticker, title, description, recommended_size_eth, price_target, document_ids } = body;
+  const proposalType = body.proposal_type === "sell" ? "sell" : "buy";
 
   if (!school) return NextResponse.json({ error: "school is required" }, { status: 400 });
 
@@ -164,6 +166,7 @@ export async function POST(req: NextRequest) {
       school,
       token_ticker: ticker,
       token_name: tokenName,
+      proposal_type: proposalType,
       title: title.trim(),
       description: description.trim(),
       proposed_by: user.id,
@@ -180,10 +183,11 @@ export async function POST(req: NextRequest) {
 
   const created = proposal as Proposal;
   after(async () => {
+    const typeLabel = created.proposal_type === "sell" ? "Sell" : "Buy";
     const payload = {
       type: "vote" as const,
-      title: `🗳️ New proposal: ${created.token_ticker}`,
-      body: `${proposalSchoolLabel(school)} is voting on ${created.token_name}. Cast your vote.`,
+      title: `🗳️ New ${typeLabel.toLowerCase()} proposal: ${created.token_ticker}`,
+      body: `${proposalSchoolLabel(school)} is voting on whether to ${typeLabel.toLowerCase()} ${created.token_name}. Cast your vote.`,
       url: proposalVoteUrl(school),
     };
     await sendPushNotifications(payload).catch(console.error);

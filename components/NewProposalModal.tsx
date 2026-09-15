@@ -58,6 +58,7 @@ async function uploadDoc(file: File, ticker: string, schoolName: string, slot: D
 
 export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated }: Props) {
   const [ticker, setTicker] = useState("");
+  const [proposalType, setProposalType] = useState<"buy" | "sell">("buy");
   const [title, setTitle] = useState("");
   const [titleManual, setTitleManual] = useState(false);
   const [description, setDescription] = useState("");
@@ -69,14 +70,19 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
   const [error, setError] = useState<string | null>(null);
   const fileRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
-  function autoTitle(t: string): string {
-    return t ? `Buy $${t}` : "";
+  function autoTitle(t: string, type: "buy" | "sell"): string {
+    return t ? `${type === "buy" ? "Buy" : "Sell"} $${t}` : "";
   }
 
   function handleTickerChange(val: string) {
     const upper = val.toUpperCase().replace(/[^A-Z0-9]/g, "");
     setTicker(upper);
-    if (!titleManual) setTitle(autoTitle(upper));
+    if (!titleManual) setTitle(autoTitle(upper, proposalType));
+  }
+
+  function handleTypeChange(type: "buy" | "sell") {
+    setProposalType(type);
+    if (!titleManual) setTitle(autoTitle(ticker, type));
   }
 
   function handleTitleChange(val: string) {
@@ -114,6 +120,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
         body: JSON.stringify({
           school: slug,
           token_ticker: ticker,
+          proposal_type: proposalType,
           title,
           description,
           recommended_size_eth: sizeEth ? parseFloat(sizeEth) : undefined,
@@ -151,7 +158,20 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
+                Buy/Sale <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={proposalType}
+                onChange={(e) => handleTypeChange(e.target.value as "buy" | "sell")}
+                className={inputClass}
+              >
+                <option value="buy">Buy</option>
+                <option value="sell">Sell</option>
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
                 Token Ticker <span className="text-red-500">*</span>
@@ -168,7 +188,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
-                Recommended Size (ETH)
+                Size (ETH)
               </label>
               <input
                 type="number"
