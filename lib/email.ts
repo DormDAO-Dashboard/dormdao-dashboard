@@ -339,12 +339,34 @@ async function batchSend(
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("RESEND_API_KEY is not set");
   const resend = new Resend(apiKey);
+
+  // Resend's batch-send endpoint does not support attachments at all — its
+  // own SDK type is `Omit<CreateEmailOptions, 'attachments' | 'scheduledAt'>`
+  // ("not supported in the batch API"). The previous version of this
+  // function passed `attachments` in anyway via an object spread, which
+  // TypeScript's excess-property check doesn't catch on a spread (only on a
+  // literal), so it type-checked clean while the field was silently dropped
+  // by Resend — pitch-material PDFs never actually reached recipients on
+  // any email sent through this path. When attachments are present, send
+  // individually via emails.send() (which does support them) instead, one
+  // request per recipient with a short delay to stay under Resend's
+  // published ~2 req/s rate limit.
+  if (attachments?.length) {
+    for (const r of recipients) {
+      const { subject, html } = buildEmail(r);
+      const result = await resend.emails.send({ from, to: r.email, subject, html, attachments });
+      assertResendOk(result);
+      await new Promise((res) => setTimeout(res, 550));
+    }
+    return;
+  }
+
   for (let i = 0; i < recipients.length; i += 50) {
     const slice = recipients.slice(i, i + 50);
     const result = await resend.batch.send(
       slice.map((r) => {
         const { subject, html } = buildEmail(r);
-        return { from, to: r.email, subject, html, ...(attachments?.length ? { attachments } : {}) };
+        return { from, to: r.email, subject, html };
       }),
     );
     assertResendOk(result);
@@ -414,25 +436,37 @@ async function getProposalVoters(proposalId: string): Promise<ProposalVoter[]> {
 }
 
 // Names only — used on the 12h-warning email, where the vote itself must
-// stay confidential while voting is still active.
+// stay confidential while voting is still active. One name per line rather
+// than a comma-separated run so a long roster stays scannable.
 function renderVoterNamesHtml(voters: ProposalVoter[]): string {
   if (voters.length === 0) return "";
-  const names = voters.map((v) => escapeHtml(v.name)).join(", ");
-  return `<p style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.6"><strong style="color:#374151">Voted so far:</strong> ${names}</p>`;
+  const names = voters
+    .map((v) => `<p style="margin:0 0 2px;font-size:12px;color:#374151">${escapeHtml(v.name)}</p>`)
+    .join("");
+  return `<div style="margin-top:10px"><p style="font-size:12px;color:#6b7280;margin:0 0 4px"><strong style="color:#374151">Voted so far:</strong></p>${names}</div>`;
 }
 
 // Names with their choice — used only on the final passed/failed email,
-// once voting has closed and the result is already public.
+// once voting has closed and the result is already public. Two vertical
+// columns (Yes / No) via a table — the reliable cross-client way to lay out
+// columns in email HTML — rather than one inline-wrapping list.
 function renderVotersWithChoiceHtml(voters: ProposalVoter[]): string {
   if (voters.length === 0) return "";
-  const rows = voters
-    .map((v) => {
-      const isYes = v.vote === "yes";
-      const color = isYes ? "#1D9E75" : "#ef4444";
-      return `<span style="display:inline-block;margin:2px 10px 2px 0;font-size:12px;color:#374151">${escapeHtml(v.name)} <strong style="color:${color}">${isYes ? "YES" : "NO"}</strong></span>`;
-    })
-    .join("");
-  return `<div style="margin-top:14px"><p style="font-size:12px;color:#6b7280;margin:0 0 6px"><strong style="color:#374151">Individual votes:</strong></p>${rows}</div>`;
+  const yesVoters = voters.filter((v) => v.vote === "yes");
+  const noVoters = voters.filter((v) => v.vote === "no");
+  const column = (label: string, color: string, list: ProposalVoter[]) => `
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.04em">${label} (${list.length})</p>
+    ${list.map((v) => `<p style="margin:0 0 3px;font-size:12px;color:#374151">${escapeHtml(v.name)}</p>`).join("") || `<p style="margin:0;font-size:12px;color:#9ca3af">—</p>`}
+  `;
+  return `<div style="margin-top:14px">
+    <p style="font-size:12px;color:#6b7280;margin:0 0 8px"><strong style="color:#374151">Individual votes:</strong></p>
+    <table style="width:100%;border-collapse:collapse">
+      <tr>
+        <td style="vertical-align:top;width:50%;padding-right:12px">${column("Yes", "#1D9E75", yesVoters)}</td>
+        <td style="vertical-align:top;width:50%;padding-left:12px;border-left:1px solid #e5e7eb">${column("No", "#ef4444", noVoters)}</td>
+      </tr>
+    </table>
+  </div>`;
 }
 
 // ── School-scoped push-triggered blast (trades, buys/sells) ──────────────────
@@ -655,6 +689,7 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
   const executionTx = proposal.execution_tx ? escapeHtml(proposal.execution_tx) : null;
   const vars = { ticker, school: schoolLabel, title };
   const t = await getEffectiveTemplateFields("trade_executed");
+  const attachments = await getProposalAttachments(proposal.document_ids);
 
   await batchSend(recipients, (r) => ({
     subject: fillTemplate(t.subject, vars),
@@ -670,5 +705,5 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
       schoolSlug: emailSchoolSlug,
       titleIcon: true,
     }),
-  }), NOTIFICATIONS_EMAIL);
+  }), NOTIFICATIONS_EMAIL, attachments);
 }
