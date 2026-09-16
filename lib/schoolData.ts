@@ -26,7 +26,7 @@ export function schoolNameFromSlug(slug: string): SchoolName | null {
 // slugs, and lookups — those must NOT change. Only the displayed label changes.
 export const SCHOOL_DISPLAY_NAMES: Record<string, string> = {
   "Berkeley":       "Blockchain at Berkeley",
-  "Boston College": "BC Blockchain",
+  "Boston College": "Fintech of BC",
   "Cambridge":      "Cambridge Blockchain Society",
   "Columbia":       "Blockchain at Columbia",
   "Cornell":        "Cornell Blockchain",
