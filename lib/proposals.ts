@@ -10,7 +10,17 @@ export interface Proposal {
   school: string; // slug, e.g. "oregon"
   token_ticker: string;
   token_name: string;
-  proposal_type: "buy" | "sell";
+  // proposal_type was added for a Buy/Sell distinction but the matching
+  // Supabase migration (supabase-proposal-type-migration.sql) was never run
+  // against the live table, which broke every proposal submission ("Could
+  // not find the 'proposal_type' column of 'proposals' in the schema
+  // cache"). Temporarily reverted: the column is no longer read from or
+  // written to the database anywhere — the Buy/Sell dropdown in
+  // NewProposalModal is now purely cosmetic, only steering the
+  // auto-generated `title` text (an ordinary column that already existed).
+  // Once the migration has actually been run, re-add this field and restore
+  // the DB read/write + ProposalCard badge (see git history around the
+  // "Add Buy/Sell dropdown" / "Temporarily disable proposal_type" commits).
   title: string;
   description: string | null;
   proposed_by: string | null;
