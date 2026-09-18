@@ -105,6 +105,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient();
+
+    // Loads avatar/school/admin for a known-signed-in user — shared by the
+    // initial mount AND every subsequent auth-state transition below. This
+    // used to only run once on mount; onAuthStateChange's callback set
+    // `user` on a sign-in event but never re-ran this, so avatar/school/
+    // admin silently kept whatever they were at mount time. That's exactly
+    // the reported glitch: the initial getUser() call can resolve (with no
+    // session yet) before the Supabase client finishes hydrating the
+    // session from storage, which then arrives a moment later purely as an
+    // onAuthStateChange event — the top bar showed a signed-in avatar slot
+    // (user was set) but with a permanently blank icon, "Set School", and
+    // no admin access, because nothing ever went back to fetch them. A
+    // genuinely fresh page load (e.g. /profile, a server component) never
+    // showed this, since it re-checks from scratch every time — only this
+    // client-side snapshot could go stale, and only intermittently,
+    // depending on which async path happened to finish first.
+    async function loadProfileFields(u: SupabaseUser) {
+      const { data: p } = await supabase
+        .from("profiles").select("avatar_url, school").eq("id", u.id).single();
+      setAvatarSrc(
+        p?.avatar_url ?? (u.user_metadata?.avatar_url as string | undefined) ?? null
+      );
+      setUserSchool((p?.school as string | null) ?? null);
+      try {
+        const res = await apiFetch("/api/admin/check");
+        const json = await res.json() as { isAdmin: boolean };
+        setIsAdmin(json.isAdmin ?? false);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+
     // A transient failure here (network blip, a stalled request) must not
     // silently leave the sidebar looking logged-out — retry once before
     // giving up, so only a genuinely broken/logged-out session renders that
@@ -115,19 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         const u = data.user ?? null;
         setUser(u);
         if (u) {
-          const { data: p } = await supabase
-            .from("profiles").select("avatar_url, school").eq("id", u.id).single();
-          setAvatarSrc(
-            p?.avatar_url ?? (u.user_metadata?.avatar_url as string | undefined) ?? null
-          );
-          setUserSchool((p?.school as string | null) ?? null);
-          try {
-            const res = await apiFetch("/api/admin/check");
-            const json = await res.json() as { isAdmin: boolean };
-            setIsAdmin(json.isAdmin ?? false);
-          } catch {
-            setIsAdmin(false);
-          }
+          await loadProfileFields(u);
         } else {
           setIsAdmin(false);
         }
@@ -142,7 +162,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     load();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
-      if (!session?.user) {
+      if (session?.user) {
+        loadProfileFields(session.user).catch((err) => {
+          console.error("[AppShell] failed to refresh profile after auth change:", err);
+        });
+      } else {
         setAvatarSrc(null);
         setUserSchool(null);
         setIsAdmin(false);
