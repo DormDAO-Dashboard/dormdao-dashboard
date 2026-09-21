@@ -153,21 +153,23 @@ export function ProposalCard({
                   ${proposal.token_ticker}
                 </span>
                 <span className="text-sm text-gray-700 dark:text-gray-400">{proposal.token_name}</span>
+                <span className={cn(
+                  "text-xs px-2 py-0.5 rounded font-medium",
+                  proposal.proposal_type === "sell"
+                    ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
+                    : "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                )}>
+                  {proposal.proposal_type === "sell" ? "SELL" : "BUY"}
+                </span>
                 {!active && (
                   <span className={cn("text-xs px-2 py-0.5 rounded font-medium", badge.className)}>
                     {badge.label}
                   </span>
                 )}
               </div>
-              {/* Buy/Sell badge + size-line branching temporarily removed — see
-                  lib/proposals.ts's note on proposal_type. Size line always
-                  reads "Buy" until that column exists and this is reverted;
-                  the real buy/sell distinction still shows in proposal.title
-                  (an ordinary, already-existing column, e.g. "Sell $HYPE"),
-                  which NewProposalModal's dropdown still drives. */}
               {proposal.recommended_size_eth != null && (
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                  Buy {proposal.recommended_size_eth} ETH
+                  {proposal.proposal_type === "sell" ? "Sell" : "Buy"} {proposal.recommended_size_eth} ETH
                 </p>
               )}
             </div>

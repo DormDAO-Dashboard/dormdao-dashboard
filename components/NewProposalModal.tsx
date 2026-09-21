@@ -120,11 +120,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
         body: JSON.stringify({
           school: slug,
           token_ticker: ticker,
-          // proposal_type is deliberately NOT sent — the `proposals` table
-          // has no such column until supabase-proposal-type-migration.sql
-          // is actually run (see lib/proposals.ts). The Buy/Sell dropdown
-          // below still steers `title` (e.g. "Sell $HYPE"), which is a
-          // real, already-existing column.
+          proposal_type: proposalType,
           title,
           description,
           recommended_size_eth: sizeEth ? parseFloat(sizeEth) : undefined,
