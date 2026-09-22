@@ -149,9 +149,19 @@ export async function POST(req: NextRequest) {
         // this file only needs "how much of this ticker does the school
         // hold," never the per-tranche breakdown the Active Holdings table
         // (unmerged, deliberately) shows.
+        //
+        // ETH is deliberately excluded here entirely — it's the school's
+        // idle treasury balance, not an acquired position (see CLAUDE.md),
+        // so it must never surface as a "New position opened" / "trimmed" /
+        // "sold" notification. Concretely: selling a real position (HYPE,
+        // say) returns proceeds to the treasury, which raises the ETH
+        // balance the very same cycle — without this exclusion that
+        // increase reads as a brand-new "ETH position opened" right
+        // alongside the real sell.
         const aggregateByTicker = (rows: StoredHolding[]): Map<string, StoredHolding> => {
           const out = new Map<string, StoredHolding>();
           for (const h of rows) {
+            if (h.ticker === "ETH") continue;
             const existing = out.get(h.ticker);
             if (existing) {
               existing.tokens += h.tokens;
