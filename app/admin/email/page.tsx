@@ -16,8 +16,8 @@ export default async function AdminEmailFunctionsPage() {
         </p>
       </div>
 
-      <AdminTradeExecutedSection />
       <AdminEmailFunctionsSection />
+      <AdminTradeExecutedSection />
     </div>
   );
 }

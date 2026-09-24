@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { proposalSchoolLabel } from "@/lib/email";
@@ -14,20 +14,23 @@ async function requireAdmin() {
   return prof?.role === "dorm_admin" ? user : null;
 }
 
-// Proposals that passed a vote but haven't been marked executed yet, across
-// every school — the pool the admin "Mark Filled" panel (Email Functions)
-// picks from. Deliberately admin-only and cross-school: the per-proposal
+// Proposals for the admin "Trade Executed" box (Email Functions), across
+// every school. Deliberately admin-only and cross-school: the per-proposal
 // "Mark as Executed" button on a school's own Voting tab already covers the
 // single-school/club-leadership case, this is the centralized counterpart.
-export async function GET() {
+// ?status=passed (default) — awaiting fill, the pool that box's list picks
+// from. ?status=executed — already filled, for "View Filled Proposals".
+export async function GET(req: NextRequest) {
   if (!await requireAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const status = req.nextUrl.searchParams.get("status") === "executed" ? "executed" : "passed";
 
   const service = createServiceClient();
   const { data, error } = await service
     .from("proposals")
     .select("*")
-    .eq("status", "passed")
-    .order("created_at", { ascending: false });
+    .eq("status", status)
+    .order(status === "executed" ? "executed_at" : "created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

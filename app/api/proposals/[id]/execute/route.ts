@@ -47,6 +47,24 @@ export async function PATCH(
   // existing per-proposal "Mark as Executed" modal) still works fine as
   // FormData with no file field present.
   const formData = await req.formData();
+  const skipEmail = formData.get("skip_email") === "1";
+
+  // "Mark Filled (No Email)" — a bare status change with no proof/notes
+  // required at all, since none of it will ever be shown to anyone. Kept in
+  // this same endpoint (rather than a separate route) because the actual
+  // state transition — passed -> executed — is identical either way; only
+  // the validation and the email side-effect differ.
+  if (skipEmail) {
+    const { data: updated, error } = await service
+      .from("proposals")
+      .update({ status: "executed", executed_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ proposal: updated });
+  }
+
   const executionLink = (formData.get("execution_tx") as string | null)?.trim() || "";
   const tradeOutput = (formData.get("trade_output") as string | null)?.trim() || "";
   const executionNotes = (formData.get("execution_notes") as string | null)?.trim() || "";
@@ -64,6 +82,10 @@ export async function PATCH(
   // either way (see lib/email.ts's sendExecutionEmail, which renders it as
   // an inline image when the URL looks like one, else as a plain link) —
   // deliberately not a separate column, so this needs no schema migration.
+  // (This also means a filled proposal with a non-null execution_tx can
+  // only have come through this emailed path, never the skip_email one
+  // above — the "View Filled Proposals" list uses exactly that to label
+  // each row Emailed vs. Marked Filled, again with no new column needed.)
   let executionProofUrl = executionLink;
   if (image && image.size > 0) {
     if (!image.type.startsWith("image/")) {

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, ImageUp, Link2, Loader2, Pencil, RotateCcw, Send, X, AlertCircle, Zap } from "lucide-react";
+import { CheckCircle2, CheckSquare, ImageUp, Link2, ListChecks, Loader2, Pencil, RotateCcw, Send, X, AlertCircle, Zap } from "lucide-react";
 
 interface PassedProposal {
   id: string;
@@ -10,6 +10,12 @@ interface PassedProposal {
   token_name: string;
   title: string;
   recommended_size_eth: number | null;
+}
+
+interface FilledProposal extends PassedProposal {
+  execution_tx: string | null;
+  execution_notes: string | null;
+  executed_at: string | null;
 }
 
 interface TemplateField {
@@ -53,6 +59,19 @@ export function AdminTradeExecutedSection() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [justFilled, setJustFilled] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // "Mark Filled (No Email)" — a separate, lighter-weight path than the
+  // send modal: no fields, no email, just the status change. Tracked by id
+  // so only the one row being marked shows a spinner.
+  const [markingId, setMarkingId] = useState<string | null>(null);
+  const [markError, setMarkError] = useState<string | null>(null);
+
+  // "View Filled Proposals" — fetched on demand (not on mount) since it's
+  // secondary to the main "awaiting fill" list above.
+  const [showFilled, setShowFilled] = useState(false);
+  const [filledProposals, setFilledProposals] = useState<FilledProposal[] | null>(null);
+  const [filledLoading, setFilledLoading] = useState(false);
+  const [filledError, setFilledError] = useState<string | null>(null);
 
   // Copy editing (subject/heading/message) — folded into this same box
   // rather than living in the generic template list, so this is genuinely
@@ -189,6 +208,41 @@ export function AdminTradeExecutedSection() {
     }
   }
 
+  async function handleMarkFilledNoEmail(p: PassedProposal) {
+    if (!window.confirm(`Mark $${p.token_ticker} — ${p.schoolLabel} as filled? No email will be sent.`)) return;
+    setMarkingId(p.id);
+    setMarkError(null);
+    try {
+      const fd = new FormData();
+      fd.set("skip_email", "1");
+      const res = await fetch(`/api/proposals/${p.id}/execute`, { method: "PATCH", body: fd });
+      const data = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to mark filled");
+      setProposals((prev) => prev.filter((row) => row.id !== p.id));
+    } catch (err) {
+      setMarkError((err as Error).message);
+    } finally {
+      setMarkingId(null);
+    }
+  }
+
+  async function openFilledList() {
+    setShowFilled(true);
+    if (filledProposals !== null) return; // already loaded this visit
+    setFilledLoading(true);
+    setFilledError(null);
+    try {
+      const res = await fetch("/api/admin/proposals?status=executed");
+      const data = await res.json() as { proposals?: FilledProposal[]; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to load filled proposals");
+      setFilledProposals(data.proposals ?? []);
+    } catch (err) {
+      setFilledError((err as Error).message);
+    } finally {
+      setFilledLoading(false);
+    }
+  }
+
   return (
     <div className="rounded-xl border border-primary/30 bg-white dark:bg-[#111] overflow-hidden">
       <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-start justify-between gap-3">
@@ -201,7 +255,7 @@ export function AdminTradeExecutedSection() {
             </span>
           </h2>
           <p className="text-xs text-gray-700 dark:text-gray-400 mt-1 max-w-md">
-            The only way this email goes out: pick a filled position below, fill in the Transaction Link/Image field, and click Send to Club Members.
+            The only way this email goes out: fill in the Transaction Link/Image field and click Send Email &amp; Mark Filled. Use Mark Filled (No Email) to close out a position without notifying anyone.
           </p>
         </div>
         <button
@@ -219,6 +273,10 @@ export function AdminTradeExecutedSection() {
           <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
           Sent — {justFilled} marked as executed.
         </div>
+      )}
+
+      {markError && (
+        <div className="px-5 pt-3"><ErrorBanner>{markError}</ErrorBanner></div>
       )}
 
       {loading ? (
@@ -239,10 +297,21 @@ export function AdminTradeExecutedSection() {
                   {p.recommended_size_eth != null && ` · ${p.recommended_size_eth} ETH`}
                 </p>
               </div>
-              <button onClick={() => openSendModal(p)}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 transition-colors text-xs font-medium">
-                <Send className="w-3.5 h-3.5" /> Fill This Proposal
-              </button>
+              <div className="shrink-0 flex items-center gap-2">
+                <button
+                  onClick={() => handleMarkFilledNoEmail(p)}
+                  disabled={markingId === p.id}
+                  title="Change status to executed — no email is sent"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-xs font-medium disabled:opacity-40"
+                >
+                  {markingId === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckSquare className="w-3.5 h-3.5" />}
+                  Mark Filled (No Email)
+                </button>
+                <button onClick={() => openSendModal(p)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 transition-colors text-xs font-medium">
+                  <Send className="w-3.5 h-3.5" /> Send Email &amp; Mark Filled
+                </button>
+              </div>
             </div>
           ))}
           {proposals.length === 0 && (
@@ -252,6 +321,15 @@ export function AdminTradeExecutedSection() {
           )}
         </div>
       )}
+
+      <div className="px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex justify-center">
+        <button
+          onClick={openFilledList}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          <ListChecks className="w-3.5 h-3.5" /> View Filled Proposals
+        </button>
+      </div>
 
       {/* ── Send modal ───────────────────────────────────────────── */}
       {target && (
@@ -410,6 +488,65 @@ export function AdminTradeExecutedSection() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Filled Proposals ─────────────────────────────────────── */}
+      {showFilled && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowFilled(false)} />
+          <div className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Filled Proposals</h3>
+              <button onClick={() => setShowFilled(false)} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+            </div>
+
+            {filledLoading ? (
+              <div className="py-10 text-center text-sm text-gray-700 dark:text-gray-400">Loading…</div>
+            ) : filledError ? (
+              <ErrorBanner>{filledError}</ErrorBanner>
+            ) : filledProposals && filledProposals.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {filledProposals.map((p) => {
+                  // Only the emailed path ever sets execution_tx/execution_notes
+                  // (see app/api/proposals/[id]/execute/route.ts) — their
+                  // presence alone tells the two paths apart, no extra column.
+                  const wasEmailed = !!(p.execution_tx || p.execution_notes);
+                  return (
+                    <div key={p.id} className="rounded-lg border border-gray-200 dark:border-gray-800 px-3 py-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          <span className="font-mono">${p.token_ticker}</span>
+                          <span className="text-gray-700 dark:text-gray-400 font-normal"> — {p.schoolLabel}</span>
+                        </p>
+                        <span className={`shrink-0 text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded ${wasEmailed ? "bg-primary/15 text-primary" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"}`}>
+                          {wasEmailed ? "Emailed" : "Marked Filled"}
+                        </span>
+                      </div>
+                      {p.execution_notes && (
+                        <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">{p.execution_notes}</p>
+                      )}
+                      {p.execution_tx && (
+                        <a href={p.execution_tx} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline mt-1 inline-block truncate max-w-full">
+                          {p.execution_tx}
+                        </a>
+                      )}
+                      {p.executed_at && (
+                        <p className="text-[11px] text-gray-700 dark:text-gray-400 mt-1">
+                          {new Date(p.executed_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-10 text-center text-sm text-gray-700 dark:text-gray-400">
+                No proposals have been marked filled yet.
+              </div>
+            )}
           </div>
         </div>
       )}
