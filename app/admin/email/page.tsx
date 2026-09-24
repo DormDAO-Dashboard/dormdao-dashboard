@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/admin-guard";
 import { AdminEmailFunctionsSection } from "@/components/AdminEmailFunctionsSection";
+import { AdminFillProposalSection } from "@/components/AdminFillProposalSection";
 
 export const metadata = { title: "Email Functions — Admin — Dorm™" };
 
@@ -15,6 +16,7 @@ export default async function AdminEmailFunctionsPage() {
         </p>
       </div>
 
+      <AdminFillProposalSection />
       <AdminEmailFunctionsSection />
     </div>
   );

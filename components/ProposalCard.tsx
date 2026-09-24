@@ -99,14 +99,17 @@ export function ProposalCard({
     setExecuteError(null);
     setExecuting(true);
     try {
+      // FormData, not JSON — the endpoint now also accepts an optional
+      // screenshot file (see the admin "Mark Filled" panel); this modal has
+      // no file field, so it's just the text fields, but must speak the
+      // same request shape either way.
+      const fd = new FormData();
+      fd.set("execution_tx", executeTx.trim());
+      fd.set("trade_output", tradeOutput.trim());
+      if (executeNotes.trim()) fd.set("execution_notes", executeNotes.trim());
       const res = await fetch(`/api/proposals/${proposal.id}/execute`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          execution_tx: executeTx.trim(),
-          trade_output: tradeOutput.trim(),
-          execution_notes: executeNotes.trim() || undefined,
-        }),
+        body: fd,
       });
       const data = await res.json() as { error?: string };
       if (!res.ok) {
@@ -427,7 +430,7 @@ export function ProposalCard({
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
-                  Etherscan TX Link <span className="text-red-500">*</span>
+                  Transaction Link <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="url"

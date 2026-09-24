@@ -686,10 +686,27 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
   const ticker = escapeHtml(proposal.token_ticker);
   const title = escapeHtml(proposal.title);
   const executionNotes = proposal.execution_notes ? escapeHtml(proposal.execution_notes) : null;
-  const executionTx = proposal.execution_tx ? escapeHtml(proposal.execution_tx) : null;
+  // execution_tx holds a single proof URL either way — a pasted transaction
+  // link, or the public Storage URL of an uploaded screenshot (see
+  // app/api/proposals/[id]/execute/route.ts). Previously this always
+  // rendered as `https://etherscan.io/tx/${executionTx}`, silently assuming
+  // a bare tx hash — but the UI's own placeholder ("https://etherscan.io/
+  // tx/0x…") and the "Mark Filled" panel both ask for/produce a full URL,
+  // so that concatenation produced a broken, doubled-up link for any real
+  // submission. Now used as-is, and rendered as an inline image instead of
+  // a link when it looks like one.
+  const executionProofUrl = proposal.execution_tx || null;
+  const isImageProof = executionProofUrl ? /\.(png|jpe?g|gif|webp)(?:[?#]|$)/i.test(executionProofUrl) : false;
+  const executionProofHtml = executionProofUrl ? escapeHtml(executionProofUrl) : null;
   const vars = { ticker, school: schoolLabel, title };
   const t = await getEffectiveTemplateFields("trade_executed");
   const attachments = await getProposalAttachments(proposal.document_ids);
+
+  const proofHtml = executionProofHtml
+    ? isImageProof
+      ? `<img src="${executionProofHtml}" alt="Transaction proof" style="max-width:100%;border-radius:8px;margin-top:12px;display:block" />`
+      : `<p style="font-size:12px;color:#9ca3af;margin-top:12px;word-break:break-all">Tx: <a href="${executionProofHtml}" style="color:#1D9E75">View transaction →</a></p>`
+    : "";
 
   await batchSend(recipients, (r) => ({
     subject: fillTemplate(t.subject, vars),
@@ -698,7 +715,7 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
       schoolLabel,
       bodyHtml: `<p style="font-size:14px;color:#374151;line-height:1.6">The <strong>${ticker}</strong> trade has been executed by your club leadership.</p>
       ${executionNotes ? `<p style="font-size:13px;color:#6b7280;border-left:3px solid #1D9E75;padding-left:12px;margin-top:12px;line-height:1.6">${executionNotes}</p>` : ""}
-      ${executionTx ? `<p style="font-size:12px;color:#9ca3af;margin-top:12px;word-break:break-all">Tx: <a href="https://etherscan.io/tx/${executionTx}" style="color:#1D9E75">${executionTx.slice(0, 24)}…</a></p>` : ""}
+      ${proofHtml}
       ${renderMessageHtml(t.message, vars)}`,
       cta: { label: "View portfolio →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,

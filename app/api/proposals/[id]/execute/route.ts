@@ -41,26 +41,54 @@ export async function PATCH(
     }
   }
 
-  const body = await req.json() as {
-    execution_tx?: string;
-    execution_notes?: string;
-    trade_output?: string;
-  };
+  // FormData rather than JSON — lets a caller (the admin "Mark Filled" panel)
+  // attach an actual screenshot file alongside/instead of a pasted link, in
+  // the same request as everything else. A text-only submission (the
+  // existing per-proposal "Mark as Executed" modal) still works fine as
+  // FormData with no file field present.
+  const formData = await req.formData();
+  const executionLink = (formData.get("execution_tx") as string | null)?.trim() || "";
+  const tradeOutput = (formData.get("trade_output") as string | null)?.trim() || "";
+  const executionNotes = (formData.get("execution_notes") as string | null)?.trim() || "";
+  const image = formData.get("image") as File | null;
 
-  if (!body.execution_tx?.trim()) {
-    return NextResponse.json({ error: "execution_tx (Etherscan link) is required" }, { status: 400 });
+  if (!executionLink && !image) {
+    return NextResponse.json({ error: "Provide a transaction link or a screenshot" }, { status: 400 });
   }
-  if (!body.trade_output?.trim()) {
+  if (!tradeOutput) {
     return NextResponse.json({ error: "trade_output is required" }, { status: 400 });
   }
 
-  const notes = [body.trade_output?.trim(), body.execution_notes?.trim()].filter(Boolean).join("\n\n");
+  // Proof is a single URL either way — a pasted link, or the public Storage
+  // URL of an uploaded screenshot. Stored in the same execution_tx column
+  // either way (see lib/email.ts's sendExecutionEmail, which renders it as
+  // an inline image when the URL looks like one, else as a plain link) —
+  // deliberately not a separate column, so this needs no schema migration.
+  let executionProofUrl = executionLink;
+  if (image && image.size > 0) {
+    if (!image.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Screenshot must be an image file" }, { status: 400 });
+    }
+    const ext = image.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+    const storagePath = `execution-proofs/${id}-${Date.now()}.${ext}`;
+    const bytes = await image.arrayBuffer();
+    const { error: uploadError } = await service.storage
+      .from("token-documents")
+      .upload(storagePath, bytes, { contentType: image.type, upsert: false });
+    if (uploadError) {
+      return NextResponse.json({ error: `Screenshot upload failed: ${uploadError.message}` }, { status: 500 });
+    }
+    const { data: urlData } = service.storage.from("token-documents").getPublicUrl(storagePath);
+    executionProofUrl = urlData.publicUrl;
+  }
+
+  const notes = [tradeOutput, executionNotes].filter(Boolean).join("\n\n");
 
   const { data: updated, error } = await service
     .from("proposals")
     .update({
       status: "executed",
-      execution_tx: body.execution_tx.trim(),
+      execution_tx: executionProofUrl || null,
       execution_notes: notes || null,
       executed_at: new Date().toISOString(),
     })
