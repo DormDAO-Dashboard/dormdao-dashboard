@@ -48,7 +48,11 @@ export function AdminEmailFunctionsSection() {
     try {
       const res = await fetch("/api/admin/email-templates");
       const data = await res.json() as { templates?: TemplateDef[] };
-      setTemplates(data.templates ?? []);
+      // trade_executed lives in its own dedicated box (AdminTradeExecutedSection,
+      // rendered above this list) — it's the one email here that never fires
+      // automatically, so both sending it and editing its copy belong together
+      // in that box rather than duplicated in this generic View/Edit list.
+      setTemplates((data.templates ?? []).filter((t) => t.key !== "trade_executed"));
     } finally {
       setLoading(false);
     }
