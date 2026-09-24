@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Holding } from "@/lib/types";
 import { ExternalLink, Download, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-type SortKey = "chain" | "tokens" | "costEth" | "purchasePrice" | "price" | "value" | "pnl" | "roiEth" | "pctPort" | "date";
+type SortKey = "tokens" | "costEth" | "entryFdv" | "purchasePrice" | "price" | "value" | "pnl" | "roiEth" | "pctPort" | "date";
 
 // Investment dates aren't zero-padded (e.g. "2026/5/8" vs "2026/5/28"), so a
 // plain string comparison sorts them lexicographically instead of
@@ -99,8 +99,15 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
     if (sortKey === key) setAsc((v) => !v);
     else {
       setSortKey(key);
-      setAsc(key === "chain" || key === "date");
+      setAsc(key === "date");
     }
+  }
+
+  function formatFdv(n: number): string {
+    if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+    if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+    if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+    return `$${n.toLocaleString()}`;
   }
 
   // USD price per token at the time it was bought — exclusively the fixed
@@ -124,9 +131,9 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
       : h.marketValueUsd ?? null;
 
     switch (sortKey) {
-      case "chain": return h.blockchain || "";
       case "tokens": return h.tokens > 0 ? h.tokens : null;
       case "costEth": return h.costBasisEth > 0 ? h.costBasisEth : null;
+      case "entryFdv": return h.entryFdvUsd ?? null;
       case "purchasePrice": return purchasePriceOf(h);
       case "price": {
         if (price) return price.usd;
@@ -168,14 +175,14 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
         <thead>
           <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
             <th className="text-left px-5 py-3">Token</th>
-            <th className={`text-left ${thClass}`} onClick={() => toggleSort("chain")}>
-              Chain <SortIcon col="chain" sortKey={sortKey} asc={asc} />
-            </th>
             <th className={`text-right ${thClass}`} onClick={() => toggleSort("tokens")}>
               Tokens <SortIcon col="tokens" sortKey={sortKey} asc={asc} />
             </th>
             <th className={`text-right ${thClass}`} onClick={() => toggleSort("costEth")}>
               Cost (ETH) <SortIcon col="costEth" sortKey={sortKey} asc={asc} />
+            </th>
+            <th className={`text-right ${thClass}`} onClick={() => toggleSort("entryFdv")}>
+              Entry FDV <SortIcon col="entryFdv" sortKey={sortKey} asc={asc} />
             </th>
             <th className={`text-right ${thClass}`} onClick={() => toggleSort("purchasePrice")}>
               Purchase Price <SortIcon col="purchasePrice" sortKey={sortKey} asc={asc} />
@@ -241,8 +248,8 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                     {isEthTreasury ? "$ETH Treasury" : `$${h.ticker}`}
                     <ExternalLink className="w-3 h-3 opacity-40" />
                   </Link>
+                  <div className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{h.blockchain || "—"}</div>
                 </td>
-                <td className="px-5 py-3 text-gray-700 dark:text-gray-400 text-xs">{h.blockchain || "—"}</td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {h.tokens !== 0
                     ? h.tokens.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -250,6 +257,9 @@ export function HoldingsTableClient({ holdings, otherSchools, schoolName = "scho
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 whitespace-nowrap">
                   {h.costBasisEth > 0 ? `${h.costBasisEth.toFixed(2)} ETH` : "—"}
+                </td>
+                <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 whitespace-nowrap">
+                  {h.entryFdvUsd ? formatFdv(h.entryFdvUsd) : "—"}
                 </td>
                 <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
                   {purchasePrice !== null ? formatUSD2(purchasePrice) : "—"}
