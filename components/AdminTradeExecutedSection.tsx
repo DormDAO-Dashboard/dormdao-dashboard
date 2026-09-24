@@ -228,7 +228,9 @@ export function AdminTradeExecutedSection() {
 
   async function openFilledList() {
     setShowFilled(true);
-    if (filledProposals !== null) return; // already loaded this visit
+    // Always refetch — a proposal marked filled after the list was last
+    // loaded (in either the same visit or a prior one) must show up
+    // immediately, not just after a full page reload.
     setFilledLoading(true);
     setFilledError(null);
     try {
