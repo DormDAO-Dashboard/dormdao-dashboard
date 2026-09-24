@@ -18,6 +18,10 @@ interface StoredHolding {
   ticker: string;
   tokens: number;
   costBasisEth: number;
+  marketValueUsd?: number;
+  gainUsd?: number;
+  roiUsdPct?: number;
+  roiEthPct?: number;
 }
 
 // Called by the cron-job.org scheduler (Bearer CRON_SECRET, no session) and
@@ -100,6 +104,16 @@ export async function POST(req: NextRequest) {
           costBasisEth: h.costBasisEth,
           blockchain: h.blockchain,
           investmentDate: h.investmentDate,
+          // Position-level USD value + P&L/ROI as of this snapshot — not
+          // used by the buy/sell-detection diffing below (that only reads
+          // ticker/tokens/costBasisEth), but once enough daily snapshots
+          // pile up, diffing this field across two captured_at dates is
+          // what makes real Month-to-Date / Season-to-Date per-position
+          // figures possible (see the portfolio-report-email work).
+          marketValueUsd: h.marketValueUsd,
+          gainUsd: h.gainUsd,
+          roiUsdPct: h.roiUsdPct,
+          roiEthPct: h.roiEthPct,
         })),
       }));
 
