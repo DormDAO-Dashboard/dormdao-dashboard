@@ -38,7 +38,16 @@ export function KpiCard({
   return (
     <Card className="flex flex-col gap-1.5" accentColor={accentColor}>
       <span className="text-xs text-gray-700 dark:text-gray-400 uppercase tracking-wider font-medium">{label}</span>
-      <span className="text-lg font-semibold font-mono text-gray-900 dark:text-white">{value}</span>
+      <span
+        className={cn(
+          "text-lg font-semibold font-mono",
+          positive === true && "text-primary",
+          positive === false && "text-danger",
+          positive === undefined && "text-gray-900 dark:text-white"
+        )}
+      >
+        {value}
+      </span>
       {sub && (
         <span
           className={cn(

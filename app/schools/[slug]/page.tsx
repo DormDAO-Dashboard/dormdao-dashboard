@@ -113,13 +113,13 @@ async function SchoolContent({ slug }: { slug: string }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <KpiCard label="NAV" value={formatNav(school.nav)} accentColor={boxBorder} />
         <KpiCard
-          label="USD Return"
+          label="Performance vs USD"
           value={formatPct(school.usdReturn)}
           positive={school.usdReturn >= 0}
           accentColor={boxBorder}
         />
         <KpiCard
-          label="ETH Return"
+          label="Performance vs ETH"
           value={formatPct(school.ethReturn)}
           positive={school.ethReturn >= 0}
           accentColor={boxBorder}
