@@ -1,5 +1,6 @@
 import { createServiceClient } from "./supabase/server";
 import { slugify } from "./utils";
+import { parseFdvString } from "./fdv";
 import type { Holding, ExitedHolding } from "./types";
 import type { SchoolRowWithHoldings } from "./sheets";
 
@@ -11,6 +12,7 @@ export interface PositionRow {
   tokens: number;
   cost_basis_eth: number;
   purchase_price_usd: number | null;
+  entry_fdv_usd: number | null;
   investment_date: string;
   created_at: string;
   updated_at: string;
@@ -28,6 +30,11 @@ export interface RawPosition {
   costBasisEth: number;
   purchasePriceUsd: number | null;
   investmentDate: string;
+  // Entry FDV in plain USD, already parsed regardless of source — either
+  // the sheet's free-text cell (via parseFdvString, see computeSchoolFromHoldings)
+  // or the admin-entered positions.entry_fdv_usd override. Feeds the
+  // Programmatic Liquidation Policy check in lib/fdv.ts.
+  entryFdvUsd?: number;
   // Only present for admin-entered `positions` table rows — lets the
   // client target a PATCH to that exact row to override purchasePriceUsd.
   // Sheet-parsed holdings have no such row, so this stays undefined there.
@@ -113,6 +120,7 @@ export function computeSchoolMetrics(
         blockchain: p.blockchain || "Ethereum",
         tokens: p.tokens,
         entryFdv: "",
+        entryFdvUsd: p.entryFdvUsd,
         costBasisEth: 0,
         pctOfPortfolio: 0,
         investmentDate: p.investmentDate,
@@ -174,6 +182,7 @@ export function computeSchoolMetrics(
       blockchain: p.blockchain,
       tokens: p.tokens,
       entryFdv: "",
+      entryFdvUsd: p.entryFdvUsd,
       costBasisEth: p.costBasisEth,
       pctOfPortfolio: 0,
       investmentDate: p.investmentDate,
@@ -231,6 +240,7 @@ export function computeSchoolFromPositions(
     costBasisEth: p.cost_basis_eth,
     purchasePriceUsd: p.purchase_price_usd,
     investmentDate: p.investment_date,
+    entryFdvUsd: p.entry_fdv_usd ?? undefined,
   }));
   return computeSchoolMetrics(name, raw, prices, { vaultEquityUsdByTicker });
 }
@@ -257,6 +267,13 @@ export function computeSchoolFromHoldings(
     // shouldn't also silently drop a real admin-provided override.
     purchasePriceUsd: h.purchasePriceUsd ?? null,
     investmentDate: h.investmentDate,
+    // Same "don't silently drop a real value" rule applies to Entry FDV —
+    // parseHoldings already reads it correctly from the sheet's Position
+    // Statistics column, but this recompute path used to rebuild every
+    // Holding from scratch via computeSchoolMetrics (which always set
+    // entryFdv: "" until this line existed), discarding it for every school
+    // that goes through here — i.e. nearly all of them.
+    entryFdvUsd: parseFdvString(h.entryFdv) ?? undefined,
   }));
   return computeSchoolMetrics(name, raw, prices, { exitedHoldings, nftHoldings, vaultEquityUsdByTicker });
 }

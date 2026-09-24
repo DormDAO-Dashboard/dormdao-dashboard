@@ -3,6 +3,12 @@ export interface Holding {
   blockchain: string;
   tokens: number;
   entryFdv: string;
+  // entryFdv parsed to a plain USD number (see lib/fdv.ts's parseFdvString),
+  // or the admin-entered positions.entry_fdv_usd override — whichever source
+  // this holding came from. Undefined means genuinely unknown (no entry FDV
+  // recorded anywhere yet), which the liquidation-policy check treats as
+  // "nothing to monitor" rather than a threshold of zero.
+  entryFdvUsd?: number;
   costBasisEth: number;
   pctOfPortfolio: number;
   investmentDate: string;

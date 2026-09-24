@@ -290,6 +290,44 @@ export async function getSchoolRecipients(schoolSlug: string): Promise<Recipient
   return recipients;
 }
 
+// Admin-only recipients — no school members at all, unlike getSchoolRecipients.
+// Used for DormDAO-internal notifications not meant for club membership (e.g.
+// Programmatic Liquidation Policy threshold alerts): dorm_admin profiles +
+// the env-configured admin(s), same resolution as the tail end of
+// getSchoolRecipients above, just without the school-members half.
+export async function getAdminRecipients(): Promise<Recipient[]> {
+  const service = createServiceClient();
+
+  const { data: adminRows } = await service
+    .from("profiles")
+    .select("id, vote_reminder_emails")
+    .eq("role", "dorm_admin");
+
+  const { data: { users } } = await service.auth.admin.listUsers({ perPage: 1000 });
+  const emailById = new Map(users.map((u) => [u.id, u.email ?? null]));
+
+  const emailSeen = new Set<string>();
+  const recipients: Recipient[] = [];
+  for (const raw of adminRows ?? []) {
+    const p = raw as ProfileRow;
+    if (p.vote_reminder_emails === false) continue;
+    const email = emailById.get(p.id);
+    if (!email || email.endsWith("@wallet.dormdao.io") || emailSeen.has(email)) continue;
+    emailSeen.add(email);
+    recipients.push({ email, userId: p.id });
+  }
+
+  for (const adminEmail of getAdminEmails()) {
+    if (emailSeen.has(adminEmail)) continue;
+    const matched = users.find((u) => u.email?.toLowerCase() === adminEmail);
+    if (!matched?.email) continue;
+    emailSeen.add(adminEmail);
+    recipients.push({ email: matched.email, userId: matched.id });
+  }
+
+  return recipients;
+}
+
 // Safety net against future regressions: re-checks that every recipient
 // returned by getSchoolRecipients() actually belongs to the target school
 // (or is a dorm_admin) right before a send goes out. Warns rather than
@@ -723,4 +761,63 @@ export async function sendExecutionEmail(proposal: Proposal): Promise<void> {
       titleIcon: true,
     }),
   }), NOTIFICATIONS_EMAIL, attachments);
+}
+
+function formatFdv(n: number): string {
+  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+  return `$${n.toLocaleString()}`;
+}
+
+export interface LiquidationAlertInput {
+  school: string; // internal school name, e.g. "Oregon" (matches SCHOOL_NAMES / portfolio_snapshots.school_name)
+  ticker: string;
+  alertType: "warning_90pct" | "threshold_crossed";
+  entryFdvUsd: number;
+  currentFdvUsd: number;
+  multipleTarget: number;
+  currentMultiple: number;
+  liquidationThresholdFdvUsd: number;
+}
+
+// Programmatic Liquidation Policy alerts (resolved 2024-06-01, see
+// lib/fdv.ts) — admin-only, never sent to school membership: this is a
+// DormDAO-internal operational signal, not a club notification. Fires once
+// per position per alert type, deduped by app/api/snapshot/route.ts against
+// the liquidation_alerts table before calling this.
+export async function sendLiquidationAlertEmail(input: LiquidationAlertInput): Promise<void> {
+  const recipients = await getAdminRecipients();
+  if (!recipients.length) return;
+
+  const schoolSlug = slugify(input.school);
+  const schoolLabel = schoolDisplayName(input.school);
+  const ticker = escapeHtml(input.ticker);
+  const isCrossed = input.alertType === "threshold_crossed";
+  const title = isCrossed
+    ? `${input.ticker} crossed its liquidation threshold`
+    : `${input.ticker} is nearing its liquidation threshold`;
+  const pctOfThreshold = (input.currentFdvUsd / input.liquidationThresholdFdvUsd) * 100;
+
+  const bodyHtml = `<p style="font-size:14px;color:#374151;line-height:1.6">${isCrossed
+    ? `<strong>${schoolLabel}</strong>&rsquo;s <strong>${ticker}</strong> position has reached ${input.currentMultiple.toFixed(2)}x its entry FDV &mdash; at or above the <strong>${input.multipleTarget}x</strong> Programmatic Liquidation Policy threshold for its entry-FDV bucket. Per policy, this triggers an automatic 50% liquidation.`
+    : `<strong>${schoolLabel}</strong>&rsquo;s <strong>${ticker}</strong> position has reached ${input.currentMultiple.toFixed(2)}x its entry FDV &mdash; ${pctOfThreshold.toFixed(0)}% of the way to the <strong>${input.multipleTarget}x</strong> Programmatic Liquidation Policy threshold for its entry-FDV bucket.`}</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:14px;font-size:13px">
+      <tr><td style="padding:6px 0;color:#6b7280">Entry FDV</td><td style="padding:6px 0;text-align:right;font-family:ui-monospace,monospace;color:#111827">${formatFdv(input.entryFdvUsd)}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;border-top:1px solid #f0f0f0">Current FDV</td><td style="padding:6px 0;text-align:right;font-family:ui-monospace,monospace;color:#111827;border-top:1px solid #f0f0f0">${formatFdv(input.currentFdvUsd)}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;border-top:1px solid #f0f0f0">Liquidation threshold (${input.multipleTarget}x)</td><td style="padding:6px 0;text-align:right;font-family:ui-monospace,monospace;color:#111827;border-top:1px solid #f0f0f0">${formatFdv(input.liquidationThresholdFdvUsd)}</td></tr>
+    </table>`;
+
+  await batchSend(recipients, (r) => ({
+    subject: `${schoolLabel} — ${title}`,
+    html: buildTemplate({
+      title,
+      schoolLabel: `${schoolLabel} · Programmatic Liquidation Policy`,
+      bodyHtml,
+      cta: { label: "View portfolio →", url: `${APP_URL}/schools/${schoolSlug}` },
+      userId: r.userId,
+      schoolSlug,
+      titleIcon: true,
+    }),
+  }), NOTIFICATIONS_EMAIL);
 }

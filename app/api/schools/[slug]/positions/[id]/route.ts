@@ -39,6 +39,7 @@ export async function PATCH(
     tokens?: number;
     costBasisEth?: number;
     purchasePriceUsd?: number | null;
+    entryFdvUsd?: number | null;
     investmentDate?: string;
   };
 
@@ -53,6 +54,7 @@ export async function PATCH(
       ...(body.tokens !== undefined && { tokens: body.tokens }),
       ...(body.costBasisEth !== undefined && { cost_basis_eth: body.costBasisEth }),
       ...(body.purchasePriceUsd !== undefined && { purchase_price_usd: body.purchasePriceUsd }),
+      ...(body.entryFdvUsd !== undefined && { entry_fdv_usd: body.entryFdvUsd }),
       ...(body.investmentDate !== undefined && { investment_date: body.investmentDate.trim() }),
       updated_at: new Date().toISOString(),
     })

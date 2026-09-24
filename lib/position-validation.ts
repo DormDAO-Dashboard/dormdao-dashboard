@@ -9,6 +9,7 @@ export interface PositionFieldsInput {
   tokens?: unknown;
   costBasisEth?: unknown;
   purchasePriceUsd?: unknown;
+  entryFdvUsd?: unknown;
   investmentDate?: unknown;
 }
 
@@ -39,6 +40,11 @@ export function validatePositionFields(body: PositionFieldsInput): string | null
   if (body.purchasePriceUsd !== undefined && body.purchasePriceUsd !== null) {
     if (typeof body.purchasePriceUsd !== "number" || !Number.isFinite(body.purchasePriceUsd) || body.purchasePriceUsd < 0) {
       return "purchasePriceUsd must be a non-negative number or null";
+    }
+  }
+  if (body.entryFdvUsd !== undefined && body.entryFdvUsd !== null) {
+    if (typeof body.entryFdvUsd !== "number" || !Number.isFinite(body.entryFdvUsd) || body.entryFdvUsd < 0) {
+      return "entryFdvUsd must be a non-negative number or null";
     }
   }
   if (body.investmentDate !== undefined && typeof body.investmentDate !== "string") {

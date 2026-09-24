@@ -11,6 +11,7 @@ interface Position {
   tokens: number;
   cost_basis_eth: number;
   purchase_price_usd: number | null;
+  entry_fdv_usd: number | null;
   investment_date: string;
 }
 
@@ -20,10 +21,11 @@ interface Draft {
   tokens: string;
   costBasisEth: string;
   purchasePriceUsd: string;
+  entryFdvUsd: string;
   investmentDate: string;
 }
 
-const EMPTY_DRAFT: Draft = { ticker: "", blockchain: "", tokens: "", costBasisEth: "", purchasePriceUsd: "", investmentDate: "" };
+const EMPTY_DRAFT: Draft = { ticker: "", blockchain: "", tokens: "", costBasisEth: "", purchasePriceUsd: "", entryFdvUsd: "", investmentDate: "" };
 
 const fieldClass = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary/50 w-full";
 
@@ -34,6 +36,7 @@ function toPayload(d: Draft) {
     tokens: parseFloat(d.tokens) || 0,
     costBasisEth: parseFloat(d.costBasisEth) || 0,
     purchasePriceUsd: d.purchasePriceUsd.trim() ? parseFloat(d.purchasePriceUsd) : null,
+    entryFdvUsd: d.entryFdvUsd.trim() ? parseFloat(d.entryFdvUsd) : null,
     investmentDate: d.investmentDate,
   };
 }
@@ -79,6 +82,7 @@ export function PositionsManagerSection({ schoolSlug }: { schoolSlug: string }) 
       tokens: String(p.tokens),
       costBasisEth: String(p.cost_basis_eth),
       purchasePriceUsd: p.purchase_price_usd != null ? String(p.purchase_price_usd) : "",
+      entryFdvUsd: p.entry_fdv_usd != null ? String(p.entry_fdv_usd) : "",
       investmentDate: p.investment_date,
     });
     setFormError(null);
@@ -148,6 +152,7 @@ export function PositionsManagerSection({ schoolSlug }: { schoolSlug: string }) 
               <th className="text-right px-3 py-3">Tokens</th>
               <th className="text-right px-3 py-3">Cost (ETH)</th>
               <th className="text-right px-3 py-3">Purchase Price</th>
+              <th className="text-right px-3 py-3">Entry FDV</th>
               <th className="text-left px-3 py-3">Date</th>
               <th className="px-3 py-3" />
             </tr>
@@ -161,6 +166,9 @@ export function PositionsManagerSection({ schoolSlug }: { schoolSlug: string }) 
                 <td className="px-3 py-3 text-right font-mono text-gray-700 dark:text-gray-300">{p.cost_basis_eth > 0 ? p.cost_basis_eth : "—"}</td>
                 <td className="px-3 py-3 text-right font-mono text-gray-700 dark:text-gray-300">
                   {p.purchase_price_usd != null ? `$${p.purchase_price_usd}` : <span className="text-gray-700 dark:text-gray-400">auto</span>}
+                </td>
+                <td className="px-3 py-3 text-right font-mono text-gray-700 dark:text-gray-300">
+                  {p.entry_fdv_usd != null ? `$${p.entry_fdv_usd.toLocaleString()}` : <span className="text-gray-700 dark:text-gray-400">—</span>}
                 </td>
                 <td className="px-3 py-3 text-gray-700 dark:text-gray-400">{p.investment_date}</td>
                 <td className="px-3 py-3 text-right">
@@ -177,21 +185,21 @@ export function PositionsManagerSection({ schoolSlug }: { schoolSlug: string }) 
             ))}
             {!loading && positions.length === 0 && !loadError && (
               <tr>
-                <td colSpan={7} className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">
+                <td colSpan={8} className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">
                   No positions entered yet — add one to start computing this school's stats internally.
                 </td>
               </tr>
             )}
             {loading && (
               <tr>
-                <td colSpan={7} className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">
+                <td colSpan={8} className="px-5 py-8 text-center text-gray-700 dark:text-gray-400 text-sm">
                   Loading…
                 </td>
               </tr>
             )}
             {loadError && (
               <tr>
-                <td colSpan={7} className="px-5 py-8 text-center text-danger text-sm">{loadError}</td>
+                <td colSpan={8} className="px-5 py-8 text-center text-danger text-sm">{loadError}</td>
               </tr>
             )}
           </tbody>
@@ -225,6 +233,9 @@ export function PositionsManagerSection({ schoolSlug }: { schoolSlug: string }) 
               </Field>
               <Field label="Purchase Price (USD)" hint="Leave blank to calculate from Cost (ETH) + Date using the historical ETH price">
                 <input type="number" value={draft.purchasePriceUsd} onChange={(e) => setDraft({ ...draft, purchasePriceUsd: e.target.value })} placeholder="auto" className={fieldClass} />
+              </Field>
+              <Field label="Entry FDV (USD)" hint="Fully diluted valuation at entry — drives the Programmatic Liquidation Policy threshold for this position. Leave blank to skip liquidation monitoring.">
+                <input type="number" value={draft.entryFdvUsd} onChange={(e) => setDraft({ ...draft, entryFdvUsd: e.target.value })} placeholder="none" className={fieldClass} />
               </Field>
               <Field label="Date *">
                 <input type="date" value={draft.investmentDate} onChange={(e) => setDraft({ ...draft, investmentDate: e.target.value })} className={fieldClass} />

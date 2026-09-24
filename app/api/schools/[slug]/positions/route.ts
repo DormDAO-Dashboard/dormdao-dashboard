@@ -51,6 +51,7 @@ export async function POST(
     tokens?: number;
     costBasisEth?: number;
     purchasePriceUsd?: number | null;
+    entryFdvUsd?: number | null;
     investmentDate?: string;
   };
 
@@ -68,6 +69,7 @@ export async function POST(
       tokens: body.tokens ?? 0,
       cost_basis_eth: body.costBasisEth ?? 0,
       purchase_price_usd: body.purchasePriceUsd ?? null,
+      entry_fdv_usd: body.entryFdvUsd ?? null,
       investment_date: body.investmentDate.trim(),
     })
     .select()

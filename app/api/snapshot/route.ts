@@ -7,8 +7,9 @@ import { Holding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
 import {
   sendSchoolEmailNotifications, send12HourWarningEmail, sendProposalResultEmail,
-  sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl,
+  sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl, sendLiquidationAlertEmail,
 } from "@/lib/email";
+import { getCurrentFdvForTickers, checkLiquidationStatus } from "@/lib/fdv";
 import { slugify } from "@/lib/utils";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { MAIN_DAO_SLUG } from "@/lib/main-dao";
@@ -292,6 +293,58 @@ export async function POST(req: NextRequest) {
           await sendSchoolEmailNotifications(slugify(change.school_name), tradePayload).catch(console.error);
         }
       }
+      // Programmatic Liquidation Policy check (resolved 2024-06-01 — see
+      // lib/fdv.ts). Every school's non-ETH holdings with a real entryFdvUsd
+      // (from the sheet's own Entry FDV column, or an admin's
+      // positions.entry_fdv_usd override) get checked against their live
+      // current FDV. Deduped via liquidation_alerts (unique on
+      // school/ticker/investment_date/alert_type) so each position only
+      // ever fires each alert type once, no matter how many cycles it stays
+      // above the line — the insert itself is the dedupe claim, so a
+      // conflict here (including a race against a concurrent cron run)
+      // skips the send rather than double-emailing admins.
+      const fdvTickers = new Set<string>();
+      for (const s of schools) {
+        for (const h of s.holdings ?? []) {
+          if (h.ticker !== "ETH" && h.entryFdvUsd) fdvTickers.add(h.ticker);
+        }
+      }
+      if (fdvTickers.size > 0) {
+        const currentFdvByTicker = await getCurrentFdvForTickers([...fdvTickers]);
+        for (const s of schools) {
+          for (const h of s.holdings ?? []) {
+            if (h.ticker === "ETH" || !h.entryFdvUsd) continue;
+            const currentFdvUsd = currentFdvByTicker[h.ticker];
+            if (!currentFdvUsd) continue;
+            const result = checkLiquidationStatus(h.entryFdvUsd, currentFdvUsd);
+            if (!result || result.status === "ok") continue;
+
+            const alertType = result.status === "crossed" ? "threshold_crossed" : "warning_90pct";
+            const { error: alertInsertError } = await supabase.from("liquidation_alerts").insert({
+              school: s.name,
+              ticker: h.ticker,
+              investment_date: h.investmentDate,
+              alert_type: alertType,
+              entry_fdv_usd: result.entryFdvUsd,
+              current_fdv_usd: result.currentFdvUsd,
+              multiple_target: result.multipleTarget,
+            });
+            if (alertInsertError) continue; // already sent this alert for this position
+
+            await sendLiquidationAlertEmail({
+              school: s.name,
+              ticker: h.ticker,
+              alertType,
+              entryFdvUsd: result.entryFdvUsd,
+              currentFdvUsd: result.currentFdvUsd,
+              multipleTarget: result.multipleTarget,
+              currentMultiple: result.currentMultiple,
+              liquidationThresholdFdvUsd: result.liquidationThresholdFdvUsd,
+            }).catch(console.error);
+          }
+        }
+      }
+
       // Send 12-hour warning for proposals expiring within 13h that haven't been warned yet
       const in13h = new Date(Date.now() + 13 * 3600 * 1000).toISOString();
       const { data: warnProposals } = await supabase
