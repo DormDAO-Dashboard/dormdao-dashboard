@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { canModerate } from "@/lib/auth-utils";
 import { sendExecutionEmail } from "@/lib/email";
+import { MAIN_DAO_SLUG } from "@/lib/main-dao";
 import type { Proposal } from "@/lib/proposals";
 
 export async function PATCH(
@@ -63,6 +64,16 @@ export async function PATCH(
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ proposal: updated });
+  }
+
+  // "Trade Executed" is a per-school notification (proposalSchoolLabel,
+  // school-scoped recipients, etc. all assume a real school) — Main DAO
+  // proposals must never trigger it. Enforced here regardless of which UI
+  // is calling this (the admin panel already hides Main DAO from its
+  // lists, and ProposalCard hides its own "Mark as Executed" button for
+  // Main DAO too, but this is the one place that actually matters).
+  if (proposal.school === MAIN_DAO_SLUG) {
+    return NextResponse.json({ error: "Main DAO proposals can't send a Trade Executed email — only school proposals can." }, { status: 400 });
   }
 
   const executionLink = (formData.get("execution_tx") as string | null)?.trim() || "";

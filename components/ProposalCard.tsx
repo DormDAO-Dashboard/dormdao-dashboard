@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { type Proposal, type ProposalDocument, deadlineLabel, votePercents, isActive } from "@/lib/proposals";
 import type { SchoolColors } from "@/lib/schoolColors";
 import { schoolDisplayName } from "@/lib/schoolData";
+import { MAIN_DAO_SLUG } from "@/lib/main-dao";
 
 interface Props {
   proposal: Proposal;
@@ -362,8 +363,11 @@ export function ProposalCard({
             </div>
           )}
 
-          {/* Mark as Executed */}
-          {proposal.status === "passed" && isClubLeader && (
+          {/* Mark as Executed — Main DAO proposals never get a "Trade
+              Executed" email (only real schools do), so this button doesn't
+              even render for them; app/api/proposals/[id]/execute enforces
+              the same rule server-side regardless of what triggers it. */}
+          {proposal.status === "passed" && isClubLeader && proposal.school !== MAIN_DAO_SLUG && (
             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
               <button
                 onClick={() => { setShowExecuteModal(true); setExecuteError(null); }}
