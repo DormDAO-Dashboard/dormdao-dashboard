@@ -6,7 +6,7 @@ import { getSchoolsData } from "@/lib/cache";
 import { Holding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
 import {
-  sendSchoolEmailNotifications, send12HourWarningEmail, sendProposalResultEmail,
+  send12HourWarningEmail, sendProposalResultEmail,
   sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl, sendLiquidationAlertEmail,
 } from "@/lib/email";
 import { getCurrentFdvForTickers, checkLiquidationStatus } from "@/lib/fdv";
@@ -289,8 +289,15 @@ export async function POST(req: NextRequest) {
               : `Position reduced by ${change.school_name}`,
             url: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app"}/activity`,
           };
+          // Email deliberately stopped here — a detected buy/sell/increase/
+          // decrease is a live sheet snapshot's best guess at what happened,
+          // not a confirmed trade. Emails to club members now go out
+          // exclusively through the explicit "Mark Filled (send email)"
+          // flow (AdminTradeExecutedSection -> execute route ->
+          // sendExecutionEmail), where an admin has actually reviewed and
+          // attached proof. Push notifications stay as-is — lower-stakes,
+          // and still useful as a live activity signal.
           await sendPushNotifications(tradePayload).catch(console.error);
-          await sendSchoolEmailNotifications(slugify(change.school_name), tradePayload).catch(console.error);
         }
       }
       // Programmatic Liquidation Policy check (resolved 2024-06-01 — see
