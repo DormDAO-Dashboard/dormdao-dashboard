@@ -305,11 +305,13 @@ export async function POST(req: NextRequest) {
       // (from the sheet's own Entry FDV column, or an admin's
       // positions.entry_fdv_usd override) get checked against their live
       // current FDV. Deduped via liquidation_alerts (unique on
-      // school/ticker/investment_date/alert_type) so each position only
-      // ever fires each alert type once, no matter how many cycles it stays
-      // above the line — the insert itself is the dedupe claim, so a
-      // conflict here (including a race against a concurrent cron run)
-      // skips the send rather than double-emailing admins.
+      // school/ticker/alert_type — deliberately NOT investment_date, so a
+      // position that crosses, dips back under, and crosses again later
+      // still only ever alerts once per type) so each (school, ticker) only
+      // ever fires each alert type once, ever — the insert itself is the
+      // dedupe claim, so a conflict here (a real re-cross, or a race
+      // against a concurrent cron run) skips the send rather than
+      // double-emailing admins.
       const fdvTickers = new Set<string>();
       for (const s of schools) {
         for (const h of s.holdings ?? []) {

@@ -10,13 +10,13 @@
 --    parseHoldings), so this column is only ever read as a fallback for
 --    the minority of schools with no sheet backing at all.
 --
--- 2. liquidation_alerts — dedupe log so the 90%-warning and
---    threshold-crossed emails each fire once per position, not once per
---    cron cycle for as long as the position stays above the line. Keyed by
---    (school, ticker, investment_date) rather than a positions.id, since
---    sheet-driven schools' holdings have no stable DB row to key off of at
---    all — this is the same natural per-tranche key already used elsewhere
---    (see the buy/sell diffing in app/api/snapshot/route.ts).
+-- 2. liquidation_alerts — dedupe log so each admin gets at most ONE
+--    90%-warning and ONE threshold-crossed email per (school, ticker) ever,
+--    not once per crossing — a position that crosses, dips back under, and
+--    crosses again later must not re-alert. Keyed by (school, ticker,
+--    alert_type), deliberately NOT investment_date/tranche: a re-buy or a
+--    partial liquidation can change a position's tranche/date without it
+--    being a new position in the sense the DAO cares about here.
 -- ============================================================================
 
 ALTER TABLE public.positions
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.liquidation_alerts (
   current_fdv_usd numeric NOT NULL,
   multiple_target numeric NOT NULL,
   sent_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (school, ticker, investment_date, alert_type)
+  UNIQUE (school, ticker, alert_type)
 );
 
 -- Zero public access, service role only — same model as positions/
