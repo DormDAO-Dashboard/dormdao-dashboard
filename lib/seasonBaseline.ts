@@ -1,34 +1,44 @@
-// Portfolio NAV at the start of the current season (2025-2026), provided
+// Portfolio NAV at the start of the current season (2026-2027), provided
 // directly by DormDAO — the baseline for computing this SEASON's USD/ETH
 // return, instead of each position's original purchase date. Using purchase
 // date conflates all-time return with season return (a position bought in
 // 2023 and still held would otherwise show its 2023-to-now return on the
 // "Current Season" panel), and can hit CoinGecko's 365-day historical-price
 // limit for older positions. A fixed, recent baseline date avoids both.
-export const SEASON_START_DATE = "2025-10-01";
+//
+// Updated for the 2026-2027 season rollover (previously 2025-2026's values
+// below) — these are each school's end-of-2025-26-season NAV, i.e. this
+// season's opening NAV. The 2025-26 season itself becomes a fixed historical
+// snapshot once its own archive tab + leaderboard-parsing update land (see
+// lib/sheets.ts's parseLeaderboard/parseHistoricalLeaderboard and
+// fetchSheetsData's '24-'25 Standings / '23-'24 Standings tab fetches) —
+// not done here, since it depends on how DormDAO's sheet structures that
+// new archive tab.
+export const SEASON_START_DATE = "2026-10-01";
 
 // Provided directly rather than fetched from CoinGecko's historical API —
 // exact and doesn't depend on that endpoint's 365-day free-tier window.
-export const SEASON_START_ETH_USD = 4144.23;
+// (ETH/USD on 2026-10-01 per CoinGecko's historical-price API: $2,684.71.)
+export const SEASON_START_ETH_USD = 2684.71;
 
 export const SEASON_START_NAV_USD: Record<string, number> = {
-  "Oregon": 84423.00,
-  "Penn": 116830.00,
-  "Dartmouth": 91578.00,
-  "Texas": 80428.00,
-  "Michigan": 83131.00,
-  "NYU": 100567.00,
-  "Cornell": 146411.00,
-  "Columbia": 138862.00,
-  "Waterloo": 143509.00,
-  "Berkeley": 124734.00,
-  "Purdue": 77429.00,
-  "Vanderbilt": 109762.00,
-  "Boston College": 137713.00,
-  "Cambridge": 171667.00,
-  "USC": 165769.00,
-  "Villanova": 165769.00,
-  "St. Andrews": 165769.00,
+  "Oregon": 50758.00,
+  "Penn": 76160.00,
+  "Dartmouth": 49154.00,
+  "Texas": 25897.00,
+  "Michigan": 57585.00,
+  "NYU": 77973.00,
+  "Cornell": 96172.00,
+  "Columbia": 114817.00,
+  "Waterloo": 103055.00,
+  "Berkeley": 75213.00,
+  "Purdue": 73937.00,
+  "Vanderbilt": 105803.00,
+  "Boston College": 130064.00,
+  "Cambridge": 108199.00,
+  "USC": 128842.00,
+  "Villanova": 169464.00,
+  "St. Andrews": 138216.00,
 };
 
 // All-Time (Since Inception) baselines, grouped by cohort — how much ETH
