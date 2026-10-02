@@ -24,10 +24,16 @@ const PANEL_WIDTH_ALLTIME = 340;
 
 // ─── Season config ────────────────────────────────────────────────────────────
 
-type Season = "2025-2026" | "2024-2025" | "2023-2024";
+// 2025-2026 is deliberately absent — it ended with the season rollover
+// (lib/seasonBaseline.ts) but has no frozen archive tab/historical dataset
+// yet (unlike 2024-2025/2023-2024, each backed by its own sheet tab — see
+// fetchSheetsData's '24-'25 Standings / '23-'24 Standings fetches). Add it
+// back here, pointed at a new schools2526 source, once that archive tab and
+// its parsing exist.
+type Season = "2026-2027" | "2024-2025" | "2023-2024";
 
 const SEASONS: { key: Season; tab: string; label: string; period: string }[] = [
-  { key: "2025-2026", tab: "25–26", label: "Current Season", period: "Oct 2025 – Sep 2026" },
+  { key: "2026-2027", tab: "26–27", label: "Current Season", period: "Oct 2026 – Sep 2027" },
   { key: "2024-2025", tab: "24–25", label: "2024–2025 Season", period: "Oct 2024 – Sep 2025" },
   { key: "2023-2024", tab: "23–24", label: "2023–2024 Season", period: "Oct 2023 – Sep 2024" },
 ];
@@ -363,7 +369,7 @@ export function LeaderboardClient({
   schools2324: SchoolRow[];
   fetchedAt: string;
 }) {
-  const [season, setSeason] = useState<Season>("2025-2026");
+  const [season, setSeason] = useState<Season>("2026-2027");
   const [userSlug, setUserSlug] = useState<string | null>(null);
 
   useEffect(() => {
@@ -377,7 +383,7 @@ export function LeaderboardClient({
   }, []);
 
   const activeSchools =
-    season === "2025-2026" ? schools
+    season === "2026-2027" ? schools
     : season === "2024-2025" ? (schools2425.length > 0 ? schools2425 : [])
     : (schools2324.length > 0 ? schools2324 : []);
 
@@ -386,7 +392,7 @@ export function LeaderboardClient({
   // Current-season data (and All-Time, which shares the same source tab) is
   // always expected to be populated — an empty result means the upstream
   // sheet returned invalid data, not that data hasn't been added yet.
-  const liveDataUnavailable = season === "2025-2026" && activeSchools.length === 0;
+  const liveDataUnavailable = season === "2026-2027" && activeSchools.length === 0;
 
   const syncedAgo = Math.round((Date.now() - new Date(fetchedAt).getTime()) / 60000);
   const syncLabel = syncedAgo < 1 ? "just now" : `${syncedAgo}m ago`;
