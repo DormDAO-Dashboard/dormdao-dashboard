@@ -173,9 +173,10 @@ function DaoWideMetrics({ schools }: { schools: SchoolRow[] }) {
   );
 }
 
-type Period = "2526" | "inception" | "2425" | "2324";
+type Period = "2627" | "2526" | "inception" | "2425" | "2324";
 
 const PERIODS: { key: Period; label: string }[] = [
+  { key: "2627",      label: "2026–2027" },
   { key: "2526",      label: "2025–2026" },
   { key: "2425",      label: "2024–2025" },
   { key: "2324",      label: "2023–2024" },
@@ -185,20 +186,23 @@ const PERIODS: { key: Period; label: string }[] = [
 export function DashboardClient({
   schools,
   sinceInceptionSchools,
+  schools2526,
   schools2425,
   schools2324,
   fetchedAt,
 }: {
   schools: SchoolRow[];
   sinceInceptionSchools: SchoolRow[];
+  schools2526: SchoolRow[];
   schools2425: SchoolRow[];
   schools2324: SchoolRow[];
   fetchedAt: string;
 }) {
-  const [period, setPeriod] = useState<Period>("2526");
+  const [period, setPeriod] = useState<Period>("2627");
 
   const activeSchools =
-    period === "2526"      ? schools :
+    period === "2627"      ? schools :
+    period === "2526"      ? schools2526 :
     period === "inception" ? (sinceInceptionSchools.length > 0 ? sinceInceptionSchools : schools) :
     period === "2425"      ? schools2425 :
                              schools2324;
@@ -255,7 +259,7 @@ export function DashboardClient({
       </div>
 
       {/* DAO-Wide Metrics — current season only */}
-      {period === "2526" && <DaoWideMetrics schools={schools} />}
+      {period === "2627" && <DaoWideMetrics schools={schools} />}
 
       {/* Analytics row */}
       <div className="flex overflow-x-auto gap-3 mb-5 scrollbar-hide md:grid md:grid-cols-3">
@@ -317,7 +321,7 @@ export function DashboardClient({
       </div>
 
       {/* ETH Holdings + Recent Buys — current year only (require live holdings) */}
-      {period === "2526" && (
+      {period === "2627" && (
         <>
           <EthHoldingsTable schools={schools} />
           <RecentBuysFeed schools={schools} />

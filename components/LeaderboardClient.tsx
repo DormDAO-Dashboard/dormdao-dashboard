@@ -24,16 +24,15 @@ const PANEL_WIDTH_ALLTIME = 340;
 
 // ─── Season config ────────────────────────────────────────────────────────────
 
-// 2025-2026 is deliberately absent — it ended with the season rollover
-// (lib/seasonBaseline.ts) but has no frozen archive tab/historical dataset
-// yet (unlike 2024-2025/2023-2024, each backed by its own sheet tab — see
-// fetchSheetsData's '24-'25 Standings / '23-'24 Standings fetches). Add it
-// back here, pointed at a new schools2526 source, once that archive tab and
-// its parsing exist.
-type Season = "2026-2027" | "2024-2025" | "2023-2024";
+// 2025-2026 is a frozen snapshot computed directly from DormDAO's given
+// start/end NAVs (lib/seasonBaseline.ts's getSchools2526) rather than parsed
+// from its own sheet archive tab like 2024-2025/2023-2024 are — there isn't
+// one for it (yet).
+type Season = "2026-2027" | "2025-2026" | "2024-2025" | "2023-2024";
 
 const SEASONS: { key: Season; tab: string; label: string; period: string }[] = [
   { key: "2026-2027", tab: "26–27", label: "Current Season", period: "Oct 2026 – Sep 2027" },
+  { key: "2025-2026", tab: "25–26", label: "2025–2026 Season", period: "Oct 2025 – Sep 2026" },
   { key: "2024-2025", tab: "24–25", label: "2024–2025 Season", period: "Oct 2024 – Sep 2025" },
   { key: "2023-2024", tab: "23–24", label: "2023–2024 Season", period: "Oct 2023 – Sep 2024" },
 ];
@@ -359,12 +358,14 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
 export function LeaderboardClient({
   schools,
   sinceInceptionSchools,
+  schools2526,
   schools2425,
   schools2324,
   fetchedAt,
 }: {
   schools: SchoolRow[];
   sinceInceptionSchools: SchoolRow[];
+  schools2526: SchoolRow[];
   schools2425: SchoolRow[];
   schools2324: SchoolRow[];
   fetchedAt: string;
@@ -384,6 +385,7 @@ export function LeaderboardClient({
 
   const activeSchools =
     season === "2026-2027" ? schools
+    : season === "2025-2026" ? (schools2526.length > 0 ? schools2526 : [])
     : season === "2024-2025" ? (schools2425.length > 0 ? schools2425 : [])
     : (schools2324.length > 0 ? schools2324 : []);
 

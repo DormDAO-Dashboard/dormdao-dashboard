@@ -4,7 +4,7 @@ import { DashboardClient } from "@/components/DashboardClient";
 export const revalidate = 600;
 
 export default async function AnalyticsPage() {
-  const { schools, sinceInceptionSchools, schools2425, schools2324, fetchedAt } = await getSchoolsData();
+  const { schools, sinceInceptionSchools, schools2526, schools2425, schools2324, fetchedAt } = await getSchoolsData();
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -15,6 +15,7 @@ export default async function AnalyticsPage() {
       <DashboardClient
         schools={schools}
         sinceInceptionSchools={sinceInceptionSchools}
+        schools2526={schools2526}
         schools2425={schools2425}
         schools2324={schools2324}
         fetchedAt={fetchedAt}

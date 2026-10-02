@@ -5,7 +5,7 @@ import { SchoolRow } from "./types";
 import { isDataCollectionPaused, getSchoolsSnapshot, saveSchoolsSnapshot } from "./data-collection-store";
 import { getPositionsBySchool, computeSchoolFromPositions, computeSchoolFromHoldings } from "./positions";
 import { getPricesForTickers } from "./prices";
-import { SEASON_START_NAV_USD, SEASON_START_ETH_USD, inceptionBaselineForYear } from "./seasonBaseline";
+import { SEASON_START_NAV_USD, SEASON_START_ETH_USD, inceptionBaselineForYear, getSchools2526 } from "./seasonBaseline";
 import { HYPERLIQUID_VAULT_POSITIONS } from "./hyperliquidVaults";
 import { getVaultUserEquityUsd } from "./hyperliquid";
 
@@ -14,6 +14,7 @@ export type { SchoolRowWithHoldings } from "./sheets";
 export interface SchoolsCache {
   schools: SchoolRowWithHoldings[];
   sinceInceptionSchools: SchoolRow[];
+  schools2526: SchoolRow[];
   schools2425: SchoolRow[];
   schools2324: SchoolRow[];
   daoReturnEth2526: number | null;
@@ -263,17 +264,19 @@ const getSchoolsDataLive = unstable_cache(
       Object.entries(tokenToSchoolSets).map(([ticker, set]) => [ticker, [...set]])
     );
 
-    const result: SchoolsCache = { schools, sinceInceptionSchools, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
+    const schools2526 = getSchools2526();
+
+    const result: SchoolsCache = { schools, sinceInceptionSchools, schools2526, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
     await saveSchoolsSnapshot(result);
     return result;
   },
-  ["schools-data-v24"],
+  ["schools-data-v25"],
   { revalidate: 600 }
 );
 
 function emptySchoolsCache(): SchoolsCache {
   return {
-    schools: [], sinceInceptionSchools: [], schools2425: [], schools2324: [],
+    schools: [], sinceInceptionSchools: [], schools2526: getSchools2526(), schools2425: [], schools2324: [],
     daoReturnEth2526: null, daoReturnEthAllTime: null, daoReturnEth2425: null, daoReturnEth2324: null,
     fetchedAt: new Date().toISOString(),
     totalNAV: 0, avgUsdReturn: 0, avgEthReturn: 0, avgDeployed: 0, tokenToSchools: {},
