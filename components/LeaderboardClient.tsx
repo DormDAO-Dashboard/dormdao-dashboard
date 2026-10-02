@@ -121,6 +121,18 @@ function YouBadge() {
 
 // ─── Quarterly table (left panel) ────────────────────────────────────────────
 
+// Q4 (Oct-Dec) always opens on the same date the DAO season itself opens
+// (Oct 1), so right after a season rollover the quarter's own baseline is
+// identical to the season's — quarterly return IS season return until the
+// quarter resets again on Jan 1. Sourcing from s.usdReturn/s.ethReturn
+// (season, live-computed) instead of the sheet's separate quarterlyUsdReturn/
+// quarterlyEthReturn cells sidesteps those cells going stale right after a
+// rollover (they're directly entered per-school and only get updated
+// whenever someone revisits that school's tab). This stops being correct
+// once Q1 2027 begins (Jan 1) while the season continues — at that point
+// quarterly needs its own live baseline (e.g. extending
+// lib/snapshotReturns.ts's season-to-date calc with a quarter-start date)
+// rather than reusing season's.
 function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: string | null }) {
   const [sortKey, setSortKey] = useState<QtSortKey>("quarterlyEth");
   const [asc, setAsc] = useState(false);
@@ -133,8 +145,8 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
   const sorted = [...schools].sort((a, b) => {
     const mult = asc ? 1 : -1;
     if (sortKey === "name") return schoolDisplayName(a.name).localeCompare(schoolDisplayName(b.name)) * mult;
-    if (sortKey === "quarterlyUsd") return ((a.quarterlyUsdReturn ?? 0) - (b.quarterlyUsdReturn ?? 0)) * mult;
-    return ((a.quarterlyEthReturn ?? 0) - (b.quarterlyEthReturn ?? 0)) * mult;
+    if (sortKey === "quarterlyUsd") return (a.usdReturn - b.usdReturn) * mult;
+    return (a.ethReturn - b.ethReturn) * mult;
   });
 
   const th = "px-3 py-2 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-700 dark:text-gray-400 text-[10px] uppercase tracking-wide";
@@ -177,16 +189,8 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
                   {isYou && <YouBadge />}
                 </Link>
               </td>
-              <td className="px-3 py-2 text-right">
-                {(s.quarterlyUsdReturn ?? 0) !== 0
-                  ? <ReturnCell value={s.quarterlyUsdReturn!} />
-                  : <span className="text-gray-700 dark:text-gray-400 font-mono">—</span>}
-              </td>
-              <td className="px-3 py-2 text-right">
-                {(s.quarterlyEthReturn ?? 0) !== 0
-                  ? <ReturnCell value={s.quarterlyEthReturn!} />
-                  : <span className="text-gray-700 dark:text-gray-400 font-mono">—</span>}
-              </td>
+              <td className="px-3 py-2 text-right"><ReturnCell value={s.usdReturn} /></td>
+              <td className="px-3 py-2 text-right"><ReturnCell value={s.ethReturn} /></td>
             </tr>
           );
         })}
