@@ -1,6 +1,7 @@
 import { createServiceClient } from "./supabase/server";
 import { slugify } from "./utils";
 import { parseFdvString } from "./fdv";
+import { SEASON_START_ETH_USD } from "./seasonBaseline";
 import type { Holding, ExitedHolding } from "./types";
 import type { SchoolRowWithHoldings } from "./sheets";
 
@@ -90,7 +91,17 @@ export function computeSchoolMetrics(
     vaultEquityUsdByTicker?: Record<string, number>;
   }
 ): SchoolRowWithHoldings {
-  const ethPriceUsd = prices.ETH?.usd ?? 0;
+  // Falling back to 0 when CoinGecko's live ETH quote is unavailable (rate
+  // limit, transient outage, cold cache) used to zero out the ETH treasury
+  // holding's own value entirely (currentValueUsd = tokens * 0), which both
+  // understated NAV and made pctDeployed read a false 100% (idle value
+  // silently counted as $0) — on top of the ETH-return aggregate bug fixed
+  // above. SEASON_START_ETH_USD is a fixed, already-hardcoded reference
+  // price (no live fetch), so using it here only when the live price is
+  // missing keeps every ETH-denominated figure in a sane neighborhood
+  // during a brief outage instead of collapsing to an extreme, while still
+  // preferring the real live price whenever it's actually available.
+  const ethPriceUsd = prices.ETH?.usd ?? SEASON_START_ETH_USD;
 
   let nav = 0;
   let idleEthValueUsd = 0;
@@ -112,7 +123,12 @@ export function computeSchoolMetrics(
     const vaultEquityUsd = extras?.vaultEquityUsdByTicker?.[ticker];
 
     if (ticker === "ETH") {
-      const currentValueUsd = vaultEquityUsd ?? p.tokens * currentPriceUsd;
+      // ethPriceUsd (not currentPriceUsd) specifically — it already falls
+      // back to SEASON_START_ETH_USD when the live quote is unavailable
+      // (see above), where currentPriceUsd's own prices[ticker]?.usd ?? 0
+      // fallback would zero out the treasury's value entirely and make
+      // pctDeployed read a false 100% (idle value counted as $0).
+      const currentValueUsd = vaultEquityUsd ?? p.tokens * ethPriceUsd;
       nav += currentValueUsd;
       idleEthValueUsd += currentValueUsd;
       return {

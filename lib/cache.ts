@@ -5,7 +5,7 @@ import { SchoolRow } from "./types";
 import { isDataCollectionPaused, getSchoolsSnapshot, saveSchoolsSnapshot } from "./data-collection-store";
 import { getPositionsBySchool, computeSchoolFromPositions, computeSchoolFromHoldings } from "./positions";
 import { getPricesForTickers } from "./prices";
-import { SEASON_START_NAV_USD, SEASON_START_ETH_USD, inceptionBaselineForYear, getSchools2526 } from "./seasonBaseline";
+import { SEASON_START_NAV_USD, SEASON_START_NAV_ETH, SEASON_START_ETH_USD, inceptionBaselineForYear, getSchools2526 } from "./seasonBaseline";
 import { HYPERLIQUID_VAULT_POSITIONS } from "./hyperliquidVaults";
 import { getVaultUserEquityUsd } from "./hyperliquid";
 
@@ -46,7 +46,10 @@ function applySeasonBaselineReturn(row: SchoolRowWithHoldings, ethPriceUsdNow: n
   if (baselineNavUsd == null || baselineNavUsd <= 0) return row;
 
   const usdReturn = ((row.nav - baselineNavUsd) / baselineNavUsd) * 100;
-  const baselineNavEth = baselineNavUsd / SEASON_START_ETH_USD;
+  // The school's own fixed ETH baseline (SEASON_START_NAV_ETH) if given,
+  // else derived from the USD baseline — both are fixed values either way,
+  // never a live fetch.
+  const baselineNavEth = SEASON_START_NAV_ETH[row.name] ?? (baselineNavUsd / SEASON_START_ETH_USD);
   const currentNavEth = ethPriceUsdNow > 0 ? row.nav / ethPriceUsdNow : null;
   const ethReturn = currentNavEth !== null ? ((currentNavEth - baselineNavEth) / baselineNavEth) * 100 : row.ethReturn;
 

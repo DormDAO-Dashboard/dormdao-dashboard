@@ -44,6 +44,32 @@ export const SEASON_START_NAV_USD: Record<string, number> = {
   "St. Andrews": 138216.00,
 };
 
+// Each school's SEASON_START_NAV_USD above, already converted to ETH, given
+// directly rather than derived at runtime (baselineNavUsd / SEASON_START_ETH_USD)
+// — a fixed value, same spirit as SEASON_START_ETH_USD itself, and never
+// re-fetched or recomputed from a live price for the "initial" side of any
+// season-return calculation. (Matches dividing by SEASON_START_ETH_USD to
+// within rounding — these are just the authoritative figures to use as-is.)
+export const SEASON_START_NAV_ETH: Record<string, number> = {
+  "Oregon": 23.93052146,
+  "Penn": 28.36819749,
+  "Dartmouth": 18.30885341,
+  "Texas": 9.646260639,
+  "Michigan": 21.44918756,
+  "NYU": 29.04328972,
+  "Cornell": 35.82201658,
+  "Columbia": 42.76695257,
+  "Waterloo": 38.3860019,
+  "Berkeley": 28.0155021,
+  "Purdue": 27.54018489,
+  "Vanderbilt": 39.40959255,
+  "Boston College": 48.44608769,
+  "Cambridge": 40.30212872,
+  "USC": 47.9910885,
+  "Villanova": 63.12175621,
+  "St. Andrews": 51.48271289,
+};
+
 // ── 2025-2026 season, frozen ────────────────────────────────────────────────
 // With the 2026-2027 rollover, 2025-2026 needs to show up as a fixed
 // historical season like 24-25/23-24 — but unlike those (each backed by its
