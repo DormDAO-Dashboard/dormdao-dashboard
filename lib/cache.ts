@@ -105,7 +105,16 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
     getPricesForTickers([...allTickers]),
     Promise.all(vaultLookups.map(async (l) => ({ ...l, usd: await getVaultUserEquityUsd(l.vaultAddress, l.userAddress) }))),
   ]);
-  const ethPriceUsdNow = prices.ETH?.usd ?? 0;
+  // Falls back to the fixed SEASON_START_ETH_USD reference price (never 0)
+  // when CoinGecko's live quote is unavailable — same reasoning as
+  // computeSchoolMetrics's own ethPriceUsd fallback (lib/positions.ts).
+  // Leaving this at 0 meant applySeasonBaselineReturn's own baseline-
+  // relative ETH calc couldn't run (currentNavEth null), so it deferred to
+  // row.ethReturn — the exact same fallback computeSinceInceptionSchools's
+  // own ethPriceUsdNow==0 case defers to below, making Current Season,
+  // Quarterly (which mirrors Current Season by design), and All-Time all
+  // collapse to one identical number during any live-price outage.
+  const ethPriceUsdNow = prices.ETH?.usd ?? SEASON_START_ETH_USD;
 
   const vaultEquityBySchool: Record<string, Record<string, number>> = {};
   for (const v of vaultEquityResults) {
@@ -238,7 +247,12 @@ const getSchoolsDataLive = unstable_cache(
     daoReturnEth2425 ??= previous?.daoReturnEth2425 ?? null;
     daoReturnEth2324 ??= previous?.daoReturnEth2324 ?? null;
 
-    const ethPriceUsdNow = (await getPricesForTickers(["ETH"])).ETH?.usd ?? 0;
+    // Same fixed fallback as applyInternallyComputedSchools's own
+    // ethPriceUsdNow above — without it, computeSinceInceptionSchools's
+    // own baseline-relative calc couldn't run during a live-price outage
+    // and deferred to the same row.ethReturn Current Season was also
+    // deferring to, making every panel show identical numbers.
+    const ethPriceUsdNow = (await getPricesForTickers(["ETH"])).ETH?.usd ?? SEASON_START_ETH_USD;
     const sinceInceptionSchools = rerank(
       patchZeroedFromSnapshot(
         computeSinceInceptionSchools(schools, subDaoOpeningYearByName, ethPriceUsdNow),
@@ -273,7 +287,7 @@ const getSchoolsDataLive = unstable_cache(
     await saveSchoolsSnapshot(result);
     return result;
   },
-  ["schools-data-v25"],
+  ["schools-data-v26"],
   { revalidate: 600 }
 );
 
