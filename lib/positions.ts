@@ -173,8 +173,17 @@ export function computeSchoolMetrics(
     // Only count this position's ETH cost basis toward the school-wide ETH
     // return once we have a matching reliable current value for it — else
     // it would drag the aggregate down as if it were a total loss, same
-    // asymmetry as the per-position bug just above.
-    if (hasReliableValue && p.costBasisEth > 0) totalCostBasisEth += p.costBasisEth;
+    // asymmetry as the per-position bug just above. This must check
+    // currentValueEth !== null specifically, not just hasReliableValue: a
+    // position can have a perfectly good token price (hasReliableValue
+    // true) while ETH's OWN price fetch fails for that cycle — ethPriceUsd
+    // is a single shared value for every position this call, not per-token
+    // — which left costBasisEth accumulating here while
+    // totalCurrentValueEthNonIdle silently skipped every position (next
+    // line already gates on currentValueEth !== null), producing a false
+    // school-wide ETH return of exactly -100% (0 current value against a
+    // real cost basis) whenever CoinGecko's ETH quote was unavailable.
+    if (currentValueEth !== null && p.costBasisEth > 0) totalCostBasisEth += p.costBasisEth;
     if (currentValueEth !== null) totalCurrentValueEthNonIdle += currentValueEth;
 
     return {
