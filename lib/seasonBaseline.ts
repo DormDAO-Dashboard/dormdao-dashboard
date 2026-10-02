@@ -128,6 +128,29 @@ const SEASON_2526_END_NAV_USD: Record<string, number> = {
 };
 const SEASON_2526_END_ETH_USD = 2684.71;
 
+// % Deployed at 2025-2026's close, provided directly by DormDAO — unlike
+// usdReturn/ethReturn above, this isn't derivable from just the start/end
+// NAV snapshots, so it's given as its own fixed record.
+const SEASON_2526_PCT_DEPLOYED: Record<string, number> = {
+  "Oregon": 70.30,
+  "Penn": 99.23,
+  "Dartmouth": 61.72,
+  "Texas": 84.87,
+  "Michigan": 75.06,
+  "NYU": 90.20,
+  "Cornell": 42.87,
+  "Columbia": 69.84,
+  "Waterloo": 73.97,
+  "Berkeley": 20.95,
+  "Purdue": 52.30,
+  "Vanderbilt": 85.82,
+  "Boston College": 73.56,
+  "Cambridge": 18.73,
+  "USC": 58.12,
+  "Villanova": 85.41,
+  "St. Andrews": 74.36,
+};
+
 // Ranked by ETH return descending, matching the site's existing convention
 // for every other season panel (current season, 24-25, 23-24).
 export function getSchools2526(): SchoolRow[] {
@@ -143,11 +166,8 @@ export function getSchools2526(): SchoolRow[] {
       nav: endNav,
       usdReturn,
       ethReturn,
-      // Not derivable from just start/end NAV snapshots — "—" client-side
-      // (see LeaderboardClient's `s.pctDeployed > 0 ? ... : "—"` guard)
-      // rather than a fabricated 0%/0.
       avgEntryFdv: 0,
-      pctDeployed: 0,
+      pctDeployed: SEASON_2526_PCT_DEPLOYED[name] ?? 0,
     };
   });
   rows.sort((a, b) => b.ethReturn - a.ethReturn);
