@@ -287,7 +287,7 @@ const getSchoolsDataLive = unstable_cache(
     await saveSchoolsSnapshot(result);
     return result;
   },
-  ["schools-data-v26"],
+  ["schools-data-v27"],
   { revalidate: 600 }
 );
 

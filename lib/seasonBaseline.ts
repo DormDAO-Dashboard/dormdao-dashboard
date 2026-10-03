@@ -73,103 +73,45 @@ export const SEASON_START_NAV_ETH: Record<string, number> = {
 // ── 2025-2026 season, frozen ────────────────────────────────────────────────
 // With the 2026-2027 rollover, 2025-2026 needs to show up as a fixed
 // historical season like 24-25/23-24 — but unlike those (each backed by its
-// own sheet archive tab), DormDAO gave simple start/end NAV snapshots
-// instead of a tab to parse. So this computes 2025-2026's frozen USD/ETH
-// returns directly, once, from those two NAV snapshots — same formula as
-// the live season-baseline calc above (return = final/initial - 1, ETH
-// return computed by converting both NAVs through their respective ETH
-// prices), just with both ends fixed instead of one end being "today".
-
-// 2025-2026's own opening NAV (what SEASON_START_NAV_USD held before the
-// 2026-2027 rollover overwrote it above) — used only to compute this frozen
-// season's return, never for any live calculation.
-const SEASON_2526_START_NAV_USD: Record<string, number> = {
-  "Oregon": 84423.00,
-  "Penn": 116830.00,
-  "Dartmouth": 91578.00,
-  "Texas": 80428.00,
-  "Michigan": 83131.00,
-  "NYU": 100567.00,
-  "Cornell": 146411.00,
-  "Columbia": 138862.00,
-  "Waterloo": 143509.00,
-  "Berkeley": 124734.00,
-  "Purdue": 77429.00,
-  "Vanderbilt": 109762.00,
-  "Boston College": 137713.00,
-  "Cambridge": 171667.00,
-  "USC": 165769.00,
-  "Villanova": 165769.00,
-  "St. Andrews": 165769.00,
-};
-const SEASON_2526_START_ETH_USD = 4144.23;
-
-// 2025-2026's closing NAV — identical to SEASON_START_NAV_USD above except
-// Oregon (corrected to 64,246 as 2026-2027's actual opening NAV; its
-// 2025-2026 closing NAV was 50,758).
-const SEASON_2526_END_NAV_USD: Record<string, number> = {
-  "Oregon": 50758.00,
-  "Penn": 76160.00,
-  "Dartmouth": 49154.00,
-  "Texas": 25897.00,
-  "Michigan": 57585.00,
-  "NYU": 77973.00,
-  "Cornell": 96172.00,
-  "Columbia": 114817.00,
-  "Waterloo": 103055.00,
-  "Berkeley": 75213.00,
-  "Purdue": 73937.00,
-  "Vanderbilt": 105803.00,
-  "Boston College": 130064.00,
-  "Cambridge": 108199.00,
-  "USC": 128842.00,
-  "Villanova": 169464.00,
-  "St. Andrews": 138216.00,
-};
-const SEASON_2526_END_ETH_USD = 2684.71;
-
-// % Deployed at 2025-2026's close, provided directly by DormDAO — unlike
-// usdReturn/ethReturn above, this isn't derivable from just the start/end
-// NAV snapshots, so it's given as its own fixed record.
-const SEASON_2526_PCT_DEPLOYED: Record<string, number> = {
-  "Oregon": 70.30,
-  "Penn": 99.23,
-  "Dartmouth": 61.72,
-  "Texas": 84.87,
-  "Michigan": 75.06,
-  "NYU": 90.20,
-  "Cornell": 42.87,
-  "Columbia": 69.84,
-  "Waterloo": 73.97,
-  "Berkeley": 20.95,
-  "Purdue": 52.30,
-  "Vanderbilt": 85.82,
-  "Boston College": 73.56,
-  "Cambridge": 18.73,
-  "USC": 58.12,
-  "Villanova": 85.41,
-  "St. Andrews": 74.36,
+// own sheet archive tab), DormDAO gave this directly as a finished table:
+// NAV, USD return, ETH return, and % deployed, all as of 2025-2026's close.
+// Stored verbatim rather than re-derived from separate start/end NAV
+// snapshots — an earlier version computed usdReturn/ethReturn from two NAV
+// dicts, but came out slightly off for a few schools (Vanderbilt, Purdue,
+// Columbia, NYU, Michigan) versus DormDAO's own figures, so these four
+// fields are now each given directly instead of derived.
+const SEASON_2526_DATA: Record<string, { nav: number; usdReturn: number; ethReturn: number; pctDeployed: number }> = {
+  "Villanova":      { nav: 169464, usdReturn: 2.23,   ethReturn: 57.80,  pctDeployed: 85.73 },
+  "Vanderbilt":     { nav: 105803, usdReturn: -3.78,  ethReturn: 48.52,  pctDeployed: 86.15 },
+  "Purdue":         { nav: 73937,  usdReturn: -4.88,  ethReturn: 46.84,  pctDeployed: 52.38 },
+  "Boston College": { nav: 130064, usdReturn: -5.55,  ethReturn: 45.79,  pctDeployed: 73.52 },
+  "St. Andrews":    { nav: 138216, usdReturn: -16.62, ethReturn: 28.71,  pctDeployed: 70.10 },
+  "Columbia":       { nav: 114817, usdReturn: -17.22, ethReturn: 27.78,  pctDeployed: 62.01 },
+  "USC":            { nav: 128842, usdReturn: -22.28, ethReturn: 19.98,  pctDeployed: 59.17 },
+  "Oregon":         { nav: 64246,  usdReturn: -23.90, ethReturn: 17.47,  pctDeployed: 71.35 },
+  "NYU":            { nav: 77973,  usdReturn: -25.70, ethReturn: 14.70,  pctDeployed: 90.66 },
+  "Waterloo":       { nav: 103055, usdReturn: -28.19, ethReturn: 10.85,  pctDeployed: 75.04 },
+  "Michigan":       { nav: 57585,  usdReturn: -32.66, ethReturn: 3.95,   pctDeployed: 75.89 },
+  "Cornell":        { nav: 96172,  usdReturn: -34.31, ethReturn: 1.40,   pctDeployed: 43.46 },
+  "Penn":           { nav: 76160,  usdReturn: -34.81, ethReturn: 0.63,   pctDeployed: 99.16 },
+  "Cambridge":      { nav: 108199, usdReturn: -36.97, ethReturn: -2.71,  pctDeployed: 19.94 },
+  "Berkeley":       { nav: 75213,  usdReturn: -39.70, ethReturn: -6.92,  pctDeployed: 21.01 },
+  "Dartmouth":      { nav: 49154,  usdReturn: -46.33, ethReturn: -17.15, pctDeployed: 62.02 },
+  "Texas":          { nav: 25897,  usdReturn: -67.80, ethReturn: -50.30, pctDeployed: 85.51 },
 };
 
 // Ranked by ETH return descending, matching the site's existing convention
 // for every other season panel (current season, 24-25, 23-24).
 export function getSchools2526(): SchoolRow[] {
-  const rows = Object.entries(SEASON_2526_END_NAV_USD).map(([name, endNav]) => {
-    const startNav = SEASON_2526_START_NAV_USD[name];
-    const usdReturn = (endNav / startNav - 1) * 100;
-    const endNavEth = endNav / SEASON_2526_END_ETH_USD;
-    const startNavEth = startNav / SEASON_2526_START_ETH_USD;
-    const ethReturn = (endNavEth / startNavEth - 1) * 100;
-    return {
-      name,
-      slug: slugify(name),
-      nav: endNav,
-      usdReturn,
-      ethReturn,
-      avgEntryFdv: 0,
-      pctDeployed: SEASON_2526_PCT_DEPLOYED[name] ?? 0,
-    };
-  });
+  const rows = Object.entries(SEASON_2526_DATA).map(([name, d]) => ({
+    name,
+    slug: slugify(name),
+    nav: d.nav,
+    usdReturn: d.usdReturn,
+    ethReturn: d.ethReturn,
+    avgEntryFdv: 0,
+    pctDeployed: d.pctDeployed,
+  }));
   rows.sort((a, b) => b.ethReturn - a.ethReturn);
   return rows.map((r, i): SchoolRow => ({ ...r, rank: i + 1 }));
 }
