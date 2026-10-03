@@ -2,7 +2,10 @@ import { getSchoolsData } from "@/lib/cache";
 import { ActivityTabs } from "@/components/ActivityTabs";
 import { SyncFooter } from "@/components/SyncFooter";
 
-export const revalidate = 600;
+// See app/leaderboard/page.tsx for why this is force-dynamic rather than
+// revalidate = 600 — avoids a second, independently-timed route cache on
+// top of getSchoolsData()'s own.
+export const dynamic = "force-dynamic";
 
 export default async function ActivityPage() {
   const { schools, fetchedAt } = await getSchoolsData();

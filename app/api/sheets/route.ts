@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSchoolsData } from "@/lib/cache";
 
-export const revalidate = 600;
+// See app/leaderboard/page.tsx for why this is force-dynamic rather than
+// revalidate = 600 — avoids a second, independently-timed route cache on
+// top of getSchoolsData()'s own.
+export const dynamic = "force-dynamic";
 
 export type { Holding, SchoolRowWithHoldings } from "@/lib/sheets";
 

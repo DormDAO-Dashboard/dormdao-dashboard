@@ -1,7 +1,10 @@
 import { getSchoolsData } from "@/lib/cache";
 import { DashboardClient } from "@/components/DashboardClient";
 
-export const revalidate = 600;
+// See app/leaderboard/page.tsx for why this is force-dynamic rather than
+// revalidate = 600 — avoids a second, independently-timed route cache on
+// top of getSchoolsData()'s own.
+export const dynamic = "force-dynamic";
 
 export default async function AnalyticsPage() {
   const { schools, sinceInceptionSchools, schools2526, schools2425, schools2324, fetchedAt } = await getSchoolsData();

@@ -2,7 +2,10 @@ import { getSchoolsData, getAllPrices } from "@/lib/cache";
 import { TokensClient } from "@/components/TokensClient";
 import type { TokenInfo } from "@/components/TokensClient";
 
-export const revalidate = 600;
+// See app/leaderboard/page.tsx for why this is force-dynamic rather than
+// revalidate = 600 — avoids a second, independently-timed route cache on
+// top of getSchoolsData()'s own.
+export const dynamic = "force-dynamic";
 
 export default async function TokensPage() {
   const [{ schools, tokenToSchools }, { prices }] = await Promise.all([
