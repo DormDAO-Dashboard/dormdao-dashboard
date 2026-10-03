@@ -80,7 +80,14 @@ interface FdvCacheEntry {
 }
 
 const fdvCache = new Map<string, FdvCacheEntry>();
-const FDV_CACHE_TTL = 60_000;
+// FDV doesn't need to be nearly as fresh as spot price for a liquidation-
+// multiple check (the snapshot cron itself only runs every ~50min via its
+// own cooldown) — a longer TTL here means consecutive cron cycles mostly
+// reuse cached FDV instead of re-fetching every ticker from scratch each
+// time, cutting this feature's added CoinGecko call volume substantially
+// (this was new load added alongside getPricesForTickers's own calls,
+// sharing the same free-tier rate limit).
+const FDV_CACHE_TTL = 30 * 60_000;
 const BATCH_SIZE = 20;
 
 async function fetchMarketsBatch(ids: string[]): Promise<Record<string, number | null>> {
