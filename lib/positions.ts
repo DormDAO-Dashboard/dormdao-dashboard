@@ -224,6 +224,15 @@ export function computeSchoolMetrics(
     };
   });
 
+  // NFT holdings (Oregon/Texas's NFT Positions sheet section) carry a
+  // sheet-entered marketValueUsd but, unlike every liquid position above,
+  // were never folded into nav — a school holding an NFT (e.g. Texas's
+  // Milady) reported a NAV short by exactly that NFT's value. There's no
+  // live price feed for NFTs here, so this trusts the sheet's own
+  // marketValueUsd the same way it already trusts that cell for display.
+  const nftValueUsd = (extras?.nftHoldings ?? []).reduce((sum, h) => sum + (h.marketValueUsd ?? 0), 0);
+  nav += nftValueUsd;
+
   for (const h of holdings) {
     h.pctOfPortfolio = nav > 0 ? ((h.marketValueUsd ?? 0) / nav) * 100 : 0;
   }
@@ -255,7 +264,13 @@ export function computeSchoolFromPositions(
   name: string,
   positions: PositionRow[],
   prices: PriceMap,
-  vaultEquityUsdByTicker?: Record<string, number>
+  vaultEquityUsdByTicker?: Record<string, number>,
+  // The admin-entered `positions` table has no NFT concept of its own — a
+  // school's NFT Positions still live in its sheet tab even once it's on
+  // the positions-table override for its liquid holdings. Without this,
+  // that school's nftHoldings were silently dropped entirely (not shown,
+  // not counted in nav) the moment it got a single positions-table row.
+  nftHoldings?: Holding[]
 ): SchoolRowWithHoldings {
   const raw: RawPosition[] = positions.map((p) => ({
     id: p.id,
@@ -267,7 +282,7 @@ export function computeSchoolFromPositions(
     investmentDate: p.investment_date,
     entryFdvUsd: p.entry_fdv_usd ?? undefined,
   }));
-  return computeSchoolMetrics(name, raw, prices, { vaultEquityUsdByTicker });
+  return computeSchoolMetrics(name, raw, prices, { vaultEquityUsdByTicker, nftHoldings });
 }
 
 // Fallback path for a school whose LEADERBOARD row is currently broken but

@@ -137,7 +137,12 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
     bySchoolName.set(school.name, applySeasonBaselineReturn(computed, ethPriceUsdNow));
   }
   for (const [schoolName, positions] of Object.entries(positionsBySchool)) {
-    const computed = computeSchoolFromPositions(schoolName, positions, prices, vaultEquityBySchool[schoolName]);
+    // bySchoolName still holds the sheet-sourced row at this point (the
+    // override below hasn't run yet) — its nftHoldings is the only place
+    // this school's NFT Positions section lives, since the positions table
+    // itself has no NFT concept.
+    const nftHoldings = bySchoolName.get(schoolName)?.nftHoldings;
+    const computed = computeSchoolFromPositions(schoolName, positions, prices, vaultEquityBySchool[schoolName], nftHoldings);
     bySchoolName.set(schoolName, applySeasonBaselineReturn(computed, ethPriceUsdNow));
   }
 
