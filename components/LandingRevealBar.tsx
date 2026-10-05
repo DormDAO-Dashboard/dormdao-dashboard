@@ -32,8 +32,8 @@ export function LandingRevealBar() {
             <Image
               src="/landing-reveal.png"
               alt="Dorm™ partners, members, and schools"
-              width={3840}
-              height={2160}
+              width={1840}
+              height={317}
               className="w-auto h-auto max-w-full max-h-[calc(100dvh-18px)] sm:max-h-[calc(100dvh-22px)] block"
             />
             {open && (
