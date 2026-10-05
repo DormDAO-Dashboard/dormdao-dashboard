@@ -17,19 +17,25 @@ import { cn } from "@/lib/utils";
 // each divider exactly centered between its two neighbors) instead of
 // sitting unused outside a centered, fixed-size image.
 //
-// Rendered at 75% of each crop's native pixel size (originals: 284x317 /
+// The row itself sits inside a `flex justify-center` wrapper on an
+// `overflow-hidden` panel rather than a left-anchored `overflow-x-auto` one:
+// once the row is wider than the viewport, centering it means the excess
+// gets clipped equally off both edges instead of only the right (Schools)
+// side disappearing off-screen.
+//
+// Rendered at ~69% of each crop's native pixel size (originals: 284x317 /
 // 628x317 / 925x317) — full native size read as too large/dominant on the
 // page; this scale is what matches the target look.
 const GROUPS = [
-  { src: "/landing-reveal-partners.png", width: 213, height: 238, alt: "Partners" },
-  { src: "/landing-reveal-members.png", width: 471, height: 238, alt: "Members" },
-  { src: "/landing-reveal-schools.png", width: 694, height: 238, alt: "Schools" },
+  { src: "/landing-reveal-partners.png", width: 195, height: 218, alt: "Partners" },
+  { src: "/landing-reveal-members.png", width: 431, height: 218, alt: "Members" },
+  { src: "/landing-reveal-schools.png", width: 636, height: 218, alt: "Schools" },
 ];
 
 function Divider() {
   return (
     <div className="flex-1 flex justify-center self-stretch">
-      <div className="w-px my-4 sm:my-6 bg-white/25" />
+      <div className="w-px my-3 sm:my-4 bg-white/25" />
     </div>
   );
 }
@@ -45,20 +51,22 @@ export function LandingRevealBar() {
           open ? "max-h-[100dvh]" : "max-h-0"
         )}
       >
-        <div className="relative overflow-x-auto">
-          <div className="flex items-center w-full px-5 sm:px-8 py-6 sm:py-8">
-            {GROUPS.map((g, i) => (
-              <div key={g.alt} className="flex items-center">
-                {i > 0 && <Divider />}
-                <Image
-                  src={g.src}
-                  alt={g.alt}
-                  width={g.width}
-                  height={g.height}
-                  className="shrink-0 block"
-                />
-              </div>
-            ))}
+        <div className="relative overflow-hidden">
+          <div className="flex justify-center">
+            <div className="flex items-center px-5 sm:px-8 py-2 sm:py-3">
+              {GROUPS.map((g, i) => (
+                <div key={g.alt} className="flex items-center">
+                  {i > 0 && <Divider />}
+                  <Image
+                    src={g.src}
+                    alt={g.alt}
+                    width={g.width}
+                    height={g.height}
+                    className="shrink-0 block"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
           {open && (
             <button
