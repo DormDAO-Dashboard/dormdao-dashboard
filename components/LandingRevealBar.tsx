@@ -11,21 +11,25 @@ import { cn } from "@/lib/utils";
 // image got short. Now each group is its own image
 // (landing-reveal-{partners,members,schools}.png, cropped at the original's
 // divider lines), laid out in a flex row with a flex-1 spacer on each side
-// of the two divider lines. The images are flex-shrink-0 at their native
-// pixel size — never smaller than the original composite — so on a wide
-// viewport the extra width goes entirely into those spacers (growing
-// symmetrically, keeping each divider exactly centered between its two
-// neighbors) instead of sitting unused outside a centered, fixed-size image.
+// of the two divider lines. The images are flex-shrink-0 at a fixed
+// rendered size — never smaller than this — so on a wide viewport the extra
+// width goes entirely into those spacers (growing symmetrically, keeping
+// each divider exactly centered between its two neighbors) instead of
+// sitting unused outside a centered, fixed-size image.
+//
+// Rendered at 75% of each crop's native pixel size (originals: 284x317 /
+// 628x317 / 925x317) — full native size read as too large/dominant on the
+// page; this scale is what matches the target look.
 const GROUPS = [
-  { src: "/landing-reveal-partners.png", width: 284, height: 317, alt: "Partners" },
-  { src: "/landing-reveal-members.png", width: 628, height: 317, alt: "Members" },
-  { src: "/landing-reveal-schools.png", width: 925, height: 317, alt: "Schools" },
+  { src: "/landing-reveal-partners.png", width: 213, height: 238, alt: "Partners" },
+  { src: "/landing-reveal-members.png", width: 471, height: 238, alt: "Members" },
+  { src: "/landing-reveal-schools.png", width: 694, height: 238, alt: "Schools" },
 ];
 
 function Divider() {
   return (
     <div className="flex-1 flex justify-center self-stretch">
-      <div className="w-px my-6 sm:my-8 bg-white/25" />
+      <div className="w-px my-4 sm:my-6 bg-white/25" />
     </div>
   );
 }
@@ -42,7 +46,7 @@ export function LandingRevealBar() {
         )}
       >
         <div className="relative overflow-x-auto">
-          <div className="flex items-center w-full px-5 sm:px-8">
+          <div className="flex items-center w-full px-5 sm:px-8 py-6 sm:py-8">
             {GROUPS.map((g, i) => (
               <div key={g.alt} className="flex items-center">
                 {i > 0 && <Divider />}
