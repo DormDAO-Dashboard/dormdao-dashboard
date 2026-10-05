@@ -11,11 +11,16 @@ import { cn } from "@/lib/utils";
 // The image is constrained by BOTH max-width and max-height (with width/height
 // left auto), so on a short/"condensed" window it shrinks to fit the
 // available height instead of overflowing and getting silently scrolled out
-// of view — the whole image is always fully visible, never cropped. The
-// wrapper around it is inline-block (shrink-to-fit), not full-width, so the
-// close button — absolutely positioned within that wrapper — always sits at
-// the image's own actual top-right corner, whether the image is currently
-// width-bound (normal case, full bleed) or height-bound (short window).
+// of view — the whole image is always fully visible, never cropped.
+//
+// The close button used to sit absolutely positioned over the image's own
+// top-right corner — fine when the image was tall (3840x2160) and that
+// corner was empty space, but the current, much shorter image (1840x317)
+// has real content (the Schools column) running edge to edge, so an overlay
+// button there covered logos. It now lives in its own dedicated bar below
+// the image instead, mirroring the open-trigger bar's layout exactly
+// (full-width flex row, arrow pinned to the right edge, vertically centered
+// in its own space) so it never overlaps the artwork.
 export function LandingRevealBar() {
   const [open, setOpen] = useState(false);
 
@@ -28,30 +33,30 @@ export function LandingRevealBar() {
         )}
       >
         <div className="flex justify-center">
-          <div className="relative inline-block">
-            <Image
-              src="/landing-reveal.png"
-              alt="Dorm™ partners, members, and schools"
-              width={1840}
-              height={317}
-              className="w-auto h-auto max-w-full max-h-[calc(100dvh-18px)] sm:max-h-[calc(100dvh-22px)] block"
-            />
-            {open && (
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close"
-                className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/80 hover:bg-black text-white shadow-lg transition-colors"
-              >
-                <ArrowDown className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-            )}
-          </div>
+          <Image
+            src="/landing-reveal.png"
+            alt="Dorm™ partners, members, and schools"
+            width={1840}
+            height={317}
+            className="w-auto h-auto max-w-full max-h-[calc(100dvh-64px)] sm:max-h-[calc(100dvh-72px)] block"
+          />
         </div>
-        {/* Black extension below the image, stitched on rather than
-            overlapping it — roughly 40% of the closed bar's own height
-            (measured ~45.5px mobile / ~56px sm+, so ~18px / ~22px). */}
-        <div className="h-[18px] sm:h-[22px] bg-black" aria-hidden="true" />
+        {/* In-flow bar below the image (not fixed — it needs to stack after
+            the image within this same panel, not compete with it for the
+            viewport's bottom edge), laid out exactly like the open-trigger
+            bar below so the close arrow lands in the same visual slot.
+            Gated on `open` same as before, so it isn't a hidden-but-focusable
+            button while the panel is collapsed to max-h-0. */}
+        {open && (
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close"
+            className="flex items-center justify-end w-full px-5 sm:px-8 py-4 sm:py-5 bg-black"
+          >
+            <ArrowDown className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0" />
+          </button>
+        )}
       </div>
 
       {!open && (
