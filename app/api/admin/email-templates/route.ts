@@ -25,6 +25,7 @@ export async function GET() {
       key: def.key,
       label: def.label,
       trigger: def.trigger,
+      recipients: def.recipients,
       variables: def.variables,
       sampleVars: def.sampleVars,
       fields: def.fields.map((f) => ({

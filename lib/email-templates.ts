@@ -15,17 +15,31 @@ export interface EmailTemplateDef {
   key: string;
   label: string;
   trigger: string;
+  // Who actually receives this email, for display next to `trigger` in the
+  // admin UI — mirrors the real recipient-resolution logic in lib/email.ts
+  // (getSchoolRecipients/getAdminRecipients/a direct single-recipient send),
+  // not a separate guess at it.
+  recipients: string[];
   variables: string[];
   fields: EmailTemplateField[];
   // Sample values used to render the "View" preview.
   sampleVars: Record<string, string>;
 }
 
+// getSchoolRecipients() sends to both of these for every school-scoped
+// email below (new_proposal, proposal_reminder_12h, proposal_result,
+// trade_executed) — opted-in members of that school, plus every dorm_admin
+// (who get one copy of every school's emails). Main DAO proposals are the
+// one exception: getSchoolRecipients treats the Main DAO as having no
+// "school members" of its own, so those sends reach Admins only.
+const SCHOOL_AND_ADMIN_RECIPIENTS = ["Individual School Members", "Admins"];
+
 export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
   {
     key: "onboarding_invite",
     label: "Onboarding Email",
     trigger: "Sent when an admin imports a member with “Send email to members” checked, clicks the onboarding-email button next to a member, or approves a signup request.",
+    recipients: ["The Invited Member"],
     variables: ["name", "school", "walletLast4"],
     fields: [
       { key: "subject", label: "Subject", default: "🍜 You're invited to Dorm™ — {{school}}" },
@@ -45,6 +59,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     key: "new_proposal",
     label: "New Proposal Posted",
     trigger: "Sent to all opted-in members of a school when a new token proposal is created for a vote.",
+    recipients: SCHOOL_AND_ADMIN_RECIPIENTS,
     variables: ["ticker", "tokenName", "school", "title"],
     fields: [
       { key: "subject", label: "Subject", default: "🍜 New proposal: ${{ticker}} — {{school}}" },
@@ -57,6 +72,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     key: "proposal_reminder_12h",
     label: "12-Hour Voting Reminder",
     trigger: "Sent when a proposal has about 12 hours left before its voting deadline closes.",
+    recipients: SCHOOL_AND_ADMIN_RECIPIENTS,
     variables: ["ticker", "school", "title"],
     fields: [
       { key: "subject", label: "Subject", default: "🍜 12 Hours Left to Vote: ${{ticker}} — {{school}}" },
@@ -69,6 +85,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     key: "proposal_result",
     label: "Proposal Result (Passed / Rejected)",
     trigger: "Sent when a proposal's voting deadline passes and it resolves as passed or rejected.",
+    recipients: SCHOOL_AND_ADMIN_RECIPIENTS,
     variables: ["ticker", "school", "title", "resultLabel"],
     fields: [
       { key: "subject", label: "Subject", default: "🍜 Proposal {{resultLabel}}: ${{ticker}} — {{school}}" },
@@ -82,6 +99,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDef[] = [
     key: "trade_executed",
     label: "Trade Executed",
     trigger: "Sent when club leadership marks an approved proposal's trade as executed.",
+    recipients: SCHOOL_AND_ADMIN_RECIPIENTS,
     variables: ["ticker", "school", "title"],
     fields: [
       { key: "subject", label: "Subject", default: "Trade executed: {{ticker}} — {{school}}" },

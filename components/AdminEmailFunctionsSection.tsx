@@ -14,6 +14,7 @@ interface TemplateDef {
   key: string;
   label: string;
   trigger: string;
+  recipients: string[];
   variables: string[];
   sampleVars: Record<string, string>;
   fields: TemplateField[];
@@ -123,6 +124,7 @@ export function AdminEmailFunctionsSection() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{t.label}</p>
                 <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{t.trigger}</p>
+                <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">Currently Sends To: {t.recipients.join(", ")}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={() => setViewTarget(t)}
@@ -151,7 +153,8 @@ export function AdminEmailFunctionsSection() {
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">{viewTarget.label}</h3>
               <button onClick={() => setViewTarget(null)} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X className="w-4 h-4" /></button>
             </div>
-            <p className="text-xs text-gray-700 dark:text-gray-400 mb-4">{viewTarget.trigger}</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mb-1">{viewTarget.trigger}</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mb-4">Currently Sends To: {viewTarget.recipients.join(", ")}</p>
 
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
               <div className="bg-gray-900 px-5 py-3">
@@ -200,6 +203,7 @@ export function AdminEmailFunctionsSection() {
               <button onClick={() => setEditTarget(null)} disabled={saving} className="text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"><X className="w-4 h-4" /></button>
             </div>
             <p className="text-xs text-gray-700 dark:text-gray-400 mb-1">{editTarget.trigger}</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mb-1">Currently Sends To: {editTarget.recipients.join(", ")}</p>
             <p className="text-xs text-gray-700 dark:text-gray-400 mb-4">
               Available variables: {editTarget.variables.map((v) => `{{${v}}}`).join(", ")}
             </p>
