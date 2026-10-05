@@ -3,7 +3,7 @@ import { after } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin-config";
 import { getSchoolsData } from "@/lib/cache";
-import { Holding } from "@/lib/types";
+import { Holding, ExitedHolding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
 import {
   send12HourWarningEmail, sendProposalResultEmail,
@@ -14,6 +14,22 @@ import { slugify } from "@/lib/utils";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { MAIN_DAO_SLUG } from "@/lib/main-dao";
 import type { Proposal } from "@/lib/proposals";
+
+// A school can act on the Programmatic Liquidation Policy's 50% trim
+// manually/early, ahead of (or instead of relying on) this automated
+// check — recorded as a "trim" exit row dated the same day the
+// still-active lot it came from was opened. If what's already been
+// trimmed off that lot is at least as large as what's still held, that
+// 50% liquidation has effectively already happened, and alerting again
+// (whether the 90% warning or the full threshold-crossed email) would
+// just be noise. Sums every matching trim row rather than just the
+// largest, in case a lot was trimmed down in more than one pass.
+function alreadyTrimmedForPolicy(exitedHoldings: ExitedHolding[], h: Holding): boolean {
+  const trimmedTokens = exitedHoldings
+    .filter((e) => e.exitType === "trim" && e.ticker === h.ticker && e.investmentDate === h.investmentDate)
+    .reduce((sum, e) => sum + e.tokensSold, 0);
+  return trimmedTokens >= h.tokens;
+}
 
 interface StoredHolding {
   ticker: string;
@@ -327,6 +343,7 @@ export async function POST(req: NextRequest) {
             if (!currentFdvUsd) continue;
             const result = checkLiquidationStatus(h.entryFdvUsd, currentFdvUsd);
             if (!result || result.status === "ok") continue;
+            if (alreadyTrimmedForPolicy(s.exitedHoldings ?? [], h)) continue;
 
             const alertType = result.status === "crossed" ? "threshold_crossed" : "warning_90pct";
             const { error: alertInsertError } = await supabase.from("liquidation_alerts").insert({
