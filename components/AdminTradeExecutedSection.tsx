@@ -261,7 +261,7 @@ export function AdminTradeExecutedSection() {
             The only way this email goes out: fill in the Transaction Link/Image field and click Send Email &amp; Mark Filled. Use Mark Filled (No Email) to close out a position without notifying anyone.
           </p>
           {template && (
-            <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">Currently Sends To: {template.recipients.join(", ")}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-2">Currently Sends To: {template.recipients.join(", ")}</p>
           )}
         </div>
         <button
