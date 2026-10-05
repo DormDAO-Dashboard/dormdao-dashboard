@@ -23,15 +23,17 @@ import { cn } from "@/lib/utils";
 // gets clipped equally off both edges instead of only the right (Schools)
 // side disappearing off-screen.
 //
-// Rendered at ~69% of each crop's native pixel size (originals: 213x343 /
-// 623x343 / 1000x343 — the schools crop was widened/heightened from the
-// previous version to make its logos and labels more readable) — full
-// native size read as too large/dominant on the page; this scale is what
-// matches the target look.
+// Rendered at ~69% of each crop's native pixel size (originals: 209x343 /
+// 617x343 / 997x343 — cropped with a safety margin around each divider's
+// soft glow in the source composite so no sliver of that glow bleeds into
+// a group image edge; it previously did, which is what made the separate
+// CSS divider bars next to it look distorted/doubled) — full native size
+// read as too large/dominant on the page; this scale is what matches the
+// target look.
 const GROUPS = [
-  { src: "/landing-reveal-partners.png", width: 147, height: 236, alt: "Partners" },
-  { src: "/landing-reveal-members.png", width: 429, height: 236, alt: "Members" },
-  { src: "/landing-reveal-schools.png", width: 688, height: 236, alt: "Schools" },
+  { src: "/landing-reveal-partners.png", width: 144, height: 236, alt: "Partners" },
+  { src: "/landing-reveal-members.png", width: 425, height: 236, alt: "Members" },
+  { src: "/landing-reveal-schools.png", width: 686, height: 236, alt: "Schools" },
 ];
 
 function Divider() {
