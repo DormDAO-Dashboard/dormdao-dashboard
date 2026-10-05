@@ -152,7 +152,12 @@ function QuarterlyTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug:
   const th = "px-3 py-2 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-700 dark:text-gray-400 text-[10px] uppercase tracking-wide";
 
   return (
-    <table className="w-full table-fixed text-xs" style={{ height: '100%' }}>
+    // No height:100% here (see SeasonTable's own note below for why) —
+    // forcing the table to fill the panel stretches every <tr> taller
+    // whenever this panel has fewer rows than fit the available height,
+    // instead of leaving that leftover space blank below a normal-height
+    // table.
+    <table className="w-full table-fixed text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
           <th className="px-3 py-2 whitespace-nowrap text-left text-[10px] uppercase tracking-wide text-gray-700 dark:text-gray-400 w-[13%]">#</th>
@@ -223,14 +228,13 @@ function SeasonTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: st
   );
 
   return (
-    // No height:100% here (unlike the other two panels) — this table is
-    // reused for 24-25/23-24 via the season tabs, which can have fewer
-    // schools than fit the panel (e.g. schools that joined a later season
-    // aren't in an older one). Forcing the table to fill the panel height
-    // with fewer rows stretched every <tr> taller instead of leaving the
-    // leftover space blank below a normal-height table, so row height
-    // matched Quarterly/All-Time only when the season happened to have a
-    // full row count.
+    // No height:100% here — this table is reused for 24-25/23-24 via the
+    // season tabs, which can have fewer schools than fit the panel (e.g.
+    // schools that joined a later season aren't in an older one). Forcing
+    // the table to fill the panel height with fewer rows stretches every
+    // <tr> taller instead of leaving the leftover space blank below a
+    // normal-height table — the other two panels (Quarterly, All-Time)
+    // follow the same rule now, for the same reason.
     <table className="w-full table-fixed text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
@@ -309,7 +313,10 @@ function AllTimeTable({ schools, userSlug }: { schools: SchoolRow[]; userSlug: s
   const th = "px-3 py-2 whitespace-nowrap cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors text-gray-700 dark:text-gray-400 text-[10px] uppercase tracking-wide";
 
   return (
-    <table className="w-full table-fixed text-xs" style={{ height: '100%' }}>
+    // No height:100% here — see SeasonTable's own note for why forcing it
+    // would stretch every <tr> taller instead of leaving leftover panel
+    // space blank below a normal-height table.
+    <table className="w-full table-fixed text-xs">
       <thead className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <tr className="border-b border-gray-200 dark:border-gray-800">
           <th className={cn(th, "text-left w-[13%]")} onClick={() => toggle("rank")}>
