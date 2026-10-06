@@ -164,9 +164,9 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
 // "Sub DAO Opening" year — see lib/sheets.ts) instead of the LEADERBOARD
 // tab's broken "Since Inception" section. Both the baseline ETH amount and
 // USD cost are given directly (lib/seasonBaseline.ts), so no historical
-// price lookup is needed at all. Schools with no cohort baseline (joined
-// this season, or an unrecognized opening date) mirror their Current Season
-// return exactly, per the same rule for the 2025-cohort schools.
+// price lookup is needed at all. Schools with no cohort baseline (opening
+// year before any known cohort is added, or an unrecognized opening date)
+// mirror their Current Season return exactly.
 function computeSinceInceptionSchools(
   schools: SchoolRowWithHoldings[],
   openingYearByName: Record<string, number | null>,

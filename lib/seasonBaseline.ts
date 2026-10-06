@@ -135,12 +135,16 @@ export const INCEPTION_BASELINE_2024 = {
   usdCost: 103893.646067,
 };
 
-// Schools whose Sub DAO opened in 2025 (USC, Villanova, St. Andrews) have no
-// separate inception baseline — they joined this season, so their All-Time
-// performance is defined to equal their Current Season performance.
+export const INCEPTION_BASELINE_2025 = {
+  // 40 ETH, cohort cost basis at 2025 Sub DAO opening
+  ethAmount: 40,
+  usdCost: 165893,
+};
+
 export function inceptionBaselineForYear(year: number | null): { ethAmount: number; usdCost: number } | null {
   if (year == null) return null;
   if (year < 2024) return INCEPTION_BASELINE_PRE_2024;
   if (year === 2024) return INCEPTION_BASELINE_2024;
+  if (year === 2025) return INCEPTION_BASELINE_2025;
   return null;
 }
