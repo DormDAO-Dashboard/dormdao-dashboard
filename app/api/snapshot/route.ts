@@ -142,6 +142,12 @@ export async function POST(req: NextRequest) {
         return;
       }
 
+      // This whole change-detection/notification stage is try/caught on its
+      // own — same reasoning as the liquidation/warning/resolve stages
+      // below: an external call failing here (sendPushNotifications, say)
+      // must not prevent those independent stages from running.
+      try {
+
       // Final authoritative check for admin-tracked positions: whatever
       // upstream computation produced this cycle's `schools.holdings`
       // (Sheets parsing, CoinGecko price resolution, positions-table read —
@@ -316,6 +322,23 @@ export async function POST(req: NextRequest) {
           await sendPushNotifications(tradePayload).catch(console.error);
         }
       }
+      } catch (err) {
+        console.error("[snapshot] change detection pass failed:", err);
+      }
+
+      // Each stage below is independently try/caught. They used to all
+      // share one try block with proposal auto-resolve/repost last — so a
+      // throw anywhere earlier (most riskily, the external FDV price
+      // lookup here, or a push/email send) skipped proposal resolution
+      // entirely for that run. Worse, the portfolio_snapshots insert above
+      // already reset the cooldown, so the next cron invocation could skip
+      // straight past via the cooldown check at the top of this function
+      // without ever reaching this code either — a strongly-passing vote
+      // could go unresolved (and unreposted to Main DAO) indefinitely if
+      // the same upstream failure kept recurring. Isolating each stage
+      // means a liquidation-alert or warning-email failure can no longer
+      // block proposal resolution, or vice versa.
+
       // Programmatic Liquidation Policy check (resolved 2024-06-01 — see
       // lib/fdv.ts). Every school's non-ETH holdings with a real entryFdvUsd
       // (from the sheet's own Entry FDV column, or an admin's
@@ -328,132 +351,144 @@ export async function POST(req: NextRequest) {
       // dedupe claim, so a conflict here (a real re-cross, or a race
       // against a concurrent cron run) skips the send rather than
       // double-emailing admins.
-      const fdvTickers = new Set<string>();
-      for (const s of schools) {
-        for (const h of s.holdings ?? []) {
-          if (h.ticker !== "ETH" && h.entryFdvUsd) fdvTickers.add(h.ticker);
-        }
-      }
-      if (fdvTickers.size > 0) {
-        const currentFdvByTicker = await getCurrentFdvForTickers([...fdvTickers]);
+      try {
+        const fdvTickers = new Set<string>();
         for (const s of schools) {
           for (const h of s.holdings ?? []) {
-            if (h.ticker === "ETH" || !h.entryFdvUsd) continue;
-            const currentFdvUsd = currentFdvByTicker[h.ticker];
-            if (!currentFdvUsd) continue;
-            const result = checkLiquidationStatus(h.entryFdvUsd, currentFdvUsd);
-            if (!result || result.status === "ok") continue;
-            if (alreadyTrimmedForPolicy(s.exitedHoldings ?? [], h)) continue;
-
-            const alertType = result.status === "crossed" ? "threshold_crossed" : "warning_90pct";
-            const { error: alertInsertError } = await supabase.from("liquidation_alerts").insert({
-              school: s.name,
-              ticker: h.ticker,
-              investment_date: h.investmentDate,
-              alert_type: alertType,
-              entry_fdv_usd: result.entryFdvUsd,
-              current_fdv_usd: result.currentFdvUsd,
-              multiple_target: result.multipleTarget,
-            });
-            if (alertInsertError) continue; // already sent this alert for this position
-
-            await sendLiquidationAlertEmail({
-              school: s.name,
-              ticker: h.ticker,
-              alertType,
-              entryFdvUsd: result.entryFdvUsd,
-              currentFdvUsd: result.currentFdvUsd,
-              multipleTarget: result.multipleTarget,
-              currentMultiple: result.currentMultiple,
-              liquidationThresholdFdvUsd: result.liquidationThresholdFdvUsd,
-            }).catch(console.error);
+            if (h.ticker !== "ETH" && h.entryFdvUsd) fdvTickers.add(h.ticker);
           }
         }
-      }
+        if (fdvTickers.size > 0) {
+          const currentFdvByTicker = await getCurrentFdvForTickers([...fdvTickers]);
+          for (const s of schools) {
+            for (const h of s.holdings ?? []) {
+              if (h.ticker === "ETH" || !h.entryFdvUsd) continue;
+              const currentFdvUsd = currentFdvByTicker[h.ticker];
+              if (!currentFdvUsd) continue;
+              const result = checkLiquidationStatus(h.entryFdvUsd, currentFdvUsd);
+              if (!result || result.status === "ok") continue;
+              if (alreadyTrimmedForPolicy(s.exitedHoldings ?? [], h)) continue;
 
-      // Send 12-hour warning for proposals expiring within 13h that haven't been warned yet
-      const in13h = new Date(Date.now() + 13 * 3600 * 1000).toISOString();
-      const { data: warnProposals } = await supabase
-        .from("proposals")
-        .select("*")
-        .eq("status", "active")
-        .eq("deadline_warning_sent", false)
-        .lt("voting_deadline", in13h)
-        .gt("voting_deadline", new Date().toISOString());
+              const alertType = result.status === "crossed" ? "threshold_crossed" : "warning_90pct";
+              const { error: alertInsertError } = await supabase.from("liquidation_alerts").insert({
+                school: s.name,
+                ticker: h.ticker,
+                investment_date: h.investmentDate,
+                alert_type: alertType,
+                entry_fdv_usd: result.entryFdvUsd,
+                current_fdv_usd: result.currentFdvUsd,
+                multiple_target: result.multipleTarget,
+              });
+              if (alertInsertError) continue; // already sent this alert for this position
 
-      if (warnProposals && warnProposals.length > 0) {
-        for (const proposal of warnProposals) {
-          await supabase.from("proposals").update({ deadline_warning_sent: true }).eq("id", proposal.id);
-          await send12HourWarningEmail(proposal as Proposal).catch(console.error);
-        }
-        console.log(`[snapshot] sent 12h warning for ${warnProposals.length} proposals`);
-      }
-
-      // Auto-resolve proposals whose voting deadline has passed
-      const { data: expiredProposals } = await supabase
-        .from("proposals")
-        .select("*")
-        .eq("status", "active")
-        .lt("voting_deadline", new Date().toISOString());
-
-      if (expiredProposals && expiredProposals.length > 0) {
-        for (const proposal of expiredProposals) {
-          // "Passed" means at least 50% YES — not a strict majority, so an
-          // exact tie (e.g. 1 yes / 1 no) still passes and reposts to Main
-          // DAO. A proposal with zero votes cast stays "rejected" rather
-          // than auto-passing on an empty 0/0 split.
-          const totalVotes = proposal.yes_votes + proposal.no_votes;
-          const resolvedStatus = totalVotes > 0 && proposal.yes_votes / totalVotes >= 0.5 ? "passed" : "rejected";
-          await supabase
-            .from("proposals")
-            .update({ status: resolvedStatus })
-            .eq("id", proposal.id);
-          const resolved = { ...proposal, status: resolvedStatus } as Proposal;
-          await sendProposalResultEmail(resolved).catch(console.error);
-
-          // Repost passed school proposals to Main DAO as a new proposal.
-          // Guard against Main DAO proposals reposting themselves.
-          if (resolvedStatus === "passed" && resolved.school !== MAIN_DAO_SLUG) {
-            const originSchoolName = SCHOOL_NAMES.find((name) => slugify(name) === resolved.school);
-            const originLabel = originSchoolName ? schoolDisplayName(originSchoolName) : resolved.school;
-            const mainDaoDeadline = new Date(Date.now() + 36 * 60 * 60 * 1000);
-
-            const { data: repostedRow, error: repostError } = await supabase
-              .from("proposals")
-              .insert({
-                school: MAIN_DAO_SLUG,
-                token_ticker: resolved.token_ticker,
-                token_name: resolved.token_name,
-                title: `${originLabel}: ${resolved.title}`,
-                description: resolved.description,
-                proposed_by: resolved.proposed_by,
-                proposed_by_name: resolved.proposed_by_name,
-                recommended_size_eth: resolved.recommended_size_eth,
-                price_target: resolved.price_target,
-                document_ids: resolved.document_ids ?? [],
-                voting_deadline: mainDaoDeadline.toISOString(),
-                created_by_admin: true,
-              })
-              .select()
-              .single();
-
-            if (repostError) {
-              console.error(`[snapshot] failed to repost proposal ${resolved.id} to Main DAO:`, repostError.message);
-            } else {
-              console.log(`[snapshot] reposted proposal ${resolved.id} to Main DAO`);
-              const reposted = repostedRow as Proposal;
-              const payload = {
-                type: "vote" as const,
-                title: `🗳️ New proposal: ${reposted.token_ticker}`,
-                body: `${proposalSchoolLabel(MAIN_DAO_SLUG)} is voting on ${reposted.token_name}. Cast your vote.`,
-                url: proposalVoteUrl(MAIN_DAO_SLUG),
-              };
-              await sendPushNotifications(payload).catch(console.error);
-              await sendNewProposalEmail(reposted).catch(console.error);
+              await sendLiquidationAlertEmail({
+                school: s.name,
+                ticker: h.ticker,
+                alertType,
+                entryFdvUsd: result.entryFdvUsd,
+                currentFdvUsd: result.currentFdvUsd,
+                multipleTarget: result.multipleTarget,
+                currentMultiple: result.currentMultiple,
+                liquidationThresholdFdvUsd: result.liquidationThresholdFdvUsd,
+              }).catch(console.error);
             }
           }
         }
-        console.log(`[snapshot] resolved ${expiredProposals.length} expired proposals`);
+      } catch (err) {
+        console.error("[snapshot] liquidation policy check failed:", err);
+      }
+
+      // Send 12-hour warning for proposals expiring within 13h that haven't been warned yet
+      try {
+        const in13h = new Date(Date.now() + 13 * 3600 * 1000).toISOString();
+        const { data: warnProposals } = await supabase
+          .from("proposals")
+          .select("*")
+          .eq("status", "active")
+          .eq("deadline_warning_sent", false)
+          .lt("voting_deadline", in13h)
+          .gt("voting_deadline", new Date().toISOString());
+
+        if (warnProposals && warnProposals.length > 0) {
+          for (const proposal of warnProposals) {
+            await supabase.from("proposals").update({ deadline_warning_sent: true }).eq("id", proposal.id);
+            await send12HourWarningEmail(proposal as Proposal).catch(console.error);
+          }
+          console.log(`[snapshot] sent 12h warning for ${warnProposals.length} proposals`);
+        }
+      } catch (err) {
+        console.error("[snapshot] 12h warning pass failed:", err);
+      }
+
+      // Auto-resolve proposals whose voting deadline has passed
+      try {
+        const { data: expiredProposals } = await supabase
+          .from("proposals")
+          .select("*")
+          .eq("status", "active")
+          .lt("voting_deadline", new Date().toISOString());
+
+        if (expiredProposals && expiredProposals.length > 0) {
+          for (const proposal of expiredProposals) {
+            // "Passed" means at least 50% YES — not a strict majority, so an
+            // exact tie (e.g. 1 yes / 1 no) still passes and reposts to Main
+            // DAO. A proposal with zero votes cast stays "rejected" rather
+            // than auto-passing on an empty 0/0 split.
+            const totalVotes = proposal.yes_votes + proposal.no_votes;
+            const resolvedStatus = totalVotes > 0 && proposal.yes_votes / totalVotes >= 0.5 ? "passed" : "rejected";
+            await supabase
+              .from("proposals")
+              .update({ status: resolvedStatus })
+              .eq("id", proposal.id);
+            const resolved = { ...proposal, status: resolvedStatus } as Proposal;
+            await sendProposalResultEmail(resolved).catch(console.error);
+
+            // Repost passed school proposals to Main DAO as a new proposal.
+            // Guard against Main DAO proposals reposting themselves.
+            if (resolvedStatus === "passed" && resolved.school !== MAIN_DAO_SLUG) {
+              const originSchoolName = SCHOOL_NAMES.find((name) => slugify(name) === resolved.school);
+              const originLabel = originSchoolName ? schoolDisplayName(originSchoolName) : resolved.school;
+              const mainDaoDeadline = new Date(Date.now() + 36 * 60 * 60 * 1000);
+
+              const { data: repostedRow, error: repostError } = await supabase
+                .from("proposals")
+                .insert({
+                  school: MAIN_DAO_SLUG,
+                  token_ticker: resolved.token_ticker,
+                  token_name: resolved.token_name,
+                  title: `${originLabel}: ${resolved.title}`,
+                  description: resolved.description,
+                  proposed_by: resolved.proposed_by,
+                  proposed_by_name: resolved.proposed_by_name,
+                  recommended_size_eth: resolved.recommended_size_eth,
+                  price_target: resolved.price_target,
+                  document_ids: resolved.document_ids ?? [],
+                  voting_deadline: mainDaoDeadline.toISOString(),
+                  created_by_admin: true,
+                })
+                .select()
+                .single();
+
+              if (repostError) {
+                console.error(`[snapshot] failed to repost proposal ${resolved.id} to Main DAO:`, repostError.message);
+              } else {
+                console.log(`[snapshot] reposted proposal ${resolved.id} to Main DAO`);
+                const reposted = repostedRow as Proposal;
+                const payload = {
+                  type: "vote" as const,
+                  title: `🗳️ New proposal: ${reposted.token_ticker}`,
+                  body: `${proposalSchoolLabel(MAIN_DAO_SLUG)} is voting on ${reposted.token_name}. Cast your vote.`,
+                  url: proposalVoteUrl(MAIN_DAO_SLUG),
+                };
+                await sendPushNotifications(payload).catch(console.error);
+                await sendNewProposalEmail(reposted).catch(console.error);
+              }
+            }
+          }
+          console.log(`[snapshot] resolved ${expiredProposals.length} expired proposals`);
+        }
+      } catch (err) {
+        console.error("[snapshot] proposal auto-resolve/repost failed:", err);
       }
     } catch (err) {
       console.error("[snapshot] unexpected error:", err);
