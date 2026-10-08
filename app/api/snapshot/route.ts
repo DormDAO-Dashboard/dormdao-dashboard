@@ -398,7 +398,12 @@ export async function POST(req: NextRequest) {
 
       if (expiredProposals && expiredProposals.length > 0) {
         for (const proposal of expiredProposals) {
-          const resolvedStatus = proposal.yes_votes > proposal.no_votes ? "passed" : "rejected";
+          // "Passed" means at least 50% YES — not a strict majority, so an
+          // exact tie (e.g. 1 yes / 1 no) still passes and reposts to Main
+          // DAO. A proposal with zero votes cast stays "rejected" rather
+          // than auto-passing on an empty 0/0 split.
+          const totalVotes = proposal.yes_votes + proposal.no_votes;
+          const resolvedStatus = totalVotes > 0 && proposal.yes_votes / totalVotes >= 0.5 ? "passed" : "rejected";
           await supabase
             .from("proposals")
             .update({ status: resolvedStatus })

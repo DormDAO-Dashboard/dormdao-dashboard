@@ -110,29 +110,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     // initial mount AND every subsequent auth-state transition below. This
     // used to only run once on mount; onAuthStateChange's callback set
     // `user` on a sign-in event but never re-ran this, so avatar/school/
-    // admin silently kept whatever they were at mount time. That's exactly
-    // the reported glitch: the initial getUser() call can resolve (with no
-    // session yet) before the Supabase client finishes hydrating the
-    // session from storage, which then arrives a moment later purely as an
-    // onAuthStateChange event — the top bar showed a signed-in avatar slot
-    // (user was set) but with a permanently blank icon, "Set School", and
-    // no admin access, because nothing ever went back to fetch them. A
-    // genuinely fresh page load (e.g. /profile, a server component) never
-    // showed this, since it re-checks from scratch every time — only this
-    // client-side snapshot could go stale, and only intermittently,
-    // depending on which async path happened to finish first.
-    async function loadProfileFields(u: SupabaseUser) {
-      const { data: p } = await supabase
+    // admin silently kept whatever they were at mount time. Fixed by having
+    // onAuthStateChange call this too — but that only fixed the "never
+    // re-fetches" half. The fetches themselves had no resilience: a single
+    // timed-out `profiles` query or `/api/admin/check` call (either one hits
+    // the same 10s-timeout fetch — see lib/fetchWithTimeout.ts) permanently
+    // stuck the sidebar/top bar with a blank avatar and no Admin link for
+    // the rest of the session, since nothing ever retried — only a full
+    // reload (or another sign-in event) would re-run this. A genuinely
+    // fresh page load (e.g. /profile's own card) never showed this, since
+    // it fetches independently of this shared layout state. One retry here
+    // — mirroring load()'s own retry below — lets a one-off blip self-heal
+    // instead of sticking for the rest of the session.
+    async function loadProfileFieldsOnce(u: SupabaseUser) {
+      const { data: p, error } = await supabase
         .from("profiles").select("avatar_url, school").eq("id", u.id).single();
+      if (error) throw error;
       setAvatarSrc(
         p?.avatar_url ?? (u.user_metadata?.avatar_url as string | undefined) ?? null
       );
       setUserSchool((p?.school as string | null) ?? null);
+
+      const res = await apiFetch("/api/admin/check");
+      const json = await res.json() as { isAdmin: boolean };
+      setIsAdmin(json.isAdmin ?? false);
+    }
+
+    async function loadProfileFields(u: SupabaseUser, isRetry = false): Promise<void> {
       try {
-        const res = await apiFetch("/api/admin/check");
-        const json = await res.json() as { isAdmin: boolean };
-        setIsAdmin(json.isAdmin ?? false);
-      } catch {
+        await loadProfileFieldsOnce(u);
+      } catch (err) {
+        if (!isRetry) {
+          await new Promise((r) => setTimeout(r, 1000));
+          return loadProfileFields(u, true);
+        }
+        console.error("[AppShell] failed to load profile fields:", err);
         setIsAdmin(false);
       }
     }
