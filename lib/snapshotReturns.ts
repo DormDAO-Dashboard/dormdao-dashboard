@@ -29,6 +29,10 @@ export interface StoredSnapshotHolding {
 interface SnapshotRow {
   captured_at: string;
   nav_usd: number;
+  // Liquid holdings and NFT holdings concatenated together — see
+  // getBaselineSnapshot below. Every caller of this file (and
+  // lib/seasonPerformance.ts) gets NFTs included in its figures as a
+  // result, not just whichever one asked for them.
   holdings: StoredSnapshotHolding[];
 }
 
@@ -60,24 +64,30 @@ export function getMonthStartDate(d: Date = new Date()): string {
 // closest available stand-in for "value at the start of this window", since
 // the cron captures roughly hourly rather than exactly at midnight on a
 // boundary date.
-async function getBaselineSnapshot(schoolName: string, sinceDate: string): Promise<SnapshotRow | null> {
+export async function getBaselineSnapshot(schoolName: string, sinceDate: string): Promise<SnapshotRow | null> {
   const service = createServiceClient();
   const { data } = await service
     .from("portfolio_snapshots")
-    .select("captured_at, nav_usd, holdings")
+    .select("captured_at, nav_usd, holdings, nft_holdings")
     .eq("school_name", schoolName)
     .gte("captured_at", sinceDate)
     .order("captured_at", { ascending: true })
     .limit(1)
     .maybeSingle();
-  return (data as SnapshotRow | null) ?? null;
+  if (!data) return null;
+  const row = data as { captured_at: string; nav_usd: number; holdings: StoredSnapshotHolding[] | null; nft_holdings: StoredSnapshotHolding[] | null };
+  return {
+    captured_at: row.captured_at,
+    nav_usd: row.nav_usd,
+    holdings: [...(row.holdings ?? []), ...(row.nft_holdings ?? [])],
+  };
 }
 
 // A snapshot's own ETH/USD price, derived from its stored ETH treasury
 // holding (marketValueUsd / tokens) rather than a separate historical-price
 // lookup — avoids CoinGecko's 365-day free-tier window entirely, same
 // reasoning as SEASON_START_ETH_USD in lib/seasonBaseline.ts.
-function ethPriceFromHoldings(holdings: StoredSnapshotHolding[] | null | undefined): number | null {
+export function ethPriceFromHoldings(holdings: StoredSnapshotHolding[] | null | undefined): number | null {
   const ethHolding = (holdings ?? []).find((h) => h.ticker === "ETH");
   if (!ethHolding || !ethHolding.tokens || ethHolding.marketValueUsd == null) return null;
   return ethHolding.marketValueUsd / ethHolding.tokens;

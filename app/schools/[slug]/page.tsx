@@ -11,6 +11,9 @@ import { SchoolSocialsEditor } from "@/components/SchoolSocialsEditor";
 import { schoolDisplayName, schoolNameFromSlug, type SchoolSocials } from "@/lib/schoolData";
 import { getEffectiveSchoolSocials } from "@/lib/school-socials-store";
 import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
+import { mergeHoldingsByTicker } from "@/lib/holdings";
+import { getScaledTokenSeasonPerformance } from "@/lib/seasonPerformance";
+import { SEASON_START_NAV_USD } from "@/lib/seasonBaseline";
 import { ArrowLeft, Globe, X, Link2, Camera, MessageSquare, Send, Code2 } from "lucide-react";
 
 function SocialLinks({ socials }: { socials: SchoolSocials }) {
@@ -71,6 +74,26 @@ async function SchoolContent({ slug }: { slug: string }) {
     if (others.length > 0) otherSchools[h.ticker] = others;
   }
 
+  // Per-token figures for the "26-27 Season" view — every token held or
+  // traded this season, scaled so the table's totals land exactly on the
+  // Leaderboard's own hardcoded season-start NAV (SEASON_START_NAV_USD)
+  // rather than this system's own recorded Oct-1 snapshot NAV, which is
+  // close but not identical. See lib/seasonPerformance.ts.
+  const mergedForSeason = mergeHoldingsByTicker(school.holdings ?? []);
+  const ethHolding = mergedForSeason.find((h) => h.ticker === "ETH");
+  const currentEthPriceUsd = ethHolding?.tokens ? (ethHolding.marketValueUsd ?? 0) / ethHolding.tokens : 0;
+  // NFTs merged in alongside liquid holdings — the function treats every
+  // ticker uniformly, and the Oct-1 baseline side already has NFT values
+  // concatenated in by getBaselineSnapshot (see lib/snapshotReturns.ts).
+  const mergedNftForSeason = mergeHoldingsByTicker(school.nftHoldings ?? []);
+  const seasonPerformance = await getScaledTokenSeasonPerformance(
+    school.name,
+    SEASON_START_NAV_USD[school.name],
+    currentEthPriceUsd,
+    [...mergedForSeason, ...mergedNftForSeason],
+    school.exitedHoldings ?? [],
+  );
+
   return (
     <>
       {/* Branded accent bar — visible to every visitor, logged in or not */}
@@ -128,7 +151,7 @@ async function SchoolContent({ slug }: { slug: string }) {
       </div>
 
       {/* Tabbed content */}
-      <SchoolTabs school={school} otherSchools={otherSchools} />
+      <SchoolTabs school={school} otherSchools={otherSchools} seasonPerformance={seasonPerformance} />
 
       <SyncFooter fetchedAt={fetchedAt} />
     </>

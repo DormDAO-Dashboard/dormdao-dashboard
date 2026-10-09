@@ -132,6 +132,23 @@ export async function POST(req: NextRequest) {
           roiUsdPct: h.roiUsdPct,
           roiEthPct: h.roiEthPct,
         })),
+        // Kept in its own column, not merged into `holdings` above — the
+        // buy/sell/exit diffing below (and its stored-snapshot comparisons
+        // across cycles) has no NFT awareness at all, and mixing NFTs into
+        // the one array it reads would make every held NFT look like it
+        // "disappeared" each cycle, eventually firing a false sell
+        // notification. See supabase-nft-snapshot-migration.sql.
+        nft_holdings: (s.nftHoldings ?? []).map((h: Holding) => ({
+          ticker: h.ticker,
+          tokens: h.tokens,
+          costBasisEth: h.costBasisEth,
+          blockchain: h.blockchain,
+          investmentDate: h.investmentDate,
+          marketValueUsd: h.marketValueUsd,
+          gainUsd: h.gainUsd,
+          roiUsdPct: h.roiUsdPct,
+          roiEthPct: h.roiEthPct,
+        })),
       }));
 
       const { error: snapError } = await supabase

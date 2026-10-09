@@ -32,7 +32,12 @@ export const SEASON_START_NAV_USD: Record<string, number> = {
   "Michigan": 57585.00,
   "NYU": 77973.00,
   "Cornell": 96172.00,
-  "Columbia": 114817.00,
+  // Corrected from 114817.00 — a typo (104817 was meant). The system's own
+  // verified Oct-1 snapshot (price-checked against CoinGecko's historical
+  // API) computed $104,367.67, 0.43% off this corrected figure — well
+  // within the normal cross-school noise band, confirming this was purely
+  // a transposed digit, not a real data or tracking gap.
+  "Columbia": 104817.00,
   "Waterloo": 103055.00,
   "Berkeley": 75213.00,
   "Purdue": 73937.00,

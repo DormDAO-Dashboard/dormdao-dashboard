@@ -8,7 +8,9 @@ import { apiFetch } from "@/lib/apiFetch";
 import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
 import { mergeHoldingsByTicker } from "@/lib/holdings";
 import { SchoolRowWithHoldings } from "@/lib/cache";
+import type { SeasonPerformanceResult } from "@/lib/seasonPerformance";
 import { HoldingsTableClient } from "@/components/HoldingsTableClient";
+import { SeasonPerformanceTable } from "@/components/SeasonPerformanceTable";
 import { PortfolioDonut } from "@/components/charts/PortfolioDonut";
 import { SchoolHistory } from "@/components/SchoolHistory";
 import { SchoolMembers } from "@/components/SchoolMembers";
@@ -26,9 +28,15 @@ type Tab = (typeof TABS)[number];
 interface Props {
   school: SchoolRowWithHoldings;
   otherSchools: Record<string, string[]>;
+  // Every token held or traded this season, plus whether the baseline
+  // could be reconciled to the Leaderboard's fixed figure — see
+  // lib/seasonPerformance.ts.
+  seasonPerformance: SeasonPerformanceResult;
 }
 
-export function SchoolTabs({ school, otherSchools }: Props) {
+const SEASON_LABEL = "Oct 1";
+
+export function SchoolTabs({ school, otherSchools, seasonPerformance }: Props) {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") as Tab;
   const [tab, setTab] = useState<Tab>(TABS.includes(initialTab) ? initialTab : "Portfolio");
@@ -44,6 +52,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
   const [holdings, setHoldings] = useState(school.holdings ?? []);
   const [canManagePositions, setCanManagePositions] = useState(false);
   const [showPriceEditor, setShowPriceEditor] = useState(false);
+  const [holdingsView, setHoldingsView] = useState<"active" | "season">("active");
 
   useEffect(() => {
     const supabase = createClient();
@@ -153,7 +162,7 @@ export function SchoolTabs({ school, otherSchools }: Props) {
               <SectionHeading color={colors.primary}>
                 Active Holdings ({holdings.length})
               </SectionHeading>
-              {canManagePositions && (
+              {canManagePositions && holdingsView === "active" && (
                 <button
                   onClick={() => setShowPriceEditor(true)}
                   title="Edit purchase prices"
@@ -163,14 +172,52 @@ export function SchoolTabs({ school, otherSchools }: Props) {
                 </button>
               )}
             </div>
-            {holdings.length > 0 ? (
-              <HoldingsTableClient
-                holdings={holdings}
-                otherSchools={otherSchools}
-                schoolName={school.name}
-              />
+
+            {/* Active Holdings = unrealized, since-purchase figures (per
+                tranche). 26-27 Season = merged per-token figures since this
+                season's SEASON_START_DATE baseline instead — see
+                lib/snapshotReturns.ts. */}
+            <div className="px-5 pt-3 flex gap-2">
+              <button
+                onClick={() => setHoldingsView("active")}
+                className={cn(
+                  "shrink-0 whitespace-nowrap text-xs px-2.5 py-1 rounded-full border transition-colors",
+                  holdingsView === "active"
+                    ? "bg-primary text-[#fff] border-primary"
+                    : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 bg-white dark:bg-transparent hover:border-gray-300 dark:hover:border-white/20"
+                )}
+              >
+                Active Holdings
+              </button>
+              <button
+                onClick={() => setHoldingsView("season")}
+                className={cn(
+                  "shrink-0 whitespace-nowrap text-xs px-2.5 py-1 rounded-full border transition-colors",
+                  holdingsView === "season"
+                    ? "bg-primary text-[#fff] border-primary"
+                    : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 bg-white dark:bg-transparent hover:border-gray-300 dark:hover:border-white/20"
+                )}
+              >
+                26-27 Season
+              </button>
+            </div>
+
+            {holdingsView === "active" ? (
+              holdings.length > 0 ? (
+                <HoldingsTableClient
+                  holdings={holdings}
+                  otherSchools={otherSchools}
+                  schoolName={school.name}
+                />
+              ) : (
+                <p className="px-5 py-6 text-sm text-gray-700 dark:text-gray-400">No holdings data available.</p>
+              )
             ) : (
-              <p className="px-5 py-6 text-sm text-gray-700 dark:text-gray-400">No holdings data available.</p>
+              <SeasonPerformanceTable
+                rows={seasonPerformance.rows}
+                sinceDateLabel={SEASON_LABEL}
+                reconciledToLeaderboard={seasonPerformance.reconciledToLeaderboard}
+              />
             )}
           </div>
 
