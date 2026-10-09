@@ -32,12 +32,11 @@ export const SEASON_START_NAV_USD: Record<string, number> = {
   "Michigan": 57585.00,
   "NYU": 77973.00,
   "Cornell": 96172.00,
-  // Reverted — Jack confirmed directly: $114,817 is correct. The earlier
-  // "typo, should be 104817" theory was wrong, despite the system's own
-  // Oct-1 snapshot computing $104,367.67 (a real, still-unexplained gap
-  // from Jack's own reconciled figure — not a data entry error, so
-  // presumably something the live tracking is still missing).
-  "Columbia": 114817.00,
+  // Final: $104,817. Root cause found — Jack's own personal spreadsheet
+  // had a broken ETH-total calc that the recent HYPE trims exposed, which
+  // is what produced the wrong $114,817 figure he'd been working from.
+  // This system's own Oct-1 snapshot ($104,367.67) was right all along.
+  "Columbia": 104817.00,
   "Waterloo": 103055.00,
   "Berkeley": 75213.00,
   "Purdue": 73937.00,
@@ -46,11 +45,11 @@ export const SEASON_START_NAV_USD: Record<string, number> = {
   "Cambridge": 108199.00,
   "USC": 128842.00,
   "Villanova": 169464.00,
-  // Corrected from 138216.00 — Jack's own re-verified figure, confirmed
-  // directly ("Nvm St. Andrews is $130,974"). Not the system's own Oct-1
-  // snapshot figure ($134,327.44, which turned out not to be the right
-  // correction either — same lesson as Columbia below).
-  "St. Andrews": 130974.00,
+  // Final: $134,327.44 — this system's own Oct-1 snapshot figure. Root
+  // cause: Jack's personal spreadsheet had a broken ETH-total calc,
+  // exposed by the recent HYPE trims, which produced both wrong numbers
+  // he'd floated before this one ($138,216, then $130,974).
+  "St. Andrews": 134327.44,
 };
 
 // Each school's SEASON_START_NAV_USD above, already converted to ETH, given
@@ -67,7 +66,7 @@ export const SEASON_START_NAV_ETH: Record<string, number> = {
   "Michigan": 21.44918756,
   "NYU": 29.04328972,
   "Cornell": 35.82201658,
-  "Columbia": 42.76695257,
+  "Columbia": 39.04220568,
   "Waterloo": 38.3860019,
   "Berkeley": 28.0155021,
   "Purdue": 27.54018489,
@@ -76,9 +75,7 @@ export const SEASON_START_NAV_ETH: Record<string, number> = {
   "Cambridge": 40.30212872,
   "USC": 47.9910885,
   "Villanova": 63.12175621,
-  // Corrected to match SEASON_START_NAV_USD's corrected St. Andrews figure
-  // (130974.00 / SEASON_START_ETH_USD).
-  "St. Andrews": 48.78515743,
+  "St. Andrews": 50.03424578,
 };
 
 // ── 2025-2026 season, frozen ────────────────────────────────────────────────
