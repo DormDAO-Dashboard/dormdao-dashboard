@@ -17,7 +17,7 @@ function ReturnCell({ value }: { value: number | null }) {
 
 function StatusNote({ status }: { status: TokenSeasonRow["status"] }) {
   if (status === "new") {
-    return <div className="text-xs text-gray-700 dark:text-gray-400">since buy — no season-start baseline</div>;
+    return <div className="text-xs text-gray-700 dark:text-gray-400">bought this season — starting value is at buy</div>;
   }
   if (status === "exited") {
     return <div className="text-xs text-gray-700 dark:text-gray-400">exited this season</div>;
@@ -59,7 +59,7 @@ export function SeasonPerformanceTable({ rows, sinceDateLabel, reconciledToLeade
           <tr className="border-b border-gray-800 text-xs text-gray-700 dark:text-gray-400">
             <th className="text-left px-5 py-3">Token</th>
             <th className="text-right px-5 py-3">Tokens</th>
-            <th className="text-right px-5 py-3">Value ({sinceDateLabel})</th>
+            <th className="text-right px-5 py-3">Starting Value</th>
             <th className="text-right px-5 py-3">Value Now</th>
             <th className="text-right px-5 py-3">Gain (USD)</th>
             <th className="text-right px-5 py-3">ROI (USD)</th>
@@ -79,7 +79,12 @@ export function SeasonPerformanceTable({ rows, sinceDateLabel, reconciledToLeade
                 {row.tokens != null ? row.tokens.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
               </td>
               <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400">
-                {row.baselineValueUsd != null ? formatUSD(row.baselineValueUsd) : "—"}
+                {row.baselineValueUsd != null ? (
+                  <>
+                    {formatUSD(row.baselineValueUsd)}
+                    <div className="text-xs font-sans">{row.status === "new" ? "at buy" : sinceDateLabel}</div>
+                  </>
+                ) : "—"}
               </td>
               <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
                 {row.valueNowUsd != null ? formatUSD(row.valueNowUsd) : "—"}

@@ -202,26 +202,35 @@ export async function getScaledTokenSeasonPerformance(
         ...computeReturn(baselineValueUsd, valueNowUsd),
       };
     } else {
-      // No season-start baseline — bought after SEASON_START_DATE. Use the
-      // holding's own since-purchase figures when upstream computed them —
-      // but a very fresh buy can have a blank Purchase Price cell on the
-      // sheet (purchasePriceUsd null), which leaves gainUsd/roiUsdPct
-      // undefined even though costBasisEth is known. Fall back to an
-      // implied cost basis (costBasisEth × today's ETH price) instead of
-      // showing nothing — using today's ETH price instead of the exact
-      // purchase-day price is a small error for something this recent
-      // (this bucket is, by definition, bought within the current season).
-      let gainUsd = h.gainUsd ?? null;
-      let roiUsdPct = h.roiUsdPct ?? null;
-      if (gainUsd == null && h.costBasisEth > 0 && h.marketValueUsd != null && currentEthPriceUsd > 0) {
-        const impliedCostBasisUsd = h.costBasisEth * currentEthPriceUsd;
-        gainUsd = h.marketValueUsd - impliedCostBasisUsd;
-        roiUsdPct = impliedCostBasisUsd > 0 ? (gainUsd / impliedCostBasisUsd) * 100 : null;
+      // No season-start baseline — bought after SEASON_START_DATE. This
+      // row's "starting value" is its own purchase-time value instead of
+      // an Oct-1 snapshot value, so it still shows a real baseline to
+      // compare against rather than a blank cell — same comparison, just
+      // anchored to this token's own buy date. Prefer the sheet's actual
+      // recorded purchasePriceUsd (exact); a very fresh buy can have that
+      // cell still blank, so fall back to an implied cost basis
+      // (costBasisEth × today's ETH price) — a small error for something
+      // this recent (this bucket is, by definition, bought this season).
+      // gainUsd/roiUsdPct are recomputed from whichever starting value was
+      // used, rather than trusted separately from upstream, so the three
+      // numbers always agree with each other.
+      let startingValueUsd: number | null = h.purchasePriceUsd != null ? h.purchasePriceUsd * h.tokens : null;
+      if (startingValueUsd == null && h.costBasisEth > 0 && currentEthPriceUsd > 0) {
+        startingValueUsd = h.costBasisEth * currentEthPriceUsd;
+      }
+      let gainUsd: number | null = null;
+      let roiUsdPct: number | null = null;
+      if (startingValueUsd != null && h.marketValueUsd != null) {
+        gainUsd = h.marketValueUsd - startingValueUsd;
+        roiUsdPct = startingValueUsd > 0 ? (gainUsd / startingValueUsd) * 100 : null;
+      } else {
+        gainUsd = h.gainUsd ?? null;
+        roiUsdPct = h.roiUsdPct ?? null;
       }
       out[h.ticker] = {
         ticker: h.ticker,
         tokens: h.tokens,
-        baselineValueUsd: null,
+        baselineValueUsd: startingValueUsd,
         valueNowUsd: h.marketValueUsd ?? null,
         gainUsd,
         roiUsdPct,
