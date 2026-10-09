@@ -23,6 +23,7 @@ export interface Proposal {
   no_votes: number;
   created_by_admin: boolean;
   document_ids: string[] | null;
+  pitch_recording_url: string | null;
   execution_tx: string | null;
   execution_notes: string | null;
   executed_at: string | null;

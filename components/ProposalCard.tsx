@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useLayoutEffect } from "react";
-import { Check, Clock, ChevronDown, ChevronUp, Lock, Loader2, ExternalLink, Trash2, FileText, X } from "lucide-react";
+import { Check, Clock, ChevronDown, ChevronUp, Lock, Loader2, ExternalLink, Trash2, FileText, Video, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Proposal, type ProposalDocument, deadlineLabel, votePercents, isActive } from "@/lib/proposals";
 import type { SchoolColors } from "@/lib/schoolColors";
@@ -395,6 +395,21 @@ export function ProposalCard({
                 </button>
               ))}
             </div>
+          )}
+
+          {proposal.pitch_recording_url && (
+            <a
+              href={proposal.pitch_recording_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={proposal.pitch_recording_url}
+              className="mt-2 flex items-center gap-2 w-full px-2.5 py-2 rounded-md border border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/60 shadow-sm dark:shadow-none hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
+            >
+              <div className="shrink-0 w-7 h-7 rounded-md bg-gray-800 dark:bg-gray-700 flex items-center justify-center">
+                <Video className="w-3.5 h-3.5 text-white dark:text-gray-200" />
+              </div>
+              <span className="text-xs font-bold text-gray-900 dark:text-white truncate">Pitch Recording</span>
+            </a>
           )}
 
           {proposal.proposed_by_name && (

@@ -132,9 +132,10 @@ export async function POST(req: NextRequest) {
     recommended_size_eth?: number;
     price_target?: number;
     document_ids?: string[];
+    pitch_recording_url?: string;
   };
 
-  const { school, token_ticker, title, description, recommended_size_eth, price_target, document_ids } = body;
+  const { school, token_ticker, title, description, recommended_size_eth, price_target, document_ids, pitch_recording_url } = body;
   const proposalType = body.proposal_type === "sell" ? "sell" : "buy";
 
   if (!school) return NextResponse.json({ error: "school is required" }, { status: 400 });
@@ -154,6 +155,12 @@ export async function POST(req: NextRequest) {
   if (!token_ticker?.trim()) return NextResponse.json({ error: "token_ticker is required" }, { status: 400 });
   if (!title?.trim()) return NextResponse.json({ error: "title is required" }, { status: 400 });
   if (!description?.trim()) return NextResponse.json({ error: "description is required" }, { status: 400 });
+
+  const recordingUrl = pitch_recording_url?.trim() || null;
+  if (recordingUrl && !/^https?:\/\//i.test(recordingUrl)) {
+    return NextResponse.json({ error: "Pitch recording link must be a valid URL" }, { status: 400 });
+  }
+
   // Always lock to 36 hours from now — ignore any client-supplied deadline
   const deadline = new Date(Date.now() + 36 * 60 * 60 * 1000);
 
@@ -175,6 +182,7 @@ export async function POST(req: NextRequest) {
       price_target: price_target ?? null,
       voting_deadline: deadline.toISOString(),
       document_ids: document_ids ?? [],
+      pitch_recording_url: recordingUrl,
     })
     .select()
     .single();

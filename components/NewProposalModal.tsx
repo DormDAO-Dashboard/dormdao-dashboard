@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { X, Paperclip, Loader2 } from "lucide-react";
+import { X, Paperclip, Loader2, Plus, Video } from "lucide-react";
 import type { SchoolColors } from "@/lib/schoolColors";
 import type { Proposal } from "@/lib/proposals";
 
@@ -24,6 +24,13 @@ const DOC_SLOTS: DocSlot[] = [
   { label: "Executive Summary", type: "exec_summary" },
   { label: "Fund Report", type: "fund_report" },
 ];
+
+const ADDITIONAL_SLOT: DocSlot = { label: "Additional Attachment", type: "additional_attachment" };
+
+// No real cap on how many PDFs a proposal can carry — this is just a sane
+// ceiling (10 total, named slots included) so one submission can't balloon
+// into dozens of uploads.
+const MAX_ADDITIONAL_ATTACHMENTS = 10 - DOC_SLOTS.length;
 
 function votingDeadline(): Date {
   const d = new Date();
@@ -65,10 +72,13 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
   const [sizeEth, setSizeEth] = useState("");
   const [deadline] = useState(votingDeadline);
   const [docFiles, setDocFiles] = useState<(File | null)[]>([null, null, null]);
+  const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
+  const [pitchRecordingUrl, setPitchRecordingUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+  const additionalInputRef = useRef<HTMLInputElement>(null);
 
   function autoTitle(t: string, type: "buy" | "sell"): string {
     return t ? `${type === "buy" ? "Buy" : "Sell"} $${t}` : "";
@@ -98,6 +108,16 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
     });
   }
 
+  function addAdditionalFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setAdditionalFiles((prev) => [...prev, ...Array.from(files)].slice(0, MAX_ADDITIONAL_ATTACHMENTS));
+    if (additionalInputRef.current) additionalInputRef.current.value = "";
+  }
+
+  function removeAdditionalFile(idx: number) {
+    setAdditionalFiles((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -110,6 +130,11 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
         if (!file) continue;
         setUploadStatus(`Uploading ${DOC_SLOTS[i].label}…`);
         const docId = await uploadDoc(file, ticker, schoolName, DOC_SLOTS[i]);
+        documentIds.push(docId);
+      }
+      for (let i = 0; i < additionalFiles.length; i++) {
+        setUploadStatus(`Uploading additional attachment ${i + 1}/${additionalFiles.length}…`);
+        const docId = await uploadDoc(additionalFiles[i], ticker, schoolName, ADDITIONAL_SLOT);
         documentIds.push(docId);
       }
       setUploadStatus(null);
@@ -125,6 +150,7 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
           description,
           recommended_size_eth: sizeEth ? parseFloat(sizeEth) : undefined,
           document_ids: documentIds.length > 0 ? documentIds : undefined,
+          pitch_recording_url: pitchRecordingUrl.trim() || undefined,
         }),
       });
       const data = await res.json() as { proposal?: Proposal; error?: string };
@@ -275,6 +301,53 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
                   )}
                 </div>
               ))}
+
+              {additionalFiles.map((file, i) => (
+                <div key={`additional-${i}`} className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-400">
+                    <Paperclip className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate min-w-0">{file.name}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeAdditionalFile(i)}
+                    className="text-gray-700 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+
+              {additionalFiles.length < MAX_ADDITIONAL_ATTACHMENTS && (
+                <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:border-primary/50 cursor-pointer transition-colors text-xs text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                  <Plus className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate min-w-0">Additional Attachments</span>
+                  <input
+                    ref={additionalInputRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    multiple
+                    className="sr-only"
+                    onChange={(e) => addAdditionalFiles(e.target.files)}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1.5">
+              Pitch Recording (Google Drive Link)
+            </label>
+            <div className="relative">
+              <Video className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-400" />
+              <input
+                type="url"
+                value={pitchRecordingUrl}
+                onChange={(e) => setPitchRecordingUrl(e.target.value)}
+                placeholder="https://drive.google.com/..."
+                className={inputClass + " pl-9"}
+              />
             </div>
           </div>
 
