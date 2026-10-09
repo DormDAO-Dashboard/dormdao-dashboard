@@ -169,6 +169,15 @@ export async function getScaledTokenSeasonPerformance(
   const out: Record<string, TokenSeasonRow> = {};
 
   for (const h of mergedHoldings) {
+    // ETH is the school's idle treasury, not an acquired position — its
+    // quantity moves whenever capital gets deployed into (or returned from)
+    // other buys, which has nothing to do with price performance. Baseline-
+    // vs-now on a shrunk treasury balance reads as a huge "loss" that isn't
+    // one — it's spend, not a price move. Same exclusion the snapshot
+    // cron's buy/sell diffing already applies to ETH, for the same reason
+    // (app/api/snapshot/route.ts), and why Active Holdings shows "—" for
+    // its Cost column instead of a cost basis.
+    if (h.ticker === "ETH") continue;
     const exits = exitsByTicker.get(h.ticker);
     const valueNowUsd = (h.marketValueUsd ?? 0) + (exits?.valueUsd ?? 0);
     const baselineValueUsd = scaledBaseline(h.ticker);
