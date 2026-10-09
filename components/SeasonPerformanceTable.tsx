@@ -53,13 +53,6 @@ export function SeasonPerformanceTable({ rows, sinceDateLabel, reconciledToLeade
 
   return (
     <div>
-      {!reconciledToLeaderboard && (
-        <p className="px-5 pt-3 text-xs text-amber-700 dark:text-amber-400">
-          This school's season-start baseline doesn't yet match the Leaderboard — figures below are this
-          school's actual recorded {sinceDateLabel} values, unscaled. Totals won't sum to the Leaderboard's
-          season return until that's reconciled.
-        </p>
-      )}
       <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
