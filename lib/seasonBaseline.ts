@@ -100,15 +100,8 @@ const SEASON_2526_DATA: Record<string, { nav: number; usdReturn: number; ethRetu
   "Vanderbilt":     { nav: 105803, usdReturn: -3.78,  ethReturn: 48.52,  pctDeployed: 86.15 },
   "Purdue":         { nav: 73937,  usdReturn: -4.88,  ethReturn: 46.84,  pctDeployed: 52.38 },
   "Boston College": { nav: 130064, usdReturn: -5.55,  ethReturn: 45.79,  pctDeployed: 73.52 },
-  // St. Andrews and Columbia nav figures corrected (138216→134327,
-  // 114817→104817) — confirmed by Jack: 25-26's closing NAV should equal
-  // 26-27's opening NAV (SEASON_START_NAV_USD above), and the original
-  // figures here were the same typo'd/unreconciled numbers, not an
-  // independent historical record. usdReturn/ethReturn/pctDeployed are
-  // DormDAO's own given season-long figures, unrelated to this nav typo,
-  // left as-is.
-  "St. Andrews":    { nav: 134327, usdReturn: -16.62, ethReturn: 28.71,  pctDeployed: 70.10 },
-  "Columbia":       { nav: 104817, usdReturn: -17.22, ethReturn: 27.78,  pctDeployed: 62.01 },
+  "St. Andrews":    { nav: 138216, usdReturn: -16.62, ethReturn: 28.71,  pctDeployed: 70.10 },
+  "Columbia":       { nav: 114817, usdReturn: -17.22, ethReturn: 27.78,  pctDeployed: 62.01 },
   "USC":            { nav: 128842, usdReturn: -22.28, ethReturn: 19.98,  pctDeployed: 59.17 },
   "Oregon":         { nav: 64246,  usdReturn: -23.90, ethReturn: 17.47,  pctDeployed: 71.35 },
   "NYU":            { nav: 77973,  usdReturn: -25.70, ethReturn: 14.70,  pctDeployed: 90.66 },
