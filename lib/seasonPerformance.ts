@@ -148,7 +148,17 @@ export async function getScaledTokenSeasonPerformance(
   // remaining holding is exactly half of what was trimmed), weeks before
   // the season began, so that trim must never show up as this season's
   // realized gain.
-  const seasonExitedHoldings = exitedHoldings.filter((ex) => parseDateMsAsc(ex.exitDate) >= SEASON_START_MS);
+  // parseDateMsAsc returns Infinity for a missing/unparseable date — fine
+  // for its original use (lib/holdings.ts sorting unknown dates last), but
+  // wrong here: Infinity >= SEASON_START_MS is always true, so a row with a
+  // blank exitDate (a real sheet data-quality issue — seen on old NFT exit
+  // rows where exitDate came through empty) would otherwise pass this
+  // filter as if it were "infinitely in the future", i.e. within the
+  // season. An unconfirmed date must be excluded, not assumed current.
+  const seasonExitedHoldings = exitedHoldings.filter((ex) => {
+    const exitMs = parseDateMsAsc(ex.exitDate);
+    return Number.isFinite(exitMs) && exitMs >= SEASON_START_MS;
+  });
 
   // This season's realized proceeds per ticker, summed across however many
   // trim/exit rows that ticker has (a position can be trimmed more than
@@ -192,14 +202,29 @@ export async function getScaledTokenSeasonPerformance(
         ...computeReturn(baselineValueUsd, valueNowUsd),
       };
     } else {
-      // No season-start baseline — bought after SEASON_START_DATE.
+      // No season-start baseline — bought after SEASON_START_DATE. Use the
+      // holding's own since-purchase figures when upstream computed them —
+      // but a very fresh buy can have a blank Purchase Price cell on the
+      // sheet (purchasePriceUsd null), which leaves gainUsd/roiUsdPct
+      // undefined even though costBasisEth is known. Fall back to an
+      // implied cost basis (costBasisEth × today's ETH price) instead of
+      // showing nothing — using today's ETH price instead of the exact
+      // purchase-day price is a small error for something this recent
+      // (this bucket is, by definition, bought within the current season).
+      let gainUsd = h.gainUsd ?? null;
+      let roiUsdPct = h.roiUsdPct ?? null;
+      if (gainUsd == null && h.costBasisEth > 0 && h.marketValueUsd != null && currentEthPriceUsd > 0) {
+        const impliedCostBasisUsd = h.costBasisEth * currentEthPriceUsd;
+        gainUsd = h.marketValueUsd - impliedCostBasisUsd;
+        roiUsdPct = impliedCostBasisUsd > 0 ? (gainUsd / impliedCostBasisUsd) * 100 : null;
+      }
       out[h.ticker] = {
         ticker: h.ticker,
         tokens: h.tokens,
         baselineValueUsd: null,
         valueNowUsd: h.marketValueUsd ?? null,
-        gainUsd: h.gainUsd ?? null,
-        roiUsdPct: h.roiUsdPct ?? null,
+        gainUsd,
+        roiUsdPct,
         roiEthPct: h.roiEthPct ?? null,
         status: "new",
       };
