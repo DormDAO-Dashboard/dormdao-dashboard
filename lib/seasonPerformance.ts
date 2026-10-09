@@ -1,6 +1,9 @@
 import { SEASON_START_DATE } from "@/lib/seasonBaseline";
 import { getBaselineSnapshot, ethPriceFromHoldings } from "@/lib/snapshotReturns";
+import { parseDateMsAsc } from "@/lib/holdings";
 import type { Holding, ExitedHolding } from "@/lib/types";
+
+const SEASON_START_MS = parseDateMsAsc(SEASON_START_DATE);
 
 export interface TokenSeasonRow {
   ticker: string;
@@ -135,11 +138,23 @@ export async function getScaledTokenSeasonPerformance(
     return { gainUsd, roiUsdPct, roiEthPct };
   }
 
+  // Only exits dated on/after the season start count as this season's
+  // realized proceeds. school.exitedHoldings is sheet-derived and not
+  // itself season-scoped — a trim from before Oct 1 is already baked into
+  // both the baseline snapshot AND the current holding (same reduced token
+  // count either side), so folding its proceeds in here too would double
+  // count it. Concretely: St. Andrews trimmed 50% of a HYPE lot on Sep 4
+  // (a real Programmatic Liquidation Policy trim, not stale data — the
+  // remaining holding is exactly half of what was trimmed), weeks before
+  // the season began, so that trim must never show up as this season's
+  // realized gain.
+  const seasonExitedHoldings = exitedHoldings.filter((ex) => parseDateMsAsc(ex.exitDate) >= SEASON_START_MS);
+
   // This season's realized proceeds per ticker, summed across however many
   // trim/exit rows that ticker has (a position can be trimmed more than
   // once before a final exit).
   const exitsByTicker = new Map<string, { valueUsd: number; sinceBuyGainUsd: number; sinceBuyRoiUsdPct: number }>();
-  for (const ex of exitedHoldings) {
+  for (const ex of seasonExitedHoldings) {
     const prev = exitsByTicker.get(ex.ticker);
     exitsByTicker.set(ex.ticker, {
       valueUsd: (prev?.valueUsd ?? 0) + ex.marketValueUsd,
@@ -182,8 +197,13 @@ export async function getScaledTokenSeasonPerformance(
     }
   }
 
-  // Fully exited tickers — nothing left in mergedHoldings for these.
-  for (const ex of exitedHoldings) {
+  // Fully exited tickers — nothing left in mergedHoldings for these. Also
+  // iterates seasonExitedHoldings, not the raw list: exitsByTicker only has
+  // entries for season-dated exits, so a ticker whose only activity
+  // predates the season (fully sold before Oct 1, nothing held, no
+  // this-season event) correctly gets no row at all here, rather than
+  // crashing on a missing exitsByTicker entry.
+  for (const ex of seasonExitedHoldings) {
     if (out[ex.ticker]) continue; // already covered above (still partially held)
     const exits = exitsByTicker.get(ex.ticker)!;
     const baselineValueUsd = scaledBaseline(ex.ticker);

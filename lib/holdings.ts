@@ -1,6 +1,6 @@
 import { Holding } from "@/lib/types";
 
-function parseDateMsAsc(dateStr: string): number {
+export function parseDateMsAsc(dateStr: string): number {
   if (!dateStr) return Infinity;
   const parts = dateStr.split(/[\/\-]/);
   if (parts.length !== 3) return Infinity;
