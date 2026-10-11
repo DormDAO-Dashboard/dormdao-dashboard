@@ -65,8 +65,15 @@ const RECONCILE_THRESHOLD = 0.01;
 // $25,897.00 — a 0.05% gap, confirming this NFT was the entire explanation
 // for Texas's reconciliation gap and that Jack's figure was correct all
 // along (unlike Columbia's, which was a genuine typo).
+//
+// LIL-NOUNS: Oregon's 1 Lil Noun, same situation — bought before
+// nft_holdings started being captured, so no recorded Oct-1 baseline.
+// Used the Lil Nouns collection floor price off CoinGecko's own
+// historical chart: 0.014899 ETH at Oct 1, 2026, 17:05:38 PDT, converted
+// at SEASON_START_ETH_USD ($2,684.71) = $40.00.
 const MANUAL_SEASON_BASELINES_USD: Record<string, number> = {
   MILADY: 2682.03,
+  "LIL-NOUNS": 40.00,
 };
 
 // Per-token season performance, scaled so every row's baseline sums to
