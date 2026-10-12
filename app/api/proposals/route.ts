@@ -161,6 +161,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Pitch recording link must be a valid URL" }, { status: 400 });
   }
 
+  // Required materials depend on proposal type — mirrors
+  // components/NewProposalModal.tsx's client-side check, re-verified here
+  // since document_ids arrives as plain already-uploaded ids with no type
+  // info of its own; this is the only place that can't be bypassed by a
+  // direct API call. A buy pitch needs a Pitch Deck + Executive Summary;
+  // a sell pitch needs only an Executive Summary. Fund Report, additional
+  // attachments, and the pitch recording link stay optional either way.
+  const requiredDocTypes = proposalType === "buy" ? ["pitch_deck", "exec_summary"] : ["exec_summary"];
+  const { data: attachedDocs } = document_ids && document_ids.length > 0
+    ? await service.from("token_documents").select("document_type").in("id", document_ids)
+    : { data: [] as { document_type: string }[] };
+  const attachedTypes = new Set((attachedDocs ?? []).map((d) => d.document_type));
+  const missingDocTypes = requiredDocTypes.filter((t) => !attachedTypes.has(t));
+  if (missingDocTypes.length > 0) {
+    const labels: Record<string, string> = { pitch_deck: "Pitch Deck", exec_summary: "Executive Summary" };
+    return NextResponse.json({
+      error: `${missingDocTypes.map((t) => labels[t]).join(" and ")} ${missingDocTypes.length > 1 ? "are" : "is"} required for a ${proposalType === "buy" ? "Buy" : "Sell"} proposal`,
+    }, { status: 400 });
+  }
+
   // Always lock to 36 hours from now — ignore any client-supplied deadline
   const deadline = new Date(Date.now() + 36 * 60 * 60 * 1000);
 

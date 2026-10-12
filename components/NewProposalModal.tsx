@@ -24,6 +24,16 @@ const DOC_SLOTS: DocSlot[] = [
   { label: "Executive Summary", type: "exec_summary" },
   { label: "Fund Report", type: "fund_report" },
 ];
+const PITCH_DECK_IDX = 0;
+const EXEC_SUMMARY_IDX = 1;
+
+// Required materials depend on proposal type: a buy pitch needs both a
+// Pitch Deck and an Executive Summary; a sell pitch needs only an
+// Executive Summary. Fund Report, Additional Attachments, and the Pitch
+// Recording link are always optional regardless of type.
+function requiredDocIndexes(type: "buy" | "sell"): number[] {
+  return type === "buy" ? [PITCH_DECK_IDX, EXEC_SUMMARY_IDX] : [EXEC_SUMMARY_IDX];
+}
 
 const ADDITIONAL_SLOT: DocSlot = { label: "Additional Attachment", type: "additional_attachment" };
 
@@ -121,6 +131,13 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    const missing = requiredDocIndexes(proposalType).filter((i) => !docFiles[i]);
+    if (missing.length > 0) {
+      setError(`${missing.map((i) => DOC_SLOTS[i].label).join(" and ")} ${missing.length > 1 ? "are" : "is"} required for a ${proposalType === "buy" ? "Buy" : "Sell"} proposal`);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -269,15 +286,19 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
 
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-2">
-              Supporting Documents <span className="text-gray-700 dark:text-gray-400 font-normal">(optional PDFs)</span>
+              Supporting Documents
             </label>
             <div className="space-y-2">
-              {DOC_SLOTS.map((slot, i) => (
+              {DOC_SLOTS.map((slot, i) => {
+                const isRequired = requiredDocIndexes(proposalType).includes(i);
+                return (
                 <div key={slot.type} className="flex items-center gap-2">
                   <label className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:border-primary/50 cursor-pointer transition-colors text-xs text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                     <Paperclip className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate min-w-0">
                       {docFiles[i] ? docFiles[i]!.name : slot.label}
+                      {!docFiles[i] && isRequired && <span className="text-red-500"> *</span>}
+                      {!docFiles[i] && !isRequired && <span className="text-gray-400 dark:text-gray-500"> (optional)</span>}
                     </span>
                     <input
                       ref={fileRefs[i]}
@@ -300,7 +321,8 @@ export function NewProposalModal({ slug, schoolName, colors, onClose, onCreated 
                     </button>
                   )}
                 </div>
-              ))}
+                );
+              })}
 
               {additionalFiles.map((file, i) => (
                 <div key={`additional-${i}`} className="flex items-center gap-2">
