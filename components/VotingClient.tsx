@@ -36,6 +36,8 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "past">("active");
+  // Default sub-tab under Past is Passed, not whichever renders first.
+  const [pastSubTab, setPastSubTab] = useState<"passed" | "failed">("passed");
   const [showModal, setShowModal] = useState(false);
   const [votingFor, setVotingFor] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -271,6 +273,14 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
 
   const activeProposals = proposals.filter(isActive);
   const pastProposals   = proposals.filter((p) => !isActive(p));
+  // "Executed" is the terminal state of a passed proposal that's since
+  // been filled, not a separate outcome — it belongs in Passed.
+  // "Expired" isn't produced by this app's own auto-resolve flow (that
+  // only ever sets passed/rejected), but is a valid status an admin could
+  // set via the CRON_SECRET-gated status route, so it's grouped with
+  // Failed for completeness rather than silently vanishing from both tabs.
+  const pastPassedProposals = pastProposals.filter((p) => p.status === "passed" || p.status === "executed");
+  const pastFailedProposals = pastProposals.filter((p) => p.status === "rejected" || p.status === "expired");
 
   if (loading) {
     return (
@@ -325,7 +335,9 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
     );
   }
 
-  const displayProposals = activeTab === "active" ? activeProposals : pastProposals;
+  const displayProposals = activeTab === "active"
+    ? activeProposals
+    : pastSubTab === "passed" ? pastPassedProposals : pastFailedProposals;
 
   return (
     <div>
@@ -358,9 +370,31 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
         )}
       </div>
 
+      {activeTab === "past" && (
+        <div className="flex gap-2 mb-5 -mt-2">
+          {(["passed", "failed"] as const).map((sub) => (
+            <button
+              key={sub}
+              onClick={() => setPastSubTab(sub)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
+                pastSubTab === sub
+                  ? "border-transparent text-white dark:text-[#0a0a0a]"
+                  : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+              )}
+              style={pastSubTab === sub ? { backgroundColor: colors.primary } : {}}
+            >
+              {sub === "passed" ? `Passed (${pastPassedProposals.length})` : `Failed (${pastFailedProposals.length})`}
+            </button>
+          ))}
+        </div>
+      )}
+
       {displayProposals.length === 0 ? (
         <div className="text-center py-16 text-gray-700 dark:text-gray-400">
-          {activeTab === "active" ? "No active proposals right now." : "No past proposals yet."}
+          {activeTab === "active"
+            ? "No active proposals right now."
+            : pastSubTab === "passed" ? "No passed proposals yet." : "No failed proposals yet."}
         </div>
       ) : (
         <div className="space-y-4">
