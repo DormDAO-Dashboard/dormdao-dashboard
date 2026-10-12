@@ -157,7 +157,16 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
     const supabase = supabaseRef.current!;
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
+    // Not an async callback, and nothing inside is awaited — Supabase's own
+    // _notifyAllSubscribers awaits whatever this callback returns WHILE
+    // holding its internal auth lock (see lib/supabase/client.ts's
+    // processLock comment), so an async callback here that awaits a
+    // profile query + admin-check fetch + fetchProposals would hold that
+    // lock for as long as all three take, blocking every other
+    // getUser()/getSession() call in this tab until it's done. Firing
+    // these as detached promises (matching AppShell's pattern) keeps the
+    // lock held only as briefly as Supabase itself needs.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
       if (!session?.user) {
         setUserSchoolSlug(null);
@@ -165,23 +174,22 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
         setUserRole(null);
         setIsAdmin(false);
       } else {
-        const { data: profile } = await supabase
+        supabase
           .from("profiles")
           .select("school, role")
           .eq("id", session.user.id)
-          .single();
-        setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
-        setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
-        setUserRole((profile?.role as MemberRole) ?? null);
-        try {
-          const res = await apiFetch("/api/admin/check");
-          const json = await res.json() as { isAdmin: boolean };
-          setIsAdmin(json.isAdmin ?? false);
-        } catch {
-          setIsAdmin(false);
-        }
+          .single()
+          .then(({ data: profile }) => {
+            setUserSchoolSlug(profile?.school ? slugify(profile.school) : null);
+            setIsMainDaoVoter(profile?.school === MAIN_DAO_VOTER);
+            setUserRole((profile?.role as MemberRole) ?? null);
+          });
+        apiFetch("/api/admin/check")
+          .then((res) => res.json() as Promise<{ isAdmin: boolean }>)
+          .then((json) => setIsAdmin(json.isAdmin ?? false))
+          .catch(() => setIsAdmin(false));
       }
-      await fetchProposals();
+      fetchProposals();
     });
 
     return () => subscription.unsubscribe();
