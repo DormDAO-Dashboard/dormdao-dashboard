@@ -67,6 +67,9 @@ export function ProposalCard({
   const [votersLoading, setVotersLoading] = useState(false);
   const [votersError, setVotersError] = useState<string | null>(null);
 
+  const [showOriginVote, setShowOriginVote] = useState(false);
+  const hasOriginVote = proposal.origin_yes_votes != null && proposal.origin_no_votes != null;
+
   async function toggleVoters() {
     const next = !showVoters;
     setShowVoters(next);
@@ -92,6 +95,10 @@ export function ProposalCard({
   const active = isActive(proposal);
   const { yesPct, noPct } = votePercents(proposal.yes_votes, proposal.no_votes);
   const totalVotes = proposal.yes_votes + proposal.no_votes;
+  const origin = hasOriginVote
+    ? votePercents(proposal.origin_yes_votes!, proposal.origin_no_votes!)
+    : null;
+  const originTotalVotes = (proposal.origin_yes_votes ?? 0) + (proposal.origin_no_votes ?? 0);
   const hasVoted = proposal.user_vote != null;
   const badge = STATUS_BADGE[proposal.status] ?? STATUS_BADGE.active;
 
@@ -412,10 +419,53 @@ export function ProposalCard({
             </a>
           )}
 
-          {proposal.proposed_by_name && (
-            <p className="mt-3 text-xs text-gray-700 dark:text-gray-400">
-              Proposed by {proposal.proposed_by_name}
-            </p>
+          {(proposal.proposed_by_name || hasOriginVote) && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between gap-2">
+                {proposal.proposed_by_name && (
+                  <p className="text-xs text-gray-700 dark:text-gray-400">
+                    Proposed by {proposal.proposed_by_name}
+                  </p>
+                )}
+                {hasOriginVote && (
+                  <button
+                    type="button"
+                    onClick={() => setShowOriginVote((v) => !v)}
+                    aria-expanded={showOriginVote}
+                    className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300 transition-colors shrink-0"
+                  >
+                    School Vote Results
+                    {showOriginVote ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </button>
+                )}
+              </div>
+
+              {showOriginVote && origin && (
+                <div className="mt-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 px-3 py-2">
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      YES {origin.yesPct}% ({proposal.origin_yes_votes})
+                    </span>
+                    <span className="font-medium text-red-500">
+                      NO {origin.noPct}% ({proposal.origin_no_votes})
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex">
+                    <div
+                      className="h-full"
+                      style={{ width: `${origin.yesPct}%`, backgroundColor: originTotalVotes === 0 ? "#4b5563" : colors.primary }}
+                    />
+                    <div
+                      className="h-full"
+                      style={{ width: `${origin.noPct}%`, backgroundColor: originTotalVotes === 0 ? "#4b5563" : "#ef4444" }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-700 dark:text-gray-400 mt-1.5">
+                    Vote at the school level before this pitch was reposted to Main DAO.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {isAdmin && onDelete && (

@@ -24,6 +24,11 @@ export interface Proposal {
   created_by_admin: boolean;
   document_ids: string[] | null;
   pitch_recording_url: string | null;
+  // The sub-DAO vote tally this proposal had at the school voting app
+  // level, captured once at repost time — null unless this is a Main DAO
+  // proposal reposted from a school's passed vote.
+  origin_yes_votes: number | null;
+  origin_no_votes: number | null;
   execution_tx: string | null;
   execution_notes: string | null;
   executed_at: string | null;

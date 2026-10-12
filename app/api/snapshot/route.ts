@@ -482,6 +482,11 @@ export async function POST(req: NextRequest) {
                   document_ids: resolved.document_ids ?? [],
                   voting_deadline: mainDaoDeadline.toISOString(),
                   created_by_admin: true,
+                  // Snapshot of the school-level vote tally this pitch
+                  // passed with — shown as "Original Vote" on the Main DAO
+                  // card (see ProposalCard.tsx), immutable from here on.
+                  origin_yes_votes: resolved.yes_votes,
+                  origin_no_votes: resolved.no_votes,
                 })
                 .select()
                 .single();
