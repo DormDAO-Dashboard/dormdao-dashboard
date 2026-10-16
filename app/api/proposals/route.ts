@@ -9,6 +9,7 @@ import { isAdminUser } from "@/lib/admin-config";
 import { TOKEN_META } from "@/lib/tokens";
 import { MAIN_DAO_SLUG, isMainDaoAuthorized } from "@/lib/main-dao";
 import type { Proposal } from "@/lib/proposals";
+import { resolveExpiredProposals } from "@/lib/proposal-resolution";
 
 export async function GET(req: NextRequest) {
   const school = req.nextUrl.searchParams.get("school");
@@ -60,6 +61,13 @@ export async function GET(req: NextRequest) {
   }
 
   const service = createServiceClient();
+
+  // Resolve any proposal whose deadline just passed (and repost passed
+  // school votes to Main DAO) before listing, so results and reposts show up
+  // the moment anyone views a voting page — not whenever the snapshot cron
+  // next runs. Cheap no-op query when nothing has expired.
+  await resolveExpiredProposals(service).catch((err) =>
+    console.error("[proposals GET] auto-resolve failed:", err));
 
   const { data: proposals, error } = await service
     .from("proposals")

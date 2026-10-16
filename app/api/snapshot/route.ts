@@ -5,15 +5,10 @@ import { isAdminUser } from "@/lib/admin-config";
 import { getSchoolsData } from "@/lib/cache";
 import { Holding, ExitedHolding } from "@/lib/types";
 import { sendPushNotifications } from "@/lib/push";
-import {
-  send12HourWarningEmail, sendProposalResultEmail,
-  sendNewProposalEmail, proposalSchoolLabel, proposalVoteUrl, sendLiquidationAlertEmail,
-} from "@/lib/email";
+import { send12HourWarningEmail, sendLiquidationAlertEmail } from "@/lib/email";
 import { getCurrentFdvForTickers, checkLiquidationStatus } from "@/lib/fdv";
-import { slugify } from "@/lib/utils";
-import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
-import { MAIN_DAO_SLUG } from "@/lib/main-dao";
 import type { Proposal } from "@/lib/proposals";
+import { resolveExpiredProposals } from "@/lib/proposal-resolution";
 
 // A school can act on the Programmatic Liquidation Policy's 50% trim
 // manually/early, ahead of (or instead of relying on) this automated
@@ -70,6 +65,16 @@ export async function POST(req: NextRequest) {
   after(async () => {
     try {
       const supabase = createServiceClient();
+
+      // Resolve expired proposals (and repost passed ones to Main DAO) on
+      // every call, BEFORE the snapshot cooldown check below — this used to
+      // run last, behind that early return, so a passed vote could wait
+      // hours for a cron run that happened to clear the cooldown. The
+      // proposals GET route also calls this, so it normally fires as soon as
+      // anyone views a voting page; this is the backstop.
+      await resolveExpiredProposals(supabase).catch((err) =>
+        console.error("[snapshot] proposal auto-resolve/repost failed:", err));
+
       const { data: recent } = await supabase
         .from("portfolio_snapshots")
         .select("captured_at")
@@ -343,18 +348,11 @@ export async function POST(req: NextRequest) {
         console.error("[snapshot] change detection pass failed:", err);
       }
 
-      // Each stage below is independently try/caught. They used to all
-      // share one try block with proposal auto-resolve/repost last — so a
-      // throw anywhere earlier (most riskily, the external FDV price
-      // lookup here, or a push/email send) skipped proposal resolution
-      // entirely for that run. Worse, the portfolio_snapshots insert above
-      // already reset the cooldown, so the next cron invocation could skip
-      // straight past via the cooldown check at the top of this function
-      // without ever reaching this code either — a strongly-passing vote
-      // could go unresolved (and unreposted to Main DAO) indefinitely if
-      // the same upstream failure kept recurring. Isolating each stage
-      // means a liquidation-alert or warning-email failure can no longer
-      // block proposal resolution, or vice versa.
+      // Each stage below is independently try/caught, so a throw in one
+      // (most riskily the external FDV price lookup, or a push/email send)
+      // can't skip the others. Proposal resolution/repost no longer lives
+      // down here at all — it runs at the top of this function, ahead of the
+      // cooldown check (see resolveExpiredProposals).
 
       // Programmatic Liquidation Policy check (resolved 2024-06-01 — see
       // lib/fdv.ts). Every school's non-ETH holdings with a real entryFdvUsd
@@ -435,82 +433,6 @@ export async function POST(req: NextRequest) {
         }
       } catch (err) {
         console.error("[snapshot] 12h warning pass failed:", err);
-      }
-
-      // Auto-resolve proposals whose voting deadline has passed
-      try {
-        const { data: expiredProposals } = await supabase
-          .from("proposals")
-          .select("*")
-          .eq("status", "active")
-          .lt("voting_deadline", new Date().toISOString());
-
-        if (expiredProposals && expiredProposals.length > 0) {
-          for (const proposal of expiredProposals) {
-            // "Passed" means at least 50% YES — not a strict majority, so an
-            // exact tie (e.g. 1 yes / 1 no) still passes and reposts to Main
-            // DAO. A proposal with zero votes cast stays "rejected" rather
-            // than auto-passing on an empty 0/0 split.
-            const totalVotes = proposal.yes_votes + proposal.no_votes;
-            const resolvedStatus = totalVotes > 0 && proposal.yes_votes / totalVotes >= 0.5 ? "passed" : "rejected";
-            await supabase
-              .from("proposals")
-              .update({ status: resolvedStatus })
-              .eq("id", proposal.id);
-            const resolved = { ...proposal, status: resolvedStatus } as Proposal;
-            await sendProposalResultEmail(resolved).catch(console.error);
-
-            // Repost passed school proposals to Main DAO as a new proposal.
-            // Guard against Main DAO proposals reposting themselves.
-            if (resolvedStatus === "passed" && resolved.school !== MAIN_DAO_SLUG) {
-              const originSchoolName = SCHOOL_NAMES.find((name) => slugify(name) === resolved.school);
-              const originLabel = originSchoolName ? schoolDisplayName(originSchoolName) : resolved.school;
-              const mainDaoDeadline = new Date(Date.now() + 36 * 60 * 60 * 1000);
-
-              const { data: repostedRow, error: repostError } = await supabase
-                .from("proposals")
-                .insert({
-                  school: MAIN_DAO_SLUG,
-                  token_ticker: resolved.token_ticker,
-                  token_name: resolved.token_name,
-                  title: `${originLabel}: ${resolved.title}`,
-                  description: resolved.description,
-                  proposed_by: resolved.proposed_by,
-                  proposed_by_name: resolved.proposed_by_name,
-                  recommended_size_eth: resolved.recommended_size_eth,
-                  price_target: resolved.price_target,
-                  document_ids: resolved.document_ids ?? [],
-                  voting_deadline: mainDaoDeadline.toISOString(),
-                  created_by_admin: true,
-                  // Snapshot of the school-level vote tally this pitch
-                  // passed with — shown as "Original Vote" on the Main DAO
-                  // card (see ProposalCard.tsx), immutable from here on.
-                  origin_yes_votes: resolved.yes_votes,
-                  origin_no_votes: resolved.no_votes,
-                })
-                .select()
-                .single();
-
-              if (repostError) {
-                console.error(`[snapshot] failed to repost proposal ${resolved.id} to Main DAO:`, repostError.message);
-              } else {
-                console.log(`[snapshot] reposted proposal ${resolved.id} to Main DAO`);
-                const reposted = repostedRow as Proposal;
-                const payload = {
-                  type: "vote" as const,
-                  title: `🗳️ New proposal: ${reposted.token_ticker}`,
-                  body: `${proposalSchoolLabel(MAIN_DAO_SLUG)} is voting on ${reposted.token_name}. Cast your vote.`,
-                  url: proposalVoteUrl(MAIN_DAO_SLUG),
-                };
-                await sendPushNotifications(payload).catch(console.error);
-                await sendNewProposalEmail(reposted).catch(console.error);
-              }
-            }
-          }
-          console.log(`[snapshot] resolved ${expiredProposals.length} expired proposals`);
-        }
-      } catch (err) {
-        console.error("[snapshot] proposal auto-resolve/repost failed:", err);
       }
     } catch (err) {
       console.error("[snapshot] unexpected error:", err);
