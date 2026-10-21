@@ -1,142 +1,230 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
 } from "recharts";
-import { formatUSD } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { cn, formatPct, formatPrice, formatUSD } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 
 const RANGES = [
+  { label: "24H", value: "1" },
   { label: "7D", value: "7" },
   { label: "30D", value: "30" },
   { label: "90D", value: "90" },
+  { label: "1Y", value: "365" },
 ];
+
+const UP_COLOR = "#1D9E75";
+const DOWN_COLOR = "#E24B4A";
+// CoinGecko returns ~288 points for 24H and ~2,000 for 90D; anything past a
+// few hundred is invisible at this chart width and just slows hover.
+const MAX_POINTS = 240;
+const CHART_HEIGHT = 240;
+
+interface PricePoint {
+  time: number;
+  price: number;
+}
 
 interface PriceLineChartProps {
   geckoId: string;
-  positive?: boolean;
 }
 
-export function PriceLineChart({ geckoId, positive }: PriceLineChartProps) {
+function downsample(points: PricePoint[]): PricePoint[] {
+  if (points.length <= MAX_POINTS) return points;
+  const step = points.length / MAX_POINTS;
+  const sampled = Array.from({ length: MAX_POINTS }, (_, i) => points[Math.floor(i * step)]);
+  // Always end on the latest quote so the chart agrees with the header price.
+  return [...sampled.slice(0, -1), points[points.length - 1]];
+}
+
+// Short axis labels that stay distinct for sub-dollar tokens ($0.0812, not "$0").
+function formatAxisPrice(v: number): string {
+  const abs = Math.abs(v);
+  if (abs >= 1000) return formatUSD(v, true);
+  if (abs >= 1) return `$${v.toFixed(2)}`;
+  return `$${Number(v.toPrecision(3))}`;
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+// Spacing between x-axis ticks per range, so labels land on clean
+// boundaries (midnight, every 4h) instead of repeating the same date.
+const TICK_STEP_MS: Record<string, number> = {
+  "1": 4 * HOUR_MS,
+  "7": DAY_MS,
+  "30": 5 * DAY_MS,
+  "90": 15 * DAY_MS,
+  "365": 60 * DAY_MS,
+};
+
+function axisTicks(start: number, end: number, days: string): number[] {
+  const step = TICK_STEP_MS[days] ?? DAY_MS;
+  const aligned = new Date(start);
+  if (step >= DAY_MS) aligned.setHours(0, 0, 0, 0);
+  else aligned.setMinutes(0, 0, 0);
+  const ticks: number[] = [];
+  for (let t = aligned.getTime() + step; t < end; t += step) ticks.push(t);
+  return ticks;
+}
+
+function formatTime(t: number, days: string, withYear = false): string {
+  const d = new Date(t);
+  if (days === "1") return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(withYear || days === "365" ? { year: "2-digit" } : {}),
+  });
+}
+
+export function PriceLineChart({ geckoId }: PriceLineChartProps) {
   const [days, setDays] = useState("7");
-  const [data, setData] = useState<{ time: number; price: number }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<PricePoint[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [hover, setHover] = useState<PricePoint | null>(null);
   const { theme } = useTheme();
   const light = theme === "light";
 
-  const tick   = light ? "#6b7280" : "#9ca3af";
-  const ttBg   = light ? "#ffffff" : "#1f2937";
-  const ttBord = light ? "#e5e7eb" : "#374151";
-  const ttLbl  = light ? "#111827" : "#f3f4f6";
-
   useEffect(() => {
-    setLoading(true);
-    setData([]);
-    fetch(`/api/market-chart?id=${geckoId}&days=${days}`)
+    const controller = new AbortController();
+    setStatus("loading");
+    setHover(null);
+    fetch(`/api/market-chart?id=${encodeURIComponent(geckoId)}&days=${days}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((d) => {
-        if (Array.isArray(d.prices)) {
-          const raw = d.prices.map(([time, price]: [number, number]) => ({ time, price }));
-          // Keep last data point per calendar date to eliminate duplicate x-axis labels
-          const dayMap = new Map<string, { time: number; price: number }>();
-          for (const pt of raw) {
-            dayMap.set(new Date(pt.time).toDateString(), pt);
-          }
-          setData(Array.from(dayMap.values()));
-        }
+        if (!Array.isArray(d.prices)) throw new Error(d.error ?? "No price data");
+        const points = d.prices
+          .map(([time, price]: [number, number]) => ({ time, price }))
+          .filter((p: PricePoint) => Number.isFinite(p.price) && p.price > 0);
+        setData(downsample(points));
+        setStatus("ready");
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        console.warn("[PriceLineChart]", geckoId, days, err);
+        setData([]);
+        setStatus("error");
+      });
+    return () => controller.abort();
   }, [geckoId, days]);
 
-  const color = positive !== false ? "#1D9E75" : "#E24B4A";
+  const first = data[0]?.price;
+  const last = data[data.length - 1];
+  const shown = hover ?? last;
+  const changePct = first && shown ? ((shown.price - first) / first) * 100 : null;
+  const isUp = first && last ? last.price >= first : true;
+  const color = isUp ? UP_COLOR : DOWN_COLOR;
+  const gradientId = `price-fill-${geckoId}`;
 
-  function xInterval(len: number): number {
-    const divisor = days === "7" ? 7 : days === "30" ? 8 : 9;
-    return Math.max(1, Math.floor(len / divisor));
-  }
+  const yDomain = useMemo<[number, number]>(() => {
+    if (data.length === 0) return [0, 1];
+    const prices = data.map((d) => d.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const pad = (max - min) * 0.08 || max * 0.02;
+    return [Math.max(0, min - pad), max + pad];
+  }, [data]);
 
-  function yTickFormatter(v: number): string {
-    if (data.length < 2) return formatUSD(v, true);
-    const prices = data.map(d => d.price);
-    const range = Math.max(...prices) - Math.min(...prices);
-    if (range < 500) {
-      return `$${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-    }
-    return formatUSD(v, true);
-  }
+  const tick = light ? "#6b7280" : "#9ca3af";
 
   return (
     <div>
-      <div className="flex gap-1.5 mb-3">
-        {RANGES.map((r) => (
-          <button
-            key={r.value}
-            onClick={() => setDays(r.value)}
-            className={cn(
-              "px-3 py-1 rounded text-xs font-medium transition-colors border",
-              days === r.value
-                ? "bg-primary/20 text-primary border-primary/40"
-                : "text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent"
-            )}
-          >
-            {r.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
+        <div className="min-h-[2.5rem]">
+          {status === "ready" && shown && (
+            <>
+              <div className="flex items-baseline gap-2 font-mono">
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">{formatPrice(shown.price)}</span>
+                {changePct !== null && (
+                  <span className={cn("text-sm", changePct >= 0 ? "text-primary" : "text-danger")}>
+                    {formatPct(changePct)}
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-gray-700 dark:text-gray-400">
+                {hover ? formatTime(hover.time, days, true) : `Past ${RANGES.find((r) => r.value === days)?.label}`}
+              </div>
+            </>
+          )}
+        </div>
+        <div className="flex gap-1">
+          {RANGES.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setDays(r.value)}
+              className={cn(
+                "px-2.5 py-1 rounded text-xs font-medium transition-colors border",
+                days === r.value
+                  ? "bg-primary/20 text-primary border-primary/40"
+                  : "text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border-transparent"
+              )}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
       </div>
-      {loading ? (
-        <div className="h-48 bg-gray-800/50 animate-pulse rounded-lg" />
-      ) : data.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-gray-700 dark:text-gray-400 text-sm">
-          No chart data available
+
+      {status === "loading" ? (
+        <div className="h-60 bg-gray-100 dark:bg-gray-800/50 animate-pulse rounded-lg" />
+      ) : status === "error" || data.length < 2 ? (
+        <div className="h-60 flex items-center justify-center text-gray-700 dark:text-gray-400 text-sm">
+          {status === "error" ? "Chart data unavailable right now" : "Not enough price history yet"}
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={light ? "#f3f4f6" : "#ffffff0a"}
-              vertical={false}
-            />
+        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+          <AreaChart
+            data={data}
+            margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+            onMouseMove={(s) => {
+              const idx = s?.activeTooltipIndex;
+              setHover(typeof idx === "number" ? data[idx] ?? null : null);
+            }}
+            onMouseLeave={() => setHover(null)}
+          >
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke={light ? "#f3f4f6" : "#ffffff0a"} vertical={false} />
             <XAxis
               dataKey="time"
-              tickFormatter={(t) =>
-                new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-              }
+              type="number"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
+              ticks={axisTicks(data[0].time, data[data.length - 1].time, days)}
+              tickFormatter={(t) => formatTime(t, days)}
               tick={{ fill: tick, fontSize: 10 }}
-              interval={xInterval(data.length)}
+              minTickGap={20}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
+              orientation="right"
+              domain={yDomain}
+              tickFormatter={formatAxisPrice}
               tick={{ fill: tick, fontSize: 10 }}
-              tickFormatter={yTickFormatter}
-              domain={["auto", "auto"]}
-              width={70}
+              axisLine={false}
+              tickLine={false}
+              width={64}
               tickCount={5}
             />
-            <Tooltip
-              formatter={(v) => [formatUSD(Number(v)), "Price"]}
-              labelFormatter={(t) =>
-                new Date(t).toLocaleDateString("en-US", {
-                  month: "short", day: "numeric", year: "numeric",
-                })
-              }
-              contentStyle={{
-                background: ttBg, border: `1px solid ${ttBord}`,
-                borderRadius: 8, fontSize: 12,
-              }}
-              labelStyle={{ color: ttLbl }}
-            />
-            <Line
+            {/* Tooltip drives the crosshair + hover state; the readout lives in the header. */}
+            <Tooltip content={() => null} cursor={{ stroke: tick, strokeDasharray: "3 3" }} />
+            <Area
               type="monotone"
               dataKey="price"
               stroke={color}
-              dot={false}
               strokeWidth={2}
+              fill={`url(#${gradientId})`}
+              dot={false}
+              activeDot={{ r: 4, fill: color, stroke: light ? "#fff" : "#111827", strokeWidth: 2 }}
+              isAnimationActive={false}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       )}
     </div>
