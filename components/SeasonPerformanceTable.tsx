@@ -1,7 +1,8 @@
 "use client";
 import type { TokenSeasonRow } from "@/lib/seasonPerformance";
 import { formatUSD, formatPct, cn } from "@/lib/utils";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import Link from "next/link";
+import { TrendingUp, TrendingDown, ExternalLink } from "lucide-react";
 
 function ReturnCell({ value }: { value: number | null }) {
   if (value == null) return <span className="text-gray-700 dark:text-gray-400">—</span>;
@@ -70,9 +71,16 @@ export function SeasonPerformanceTable({ rows, sinceDateLabel, reconciledToLeade
           {list.map((row) => (
             <tr key={row.ticker} className="border-b border-gray-800/60 last:border-b-0">
               <td className="px-5 py-3">
-                <div className={cn("font-medium", row.status === "exited" ? "text-gray-700 dark:text-gray-400" : "text-gray-900 dark:text-white")}>
+                <Link
+                  href={`/tokens/${row.ticker.toLowerCase()}`}
+                  className={cn(
+                    "font-medium hover:text-primary transition-colors inline-flex items-center gap-1 whitespace-nowrap",
+                    row.status === "exited" ? "text-gray-700 dark:text-gray-400" : "text-gray-900 dark:text-white"
+                  )}
+                >
                   ${row.ticker}
-                </div>
+                  <ExternalLink className="w-3 h-3 opacity-40" />
+                </Link>
                 <StatusNote status={row.status} />
               </td>
               <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">
