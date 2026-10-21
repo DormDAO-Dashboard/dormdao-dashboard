@@ -18,12 +18,24 @@ type Tab = (typeof TABS)[number]["key"];
 
 const YEAR_TABS = [
   { key: "all",  label: "All Time",   start: 0,                                    end: Infinity },
+  { key: "2627", label: "2026–2027",  start: new Date("2026-10-01").getTime(),     end: new Date("2027-10-01").getTime() },
   { key: "2526", label: "2025–2026",  start: new Date("2025-10-01").getTime(),     end: new Date("2026-10-01").getTime() },
   { key: "2425", label: "2024–2025",  start: new Date("2024-10-01").getTime(),     end: new Date("2025-10-01").getTime() },
   { key: "2324", label: "2023–2024",  start: new Date("2023-10-01").getTime(),     end: new Date("2024-10-01").getTime() },
 ] as const;
 
 type YearKey = (typeof YEAR_TABS)[number]["key"];
+
+function TickerLink({ ticker, label }: { ticker: string; label: string }) {
+  return (
+    <Link
+      href={`/tokens/${ticker.toLowerCase()}`}
+      className="font-mono font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors"
+    >
+      {label}
+    </Link>
+  );
+}
 
 function toMs(d: string): number {
   if (!d) return 0;
@@ -241,7 +253,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                         <span className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(h.schoolName)}</span>
                       </Link>
                     </td>
-                    <td className="px-5 py-3 font-mono font-semibold text-gray-900 dark:text-white">{h.ticker}</td>
+                    <td className="px-5 py-3"><TickerLink ticker={h.ticker} label={h.ticker} /></td>
                     <td className="px-5 py-3 text-right font-mono text-gray-700 dark:text-gray-400 text-xs">
                       {h.costBasisEth > 0 ? `${h.costBasisEth.toFixed(3)} ETH` : "—"}
                     </td>
@@ -303,7 +315,7 @@ function NftActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                           <span className="text-gray-700 dark:text-gray-400 text-xs">{schoolDisplayName(h.schoolName)}</span>
                         </Link>
                       </td>
-                      <td className="px-5 py-3 font-mono font-semibold text-gray-900 dark:text-white">{h.ticker}</td>
+                      <td className="px-5 py-3"><TickerLink ticker={h.ticker} label={h.ticker} /></td>
                       <td className="px-5 py-3">
                         {h.exitType === "exit" ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-danger/20 text-danger border border-danger/30">Exit</span>
@@ -537,7 +549,7 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
                       </div>
                     </Link>
                   </td>
-                  <td className="px-5 py-3 font-mono font-semibold text-gray-900 dark:text-white">${r.ticker}</td>
+                  <td className="px-5 py-3"><TickerLink ticker={r.ticker} label={`$${r.ticker}`} /></td>
                   <td className="px-5 py-3">
                     <ActionBadge type={r.actionType} isNft={r.isNft} />
                   </td>
@@ -574,7 +586,7 @@ function AllActivity({ schools, yearStart, yearEnd }: { schools: SchoolRowWithHo
 
 export function ActivityTabs({ schools }: { schools: SchoolRowWithHoldings[] }) {
   const [tab, setTab] = useState<Tab>("all");
-  const [year, setYear] = useState<YearKey>("2526");
+  const [year, setYear] = useState<YearKey>("2627");
 
   const yearTab = YEAR_TABS.find((y) => y.key === year)!;
 
