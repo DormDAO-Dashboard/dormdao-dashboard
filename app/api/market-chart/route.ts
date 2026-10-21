@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { fetchCoinGecko } from "@/lib/coingecko";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(
+    const res = await fetchCoinGecko(
       `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(geckoId)}/market_chart?vs_currency=usd&days=${days}`,
       { next: { revalidate: days === "7" ? 300 : 3600 } }
     );

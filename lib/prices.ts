@@ -40,9 +40,11 @@ async function fetchBatch(ids: string[]): Promise<Record<string, PriceEntry> | n
   return null;
 }
 
-export async function getPricesForTickers(
-  tickersInput: string[]
-): Promise<Record<string, { usd: number; usd_24h_change: number }>> {
+// Ticker → CoinGecko id for every ticker that has one, static or discovered.
+// Exported so callers (e.g. the token detail page via /api/prices) can render
+// the chart and market stats for a newly bought token the same way its price
+// already gets resolved, instead of only for tokens hardcoded in TOKEN_META.
+export async function resolveGeckoIds(tickersInput: string[]): Promise<Map<string, string>> {
   const tickers = tickersInput.map((t) => t.trim().toUpperCase());
   const idsForTicker = new Map<string, string>();
   for (const t of tickers) {
@@ -68,6 +70,13 @@ export async function getPricesForTickers(
       if (resolved) idsForTicker.set(t, resolved.geckoId);
     }
   }
+  return idsForTicker;
+}
+
+export async function getPricesForTickers(
+  tickersInput: string[]
+): Promise<Record<string, { usd: number; usd_24h_change: number }>> {
+  const idsForTicker = await resolveGeckoIds(tickersInput);
 
   const now = Date.now();
   const allIds = [...new Set(idsForTicker.values())];

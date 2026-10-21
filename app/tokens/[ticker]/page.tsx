@@ -177,6 +177,10 @@ export default function TokenDetailPage() {
   const tickerUpper = ticker.toUpperCase();
   const meta = TOKEN_META[tickerUpper];
 
+  const [resolvedGeckoId, setResolvedGeckoId] = useState<string | null>(null);
+  // Newly bought tokens aren't in TOKEN_META yet; /api/prices discovers their
+  // CoinGecko id, so fall back to that for the chart and market stats.
+  const geckoId = meta?.geckoId ?? resolvedGeckoId;
   const [price, setPrice] = useState<{ usd: number; usd_24h_change: number } | null>(null);
   const [ethPrice, setEthPrice] = useState(0);
   const [coinDetail, setCoinDetail] = useState<CoinDetail | null>(null);
@@ -193,17 +197,10 @@ export default function TokenDetailPage() {
       .then((d) => {
         setPrice(d.prices?.[tickerUpper] ?? null);
         setEthPrice(d.prices?.ETH?.usd ?? 0);
+        setResolvedGeckoId(d.ids?.[tickerUpper] ?? null);
       })
+      .catch(() => {})
       .finally(() => setLoadingPrice(false));
-
-    if (meta?.geckoId) {
-      fetch(`/api/coin-detail?id=${meta.geckoId}`)
-        .then((r) => r.json())
-        .then((d) => setCoinDetail(d))
-        .finally(() => setLoadingDetail(false));
-    } else {
-      setLoadingDetail(false);
-    }
 
     fetch("/api/sheets")
       .then((r) => r.json())
@@ -237,7 +234,19 @@ export default function TokenDetailPage() {
         setSchoolPositions(positions.sort((a, b) => b.tokens - a.tokens));
       })
       .finally(() => setLoadingSchools(false));
-  }, [tickerUpper, meta?.geckoId]);
+  }, [tickerUpper]);
+
+  // Market stats only render once geckoId is known, so no-id needs no handling.
+  useEffect(() => {
+    if (!geckoId) return;
+    setLoadingDetail(true);
+    setCoinDetail(null);
+    fetch(`/api/coin-detail?id=${geckoId}`)
+      .then((r) => r.json())
+      .then((d) => setCoinDetail(d.error ? null : d))
+      .catch(() => setCoinDetail(null))
+      .finally(() => setLoadingDetail(false));
+  }, [geckoId]);
 
   const isUp = price ? price.usd_24h_change >= 0 : null;
 
@@ -299,15 +308,15 @@ export default function TokenDetailPage() {
         </div>
 
         {/* Price chart */}
-        {meta?.geckoId && (
+        {geckoId && (
           <div className="mt-6">
-            <PriceLineChart geckoId={meta.geckoId} positive={isUp ?? true} />
+            <PriceLineChart geckoId={geckoId} />
           </div>
         )}
       </div>
 
       {/* Market stats */}
-      {meta?.geckoId && (
+      {geckoId && (
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Market Stats</h2>
@@ -342,7 +351,9 @@ export default function TokenDetailPage() {
                 subColor={coinDetail.athChangePercent && coinDetail.athChangePercent < 0 ? "text-danger" : "text-primary"}
               />
             </div>
-          ) : null}
+          ) : (
+            <div className="text-sm text-gray-700 dark:text-gray-400">Market stats unavailable right now — try refreshing.</div>
+          )}
         </div>
       )}
 

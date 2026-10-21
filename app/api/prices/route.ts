@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TICKER_TO_COINGECKO } from "@/lib/tokens";
-import { getPricesForTickers } from "@/lib/prices";
+import { getPricesForTickers, resolveGeckoIds } from "@/lib/prices";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -10,8 +10,15 @@ export async function GET(req: NextRequest) {
     : Object.keys(TICKER_TO_COINGECKO);
 
   try {
+    // Sequential on purpose: getPricesForTickers warms the per-ticker id
+    // cache, so resolveGeckoIds afterwards costs no extra CoinGecko requests.
     const prices = await getPricesForTickers(tickers);
-    return NextResponse.json({ prices, fetchedAt: new Date().toISOString() });
+    const ids = await resolveGeckoIds(tickers);
+    return NextResponse.json({
+      prices,
+      ids: Object.fromEntries(ids),
+      fetchedAt: new Date().toISOString(),
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: msg, prices: {} }, { status: 500 });
