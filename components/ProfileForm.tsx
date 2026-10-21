@@ -275,7 +275,9 @@ function NormalProfile({
   const [discord, setDiscord]               = useState(initialDiscord);
   const [walletAddress, setWalletAddress]   = useState(initialWalletAddress);
   const [isPublic, setIsPublic]               = useState(initialIsPublic);
-  const DEFAULT_PUBLIC_FIELDS = ["display_name", "school", "graduation_year", "major", "twitter", "linkedin"];
+  // Keep in sync with the profiles.public_fields column default
+  // (supabase-public-profiles-default-migration.sql).
+  const DEFAULT_PUBLIC_FIELDS = ["display_name", "school", "bio", "graduation_year", "major"];
   const [publicFields, setPublicFields]       = useState<string[]>(initialPublicFields.length > 0 ? initialPublicFields : DEFAULT_PUBLIC_FIELDS);
   const [voteReminderEmails, setVoteReminderEmails] = useState(initialVoteReminderEmails);
   const [isAlumni, setIsAlumni]               = useState(initialIsAlumni);
