@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
 } from "recharts";
-import { cn, formatPct, formatPrice, formatUSD } from "@/lib/utils";
+import { cn, formatPct, formatUSD } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 
 const RANGES = [
@@ -26,8 +26,17 @@ interface PricePoint {
   price: number;
 }
 
+export interface ChartHover {
+  price: number;
+  time: number;
+  changePct: number | null; // vs the first point in the selected range
+  label: string;            // formatted date/time of the hovered point
+}
+
 interface PriceLineChartProps {
   geckoId: string;
+  // Lets the page show the hovered price in its main header.
+  onHoverChange?: (hover: ChartHover | null) => void;
 }
 
 function downsample(points: PricePoint[]): PricePoint[] {
@@ -68,17 +77,25 @@ function axisTicks(start: number, end: number, days: string): number[] {
   return ticks;
 }
 
-function formatTime(t: number, days: string, withYear = false): string {
+// Hovered-point label: hourly ranges get a time of day, 1Y (daily points)
+// gets the full date.
+function hoverLabel(t: number, days: string): string {
+  const d = new Date(t);
+  if (days === "365") return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+function formatTime(t: number, days: string): string {
   const d = new Date(t);
   if (days === "1") return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   return d.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    ...(withYear || days === "365" ? { year: "2-digit" } : {}),
+    ...(days === "365" ? { year: "2-digit" } : {}),
   });
 }
 
-export function PriceLineChart({ geckoId }: PriceLineChartProps) {
+export function PriceLineChart({ geckoId, onHoverChange }: PriceLineChartProps) {
   const [days, setDays] = useState("7");
   const [data, setData] = useState<PricePoint[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -111,9 +128,18 @@ export function PriceLineChart({ geckoId }: PriceLineChartProps) {
 
   const first = data[0]?.price;
   const last = data[data.length - 1];
-  const shown = hover ?? last;
-  const changePct = first && shown ? ((shown.price - first) / first) * 100 : null;
+  const rangeChangePct = first && last ? ((last.price - first) / first) * 100 : null;
   const isUp = first && last ? last.price >= first : true;
+
+  useEffect(() => {
+    if (!onHoverChange) return;
+    onHoverChange(hover ? {
+      price: hover.price,
+      time: hover.time,
+      changePct: first ? ((hover.price - first) / first) * 100 : null,
+      label: hoverLabel(hover.time, days),
+    } : null);
+  }, [hover, first, days, onHoverChange]);
   const color = isUp ? UP_COLOR : DOWN_COLOR;
   const gradientId = `price-fill-${geckoId}`;
 
@@ -131,20 +157,13 @@ export function PriceLineChart({ geckoId }: PriceLineChartProps) {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
-        <div className="min-h-[2.5rem]">
-          {status === "ready" && shown && (
+        <div className="min-h-[1.25rem] text-sm font-mono">
+          {status === "ready" && rangeChangePct !== null && (
             <>
-              <div className="flex items-baseline gap-2 font-mono">
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">{formatPrice(shown.price)}</span>
-                {changePct !== null && (
-                  <span className={cn("text-sm", changePct >= 0 ? "text-primary" : "text-danger")}>
-                    {formatPct(changePct)}
-                  </span>
-                )}
-              </div>
-              <div className="text-xs text-gray-700 dark:text-gray-400">
-                {hover ? formatTime(hover.time, days, true) : `Past ${RANGES.find((r) => r.value === days)?.label}`}
-              </div>
+              <span className={rangeChangePct >= 0 ? "text-primary" : "text-danger"}>{formatPct(rangeChangePct)}</span>
+              <span className="ml-1.5 text-xs text-gray-700 dark:text-gray-400">
+                past {RANGES.find((r) => r.value === days)?.label}
+              </span>
             </>
           )}
         </div>
@@ -178,8 +197,9 @@ export function PriceLineChart({ geckoId }: PriceLineChartProps) {
             data={data}
             margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
             onMouseMove={(s) => {
-              const idx = s?.activeTooltipIndex;
-              setHover(typeof idx === "number" ? data[idx] ?? null : null);
+              // Recharts 3 reports the index as a string ("12"), not a number.
+              const idx = Number(s?.activeTooltipIndex);
+              setHover(Number.isInteger(idx) ? data[idx] ?? null : null);
             }}
             onMouseLeave={() => setHover(null)}
           >

@@ -6,7 +6,7 @@ import { formatUSD, formatPrice, formatPct } from "@/lib/utils";
 import { TOKEN_META } from "@/lib/tokens";
 import { schoolDisplayName } from "@/lib/schoolData";
 import { Skeleton } from "@/components/ui/Card";
-import { PriceLineChart } from "@/components/charts/PriceLineChart";
+import { PriceLineChart, type ChartHover } from "@/components/charts/PriceLineChart";
 import { FundDocuments } from "@/components/FundDocuments";
 import { ForumClient } from "@/components/ForumClient";
 import { ArrowLeft, TrendingUp, TrendingDown, Upload } from "lucide-react";
@@ -182,6 +182,7 @@ export default function TokenDetailPage() {
   // CoinGecko id, so fall back to that for the chart and market stats.
   const geckoId = meta?.geckoId ?? resolvedGeckoId;
   const [price, setPrice] = useState<{ usd: number; usd_24h_change: number } | null>(null);
+  const [chartHover, setChartHover] = useState<ChartHover | null>(null);
   const [ethPrice, setEthPrice] = useState(0);
   const [coinDetail, setCoinDetail] = useState<CoinDetail | null>(null);
   const [schoolPositions, setSchoolPositions] = useState<SchoolPosition[]>([]);
@@ -249,6 +250,9 @@ export default function TokenDetailPage() {
   }, [geckoId]);
 
   const isUp = price ? price.usd_24h_change >= 0 : null;
+  // While hovering the chart, the header shows that point's price and its
+  // change since the start of the selected range instead of the live 24h move.
+  const headerUp = chartHover ? (chartHover.changePct ?? 0) >= 0 : isUp;
 
   return (
     <div>
@@ -273,10 +277,14 @@ export default function TokenDetailPage() {
               </>
             ) : price ? (
               <>
-                <div className="text-3xl font-mono font-bold text-gray-900 dark:text-white">{formatPrice(price.usd)}</div>
-                <div className={`flex items-center gap-1 text-sm font-mono mt-1 ${isUp ? "text-primary" : "text-danger"}`}>
-                  {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                  {formatPct(price.usd_24h_change)} (24h)
+                <div className="text-3xl font-mono font-bold text-gray-900 dark:text-white">
+                  {formatPrice(chartHover ? chartHover.price : price.usd)}
+                </div>
+                <div className={`flex items-center gap-1 text-sm font-mono mt-1 ${headerUp ? "text-primary" : "text-danger"}`}>
+                  {headerUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                  {chartHover
+                    ? <>{chartHover.changePct !== null ? formatPct(chartHover.changePct) : "—"} <span className="text-gray-700 dark:text-gray-400">· {chartHover.label}</span></>
+                    : <>{formatPct(price.usd_24h_change)} (24h)</>}
                 </div>
               </>
             ) : meta?.vault ? (
@@ -310,7 +318,7 @@ export default function TokenDetailPage() {
         {/* Price chart */}
         {geckoId && (
           <div className="mt-6">
-            <PriceLineChart geckoId={geckoId} />
+            <PriceLineChart geckoId={geckoId} onHoverChange={setChartHover} />
           </div>
         )}
       </div>
