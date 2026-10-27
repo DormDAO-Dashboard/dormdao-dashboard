@@ -284,8 +284,8 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        {[...Array(2)].map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+        {[...Array(3)].map((_, i) => (
           <div
             key={i}
             className="rounded-xl border border-gray-200 dark:border-gray-800 h-48 animate-pulse bg-gray-100 dark:bg-gray-900/50"
@@ -397,7 +397,9 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
             : pastSubTab === "passed" ? "No passed proposals yet." : "No failed proposals yet."}
         </div>
       ) : (
-        <div className="space-y-4">
+        // 3 per row on desktop (2 on tablet, 1 on phone), same grid for the
+        // Active tab and both Past sub-tabs, on school and Main DAO pages.
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
           {displayProposals.map((proposal) => (
             <ProposalCard
               key={proposal.id}
