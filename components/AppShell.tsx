@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Trophy, GraduationCap, BarChart2, DollarSign, Activity,
   Newspaper, MessagesSquare, BookOpen, Info, Sun, Moon, User,
-  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users, Map, Landmark, Mail, Settings,
+  ChevronRight, MoreHorizontal, X, Scale, ShieldCheck, Users, Map, Landmark, Mail, Settings, Target,
 } from "lucide-react";
 import { slugify } from "@/lib/utils";
 import { getSchoolColors } from "@/lib/schoolColors";
@@ -55,6 +55,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/members":  "Members",
   "/admin/email":    "Email Functions",
   "/admin/settings": "Admin Settings",
+  "/predictions":    "Prediction Markets",
 };
 
 function deriveTitle(pathname: string): string {
@@ -63,6 +64,7 @@ function deriveTitle(pathname: string): string {
   if (pathname.startsWith("/tokens/"))  return "Token";
   if (pathname.startsWith("/forum/"))   return "Thread";
   if (pathname.startsWith("/users/"))   return "Profile";
+  if (pathname.startsWith("/predictions/")) return "Prediction Markets";
   return "Dorm™";
 }
 
@@ -312,7 +314,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             });
 
             if (isAdmin) {
-              const adminActive = matchesRoute("/admin", pathname);
+              // /predictions is admin-only for now, so it lives in this group.
+              const adminActive = matchesRoute("/admin", pathname) || matchesRoute("/predictions", pathname);
               const showAdminSub = adminHovered || adminActive;
 
               const adminLink = (
@@ -340,6 +343,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 { href: "/admin/members",  label: "Members",        icon: Users },
                 { href: "/admin/email",    label: "Email Functions", icon: Mail },
                 { href: "/admin/settings", label: "Admin Settings", icon: Settings },
+                { href: "/predictions",    label: "Predictions",    icon: Target },
               ].map(({ href, label, icon: SubIcon }) => {
                 const subActive = matchesRoute(href, pathname);
                 return (
