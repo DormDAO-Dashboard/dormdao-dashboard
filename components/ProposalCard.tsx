@@ -152,13 +152,15 @@ export function ProposalCard({
 
   return (
     <>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
+      {/* h-full so every card fills its grid cell — VotingClient's grid
+          gives all rows the same height, so all cards match in size. */}
+      <div className="h-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden">
         <div className="h-1 w-full" style={{ backgroundColor: colors.primary }} />
 
         <div className="p-5">
           {/* Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span className="font-mono font-bold text-lg text-gray-900 dark:text-white">
                   ${proposal.token_ticker}
@@ -179,17 +181,20 @@ export function ProposalCard({
                 )}
               </div>
               {proposal.recommended_size_eth != null && (
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
                   {proposal.proposal_type === "sell" ? "Sell" : "Buy"} {proposal.recommended_size_eth} ETH
                 </p>
               )}
             </div>
-            <div className="shrink-0 flex flex-col items-end gap-1 text-right">
-              <span className="text-xs text-gray-700 dark:text-gray-400 font-mono whitespace-nowrap">
+            {/* Capped at half the header and truncated (full title on
+                hover) — it used to be shrink-0, so a long reposted title
+                squeezed the left column until "Buy x ETH" wrapped. */}
+            <div className="min-w-0 max-w-[50%] flex flex-col items-end gap-1 text-right">
+              <span title={proposal.title} className="block max-w-full truncate text-xs text-gray-700 dark:text-gray-400 font-mono">
                 {proposal.title}
               </span>
               {proposal.price_target != null && (
-                <span className="text-xs text-gray-700 dark:text-gray-400 font-mono whitespace-nowrap">
+                <span className="block max-w-full truncate text-xs text-gray-700 dark:text-gray-400 font-mono">
                   Target ${proposal.price_target.toLocaleString()}
                 </span>
               )}

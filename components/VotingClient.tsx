@@ -284,7 +284,7 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
@@ -399,7 +399,9 @@ export function VotingClient({ slug, schoolName, pageMode = false, isMainDao = f
       ) : (
         // 3 per row on desktop (2 on tablet, 1 on phone), same grid for the
         // Active tab and both Past sub-tabs, on school and Main DAO pages.
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+        // auto-rows-fr makes every row as tall as the tallest card, so all
+        // cards are the same width and height (ProposalCard is h-full).
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr gap-4">
           {displayProposals.map((proposal) => (
             <ProposalCard
               key={proposal.id}
