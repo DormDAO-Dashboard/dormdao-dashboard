@@ -18,7 +18,7 @@ import { getEffectiveTemplateFields } from "@/lib/email-templates-store";
 const DOMAIN_VERIFIED = process.env.RESEND_DOMAIN_VERIFIED === "true";
 export const ONBOARDING_EMAIL = DOMAIN_VERIFIED ? "onboarding@dormdao.io" : "onboarding@resend.dev";
 export const NOTIFICATIONS_EMAIL = DOMAIN_VERIFIED ? "notifications@dormdao.io" : "onboarding@resend.dev";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://dormdao-dashboard.vercel.app";
 
 // Trade/position-change notification titles (built in app/api/snapshot/route.ts)
 // carry a leading emoji (🟢/🔴) meant for the browser push notification —
@@ -114,7 +114,7 @@ const SCHOOL_HEADER_IMAGES: Record<string, { file: string; width: number; height
   "waterloo":       { file: "waterloo.png",       width: 133, height: 28 },
 };
 
-function buildTemplate(opts: {
+export function buildTemplate(opts: {
   title: string;
   schoolLabel?: string;
   bodyHtml: string;
@@ -132,6 +132,9 @@ function buildTemplate(opts: {
   // instead, since that's the one place in the email an image actually can
   // stand in for what the emoji used to signal.
   titleIcon?: boolean;
+  // Content width in px — the monthly reports (lib/report-emails.ts) carry
+  // multi-column tables that need more room than a one-paragraph notice.
+  maxWidth?: number;
 }): string {
   const headerColors = opts.schoolSlug ? getSchoolColors(opts.schoolSlug) : DEFAULT_HEADER_COLORS;
   const headerBg = (opts.schoolSlug && EMAIL_HEADER_BG_OVERRIDE[opts.schoolSlug]) || headerColors.primary;
@@ -153,7 +156,7 @@ function buildTemplate(opts: {
     ? `<a href="${buildUnsubUrl(opts.userId)}" style="color:#9ca3af;text-decoration:underline">Unsubscribe</a>`
     : `<a href="${APP_URL}/profile" style="color:#9ca3af;text-decoration:underline">Manage preferences</a>`;
 
-  return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
+  return `<div style="font-family:sans-serif;max-width:${opts.maxWidth ?? 520}px;margin:0 auto">
   <div style="background:${headerBg};padding:16px 24px;border-radius:12px 12px 0 0">
     ${headerMark}
   </div>
