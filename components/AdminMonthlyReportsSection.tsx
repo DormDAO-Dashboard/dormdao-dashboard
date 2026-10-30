@@ -53,7 +53,7 @@ export function AdminMonthlyReportsSection() {
     }
   }
 
-  const rows: Array<{ type: ReportType; title: string; description: string }> = [
+  const rows: Array<{ type: ReportType; title: string; description: string; status?: string }> = [
     {
       type: "portfolio",
       title: "Monthly Portfolio Report",
@@ -62,7 +62,8 @@ export function AdminMonthlyReportsSection() {
     {
       type: "leaderboard",
       title: "Monthly Leaderboard Digest",
-      description: "DormDAO-wide — totals, the full leaderboard, a cross-school performance chart, and every buy in the past 30 days.",
+      description: "DormDAO-wide — portfolio snapshot, Past Month leaderboard, season-to-date Performance Leaderboard chart, and positions opened this month.",
+      status: "In review — needs Jack's sign-off and approved disclosure text before it can send",
     },
   ];
 
@@ -85,7 +86,7 @@ export function AdminMonthlyReportsSection() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-gray-900 dark:text-white">{r.title}</p>
               <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{r.description}</p>
-              <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mt-2">Not scheduled — preview only, nothing sends automatically yet</p>
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mt-2">{r.status ?? "Not scheduled — preview only, nothing sends automatically yet"}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {r.type === "portfolio" && (

@@ -6,7 +6,7 @@ import { schoolDisplayName } from "@/lib/schoolData";
 import { SEASON_START_DATE, SEASON_START_NAV_USD } from "@/lib/seasonBaseline";
 import { getScaledTokenSeasonPerformance } from "@/lib/seasonPerformance";
 import {
-  getMonthStartDate, getPortfolioMonthToDateReturn, getPositionMonthToDateReturns,
+  getMonthStartDate, getPortfolioMonthToDateReturn, getPortfolioWindowReturn, getPositionMonthToDateReturns,
 } from "@/lib/snapshotReturns";
 import type { Holding } from "@/lib/types";
 
@@ -287,59 +287,151 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
 }
 
 // ── Monthly Leaderboard Digest (DormDAO-wide) ────────────────────────────────
+//
+// Kept deliberately short (per Zack's review): a portfolio snapshot, two
+// leaderboards on different timeframes — Past Month on top, Season-to-Date
+// as the "Performance Leaderboard" bar chart — and the positions opened this
+// month. No since-inception figures anywhere in the digest.
+//
+// Stays in review until Jack signs off: `review` on the result lists every
+// open item (missing disclosure, schools without a month baseline, opened
+// positions the snapshot history disagrees on) and the admin preview shows
+// it above the email. These changes are digest-only — the school Portfolio
+// Report above is unaffected.
 
-export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promise<BuiltEmail> {
+// Approved disclosure text for the digest footer, as HTML. Deliberately
+// null: no approved wording exists in the codebase or the design previews,
+// and it must come from whoever signs off on legal language — not be
+// written here. While it's null the email shows a visible placeholder and
+// the review list flags it, so the digest can't look finished without it.
+const DIGEST_DISCLOSURE_HTML: string | null = null;
+
+export interface ReviewStatus {
+  status: "in_review";
+  flags: string[];
+}
+
+export interface BuiltDigest extends BuiltEmail {
+  review: ReviewStatus;
+}
+
+export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promise<BuiltDigest> {
   const { schools, totalNAV, avgEthReturn, avgUsdReturn, avgDeployed } = await getSchoolsData();
-  const ranked = [...schools].sort((a, b) => a.rank - b.rank);
+  const seasonRanked = [...schools].sort((a, b) => a.rank - b.rank);
+  const flags: string[] = [];
 
-  const kpi = (labelText: string, value: string) => `
+  const monthStartIso = getMonthStartDate(now);
+  const monthStartMs = new Date(monthStartIso).getTime();
+  const nowMs = now.getTime();
+  const monthRange = `${fmtDate(monthStartMs)} – ${fmtDate(now)}`;
+  const seasonRange = `${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))} – ${fmtDate(now)}`;
+
+  // One ETH price for the whole DAO, read off the first school's ETH treasury
+  // holding — the same marketValueUsd / tokens derivation the school report
+  // uses, but not dependent on any one school holding ETH.
+  let ethPriceUsd = 0;
+  for (const s of schools) {
+    const eth = mergeHoldingsByTicker(s.holdings ?? []).find((h) => h.ticker === "ETH");
+    if (eth?.tokens && eth.marketValueUsd) { ethPriceUsd = eth.marketValueUsd / eth.tokens; break; }
+  }
+  if (!ethPriceUsd) flags.push("No ETH price could be derived from any school's ETH holding, so past-month ETH returns are blank.");
+
+  const service = createServiceClient();
+  const [monthReturns, { data: buyRows }] = await Promise.all([
+    Promise.all(schools.map((s) => ethPriceUsd
+      ? getPortfolioWindowReturn(s.name, monthStartIso, s.nav, ethPriceUsd)
+      : Promise.resolve(null))),
+    service
+      .from("portfolio_changes")
+      .select("school_name, token_ticker, detected_at")
+      .eq("change_type", "buy")
+      .gte("detected_at", monthStartIso)
+      .lte("detected_at", now.toISOString()),
+  ]);
+
+  // ── Accuracy cross-checks (shown to the reviewer, never in the email)
+  const navSum = schools.reduce((sum, s) => sum + s.nav, 0);
+  if (Math.abs(navSum - totalNAV) > 1) {
+    flags.push(`DormDAO NAV (${usd(totalNAV)}) doesn't equal the sum of school NAVs (${usd(navSum)}).`);
+  }
+  const monthBy = new Map(schools.map((s, i) => [s.name, monthReturns[i]]));
+  const noBaseline = schools.filter((s) => !monthBy.get(s.name)).map((s) => schoolDisplayName(s.name));
+  if (noBaseline.length > 0) {
+    flags.push(`No snapshot at or after ${fmtDate(monthStartMs)} for ${noBaseline.join(", ")}, so they're unranked in Past Month.`);
+  }
+  const lateBaseline = schools
+    .map((s) => ({ s, r: monthBy.get(s.name) }))
+    .filter((x) => x.r && new Date(x.r.baselineCapturedAt).getTime() - monthStartMs > 36 * 3_600_000)
+    .map((x) => `${schoolDisplayName(x.s.name)} (${fmtDate(new Date(x.r!.baselineCapturedAt))})`);
+  if (lateBaseline.length > 0) {
+    flags.push(`Past Month baseline is a late snapshot, not the 1st, for: ${lateBaseline.join(", ")}.`);
+  }
+
+  // ── Portfolio snapshot
+  const kpi = (labelText: string, value: string, sub: string) => `
       <td style="width:25%;padding:14px 10px;text-align:center;vertical-align:top">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${labelText}</div>
         <div style="font-size:18px;font-weight:700;color:#111827;font-family:ui-monospace,monospace">${value}</div>
+        <div style="font-size:10px;color:${MUTED};margin-top:3px">${sub}</div>
       </td>`;
-  const kpis = `
-  <table style="width:100%;border-collapse:collapse;margin-top:14px;border:1px solid #e5e7eb">
+  const snapshot = `
+  ${h3("18px 0 0")}Portfolio Snapshot</h3>
+  <table style="width:100%;border-collapse:collapse;margin-top:10px;border:1px solid #e5e7eb">
     <tr>
-      ${kpi("DormDAO NAV", usd(totalNAV))}
-      ${kpi("Avg ETH Return", signedPct(avgEthReturn))}
-      ${kpi("Avg USD Return", signedPct(avgUsdReturn))}
-      ${kpi("Avg Deployed", `${avgDeployed.toFixed(1)}%`)}
+      ${kpi("DormDAO NAV", usd(totalNAV), `${schools.length} schools`)}
+      ${kpi("Avg ETH Return", signedPct(avgEthReturn), "Season to date")}
+      ${kpi("Avg USD Return", signedPct(avgUsdReturn), "Season to date")}
+      ${kpi("Avg Deployed", `${avgDeployed.toFixed(1)}%`, "Of NAV, today")}
     </tr>
   </table>`;
 
-  const leaderRows = ranked.map((s, i) => `
-      <tr style="background:${i < 3 ? "#f0fbf6" : i % 2 ? "#fafafa" : "#ffffff"}">
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;font-family:ui-monospace,monospace;font-weight:700;font-size:12px;color:${i < 3 ? "#111827" : MUTED};text-align:center">${s.rank}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;font-size:12.5px;font-weight:600;color:#111827">${escapeHtml(schoolDisplayName(s.name))}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-family:ui-monospace,monospace;font-size:12px;font-weight:700;color:${tone(s.ethReturn)};white-space:nowrap">${signedPct(s.ethReturn)}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-family:ui-monospace,monospace;font-size:12px;color:${tone(s.usdReturn)};white-space:nowrap">${signedPct(s.usdReturn)}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-family:ui-monospace,monospace;font-size:12px;color:#374151;white-space:nowrap">${s.pctDeployed.toFixed(1)}%</td>
+  // ── Past Month leaderboard (top)
+  const monthRanked = schools
+    .map((s) => ({ s, r: monthBy.get(s.name) ?? null }))
+    .sort((a, b) => {
+      if (a.r && b.r) return b.r.ethReturnPct - a.r.ethReturnPct;
+      if (a.r) return -1;
+      if (b.r) return 1;
+      return a.s.rank - b.s.rank;
+    });
+  const pctCell = (v: number | null | undefined, bold = false) => v == null
+    ? `<td style="${numCell};color:${MUTED}">—</td>`
+    : `<td style="${numCell};color:${tone(v)};white-space:nowrap${bold ? ";font-weight:700" : ""}">${signedPct(v)}</td>`;
+  const monthRows = monthRanked.map(({ s, r }, i) => `
+      <tr style="background:${r && i < 3 ? "#f0fbf6" : i % 2 ? "#fafafa" : "#ffffff"}">
+        <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12px;color:${r && i < 3 ? "#111827" : MUTED};text-align:center">${r ? i + 1 : "—"}</td>
+        <td style="${cell};font-size:12.5px;font-weight:600;color:#111827">${escapeHtml(schoolDisplayName(s.name))}</td>
+        ${pctCell(r?.ethReturnPct, true)}
+        ${pctCell(r?.usdReturnPct)}
       </tr>`).join("");
-
-  const leaderboard = `
-  ${h3("26px 0 0")}Leaderboard</h3>
+  const monthBoard = `
+  ${h3("26px 0 0")}Past Month Leaderboard <span style="font-weight:400;color:${MUTED};font-size:11px">${monthRange}</span></h3>
   <table style="width:100%;border-collapse:collapse;margin-top:10px">
     <thead><tr style="background:#f9fafb">
       <th style="${th("center")}">Rank</th>
       <th style="${th("left")}">School</th>
       <th style="${th("right")}">ETH Return</th>
       <th style="${th("right")}">USD Return</th>
-      <th style="${th("right")}">Deployed</th>
     </tr></thead>
-    <tbody>${leaderRows}</tbody>
+    <tbody>${monthRows}</tbody>
   </table>
-  ${footnote("Ranked by current-season ETH return, the same as the dashboard leaderboard. Season returns are since Oct 1, 2026.")}`;
+  ${footnote(`Ranked by ETH return over ${monthRange} — each school's NAV today against its first snapshot of the month.${noBaseline.length ? " Schools without a snapshot for that date show — and aren't ranked." : ""}`)}`;
 
-  // Diverging bars: positive returns grow right of center, negative left,
-  // scaled to the largest absolute return on the board. Nested tables, not
-  // flex/grid — email clients (Outlook especially) don't support them.
-  const maxAbs = Math.max(1, ...ranked.map((s) => Math.abs(s.ethReturn)));
-  const barRows = ranked.map((s, i) => {
+  // ── Performance Leaderboard (Season to date): ETH return as diverging
+  // bars — positive grows right of center, negative left, scaled to the
+  // largest absolute return on the board, so the size of a lead is visible —
+  // with USD Return and % Deployed beside it: the other two metrics this
+  // digest has always carried per school (same columns as the dashboard
+  // leaderboard). Nested tables, not flex/grid — email clients (Outlook
+  // especially) don't support them.
+  const maxAbs = Math.max(1, ...seasonRanked.map((s) => Math.abs(s.ethReturn)));
+  const barRows = seasonRanked.map((s, i) => {
     const w = ((Math.abs(s.ethReturn) / maxAbs) * 100).toFixed(1);
     const bar = (side: "left" | "right") =>
       `<div style="height:14px;width:${w}%;background:${side === "right" ? GREEN : RED};${side === "right" ? "border-radius:0 3px 3px 0" : "border-radius:3px 0 0 3px;margin-left:auto"}"></div>`;
     const leftCell = s.ethReturn < 0 ? bar("left") : "";
     const rightCell = s.ethReturn >= 0 ? bar("right") : "";
+    const side = "padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;font-size:11px;white-space:nowrap;width:1%";
     return `
       <tr style="background:${i % 2 ? "#fafafa" : "#ffffff"}">
         <td style="padding:5px 8px;font-size:11px;color:#374151;white-space:nowrap;width:1%">${escapeHtml(schoolDisplayName(s.name))}</td>
@@ -349,53 +441,97 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
             <td style="width:50%;padding:0">${rightCell}</td>
           </tr></table>
         </td>
-        <td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;font-size:11px;font-weight:700;color:${tone(s.ethReturn)};white-space:nowrap;width:1%">${signedPct(s.ethReturn)}</td>
+        <td style="${side};font-weight:700;color:${tone(s.ethReturn)}">${signedPct(s.ethReturn)}</td>
+        <td style="${side};color:${tone(s.usdReturn)}">${signedPct(s.usdReturn)}</td>
+        <td style="${side};color:#374151">${s.pctDeployed.toFixed(1)}%</td>
       </tr>`;
   }).join("");
+  const chartTh = (align: "left" | "right" | "center") => `${th(align)};padding:6px 8px`;
   const chart = `
-  ${h3("26px 0 0")}Cross-School Performance</h3>
-  <table style="width:100%;border-collapse:collapse;margin-top:10px">${barRows}</table>
-  ${footnote("Current-season ETH return by school — green bars run right for positive returns, red bars left for negative, scaled to the largest move on the board.")}`;
+  ${h3("26px 0 0")}Performance Leaderboard <span style="font-weight:400;color:${MUTED};font-size:11px">Season to date · ${seasonRange}</span></h3>
+  <table style="width:100%;border-collapse:collapse;margin-top:10px">
+    <thead><tr style="background:#f9fafb">
+      <th style="${chartTh("left")}">School</th>
+      <th style="${chartTh("center")}">ETH Return</th>
+      <th style="${chartTh("right")}">ETH</th>
+      <th style="${chartTh("right")}">USD</th>
+      <th style="${chartTh("right")}">Deployed</th>
+    </tr></thead>
+    ${barRows}
+  </table>
+  ${footnote("Ranked by season ETH return, the same as the dashboard leaderboard. Green bars run right for gains, red bars left for losses, scaled to the largest move on the board. Deployed is the share of NAV held outside the ETH treasury today.")}`;
 
-  // Every tranche bought in the last 30 days, across all schools.
-  const windowStartMs = now.getTime() - 30 * 86_400_000;
-  const recentBuys = ranked
-    .flatMap((s) => (s.holdings ?? [])
-      .filter((h) => h.ticker !== "ETH")
-      .map((h) => ({ school: s, h, ms: investmentMs(h) })))
-    .filter((r): r is { school: typeof r.school; h: Holding; ms: number } => r.ms != null && r.ms >= windowStartMs && r.ms <= now.getTime())
-    .sort((a, b) => b.ms - a.ms);
+  // ── Positions opened this month: a ticker whose earliest tranche falls in
+  // the window. Adds to a position a school already held don't count.
+  type Opened = { school: (typeof schools)[number]; h: Holding; ms: number };
+  const opened: Opened[] = [];
+  let undated = 0;
+  for (const s of schools) {
+    const tranches = [...(s.holdings ?? []), ...(s.nftHoldings ?? [])].filter((h) => h.ticker !== "ETH");
+    const firstBuy = new Map<string, number>();
+    for (const h of tranches) {
+      const ms = investmentMs(h);
+      if (ms == null) { undated++; continue; }
+      firstBuy.set(h.ticker, Math.min(firstBuy.get(h.ticker) ?? Infinity, ms));
+    }
+    for (const h of mergeHoldingsByTicker(tranches)) {
+      const ms = firstBuy.get(h.ticker);
+      if (ms != null && ms >= monthStartMs && ms <= nowMs) opened.push({ school: s, h, ms });
+    }
+  }
+  opened.sort((a, b) => b.ms - a.ms);
+  if (undated > 0) flags.push(`${undated} holding tranche(s) have no readable investment date, so they can't be checked for "opened this month".`);
 
-  const buyRows = recentBuys.map((r, i) => `
+  // Cross-check against the buys the hourly snapshot diff detected.
+  const key = (school: string, ticker: string) => `${school}|${ticker.toUpperCase()}`;
+  const sheetKeys = new Set(opened.map((o) => key(o.school.name, o.h.ticker)));
+  const detectedKeys = new Set(((buyRows ?? []) as Array<{ school_name: string; token_ticker: string }>)
+    .map((r) => key(r.school_name, r.token_ticker)));
+  const pretty = (k: string) => { const [school, t] = k.split("|"); return `${schoolDisplayName(school)} $${t}`; };
+  const onlySheet = [...sheetKeys].filter((k) => !detectedKeys.has(k)).map(pretty);
+  const onlyDetected = [...detectedKeys].filter((k) => !sheetKeys.has(k)).map(pretty);
+  if (onlySheet.length) flags.push(`Listed as opened (by investment date) but no matching buy detected in snapshots: ${onlySheet.join(", ")}.`);
+  if (onlyDetected.length) flags.push(`Buy detected in snapshots this month but not listed (investment date is earlier, or the position is already closed): ${onlyDetected.join(", ")}.`);
+
+  const openedRows = opened.map((r, i) => `
       <tr style="background:${i % 2 ? "#fafafa" : "#ffffff"}">
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#374151">${escapeHtml(schoolDisplayName(r.school.name))}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;font-family:ui-monospace,monospace;font-weight:700;font-size:12.5px;color:#111827">$${escapeHtml(r.h.ticker)}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#6b7280;white-space:nowrap">${fmtDate(r.ms)}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-family:ui-monospace,monospace;font-size:12px;color:#374151">${usd(r.h.marketValueUsd ?? 0)}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:${r.h.roiEthPct == null ? MUTED : tone(r.h.roiEthPct)}">${r.h.roiEthPct == null ? "—" : signedPct(r.h.roiEthPct)}</td>
+        <td style="${cell};font-size:12px;color:#374151">${escapeHtml(schoolDisplayName(r.school.name))}</td>
+        <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12.5px;color:#111827">$${escapeHtml(r.h.ticker)}</td>
+        <td style="${cell};font-size:11px;color:#6b7280;white-space:nowrap">${fmtDate(r.ms)}</td>
+        <td style="${numCell};color:#374151">${r.h.marketValueUsd == null ? "—" : usd(r.h.marketValueUsd)}</td>
+        ${pctCell(r.h.roiEthPct, true)}
       </tr>`).join("");
   const newPositions = `
-  ${h3("26px 0 0")}New Buys — Past 30 Days</h3>
-  ${recentBuys.length === 0
-    ? `<p style="font-size:12px;color:#6b7280;margin:10px 0 0">No new buys across DormDAO in the past 30 days.</p>`
+  ${h3("26px 0 0")}Positions Opened <span style="font-weight:400;color:${MUTED};font-size:11px">${monthRange}</span></h3>
+  ${opened.length === 0
+    ? `<p style="font-size:12px;color:#6b7280;margin:10px 0 0">No new positions opened across DormDAO this month.</p>`
     : `<table style="width:100%;border-collapse:collapse;margin-top:10px">
     <thead><tr style="background:#f9fafb">
       <th style="${th("left")}">School</th>
       <th style="${th("left")}">Token</th>
-      <th style="${th("left")}">Bought</th>
+      <th style="${th("left")}">Opened</th>
       <th style="${th("right")}">Value</th>
       <th style="${th("right")}">vs ETH</th>
     </tr></thead>
-    <tbody>${buyRows}</tbody>
+    <tbody>${openedRows}</tbody>
   </table>
-  ${footnote(`Every buy across DormDAO since ${fmtDate(windowStartMs)}, including adds to existing positions. "vs ETH" is the return since purchase, measured against holding ETH.`)}`}`;
+  ${footnote(`New positions only — adds to positions a school already held aren't listed. "vs ETH" is the return since purchase, measured against holding ETH.`)}`}`;
+
+  // ── Disclosure
+  if (!DIGEST_DISCLOSURE_HTML) {
+    flags.unshift("Disclosure text is missing. Add the approved wording to DIGEST_DISCLOSURE_HTML in lib/report-emails.ts before this can send.");
+  }
+  const disclosure = DIGEST_DISCLOSURE_HTML
+    ? `<div style="margin-top:22px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:10px;color:${MUTED};line-height:1.5">${DIGEST_DISCLOSURE_HTML}</div>`
+    : `<div style="margin-top:22px;padding:10px 12px;border:1px dashed #f59e0b;background:#fffbeb;border-radius:6px;font-size:11px;color:#92400e;line-height:1.5"><strong>Disclosure — awaiting approved text.</strong> This placeholder must be replaced before the digest is sent.</div>`;
 
   const bodyHtml = `
   <p style="font-size:12.5px;color:${MUTED};margin:-8px 0 4px">${monthLabel(now)} · Season 2026–27 · As of ${fmtDate(now)}</p>
-  ${kpis}
-  ${leaderboard}
+  ${snapshot}
+  ${monthBoard}
   ${chart}
-  ${newPositions}`;
+  ${newPositions}
+  ${disclosure}`;
 
   return {
     subject: `DormDAO Leaderboard Digest — ${monthLabel(now)}`,
@@ -407,5 +543,6 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
       cta: { label: "View Full DormDAO Leaderboard →", url: `${APP_URL}/leaderboard` },
       maxWidth: 680,
     }),
+    review: { status: "in_review", flags },
   };
 }
