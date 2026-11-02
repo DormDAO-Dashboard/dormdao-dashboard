@@ -289,10 +289,17 @@ const getSchoolsDataLive = unstable_cache(
     const schools2526 = getSchools2526();
 
     const result: SchoolsCache = { schools, sinceInceptionSchools, schools2526, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
-    await saveSchoolsSnapshot(result);
+    // The saved snapshot is the last-good fallback patchZeroedFromSnapshot
+    // reads next cycle. If it couldn't be read this cycle, nothing above was
+    // patched, so saving now would overwrite a good snapshot with zeroed
+    // schools and leave them stuck at $0 even after the sheet recovers
+    // (what happened on 2026-11-02). Skip the save in that case.
+    const brokenCount = schools.filter((s) => s.nav === 0 && (s.holdings?.length ?? 0) === 0).length;
+    if (brokenCount > 0) console.error(`[schools] ${brokenCount} school(s) have no holdings and $0 NAV this cycle`);
+    if (!(brokenCount > 0 && !previous)) await saveSchoolsSnapshot(result);
     return result;
   },
-  ["schools-data-v27"],
+  ["schools-data-v28"],
   { revalidate: 600 }
 );
 

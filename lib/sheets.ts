@@ -142,6 +142,35 @@ async function fetchSchoolTabCsv(name: string): Promise<string[][]> {
   return [];
 }
 
+// Fetches every school tab with limited concurrency, then retries any tab
+// that came back empty one at a time with a growing delay. Firing all ~17
+// tabs (plus the 3 leaderboard tabs) at gviz at once got a batch of them
+// throttled or timed out together: on 2026-11-02, 9 schools came back with
+// no holdings and rendered as $0 NAV across the whole leaderboard.
+const TAB_FETCH_CONCURRENCY = 4;
+const TAB_RETRY_DELAYS_MS = [1_000, 2_500, 5_000];
+
+async function fetchAllSchoolTabs(names: readonly string[]): Promise<Map<string, string[][]>> {
+  const out = new Map<string, string[][]>();
+  const queue = [...names];
+  await Promise.all(Array.from({ length: TAB_FETCH_CONCURRENCY }, async () => {
+    for (let name = queue.shift(); name !== undefined; name = queue.shift()) {
+      out.set(name, await fetchSchoolTabCsv(name));
+    }
+  }));
+
+  for (const delay of TAB_RETRY_DELAYS_MS) {
+    const missing = names.filter((n) => (out.get(n)?.length ?? 0) === 0);
+    if (missing.length === 0) break;
+    console.warn(`[sheets] ${missing.length} school tab(s) empty, retrying in ${delay}ms: ${missing.join(", ")}`);
+    await new Promise((r) => setTimeout(r, delay));
+    for (const name of missing) out.set(name, await fetchSchoolTabCsv(name));
+  }
+  const stillMissing = names.filter((n) => (out.get(n)?.length ?? 0) === 0);
+  if (stillMissing.length > 0) console.error(`[sheets] school tab(s) still empty after retries: ${stillMissing.join(", ")}`);
+  return out;
+}
+
 interface LeaderboardEntry {
   name: string;
   rank: number;
@@ -668,9 +697,10 @@ export async function fetchSheetsData(): Promise<{
   // (perfectly fine) holdings were never even fetched.
   const leaderboardByName = new Map(leaderboardEntries.map((e) => [tabToDisplayName(e.name).toLowerCase(), e]));
 
+  const tabDataByName = await fetchAllSchoolTabs(SCHOOL_NAMES);
   const schoolsWithHoldings = await Promise.all(
     SCHOOL_NAMES.map(async (schoolName) => {
-      const tabData = await fetchSchoolTabCsv(schoolName);
+      const tabData = tabDataByName.get(schoolName) ?? [];
       const holdings = parseHoldings(tabData);
       const exitedHoldings = parseExitedHoldings(tabData);
       const nftHoldings = parseNftHoldings(tabData);
