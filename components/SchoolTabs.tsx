@@ -90,6 +90,22 @@ export function SchoolTabs({ school, otherSchools, seasonPerformance }: Props) {
   const mergedHoldings = holdings ? mergeHoldingsByTicker(holdings) : undefined;
   const mergedNftHoldings = school.nftHoldings ? mergeHoldingsByTicker(school.nftHoldings) : undefined;
 
+  // seasonPerformance.rows covers liquid tokens and NFTs together (the page
+  // feeds both in). Split them so the 26-27 Season view shows NFTs in the
+  // NFT box, with season figures, instead of mixing them into the token table.
+  const nftTickers = new Set([
+    ...(mergedNftHoldings ?? []).map((h) => h.ticker),
+    ...(school.exitedHoldings ?? []).filter((h) => h.isNft).map((h) => h.ticker),
+  ]);
+  const seasonTokenRows = Object.fromEntries(
+    Object.entries(seasonPerformance.rows).filter(([ticker]) => !nftTickers.has(ticker)),
+  );
+  const seasonNftRows = Object.fromEntries(
+    Object.entries(seasonPerformance.rows).filter(([ticker]) => nftTickers.has(ticker)),
+  );
+  const seasonNftCount = Object.keys(seasonNftRows).length;
+  const showNftBox = holdingsView === "season" ? seasonNftCount > 0 : (mergedNftHoldings?.length ?? 0) > 0;
+
   const editableHoldings = holdings
     .filter((h): h is typeof h & { positionId: string } => h.positionId != null)
     .map((h) => ({ positionId: h.positionId, ticker: h.ticker, investmentDate: h.investmentDate, purchasePriceUsd: h.purchasePriceUsd }));
@@ -214,28 +230,38 @@ export function SchoolTabs({ school, otherSchools, seasonPerformance }: Props) {
               )
             ) : (
               <SeasonPerformanceTable
-                rows={seasonPerformance.rows}
+                rows={seasonTokenRows}
                 sinceDateLabel={SEASON_LABEL}
                 reconciledToLeaderboard={seasonPerformance.reconciledToLeaderboard}
               />
             )}
           </div>
 
-          {(mergedNftHoldings?.length ?? 0) > 0 && (
+          {showNftBox && (
             <div
               className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 overflow-hidden"
               style={{ borderColor: boxBorder }}
             >
               <div className="px-5 py-4 border-b border-gray-800">
                 <SectionHeading color={colors.primary}>
-                  Active NFT Holdings ({mergedNftHoldings!.length})
+                  {holdingsView === "season"
+                    ? `NFT Holdings · 26-27 Season (${seasonNftCount})`
+                    : `Active NFT Holdings (${mergedNftHoldings!.length})`}
                 </SectionHeading>
               </div>
-              <HoldingsTableClient
-                holdings={mergedNftHoldings!}
-                otherSchools={{}}
-                schoolName={school.name}
-              />
+              {holdingsView === "season" ? (
+                <SeasonPerformanceTable
+                  rows={seasonNftRows}
+                  sinceDateLabel={SEASON_LABEL}
+                  reconciledToLeaderboard={seasonPerformance.reconciledToLeaderboard}
+                />
+              ) : (
+                <HoldingsTableClient
+                  holdings={mergedNftHoldings!}
+                  otherSchools={{}}
+                  schoolName={school.name}
+                />
+              )}
             </div>
           )}
         </div>
