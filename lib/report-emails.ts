@@ -1,28 +1,35 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { getSchoolsData } from "@/lib/cache";
 import { buildTemplate, escapeHtml, APP_URL } from "@/lib/email";
 import { mergeHoldingsByTicker, parseDateMsAsc } from "@/lib/holdings";
 import { schoolDisplayName } from "@/lib/schoolData";
 import { SEASON_START_DATE, SEASON_START_NAV_USD } from "@/lib/seasonBaseline";
 import { getScaledTokenSeasonPerformance } from "@/lib/seasonPerformance";
-import {
-  getMonthStartDate, getPortfolioMonthToDateReturn, getPortfolioWindowReturn, getPositionMonthToDateReturns,
-} from "@/lib/snapshotReturns";
+import { getPositionWindowReturns } from "@/lib/snapshotReturns";
+import { previousMonthPeriod, getClosingState, monthReturn, monthIsSeasonStart } from "@/lib/report-period";
+import { slugify } from "@/lib/utils";
 import type { Holding } from "@/lib/types";
 
 // The two monthly report emails — per-school Portfolio Report and the
-// DormDAO-wide Leaderboard Digest — built from the same live data the site
-// shows (getSchoolsData, the 26-27 season baseline, and the daily
-// portfolio_snapshots history for Month-to-Date). Ported from the
+// DormDAO-wide Ramen Report — each describing the last completed month as
+// of its final day, rebuilt from the hourly portfolio_snapshots history
+// (lib/report-period.ts) rather than today's live data. Ported from the
 // "Portfolio Report Email" / "Leaderboard Digest Email" design previews,
 // minus their illustrative placeholder figures and internal notes.
 //
 // Preview-only for now: rendered in the admin Email Functions page via
 // /api/admin/report-emails/preview. Nothing here sends anything.
 
+export interface ReviewStatus {
+  status: "in_review";
+  flags: string[];
+}
+
 export interface BuiltEmail {
   subject: string;
   html: string;
+  // Open items for the reviewer, shown above the admin preview, never in
+  // the email itself.
+  review?: ReviewStatus;
 }
 
 const GREEN = "#1D9E75";
@@ -98,39 +105,51 @@ function returnLine(label: string, range: string, pct: number | null | undefined
 // ── Monthly Portfolio Report (one per school) ────────────────────────────────
 
 export async function buildPortfolioReportEmail(slug: string, now: Date = new Date()): Promise<BuiltEmail | null> {
-  const { schools, sinceInceptionSchools } = await getSchoolsData();
-  const school = schools.find((s) => s.slug === slug);
+  const period = previousMonthPeriod(now);
+  const state = await getClosingState(period);
+  const school = state.schools.find((s) => slugify(s.name) === slug);
   if (!school) return null;
 
   const label = schoolDisplayName(school.name);
-  const merged = mergeHoldingsByTicker(school.holdings ?? []);
-  const nfts = mergeHoldingsByTicker(school.nftHoldings ?? []);
+  const merged = mergeHoldingsByTicker(school.holdings);
+  const nfts = mergeHoldingsByTicker(school.nftHoldings);
   const ethHolding = merged.find((h) => h.ticker === "ETH");
-  const ethPriceUsd = ethHolding?.tokens ? (ethHolding.marketValueUsd ?? 0) / ethHolding.tokens : 0;
+  const ethPriceUsd = school.ethPriceUsd;
   const positions = [...merged.filter((h) => h.ticker !== "ETH"), ...nfts]
     .sort((a, b) => (b.marketValueUsd ?? 0) - (a.marketValueUsd ?? 0));
+  const nav = school.navUsd;
+  const asOfMs = period.asOf.getTime();
 
-  const monthStartIso = getMonthStartDate(now);
-  const monthStartMs = new Date(monthStartIso).getTime();
+  const monthStartMs = period.monthStart.getTime();
+  const firstMonth = monthIsSeasonStart(period);
 
   const service = createServiceClient();
-  const [mtd, mtdByTicker, season, { data: changeRows }] = await Promise.all([
-    getPortfolioMonthToDateReturn(school.name, school.nav, ethPriceUsd),
-    getPositionMonthToDateReturns(school.name, ethPriceUsd, positions),
+  const [mtd, season, monthByTicker, { data: changeRows }] = await Promise.all([
+    monthReturn(school, period),
     getScaledTokenSeasonPerformance(
-      school.name, SEASON_START_NAV_USD[school.name], ethPriceUsd, [...merged, ...nfts], school.exitedHoldings ?? [],
+      school.name, SEASON_START_NAV_USD[school.name], ethPriceUsd, [...merged, ...nfts], school.exitedHoldings,
     ),
+    firstMonth
+      ? Promise.resolve(null)
+      : getPositionWindowReturns(school.name, period.monthStart.toISOString(), ethPriceUsd, positions),
     service
       .from("portfolio_changes")
       .select("change_type, token_ticker, detected_at")
       .eq("school_name", school.name)
+      .lt("detected_at", period.cutoff.toISOString())
       .order("detected_at", { ascending: false })
       .limit(3),
   ]);
-  const inception = sinceInceptionSchools.find((s) => s.name === school.name);
 
-  const monthRange = `${fmtDate(monthStartMs)}–${fmtDate(now)}`;
-  const seasonRange = `${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))}–${fmtDate(now)}`;
+  const flags: string[] = [];
+  if (state.stale.some((x) => x.name === school.name)) {
+    flags.push(`Closing figures come from a snapshot taken ${fmtDate(new Date(school.capturedAt))}, more than a day before the month ended.`);
+  }
+  if (!mtd) flags.push(`No snapshot from early ${monthLabel(period.monthStart)} to measure the month from, so Month-to-Date is blank.`);
+  if (school.inceptionEthReturn == null) flags.push("Sub DAO opening year unavailable, so Since Inception is blank.");
+
+  const monthRange = `${fmtDate(monthStartMs)}–${fmtDate(asOfMs)}`;
+  const seasonRange = `${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))}–${fmtDate(asOfMs)}`;
 
   // ── Headline numbers
   const headline = `
@@ -138,7 +157,7 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
     <tr>
       <td style="width:50%;padding:14px 16px;vertical-align:top">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">NAV</div>
-        <div style="font-size:20px;font-weight:700;font-family:ui-monospace,monospace;color:#111827">${usd(school.nav)}</div>
+        <div style="font-size:20px;font-weight:700;font-family:ui-monospace,monospace;color:#111827">${usd(nav)}</div>
       </td>
       <td style="width:50%;padding:14px 16px;vertical-align:top">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">% Deployed</div>
@@ -149,16 +168,16 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
       <td colspan="2" style="padding:14px 16px;vertical-align:top;border-top:1px solid #e5e7eb">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Performance vs USD</div>
         ${returnLine("Month-to-Date", monthRange, mtd?.usdReturnPct, true)}
-        ${returnLine("Current Season", seasonRange, school.usdReturn)}
-        ${returnLine("Since Inception", `through ${fmtDate(now)}`, inception?.usdReturn)}
+        ${returnLine("Current Season", seasonRange, school.seasonUsdReturn)}
+        ${returnLine("Since Inception", `through ${fmtDate(asOfMs)}`, school.inceptionUsdReturn)}
       </td>
     </tr>
     <tr>
       <td colspan="2" style="padding:14px 16px;vertical-align:top;border-top:1px solid #e5e7eb">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Performance vs ETH</div>
         ${returnLine("Month-to-Date", monthRange, mtd?.ethReturnPct, true)}
-        ${returnLine("Current Season", seasonRange, school.ethReturn)}
-        ${returnLine("Since Inception", `through ${fmtDate(now)}`, inception?.ethReturn)}
+        ${returnLine("Current Season", seasonRange, school.seasonEthReturn)}
+        ${returnLine("Since Inception", `through ${fmtDate(asOfMs)}`, school.inceptionEthReturn)}
       </td>
     </tr>
   </table>`;
@@ -182,7 +201,8 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
     const seasonRow = season.rows[h.ticker];
     // A position opened during the window has no baseline to diff against —
     // its since-purchase figures ARE its window figures.
-    const mtdRow = mtdByTicker[h.ticker];
+    // In the season's first month, MTD and Season are the same window.
+    const mtdRow = monthByTicker ? monthByTicker[h.ticker] : seasonRow;
     const mtdGain = mtdRow ? mtdRow.gainUsd : boughtMs != null && boughtMs >= monthStartMs ? h.gainUsd : null;
     const mtdEth = mtdRow ? mtdRow.roiEthPct : boughtMs != null && boughtMs >= monthStartMs ? h.roiEthPct : null;
     const sub = h.blockchain ? escapeHtml(h.blockchain) : "";
@@ -213,7 +233,7 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
     </tr></thead>
     <tbody>${ethRow}${positionRows}</tbody>
   </table>
-  ${footnote(`Since Purchase is each position's return since it was opened. Season is since ${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))} and MTD since ${fmtDate(monthStartMs)} — for a position opened after those dates, they equal its since-purchase return. Percentages are measured against holding ETH.`)}`;
+  ${footnote(`Since Purchase is each position's return since it was opened. All values as of ${fmtDate(asOfMs)}. Season is since ${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))} and MTD covers ${monthRange} — for a position opened after those dates, they equal its since-purchase return. Percentages are measured against holding ETH.`)}`;
 
   // ── Insights
   const withRoi = positions.filter((h) => h.roiEthPct != null);
@@ -224,11 +244,11 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
   const worst = byRoi[byRoi.length - 1];
   const largest = positions[0];
   const smallest = positions[positions.length - 1];
-  const ages = positions.map(investmentMs).filter((ms): ms is number => ms != null).map((ms) => (now.getTime() - ms) / 86_400_000);
+  const ages = positions.map(investmentMs).filter((ms): ms is number => ms != null).map((ms) => (asOfMs - ms) / 86_400_000);
   const avgAge = ages.length ? Math.round(ages.reduce((s, d) => s + d, 0) / ages.length) : null;
   const avgSize = positions.length ? positions.reduce((s, h) => s + (h.marketValueUsd ?? 0), 0) / positions.length : null;
   const pctOfNav = (h: Holding | undefined) =>
-    h && school.nav > 0 ? `${(((h.marketValueUsd ?? 0) / school.nav) * 100).toFixed(1)}% of NAV` : "—";
+    h && nav > 0 ? `${(((h.marketValueUsd ?? 0) / nav) * 100).toFixed(1)}% of NAV` : "—";
   const bestWorstSub = (h: Holding | undefined) =>
     h ? `${signedPct(h.roiEthPct ?? 0)} vs ETH · ${signedUsd(h.gainUsd ?? 0)}` : "—";
 
@@ -249,7 +269,7 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
   <table style="width:100%;border-collapse:collapse">
     <tr>
       ${statBox("Positions", String(positions.length), "active holdings")}
-      ${statBox("Rank", `#${school.rank}`, "by season ETH return", GREEN)}
+      ${statBox("Rank", `#${school.seasonRank}`, "by season ETH return", GREEN)}
       ${statBox("Avg Position Age", avgAge != null ? `${avgAge}d` : "—", avgAge != null ? `~${(avgAge / 30.4).toFixed(1)} months` : "")}
     </tr>
     <tr>
@@ -265,107 +285,102 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
   </table>
   ${changesHtml}`;
 
-  const dashboardUrl = `${APP_URL}/schools/${school.slug}`;
+  const schoolSlug = slugify(school.name);
+  const dashboardUrl = `${APP_URL}/schools/${schoolSlug}`;
   const bodyHtml = `
-  <p style="font-size:12px;color:#6b7280;margin:-8px 0 16px">${monthLabel(now)} · Season 2026–27 · As of ${fmtDate(now)}</p>
+  <p style="font-size:12px;color:#6b7280;margin:-8px 0 16px">${monthLabel(period.monthStart)} · Season 2026–27 · As of ${fmtDate(asOfMs)}</p>
   <p style="margin:0 0 20px"><a href="${dashboardUrl}" style="display:inline-block;padding:10px 22px;background:${GREEN};color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">View Full Portfolio Dashboard &rarr;</a></p>
   ${headline}
   ${positionsTable}
   ${insights}`;
 
   return {
-    subject: `Your Monthly Portfolio Report — ${label} — ${monthLabel(now)}`,
+    subject: `Your Monthly Portfolio Report — ${label} — ${monthLabel(period.monthStart)}`,
     html: buildTemplate({
       title: "Your Monthly Portfolio Report",
       schoolLabel: escapeHtml(label),
-      schoolSlug: school.slug,
+      schoolSlug,
       titleIcon: true,
       bodyHtml,
       maxWidth: 680,
     }),
+    review: { status: "in_review", flags },
   };
 }
 
-// ── Monthly Leaderboard Digest (DormDAO-wide) ────────────────────────────────
+// ── Ramen Report (DormDAO-wide monthly leaderboard digest) ───────────────────
 //
 // Kept deliberately short (per Zack's review): a portfolio snapshot, two
-// leaderboards on different timeframes — Past Month on top, Season-to-Date
-// as the "Performance Leaderboard" bar chart — and the positions opened this
-// month. No since-inception figures anywhere in the digest.
+// leaderboards on different timeframes — the season-to-date "Performance
+// Leaderboard" bar chart, then the report month's leaderboard — and the
+// positions opened during the month. No since-inception figures.
+//
+// Like the school report, it describes the last completed month as of its
+// final day (lib/report-period.ts), never today's live numbers.
 //
 // Stays in review until Jack signs off: `review` on the result lists every
-// open item (missing disclosure, schools without a month baseline, opened
+// open item (missing disclosure, missing or stale snapshots, opened
 // positions the snapshot history disagrees on) and the admin preview shows
-// it above the email. These changes are digest-only — the school Portfolio
-// Report above is unaffected.
+// it above the email.
 
-// Approved disclosure text for the digest footer, as HTML. Deliberately
-// null: no approved wording exists in the codebase or the design previews,
-// and it must come from whoever signs off on legal language — not be
-// written here. While it's null the email shows a visible placeholder and
-// the review list flags it, so the digest can't look finished without it.
+// Approved disclosure text for the footer, as HTML. Deliberately null: no
+// approved wording exists in the codebase or the design previews, and it
+// must come from whoever signs off on legal language — not be written here.
+// While it's null the email shows a visible placeholder and the review list
+// flags it, so the report can't look finished without it.
 const DIGEST_DISCLOSURE_HTML: string | null = null;
 
-export interface ReviewStatus {
-  status: "in_review";
-  flags: string[];
-}
-
-export interface BuiltDigest extends BuiltEmail {
-  review: ReviewStatus;
-}
-
-export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promise<BuiltDigest> {
-  const { schools, totalNAV, avgEthReturn, avgUsdReturn, avgDeployed } = await getSchoolsData();
-  const seasonRanked = [...schools].sort((a, b) => a.rank - b.rank);
+export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promise<BuiltEmail> {
+  const period = previousMonthPeriod(now);
+  const state = await getClosingState(period);
+  const schools = state.schools; // sorted by season ETH return
   const flags: string[] = [];
 
-  const monthStartIso = getMonthStartDate(now);
-  const monthStartMs = new Date(monthStartIso).getTime();
-  const nowMs = now.getTime();
-  const monthRange = `${fmtDate(monthStartMs)} – ${fmtDate(now)}`;
-  const seasonRange = `${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))} – ${fmtDate(now)}`;
-
-  // One ETH price for the whole DAO, read off the first school's ETH treasury
-  // holding — the same marketValueUsd / tokens derivation the school report
-  // uses, but not dependent on any one school holding ETH.
-  let ethPriceUsd = 0;
-  for (const s of schools) {
-    const eth = mergeHoldingsByTicker(s.holdings ?? []).find((h) => h.ticker === "ETH");
-    if (eth?.tokens && eth.marketValueUsd) { ethPriceUsd = eth.marketValueUsd / eth.tokens; break; }
-  }
-  if (!ethPriceUsd) flags.push("No ETH price could be derived from any school's ETH holding, so past-month ETH returns are blank.");
+  const monthStartIso = period.monthStart.toISOString();
+  const monthStartMs = period.monthStart.getTime();
+  const cutoffMs = period.cutoff.getTime();
+  const asOfMs = period.asOf.getTime();
+  const monthRange = `${fmtDate(monthStartMs)} – ${fmtDate(asOfMs)}`;
+  const seasonRange = `${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))} – ${fmtDate(asOfMs)}`;
+  const firstMonth = monthIsSeasonStart(period);
 
   const service = createServiceClient();
   const [monthReturns, { data: buyRows }] = await Promise.all([
-    Promise.all(schools.map((s) => ethPriceUsd
-      ? getPortfolioWindowReturn(s.name, monthStartIso, s.nav, ethPriceUsd)
-      : Promise.resolve(null))),
+    Promise.all(schools.map((s) => monthReturn(s, period))),
     service
       .from("portfolio_changes")
       .select("school_name, token_ticker, detected_at")
       .eq("change_type", "buy")
       .gte("detected_at", monthStartIso)
-      .lte("detected_at", now.toISOString()),
+      .lt("detected_at", period.cutoff.toISOString()),
   ]);
 
-  // ── Accuracy cross-checks (shown to the reviewer, never in the email)
-  const navSum = schools.reduce((sum, s) => sum + s.nav, 0);
-  if (Math.abs(navSum - totalNAV) > 1) {
-    flags.push(`DormDAO NAV (${usd(totalNAV)}) doesn't equal the sum of school NAVs (${usd(navSum)}).`);
+  // ── Accuracy checks (shown to the reviewer, never in the email)
+  if (state.missing.length) {
+    flags.push(`No snapshot before ${fmtDate(cutoffMs)} for ${state.missing.map(schoolDisplayName).join(", ")}, so they're left out entirely.`);
+  }
+  if (state.stale.length) {
+    flags.push(`Closing figures come from a snapshot more than a day before month end for: ${state.stale.map((x) => `${schoolDisplayName(x.name)} (${fmtDate(new Date(x.capturedAt))})`).join(", ")}.`);
   }
   const monthBy = new Map(schools.map((s, i) => [s.name, monthReturns[i]]));
   const noBaseline = schools.filter((s) => !monthBy.get(s.name)).map((s) => schoolDisplayName(s.name));
-  if (noBaseline.length > 0) {
-    flags.push(`No snapshot at or after ${fmtDate(monthStartMs)} for ${noBaseline.join(", ")}, so they're unranked in Past Month.`);
+  if (noBaseline.length) {
+    flags.push(`No snapshot from early in the month for ${noBaseline.join(", ")}, so they're unranked in the month leaderboard.`);
   }
   const lateBaseline = schools
     .map((s) => ({ s, r: monthBy.get(s.name) }))
-    .filter((x) => x.r && new Date(x.r.baselineCapturedAt).getTime() - monthStartMs > 36 * 3_600_000)
-    .map((x) => `${schoolDisplayName(x.s.name)} (${fmtDate(new Date(x.r!.baselineCapturedAt))})`);
-  if (lateBaseline.length > 0) {
-    flags.push(`Past Month baseline is a late snapshot, not the 1st, for: ${lateBaseline.join(", ")}.`);
+    .filter((x) => x.r?.baselineCapturedAt && new Date(x.r.baselineCapturedAt).getTime() - monthStartMs > 36 * 3_600_000)
+    .map((x) => `${schoolDisplayName(x.s.name)} (${fmtDate(new Date(x.r!.baselineCapturedAt!))})`);
+  if (lateBaseline.length) flags.push(`Month baseline is a late snapshot, not the 1st, for: ${lateBaseline.join(", ")}.`);
+  if (firstMonth) {
+    flags.push(`${monthLabel(period.monthStart)} is the season's first month, so the month leaderboard and the season chart cover the same period and show the same returns.`);
   }
+
+  const n = schools.length || 1;
+  const totalNav = schools.reduce((sum, s) => sum + s.navUsd, 0);
+  const avgEth = schools.reduce((sum, s) => sum + s.seasonEthReturn, 0) / n;
+  const avgUsd = schools.reduce((sum, s) => sum + s.seasonUsdReturn, 0) / n;
+  const avgDeployed = schools.reduce((sum, s) => sum + s.pctDeployed, 0) / n;
 
   // ── Portfolio snapshot
   const kpi = (labelText: string, value: string, sub: string) => `
@@ -375,62 +390,32 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
         <div style="font-size:10px;color:${MUTED};margin-top:3px">${sub}</div>
       </td>`;
   const snapshot = `
-  ${h3("18px 0 0")}Portfolio Snapshot</h3>
+  ${h3("18px 0 0")}Portfolio Snapshot <span style="font-weight:400;color:${MUTED};font-size:11px">As of ${fmtDate(asOfMs)}</span></h3>
   <table style="width:100%;border-collapse:collapse;margin-top:10px;border:1px solid #e5e7eb">
     <tr>
-      ${kpi("DormDAO NAV", usd(totalNAV), `${schools.length} schools`)}
-      ${kpi("Avg ETH Return", signedPct(avgEthReturn), "Season to date")}
-      ${kpi("Avg USD Return", signedPct(avgUsdReturn), "Season to date")}
-      ${kpi("Avg Deployed", `${avgDeployed.toFixed(1)}%`, "Of NAV, today")}
+      ${kpi("DormDAO NAV", usd(totalNav), `${schools.length} schools`)}
+      ${kpi("Avg ETH Return", signedPct(avgEth), "Season to date")}
+      ${kpi("Avg USD Return", signedPct(avgUsd), "Season to date")}
+      ${kpi("Avg Deployed", `${avgDeployed.toFixed(1)}%`, "Of NAV")}
     </tr>
   </table>`;
 
-  // ── Past Month leaderboard (top)
-  const monthRanked = schools
-    .map((s) => ({ s, r: monthBy.get(s.name) ?? null }))
-    .sort((a, b) => {
-      if (a.r && b.r) return b.r.ethReturnPct - a.r.ethReturnPct;
-      if (a.r) return -1;
-      if (b.r) return 1;
-      return a.s.rank - b.s.rank;
-    });
   const pctCell = (v: number | null | undefined, bold = false) => v == null
     ? `<td style="${numCell};color:${MUTED}">—</td>`
     : `<td style="${numCell};color:${tone(v)};white-space:nowrap${bold ? ";font-weight:700" : ""}">${signedPct(v)}</td>`;
-  const monthRows = monthRanked.map(({ s, r }, i) => `
-      <tr style="background:${r && i < 3 ? "#f0fbf6" : i % 2 ? "#fafafa" : "#ffffff"}">
-        <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12px;color:${r && i < 3 ? "#111827" : MUTED};text-align:center">${r ? i + 1 : "—"}</td>
-        <td style="${cell};font-size:12.5px;font-weight:600;color:#111827">${escapeHtml(schoolDisplayName(s.name))}</td>
-        ${pctCell(r?.ethReturnPct, true)}
-        ${pctCell(r?.usdReturnPct)}
-      </tr>`).join("");
-  const monthBoard = `
-  ${h3("26px 0 0")}Past Month Leaderboard <span style="font-weight:400;color:${MUTED};font-size:11px">${monthRange}</span></h3>
-  <table style="width:100%;border-collapse:collapse;margin-top:10px">
-    <thead><tr style="background:#f9fafb">
-      <th style="${th("center")}">Rank</th>
-      <th style="${th("left")}">School</th>
-      <th style="${th("right")}">ETH Return</th>
-      <th style="${th("right")}">USD Return</th>
-    </tr></thead>
-    <tbody>${monthRows}</tbody>
-  </table>
-  ${footnote(`Ranked by ETH return over ${monthRange} — each school's NAV today against its first snapshot of the month.${noBaseline.length ? " Schools without a snapshot for that date show — and aren't ranked." : ""}`)}`;
 
-  // ── Performance Leaderboard (Season to date): ETH return as diverging
+  // ── Performance Leaderboard (season to date): ETH return as diverging
   // bars — positive grows right of center, negative left, scaled to the
   // largest absolute return on the board, so the size of a lead is visible —
-  // with USD Return and % Deployed beside it: the other two metrics this
-  // digest has always carried per school (same columns as the dashboard
-  // leaderboard). Nested tables, not flex/grid — email clients (Outlook
-  // especially) don't support them.
-  const maxAbs = Math.max(1, ...seasonRanked.map((s) => Math.abs(s.ethReturn)));
-  const barRows = seasonRanked.map((s, i) => {
-    const w = ((Math.abs(s.ethReturn) / maxAbs) * 100).toFixed(1);
+  // with USD Return and % Deployed beside it. Nested tables, not flex/grid —
+  // email clients (Outlook especially) don't support them.
+  const maxAbs = Math.max(1, ...schools.map((s) => Math.abs(s.seasonEthReturn)));
+  const barRows = schools.map((s, i) => {
+    const w = ((Math.abs(s.seasonEthReturn) / maxAbs) * 100).toFixed(1);
     const bar = (side: "left" | "right") =>
       `<div style="height:14px;width:${w}%;background:${side === "right" ? GREEN : RED};${side === "right" ? "border-radius:0 3px 3px 0" : "border-radius:3px 0 0 3px;margin-left:auto"}"></div>`;
-    const leftCell = s.ethReturn < 0 ? bar("left") : "";
-    const rightCell = s.ethReturn >= 0 ? bar("right") : "";
+    const leftCell = s.seasonEthReturn < 0 ? bar("left") : "";
+    const rightCell = s.seasonEthReturn >= 0 ? bar("right") : "";
     const side = "padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;font-size:11px;white-space:nowrap;width:1%";
     return `
       <tr style="background:${i % 2 ? "#fafafa" : "#ffffff"}">
@@ -441,8 +426,8 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
             <td style="width:50%;padding:0">${rightCell}</td>
           </tr></table>
         </td>
-        <td style="${side};font-weight:700;color:${tone(s.ethReturn)}">${signedPct(s.ethReturn)}</td>
-        <td style="${side};color:${tone(s.usdReturn)}">${signedPct(s.usdReturn)}</td>
+        <td style="${side};font-weight:700;color:${tone(s.seasonEthReturn)}">${signedPct(s.seasonEthReturn)}</td>
+        <td style="${side};color:${tone(s.seasonUsdReturn)}">${signedPct(s.seasonUsdReturn)}</td>
         <td style="${side};color:#374151">${s.pctDeployed.toFixed(1)}%</td>
       </tr>`;
   }).join("");
@@ -459,15 +444,44 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
     </tr></thead>
     ${barRows}
   </table>
-  ${footnote("Ranked by season ETH return, the same as the dashboard leaderboard. Green bars run right for gains, red bars left for losses, scaled to the largest move on the board. Deployed is the share of NAV held outside the ETH treasury today.")}`;
+  ${footnote(`Ranked by season ETH return, the same as the dashboard leaderboard, as of ${fmtDate(asOfMs)}. Green bars run right for gains, red bars left for losses, scaled to the largest move on the board. Deployed is the share of NAV held outside the ETH treasury.`)}`;
 
-  // ── Positions opened this month: a ticker whose earliest tranche falls in
-  // the window. Adds to a position a school already held don't count.
+  // ── Month leaderboard
+  const monthRanked = schools
+    .map((s) => ({ s, r: monthBy.get(s.name) ?? null }))
+    .sort((a, b) => {
+      if (a.r && b.r) return b.r.ethReturnPct - a.r.ethReturnPct;
+      if (a.r) return -1;
+      if (b.r) return 1;
+      return a.s.seasonRank - b.s.seasonRank;
+    });
+  const monthRows = monthRanked.map(({ s, r }, i) => `
+      <tr style="background:${r && i < 3 ? "#f0fbf6" : i % 2 ? "#fafafa" : "#ffffff"}">
+        <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12px;color:${r && i < 3 ? "#111827" : MUTED};text-align:center">${r ? i + 1 : "—"}</td>
+        <td style="${cell};font-size:12.5px;font-weight:600;color:#111827">${escapeHtml(schoolDisplayName(s.name))}</td>
+        ${pctCell(r?.ethReturnPct, true)}
+        ${pctCell(r?.usdReturnPct)}
+      </tr>`).join("");
+  const monthBoard = `
+  ${h3("26px 0 0")}${escapeHtml(monthLabel(period.monthStart).split(" ")[0])} Leaderboard <span style="font-weight:400;color:${MUTED};font-size:11px">${monthRange}</span></h3>
+  <table style="width:100%;border-collapse:collapse;margin-top:10px">
+    <thead><tr style="background:#f9fafb">
+      <th style="${th("center")}">Rank</th>
+      <th style="${th("left")}">School</th>
+      <th style="${th("right")}">ETH Return</th>
+      <th style="${th("right")}">USD Return</th>
+    </tr></thead>
+    <tbody>${monthRows}</tbody>
+  </table>
+  ${footnote(`Ranked by ETH return over ${monthRange}${firstMonth ? " — the season's first month, so these match the season returns above" : ""}.${noBaseline.length ? " Schools without a snapshot for the start of the month show — and aren't ranked." : ""}`)}`;
+
+  // ── Positions opened during the month: a ticker whose earliest tranche
+  // falls in the month. Adds to a position a school already held don't count.
   type Opened = { school: (typeof schools)[number]; h: Holding; ms: number };
   const opened: Opened[] = [];
   let undated = 0;
   for (const s of schools) {
-    const tranches = [...(s.holdings ?? []), ...(s.nftHoldings ?? [])].filter((h) => h.ticker !== "ETH");
+    const tranches = [...s.holdings, ...s.nftHoldings].filter((h) => h.ticker !== "ETH");
     const firstBuy = new Map<string, number>();
     for (const h of tranches) {
       const ms = investmentMs(h);
@@ -476,7 +490,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
     }
     for (const h of mergeHoldingsByTicker(tranches)) {
       const ms = firstBuy.get(h.ticker);
-      if (ms != null && ms >= monthStartMs && ms <= nowMs) opened.push({ school: s, h, ms });
+      if (ms != null && ms >= monthStartMs && ms < cutoffMs) opened.push({ school: s, h, ms });
     }
   }
   opened.sort((a, b) => b.ms - a.ms);
@@ -491,7 +505,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
   const onlySheet = [...sheetKeys].filter((k) => !detectedKeys.has(k)).map(pretty);
   const onlyDetected = [...detectedKeys].filter((k) => !sheetKeys.has(k)).map(pretty);
   if (onlySheet.length) flags.push(`Listed as opened (by investment date) but no matching buy detected in snapshots: ${onlySheet.join(", ")}.`);
-  if (onlyDetected.length) flags.push(`Buy detected in snapshots this month but not listed (investment date is earlier, or the position is already closed): ${onlyDetected.join(", ")}.`);
+  if (onlyDetected.length) flags.push(`Buy detected in snapshots during the month but not listed (investment date is earlier, or the position was closed by month end): ${onlyDetected.join(", ")}.`);
 
   const openedRows = opened.map((r, i) => `
       <tr style="background:${i % 2 ? "#fafafa" : "#ffffff"}">
@@ -504,7 +518,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
   const newPositions = `
   ${h3("26px 0 0")}Positions Opened <span style="font-weight:400;color:${MUTED};font-size:11px">${monthRange}</span></h3>
   ${opened.length === 0
-    ? `<p style="font-size:12px;color:#6b7280;margin:10px 0 0">No new positions opened across DormDAO this month.</p>`
+    ? `<p style="font-size:12px;color:#6b7280;margin:10px 0 0">No new positions opened across DormDAO in ${escapeHtml(monthLabel(period.monthStart))}.</p>`
     : `<table style="width:100%;border-collapse:collapse;margin-top:10px">
     <thead><tr style="background:#f9fafb">
       <th style="${th("left")}">School</th>
@@ -515,7 +529,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
     </tr></thead>
     <tbody>${openedRows}</tbody>
   </table>
-  ${footnote(`New positions only — adds to positions a school already held aren't listed. "vs ETH" is the return since purchase, measured against holding ETH.`)}`}`;
+  ${footnote(`New positions only — adds to positions a school already held aren't listed. Value and "vs ETH" (return since purchase, measured against holding ETH) are as of ${fmtDate(asOfMs)}.`)}`}`;
 
   // ── Disclosure
   if (!DIGEST_DISCLOSURE_HTML) {
@@ -523,20 +537,20 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
   }
   const disclosure = DIGEST_DISCLOSURE_HTML
     ? `<div style="margin-top:22px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:10px;color:${MUTED};line-height:1.5">${DIGEST_DISCLOSURE_HTML}</div>`
-    : `<div style="margin-top:22px;padding:10px 12px;border:1px dashed #f59e0b;background:#fffbeb;border-radius:6px;font-size:11px;color:#92400e;line-height:1.5"><strong>Disclosure — awaiting approved text.</strong> This placeholder must be replaced before the digest is sent.</div>`;
+    : `<div style="margin-top:22px;padding:10px 12px;border:1px dashed #f59e0b;background:#fffbeb;border-radius:6px;font-size:11px;color:#92400e;line-height:1.5"><strong>Disclosure — awaiting approved text.</strong> This placeholder must be replaced before the report is sent.</div>`;
 
   const bodyHtml = `
-  <p style="font-size:12.5px;color:${MUTED};margin:-8px 0 4px">${monthLabel(now)} · Season 2026–27 · As of ${fmtDate(now)}</p>
+  <p style="font-size:12.5px;color:${MUTED};margin:-8px 0 4px">${monthLabel(period.monthStart)} · Season 2026–27 · As of ${fmtDate(asOfMs)}</p>
   ${snapshot}
-  ${monthBoard}
   ${chart}
+  ${monthBoard}
   ${newPositions}
   ${disclosure}`;
 
   return {
-    subject: `DormDAO Leaderboard Digest — ${monthLabel(now)}`,
+    subject: `DormDAO Ramen Report — ${monthLabel(period.monthStart)}`,
     html: buildTemplate({
-      title: "Leaderboard Digest",
+      title: "Ramen Report",
       schoolLabel: "DormDAO · All Schools",
       titleIcon: true,
       bodyHtml,

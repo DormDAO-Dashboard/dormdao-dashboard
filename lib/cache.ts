@@ -27,6 +27,11 @@ export interface SchoolsCache {
   avgEthReturn: number;
   avgDeployed: number;
   tokenToSchools: Record<string, string[]>;
+  // Each school's "Sub DAO Opening" year from its sheet tab, which picks its
+  // inception-cohort baseline (inceptionBaselineForYear). Exposed so the
+  // monthly reports can recompute Since Inception as of a past date.
+  // Optional: snapshots saved before this field existed don't have it.
+  subDaoOpeningYearByName?: Record<string, number | null>;
 }
 
 export interface PricesCache {
@@ -288,7 +293,7 @@ const getSchoolsDataLive = unstable_cache(
 
     const schools2526 = getSchools2526();
 
-    const result: SchoolsCache = { schools, sinceInceptionSchools, schools2526, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools };
+    const result: SchoolsCache = { schools, sinceInceptionSchools, schools2526, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools, subDaoOpeningYearByName };
     // The saved snapshot is the last-good fallback patchZeroedFromSnapshot
     // reads next cycle. If it couldn't be read this cycle, nothing above was
     // patched, so saving now would overwrite a good snapshot with zeroed
@@ -299,7 +304,7 @@ const getSchoolsDataLive = unstable_cache(
     if (!(brokenCount > 0 && !previous)) await saveSchoolsSnapshot(result);
     return result;
   },
-  ["schools-data-v28"],
+  ["schools-data-v29"],
   { revalidate: 600 }
 );
 

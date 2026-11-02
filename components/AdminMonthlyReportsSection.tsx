@@ -16,10 +16,23 @@ function previewUrl(type: ReportType, school: string): string {
     : "/api/admin/report-emails/preview?type=leaderboard";
 }
 
-// The two monthly report emails, previewed with today's live data (see
-// lib/report-emails.ts). Neither is scheduled to send yet — this box is how
+// The two monthly report emails, previewed for the last completed month,
+// exactly as they'd send now (see lib/report-emails.ts). Neither is scheduled to send yet — this box is how
 // they get reviewed before that's turned on.
+// Mirrors previousMonthPeriod (lib/report-period.ts): the last completed
+// UTC calendar month.
+function lastCompletedMonth(now = new Date()) {
+  const cutoff = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+  const asOf = new Date(cutoff - 86_400_000);
+  return {
+    reportMonthLabel: start.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
+    reportAsOfLabel: asOf.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }),
+  };
+}
+
 export function AdminMonthlyReportsSection() {
+  const { reportMonthLabel, reportAsOfLabel } = lastCompletedMonth();
   const [school, setSchool] = useState(SCHOOL_OPTIONS[0]?.slug ?? "");
   const [viewing, setViewing] = useState<{ title: string; subtitle?: string; url: string } | null>(null);
   const [html, setHtml] = useState<string | null>(null);
@@ -57,12 +70,12 @@ export function AdminMonthlyReportsSection() {
     {
       type: "portfolio",
       title: "Monthly Portfolio Report",
-      description: "One per school — NAV, Month-to-Date / Season / Since Inception returns, every position, and portfolio insights.",
+      description: "One per school — NAV, month / season / since inception returns, every position, and portfolio insights.",
     },
     {
       type: "leaderboard",
-      title: "Monthly Leaderboard Digest",
-      description: "DormDAO-wide — portfolio snapshot, Past Month leaderboard, season-to-date Performance Leaderboard chart, and positions opened this month.",
+      title: "Ramen Report",
+      description: "DormDAO-wide — portfolio snapshot, season-to-date Performance Leaderboard chart, the month's leaderboard, and positions opened during the month.",
       status: "In review — needs Jack's sign-off and approved disclosure text before it can send",
     },
   ];
@@ -75,7 +88,7 @@ export function AdminMonthlyReportsSection() {
           <span className="ml-2 text-xs text-gray-700 dark:text-gray-400 font-normal">2 emails</span>
         </h2>
         <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">
-          Previews use today&apos;s live data, exactly as the email would look if it sent right now.
+          Previews show {reportMonthLabel}, with every figure as of {reportAsOfLabel}: exactly what the email would look like if it sent now. They roll over to the next month once it ends.
         </p>
       </div>
 
