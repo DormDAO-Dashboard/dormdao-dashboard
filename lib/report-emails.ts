@@ -512,8 +512,8 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
         <td style="${cell};font-size:12px;color:#374151">${escapeHtml(schoolDisplayName(r.school.name))}</td>
         <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12.5px;color:#111827">$${escapeHtml(r.h.ticker)}</td>
         <td style="${cell};font-size:11px;color:#6b7280;white-space:nowrap">${fmtDate(r.ms)}</td>
+        <td style="${numCell};color:#374151;white-space:nowrap">${r.h.costBasisEth > 0 ? `${r.h.costBasisEth.toFixed(2)} ETH` : "—"}</td>
         <td style="${numCell};color:#374151">${r.h.marketValueUsd == null ? "—" : usd(r.h.marketValueUsd)}</td>
-        ${pctCell(r.h.roiEthPct, true)}
       </tr>`).join("");
   const newPositions = `
   ${h3("26px 0 0")}Positions Opened <span style="font-weight:400;color:${MUTED};font-size:11px">${monthRange}</span></h3>
@@ -524,12 +524,12 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
       <th style="${th("left")}">School</th>
       <th style="${th("left")}">Token</th>
       <th style="${th("left")}">Opened</th>
+      <th style="${th("right")}">Cost Basis (ETH)</th>
       <th style="${th("right")}">Value</th>
-      <th style="${th("right")}">vs ETH</th>
     </tr></thead>
     <tbody>${openedRows}</tbody>
   </table>
-  ${footnote(`New positions only — adds to positions a school already held aren't listed. Value and "vs ETH" (return since purchase, measured against holding ETH) are as of ${fmtDate(asOfMs)}.`)}`}`;
+  ${footnote(`New positions only — adds to positions a school already held aren't listed. Cost Basis is the ETH each school invested in the position; Value is as of ${fmtDate(asOfMs)}.`)}`}`;
 
   // ── Disclosure
   if (!DIGEST_DISCLOSURE_HTML) {
