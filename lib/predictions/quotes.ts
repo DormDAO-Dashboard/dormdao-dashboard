@@ -2,13 +2,25 @@ import type { Pitch, PricePoint, Quote } from "@/lib/predictions/types";
 import { sidePrice } from "@/lib/predictions/math";
 import { fetchKalshiHistory, fetchKalshiYes } from "@/lib/predictions/markets/kalshi";
 import { fetchPolymarketHistory, fetchPolymarketYes } from "@/lib/predictions/markets/polymarket";
+import { combineYes, sumSeries } from "@/lib/predictions/markets/basket";
 import type { YesQuote } from "@/lib/predictions/markets/http";
 
 function fetchYes(pitch: Pitch): Promise<YesQuote | null> {
   switch (pitch.market.source) {
     case "polymarket": return fetchPolymarketYes(pitch.market.slug);
     case "kalshi": return fetchKalshiYes(pitch.market.ticker);
+    case "polymarket_basket": return Promise.all(pitch.market.slugs.map(fetchPolymarketYes)).then(combineYes);
     case "manual": return Promise.resolve(null);
+  }
+}
+
+function fetchYesHistory(pitch: Pitch, sinceMs: number): Promise<PricePoint[]> {
+  switch (pitch.market.source) {
+    case "polymarket": return fetchPolymarketHistory(pitch.market.slug, sinceMs);
+    case "kalshi": return fetchKalshiHistory(pitch.market.ticker, sinceMs);
+    case "polymarket_basket":
+      return Promise.all(pitch.market.slugs.map((s) => fetchPolymarketHistory(s, sinceMs))).then(sumSeries);
+    case "manual": return Promise.resolve([]);
   }
 }
 
@@ -38,11 +50,7 @@ export async function getQuotes(pitches: Pitch[]): Promise<Record<string, Quote 
 
 export async function getHistory(pitch: Pitch, sinceMs: number): Promise<PricePoint[]> {
   try {
-    const points = pitch.market.source === "polymarket"
-      ? await fetchPolymarketHistory(pitch.market.slug, sinceMs)
-      : pitch.market.source === "kalshi"
-        ? await fetchKalshiHistory(pitch.market.ticker, sinceMs)
-        : [];
+    const points = await fetchYesHistory(pitch, sinceMs);
     return points.map((pt) => ({ time: pt.time, price: sidePrice(pt.price, pitch.side) }));
   } catch (err) {
     console.warn("[predictions] history failed", pitch.id, err);

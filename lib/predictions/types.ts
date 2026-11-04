@@ -17,6 +17,8 @@ export type Side = "YES" | "NO";
 export type MarketRef =
   | { source: "polymarket"; slug: string }
   | { source: "kalshi"; ticker: string }
+  // Mutually exclusive Polymarket outcomes bought together; priced as their sum.
+  | { source: "polymarket_basket"; slugs: string[] }
   | { source: "manual" };
 
 // Thesis lifecycle: closed once the market resolves or the trade is exited.

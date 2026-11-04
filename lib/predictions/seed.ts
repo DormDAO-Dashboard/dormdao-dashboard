@@ -1,6 +1,6 @@
 import type { Pitch, Trade, Round } from "@/lib/predictions/types";
 
-// Rounds 5–7 from the OBG "Prediction Markets #N" Medium posts. Used until the
+// Rounds 5–8 from the OBG "Prediction Markets #N" Medium posts. Used until the
 // Supabase project is connected; supabase/seed.sql mirrors it. Thesis text is
 // a short summary — the full write-up is linked from each round. No trades:
 // the posts don't give fill sizes, so fund $ stay empty until real fills are
@@ -29,6 +29,13 @@ export const SEED_ROUNDS: Round[] = [
     mediumUrl: `${MEDIUM}/oregon-blockchain-group-prediction-markets-7-e9b146348a37`,
     summary: "Fading Anthropic for best AI model at month-end, Q3 GDP clearing 3.0%, and a Texas split ticket.",
     selectedPitchId: "p7-ai-anthropic",
+  },
+  {
+    number: 8,
+    publishedAt: "2026-10-29",
+    mediumUrl: `${MEDIUM}/oregon-blockchain-group-prediction-markets-8-4fab3fc07174`,
+    summary: "All-midterms round: fading the blue mega-tsunami, Talarico winning Texas, and the Texas Senate landing within three points.",
+    selectedPitchId: "p8-politics-mega-tsunami",
   },
 ];
 
@@ -231,6 +238,75 @@ export const SEED_PITCHES: Pitch[] = [
     thesis: [
       "Talarico has led Paxton in nearly every recent poll (NYT 51–45, even Trafalgar has him ahead) with strong independent support and competitive spending.",
       "Abbott edges Hinojosa on border security, public safety, and property taxes, outspent him 6-to-1, and leads among older, high-turnout voters. Plan: hold to Election Day (~117%).",
+    ],
+    status: "open",
+  },
+
+  // ── Round 8 ────────────────────────────────────────────────────────────
+  {
+    ...base,
+    id: "p8-politics-mega-tsunami",
+    roundNumber: 8,
+    sector: "politics",
+    analyst: "Jared Vaughn",
+    marketTitle: "Blue Mega-Tsunami in 2026?",
+    outcomeLabel: "Dems win 54+ Senate and 240+ House",
+    venue: "polymarket",
+    market: { source: "polymarket", slug: "blue-mega-tsunami-in-2026" },
+    side: "NO",
+    entryPrice: 0.79,
+    impliedPrice: 1,
+    sellLimit: 0.97,
+    exitBy: "2026-11-03",
+    thesis: [
+      "The Senate threshold is the obstacle: Democrats caucus 47, so 54 needs seven net pickups. Even winning NC, ME, AK, OH, and TX only gets to 52 while holding every seat. A strong Democratic night can still miss the combined bar.",
+      "Thin leads leave room for Republican consolidation (Texas flips to a tie if a third of Libertarian support moves to Paxton), and Iowa shows a six-point split between Democratic candidates in one poll. Plan: hold to resolution (~26.6%) or limit sell at 97¢ (~22.8%).",
+    ],
+    status: "open",
+  },
+  {
+    ...base,
+    id: "p8-politics-talarico",
+    roundNumber: 8,
+    sector: "politics",
+    analyst: "Audrey Hudspeth",
+    marketTitle: "Texas Senate Election Winner",
+    outcomeLabel: "James Talarico (D)",
+    venue: "polymarket",
+    market: { source: "polymarket", slug: "will-the-democrats-win-the-texas-senate-race-in-2026" },
+    side: "YES",
+    entryPrice: 0.68,
+    impliedPrice: 1,
+    exitBy: "2026-11-03",
+    thesis: [
+      "Paxton is a damaged nominee: impeached in 2023, 41/57 favorability (worst statewide), and tied to a president 54% of Texas likely voters view unfavorably.",
+      "Talarico leads every major average by 1.8–4.3 points, wins independents 60–32, and early voting is up 74% with Democratic counties leading. Plan: hold to resolution (~47%).",
+    ],
+    status: "open",
+  },
+  {
+    ...base,
+    id: "p8-politics-tx-margin",
+    roundNumber: 8,
+    sector: "politics",
+    analyst: "Clayton Fawthrop-Male",
+    marketTitle: "Texas Senate Election Margin of Victory",
+    outcomeLabel: "Talarico 0–3% or Paxton 0–3%",
+    venue: "polymarket",
+    market: {
+      source: "polymarket_basket",
+      slugs: [
+        "will-the-democratic-party-candidate-win-the-2026-texas-senate-election-by-0-3",
+        "will-the-republican-party-candidate-win-the-2026-texas-senate-election-by-0-3",
+      ],
+    },
+    side: "YES",
+    entryPrice: 0.51,
+    impliedPrice: 1,
+    exitBy: "2026-11-03",
+    thesis: [
+      "Polls average Talarico +2 and early voters split 33.3% Democratic-primary vs 32.7% Republican-primary; in 2022 that early-vote gap landed within ~2 points of the final margin.",
+      "2018 Cruz–O'Rourke polled Cruz +6 but finished +2.6. Bought as Talarico 0–3% (34¢) plus Paxton 0–3% (17¢), sized two-thirds/one-third so either leg pays ~96%.",
     ],
     status: "open",
   },
