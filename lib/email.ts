@@ -445,20 +445,17 @@ async function getProposalAttachments(documentIds: string[] | null | undefined):
 }
 
 // ── Proposal voter list ───────────────────────────────────────────────────────
-// Always fetched with vote choice included — which fields actually get
-// rendered into an email's HTML (name only vs. name + choice) is decided by
-// each call site below, not by this query. Nothing here is exposed to a
-// client; it's assembled straight into the outgoing email body server-side.
+// Names only. Which side anyone voted for is never disclosed — in any email,
+// before or after the vote closes; only the aggregate tally is shown.
 interface ProposalVoter {
   name: string;
-  vote: "yes" | "no";
 }
 
 async function getProposalVoters(proposalId: string): Promise<ProposalVoter[]> {
   const service = createServiceClient();
   const { data: votes } = await service
     .from("proposal_votes")
-    .select("user_id, vote")
+    .select("user_id")
     .eq("proposal_id", proposalId);
   if (!votes?.length) return [];
 
@@ -472,42 +469,19 @@ async function getProposalVoters(proposalId: string): Promise<ProposalVoter[]> {
   );
 
   return votes
-    .map((v) => ({ name: nameById.get(v.user_id as string) ?? "Anonymous", vote: v.vote as "yes" | "no" }))
+    .map((v) => ({ name: nameById.get(v.user_id as string) ?? "Anonymous" }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// Names only — used on the 12h-warning email, where the vote itself must
-// stay confidential while voting is still active. One name per line rather
-// than a comma-separated run so a long roster stays scannable.
-function renderVoterNamesHtml(voters: ProposalVoter[]): string {
+// One name per line rather than a comma-separated run so a long roster
+// stays scannable. `heading` differs between the 12h warning ("Voted so
+// far") and the result email ("Voted").
+function renderVoterNamesHtml(voters: ProposalVoter[], heading = "Voted so far:"): string {
   if (voters.length === 0) return "";
   const names = voters
     .map((v) => `<p style="margin:0 0 2px;font-size:12px;color:#374151">${escapeHtml(v.name)}</p>`)
     .join("");
-  return `<div style="margin-top:10px"><p style="font-size:12px;color:#6b7280;margin:0 0 4px"><strong style="color:#374151">Voted so far:</strong></p>${names}</div>`;
-}
-
-// Names with their choice — used only on the final passed/failed email,
-// once voting has closed and the result is already public. Two vertical
-// columns (Yes / No) via a table — the reliable cross-client way to lay out
-// columns in email HTML — rather than one inline-wrapping list.
-function renderVotersWithChoiceHtml(voters: ProposalVoter[]): string {
-  if (voters.length === 0) return "";
-  const yesVoters = voters.filter((v) => v.vote === "yes");
-  const noVoters = voters.filter((v) => v.vote === "no");
-  const column = (label: string, color: string, list: ProposalVoter[]) => `
-    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.04em">${label} (${list.length})</p>
-    ${list.map((v) => `<p style="margin:0 0 3px;font-size:12px;color:#374151">${escapeHtml(v.name)}</p>`).join("") || `<p style="margin:0;font-size:12px;color:#9ca3af">—</p>`}
-  `;
-  return `<div style="margin-top:14px">
-    <p style="font-size:12px;color:#6b7280;margin:0 0 8px"><strong style="color:#374151">Individual votes:</strong></p>
-    <table style="width:100%;border-collapse:collapse">
-      <tr>
-        <td style="vertical-align:top;width:50%;padding-right:12px">${column("Yes", "#1D9E75", yesVoters)}</td>
-        <td style="vertical-align:top;width:50%;padding-left:12px;border-left:1px solid #e5e7eb">${column("No", "#ef4444", noVoters)}</td>
-      </tr>
-    </table>
-  </div>`;
+  return `<div style="margin-top:10px"><p style="font-size:12px;color:#6b7280;margin:0 0 4px"><strong style="color:#374151">${heading}</strong></p>${names}</div>`;
 }
 
 // ── School-scoped push-triggered blast (trades, buys/sells) ──────────────────
@@ -710,7 +684,7 @@ export async function sendProposalResultEmail(proposal: Proposal): Promise<void>
         <tr><td style="padding:5px 0;color:#6b7280;width:110px">Result</td><td style="padding:5px 0"><strong style="color:${passed ? "#1D9E75" : "#ef4444"}">${resultLabel}</strong></td></tr>
         <tr><td style="padding:5px 0;color:#6b7280">Final vote</td><td style="padding:5px 0">${proposal.yes_votes} yes / ${proposal.no_votes} no (${yesPct}% in favor)</td></tr>
       </table>
-      ${renderVotersWithChoiceHtml(voters)}
+      ${renderVoterNamesHtml(voters, "Voted:")}
       ${renderMessageHtml(message, vars)}`,
       cta: { label: "View results →", url: proposalVoteUrl(proposal.school) },
       userId: r.userId,
