@@ -1,10 +1,15 @@
 import { Holding } from "@/lib/types";
 
+// Sheet dates are y/m/d, but a few rows are typed month-first (Oregon's
+// LIL-NOUNS "5/19/2023", Texas's MILADY "7/1/2024"). Read as y/m/d those
+// land around 1912 and wreck anything averaged over dates (the report's
+// Avg Position Age), so a 4-digit last part is taken as m/d/yyyy.
 export function parseDateMsAsc(dateStr: string): number {
   if (!dateStr) return Infinity;
-  const parts = dateStr.split(/[\/\-]/);
+  const parts = dateStr.trim().split(/[\/\-]/);
   if (parts.length !== 3) return Infinity;
-  const [y, m, d] = parts.map(Number);
+  const nums = parts.map(Number);
+  const [y, m, d] = parts[2].length === 4 ? [nums[2], nums[0], nums[1]] : nums;
   if (!y || !m || !d) return Infinity;
   return new Date(y, m - 1, d).getTime();
 }

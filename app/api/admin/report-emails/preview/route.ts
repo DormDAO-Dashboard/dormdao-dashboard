@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/admin-guard";
 import { escapeHtml } from "@/lib/email";
 import {
-  buildPortfolioReportEmail, buildLeaderboardDigestEmail, type BuiltEmail, type ReviewStatus,
+  buildPortfolioReportEmail, buildLeaderboardDigestEmail, RECIPIENT_NAME_TOKEN, type BuiltEmail, type ReviewStatus,
 } from "@/lib/report-emails";
 
 // Shown above the email, never inside it: the digest's sign-off status and
@@ -16,6 +16,11 @@ function reviewBanner(review: ReviewStatus): string {
     <ul style="margin:6px 0 0;padding-left:18px">${items}</ul>
   </div>`;
 }
+
+// The recipient's first name is mail-merged at send time; the preview marks
+// where it goes instead of guessing a name.
+const MERGE_FIELD_PREVIEW =
+  `<span style="background:#fef3c7;color:#92400e;border-radius:3px;padding:0 3px;font-weight:600">[First name]</span>`;
 
 // Renders one of the monthly report emails exactly as it would be sent for
 // the last completed month (figures as of that month's final day — see
@@ -50,7 +55,7 @@ export async function GET(req: NextRequest) {
     <span style="text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#9ca3af">Subject</span>&nbsp;&nbsp;${escapeHtml(email.subject)}
   </div>
   ${email.review ? reviewBanner(email.review) : ""}
-  ${email.html}
+  ${email.html.split(RECIPIENT_NAME_TOKEN).join(MERGE_FIELD_PREVIEW)}
 </body></html>`;
 
   return new NextResponse(page, {

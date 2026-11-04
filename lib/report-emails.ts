@@ -104,6 +104,24 @@ function returnLine(label: string, range: string, pct: number | null | undefined
 
 // ── Monthly Portfolio Report (one per school) ────────────────────────────────
 
+// Mail-merge field for the recipient's first name. The built email keeps it
+// as a literal token; personalizeReport() fills it per recipient at send
+// time, and the admin preview shows it highlighted.
+export const RECIPIENT_NAME_TOKEN = "{{firstName}}";
+
+export function personalizeReport(html: string, displayName: string | null | undefined): string {
+  const first = displayName?.trim().split(/\s+/)[0];
+  return html.split(RECIPIENT_NAME_TOKEN).join(first ? escapeHtml(first) : "there");
+}
+
+// Intro shown above the report. PLACEHOLDER DRAFT: Jack's team is writing
+// the final copy and sending it to Zack for review — replace this, then set
+// PORTFOLIO_INTRO_APPROVED. Fields: {{firstName}} (merged per recipient),
+// {club}, {month}.
+const PORTFOLIO_INTRO_DRAFT =
+  `Hi ${RECIPIENT_NAME_TOKEN}, here's {club}'s portfolio report for {month}: your NAV and returns, every active position, and your most recent portfolio transactions.`;
+const PORTFOLIO_INTRO_APPROVED = false;
+
 export async function buildPortfolioReportEmail(slug: string, now: Date = new Date()): Promise<BuiltEmail | null> {
   const period = previousMonthPeriod(now);
   const state = await getClosingState(period);
@@ -136,6 +154,7 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
       .from("portfolio_changes")
       .select("change_type, token_ticker, detected_at")
       .eq("school_name", school.name)
+      .neq("token_ticker", "ETH")
       .lt("detected_at", period.cutoff.toISOString())
       .order("detected_at", { ascending: false })
       .limit(3),
@@ -147,6 +166,9 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
   }
   if (!mtd) flags.push(`No snapshot from early ${monthLabel(period.monthStart)} to measure the month from, so Month-to-Date is blank.`);
   if (school.inceptionEthReturn == null) flags.push("Sub DAO opening year unavailable, so Since Inception is blank.");
+  if (!PORTFOLIO_INTRO_APPROVED) {
+    flags.unshift("Intro copy is a placeholder draft. Jack's team to write the final text and Zack to review it, then replace PORTFOLIO_INTRO_DRAFT in lib/report-emails.ts.");
+  }
 
   const monthRange = `${fmtDate(monthStartMs)}–${fmtDate(asOfMs)}`;
   const seasonRange = `${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))}–${fmtDate(asOfMs)}`;
@@ -233,7 +255,7 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
     </tr></thead>
     <tbody>${ethRow}${positionRows}</tbody>
   </table>
-  ${footnote(`Since Purchase is each position's return since it was opened. All values as of ${fmtDate(asOfMs)}. Season is since ${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))} and MTD covers ${monthRange} — for a position opened after those dates, they equal its since-purchase return. Percentages are measured against holding ETH.`)}`;
+  ${footnote("Since Purchase is each position's return since it was opened. Percentages are measured against holding ETH.")}`;
 
   // ── Insights
   const withRoi = positions.filter((h) => h.roiEthPct != null);
@@ -255,7 +277,7 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
   const changes = (changeRows ?? []) as Array<{ change_type: string; token_ticker: string; detected_at: string }>;
   const changesHtml = changes.length === 0 ? "" : `
   <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0">
-    <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Most Recent Portfolio Updates</div>
+    <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Most recent portfolio transactions</div>
     ${changes.map((c) => {
       const isBuy = c.change_type === "buy" || c.change_type === "increase";
       const bg = isBuy ? "#e6f7ef" : "#fdecec";
@@ -287,15 +309,19 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
 
   const schoolSlug = slugify(school.name);
   const dashboardUrl = `${APP_URL}/schools/${schoolSlug}`;
+  const intro = PORTFOLIO_INTRO_DRAFT
+    .replace("{club}", escapeHtml(label))
+    .replace("{month}", monthLabel(period.monthStart));
   const bodyHtml = `
   <p style="font-size:12px;color:#6b7280;margin:-8px 0 16px">${monthLabel(period.monthStart)} · Season 2026–27 · As of ${fmtDate(asOfMs)}</p>
+  <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px">${intro}</p>
   <p style="margin:0 0 20px"><a href="${dashboardUrl}" style="display:inline-block;padding:10px 22px;background:${GREEN};color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">View Full Portfolio Dashboard &rarr;</a></p>
   ${headline}
   ${positionsTable}
   ${insights}`;
 
   return {
-    subject: `Your Monthly Portfolio Report — ${label} — ${monthLabel(period.monthStart)}`,
+    subject: `${label} – Monthly Portfolio Report`,
     html: buildTemplate({
       title: "Your Monthly Portfolio Report",
       schoolLabel: escapeHtml(label),
@@ -345,7 +371,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
   const firstMonth = monthIsSeasonStart(period);
 
   const service = createServiceClient();
-  const [monthReturns, { data: buyRows }] = await Promise.all([
+  const [monthReturns, { data: buyRows }, { data: docRows }] = await Promise.all([
     Promise.all(schools.map((s) => monthReturn(s, period))),
     service
       .from("portfolio_changes")
@@ -353,6 +379,8 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
       .eq("change_type", "buy")
       .gte("detected_at", monthStartIso)
       .lt("detected_at", period.cutoff.toISOString()),
+    // Pitch materials on file, to flag opened positions with nothing to link to.
+    service.from("token_documents").select("school, token_ticker"),
   ]);
 
   // ── Accuracy checks (shown to the reviewer, never in the email)
@@ -396,7 +424,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
       ${kpi("DormDAO NAV", usd(totalNav), `${schools.length} schools`)}
       ${kpi("Avg ETH Return", signedPct(avgEth), "Season to date")}
       ${kpi("Avg USD Return", signedPct(avgUsd), "Season to date")}
-      ${kpi("Avg Deployed", `${avgDeployed.toFixed(1)}%`, "Of NAV")}
+      ${kpi("Avg Deployed", `${avgDeployed.toFixed(1)}%`, "NAV outside ETH treasury")}
     </tr>
   </table>`;
 
@@ -444,7 +472,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
     </tr></thead>
     ${barRows}
   </table>
-  ${footnote(`Ranked by season ETH return, the same as the dashboard leaderboard, as of ${fmtDate(asOfMs)}. Green bars run right for gains, red bars left for losses, scaled to the largest move on the board. Deployed is the share of NAV held outside the ETH treasury.`)}`;
+  ${footnote(`Ranked by season ETH return as of ${fmtDate(asOfMs)}. Deployed is the share of NAV held outside the ETH treasury.`)}`;
 
   // ── Month leaderboard
   const monthRanked = schools
@@ -505,12 +533,23 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
   const onlySheet = [...sheetKeys].filter((k) => !detectedKeys.has(k)).map(pretty);
   const onlyDetected = [...detectedKeys].filter((k) => !sheetKeys.has(k)).map(pretty);
   if (onlySheet.length) flags.push(`Listed as opened (by investment date) but no matching buy detected in snapshots: ${onlySheet.join(", ")}.`);
+  // Each opened position links to its token page, whose Fund Documents
+  // section is the folder of pitch materials (decks, exec summaries) on file
+  // for that token.
+  const pitchUrl = (ticker: string) => `${APP_URL}/tokens/${encodeURIComponent(ticker.toLowerCase())}`;
+  const docKeys = new Set(((docRows ?? []) as Array<{ school: string | null; token_ticker: string | null }>)
+    .filter((d) => d.school && d.token_ticker)
+    .map((d) => key(d.school!.toLowerCase(), d.token_ticker!)));
+  const noPitch = opened
+    .filter((o) => !docKeys.has(key(o.school.name.toLowerCase(), o.h.ticker)))
+    .map((o) => `${schoolDisplayName(o.school.name)} $${o.h.ticker}`);
+  if (noPitch.length) flags.push(`No pitch materials uploaded for: ${noPitch.join(", ")}. Their links open the token page, which won't show a pitch from that club until one is uploaded.`);
   if (onlyDetected.length) flags.push(`Buy detected in snapshots during the month but not listed (investment date is earlier, or the position was closed by month end): ${onlyDetected.join(", ")}.`);
 
   const openedRows = opened.map((r, i) => `
       <tr style="background:${i % 2 ? "#fafafa" : "#ffffff"}">
+        <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12.5px;white-space:nowrap"><a href="${pitchUrl(r.h.ticker)}" style="color:${GREEN};text-decoration:none">$${escapeHtml(r.h.ticker)} &rarr;</a></td>
         <td style="${cell};font-size:12px;color:#374151">${escapeHtml(schoolDisplayName(r.school.name))}</td>
-        <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12.5px;color:#111827">$${escapeHtml(r.h.ticker)}</td>
         <td style="${cell};font-size:11px;color:#6b7280;white-space:nowrap">${fmtDate(r.ms)}</td>
         <td style="${numCell};color:#374151;white-space:nowrap">${r.h.costBasisEth > 0 ? `${r.h.costBasisEth.toFixed(2)} ETH` : "—"}</td>
         <td style="${numCell};color:#374151">${r.h.marketValueUsd == null ? "—" : usd(r.h.marketValueUsd)}</td>
@@ -521,15 +560,15 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
     ? `<p style="font-size:12px;color:#6b7280;margin:10px 0 0">No new positions opened across DormDAO in ${escapeHtml(monthLabel(period.monthStart))}.</p>`
     : `<table style="width:100%;border-collapse:collapse;margin-top:10px">
     <thead><tr style="background:#f9fafb">
-      <th style="${th("left")}">School</th>
       <th style="${th("left")}">Token</th>
+      <th style="${th("left")}">Club</th>
       <th style="${th("left")}">Opened</th>
       <th style="${th("right")}">Cost Basis (ETH)</th>
       <th style="${th("right")}">Value</th>
     </tr></thead>
     <tbody>${openedRows}</tbody>
   </table>
-  ${footnote(`New positions only — adds to positions a school already held aren't listed. Cost Basis is the ETH each school invested in the position; Value is as of ${fmtDate(asOfMs)}.`)}`}`;
+  ${footnote(`New positions only — adds to positions a club already held aren't listed. Cost Basis is the ETH each club invested; Value is as of ${fmtDate(asOfMs)}. Click a token for its pitch materials.`)}`}`;
 
   // ── Disclosure
   if (!DIGEST_DISCLOSURE_HTML) {
@@ -548,7 +587,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
   ${disclosure}`;
 
   return {
-    subject: `DormDAO Ramen Report — ${monthLabel(period.monthStart)}`,
+    subject: "Ramen Report – Monthly Dorm Performance Leaderboard",
     html: buildTemplate({
       title: "Ramen Report",
       schoolLabel: "DormDAO · All Schools",

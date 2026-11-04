@@ -70,7 +70,8 @@ export function AdminMonthlyReportsSection() {
     {
       type: "portfolio",
       title: "Monthly Portfolio Report",
-      description: "One per school — NAV, month / season / since inception returns, every position, and portfolio insights.",
+      description: "One per club, opening with a short intro addressed to each recipient by first name — NAV, month / season / since inception returns, every position, and portfolio insights.",
+      status: "In review — intro copy is a placeholder until Jack's team drafts it and Zack approves",
     },
     {
       type: "leaderboard",
