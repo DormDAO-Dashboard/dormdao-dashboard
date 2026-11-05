@@ -33,6 +33,10 @@ export default function LoginPage() {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        // Always show Google's account chooser. Without it, Google silently
+        // reuses whichever account the browser is already signed into — on a
+        // shared laptop that logged one member into another member's account.
+        queryParams: { prompt: "select_account" },
       },
     });
   }
