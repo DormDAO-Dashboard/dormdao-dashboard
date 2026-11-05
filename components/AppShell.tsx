@@ -18,6 +18,7 @@ import { BellButton } from "@/components/BellButton";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { schoolDisplayName, schoolShortName } from "@/lib/schoolData";
 import { MAIN_DAO_VOTER } from "@/lib/main-dao";
+import { canUsePredictions } from "@/lib/predictions/eligibility";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -73,6 +74,15 @@ function matchesRoute(href: string, pathname: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
+// Only shown to those who can use it (Oregon members and admins) — see
+// lib/predictions/eligibility.ts. Sits right after Forum.
+const PREDICTIONS_LINK = { href: "/predictions", label: "Predictions", icon: Target };
+function navLinksFor(showPredictions: boolean) {
+  if (!showPredictions) return NAV_LINKS;
+  const i = NAV_LINKS.findIndex((l) => l.href === "/forum") + 1;
+  return [...NAV_LINKS.slice(0, i), PREDICTIONS_LINK, ...NAV_LINKS.slice(i)];
+}
+
 const PRIMARY_HREFS = new Set(["/leaderboard", "/schools", "/analytics", "/activity", "/forum"]);
 const PRIMARY_LINKS = NAV_LINKS.filter(l => PRIMARY_HREFS.has(l.href));
 const MORE_LINKS    = NAV_LINKS.filter(l => !PRIMARY_HREFS.has(l.href));
@@ -95,6 +105,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [avatarSrc, setAvatarSrc]   = useState<string | null>(null);
   const [userSchool, setUserSchool] = useState<string | null>(null);
   const [isAdmin, setIsAdmin]       = useState(false);
+  const [isAlumni, setIsAlumni]     = useState(false);
   const [pinned, setPinned]             = useState(false);
   const [hovered, setHovered]           = useState(false);
   const [showMore, setShowMore]         = useState(false);
@@ -126,12 +137,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     // instead of sticking for the rest of the session.
     async function loadProfileFieldsOnce(u: SupabaseUser) {
       const { data: p, error } = await supabase
-        .from("profiles").select("avatar_url, school").eq("id", u.id).single();
+        .from("profiles").select("avatar_url, school, is_alumni").eq("id", u.id).single();
       if (error) throw error;
       setAvatarSrc(
         p?.avatar_url ?? (u.user_metadata?.avatar_url as string | undefined) ?? null
       );
       setUserSchool((p?.school as string | null) ?? null);
+      setIsAlumni(p?.is_alumni === true);
 
       const res = await apiFetch("/api/admin/check");
       const json = await res.json() as { isAdmin: boolean };
@@ -183,6 +195,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       } else {
         setAvatarSrc(null);
         setUserSchool(null);
+        setIsAlumni(false);
         setIsAdmin(false);
       }
     });
@@ -196,6 +209,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const expanded  = pinned || hovered;
+  const showPredictions = !!user && canUsePredictions(userSchool, isAlumni, isAdmin);
   const sidebarPx = expanded ? 200 : 64;
 
   function AvatarImg({ size }: { size: number }) {
@@ -251,7 +265,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             const voteActive = userSchoolSlug ? matchesRoute(`/schools/${userSchoolSlug}/vote`, pathname) : false;
             const voteColor  = userSchoolSlug ? getSchoolColors(userSchoolSlug).primary : undefined;
 
-            const navItems = NAV_LINKS.filter(({ href }) => href !== "/map").flatMap(({ href, label, icon: Icon }) => {
+            const navItems = navLinksFor(showPredictions).filter(({ href }) => href !== "/map").flatMap(({ href, label, icon: Icon }) => {
               const active = matchesRoute(href, pathname);
               const link = (
                 <Link key={href} href={href} className={cn(
@@ -314,8 +328,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             });
 
             if (isAdmin) {
-              // /predictions is admin-only for now, so it lives in this group.
-              const adminActive = matchesRoute("/admin", pathname) || matchesRoute("/predictions", pathname);
+              const adminActive = matchesRoute("/admin", pathname);
               const showAdminSub = adminHovered || adminActive;
 
               const adminLink = (
@@ -343,7 +356,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 { href: "/admin/members",  label: "Members",        icon: Users },
                 { href: "/admin/email",    label: "Email Functions", icon: Mail },
                 { href: "/admin/settings", label: "Admin Settings", icon: Settings },
-                { href: "/predictions",    label: "Predictions",    icon: Target },
               ].map(({ href, label, icon: SubIcon }) => {
                 const subActive = matchesRoute(href, pathname);
                 return (
@@ -545,7 +557,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })()}
-              {MORE_LINKS.map(({ href, label, icon: Icon }) => {
+              {(showPredictions ? [PREDICTIONS_LINK, ...MORE_LINKS] : MORE_LINKS).map(({ href, label, icon: Icon }) => {
                 const active = matchesRoute(href, pathname);
                 return (
                   <Link key={href} href={href} onClick={() => setShowMore(false)}

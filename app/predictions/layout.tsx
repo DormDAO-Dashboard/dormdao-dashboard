@@ -1,9 +1,9 @@
-import { requireAdmin } from "@/lib/admin-guard";
+import { requirePredictionsAccess } from "@/lib/predictions/access";
 import { PredictionsNav } from "@/components/predictions/PredictionsNav";
 
-// OBG Prediction Markets — admin-only while it's being built out.
+// OBG Prediction Markets — Oregon members (and admins) only; see lib/predictions/access.ts.
 export default async function PredictionsLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin();
+  await requirePredictionsAccess();
   return (
     <div>
       <PredictionsNav />

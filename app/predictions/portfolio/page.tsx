@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin-guard";
+import { requirePredictionsAccess } from "@/lib/predictions/access";
 import Link from "next/link";
 import { loadAllWithQuotes } from "@/lib/predictions/load";
 import { markPrice, returnPct, summarizePosition, withSettlement } from "@/lib/predictions/math";
@@ -14,7 +14,7 @@ const card = "rounded-lg border border-gray-200 dark:border-gray-800 bg-white da
 export default async function PortfolioPage() {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
-  await requireAdmin();
+  await requirePredictionsAccess();
   const { rounds, pitches, trades, quotes } = await loadAllWithQuotes();
 
   // The fund's actual pick each round (the vote winner), newest first.

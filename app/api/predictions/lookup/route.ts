@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminUser } from "@/lib/admin-guard";
+import { getPredictionsUser } from "@/lib/predictions/access";
 import { parseMarketLink } from "@/lib/predictions/markets/parseLink";
 import { lookupMarket } from "@/lib/predictions/markets/lookup";
 
@@ -9,8 +9,8 @@ const MAX_INPUT_LENGTH = 500;
 // Returns the market title and its outcomes with live YES prices, for the
 // pitch submission form.
 export async function GET(req: NextRequest) {
-  if (!(await getAdminUser())) {
-    return NextResponse.json({ error: "Admins only." }, { status: 403 });
+  if (!(await getPredictionsUser())) {
+    return NextResponse.json({ error: "Predictions is only open to Oregon Blockchain Group members." }, { status: 403 });
   }
   const link = new URL(req.url).searchParams.get("link") ?? "";
   if (link.length > MAX_INPUT_LENGTH) {

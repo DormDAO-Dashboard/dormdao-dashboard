@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminUser } from "@/lib/admin-guard";
+import { getPredictionsUser } from "@/lib/predictions/access";
 import { getRepo } from "@/lib/predictions/repo";
 import { getHistory } from "@/lib/predictions/quotes";
 import { historyStart } from "@/lib/predictions/load";
@@ -15,8 +15,8 @@ function isRange(value: string | null): value is Range {
 // GET /api/predictions/history?id=<pitch id>&range=since|7d|30d|all
 // Chosen-side price history for one pitch, for the pitch page's range buttons.
 export async function GET(req: NextRequest) {
-  if (!(await getAdminUser())) {
-    return NextResponse.json({ error: "Admins only." }, { status: 403 });
+  if (!(await getPredictionsUser())) {
+    return NextResponse.json({ error: "Predictions is only open to Oregon Blockchain Group members." }, { status: 403 });
   }
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

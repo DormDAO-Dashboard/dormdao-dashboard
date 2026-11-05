@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin-guard";
+import { requirePredictionsAccess } from "@/lib/predictions/access";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -52,7 +52,7 @@ function TradesTable({ trades }: { trades: Trade[] }) {
 export default async function PitchPage({ params }: { params: Promise<{ id: string }> }) {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
-  await requireAdmin();
+  await requirePredictionsAccess();
   const { id } = await params;
   const repo = getRepo();
   const [pitch, rounds, trades] = await Promise.all([repo.getPitch(id), repo.listRounds(), repo.listTrades(id)]);

@@ -20,8 +20,8 @@ export async function getAdminUser(): Promise<User | null> {
   return prof?.role === "dorm_admin" ? user : null;
 }
 
-// Shared access gate for every /admin/* page (and /predictions while it's
-// admin-only). Redirects signed-out users to /login and non-admins to /.
+// Shared access gate for every /admin/* page. Redirects signed-out users
+// to /login and non-admins to /.
 export async function requireAdmin(): Promise<User> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin-guard";
+import { requirePredictionsAccess } from "@/lib/predictions/access";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { loadAllWithQuotes } from "@/lib/predictions/load";
@@ -12,7 +12,7 @@ export const revalidate = 60;
 export default async function ArchivePage() {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
-  await requireAdmin();
+  await requirePredictionsAccess();
   const { rounds, pitches, quotes } = await loadAllWithQuotes();
 
   if (rounds.length === 0) {

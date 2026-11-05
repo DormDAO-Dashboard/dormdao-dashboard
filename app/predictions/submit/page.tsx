@@ -1,11 +1,11 @@
-import { requireAdmin } from "@/lib/admin-guard";
+import { requirePredictionsAccess } from "@/lib/predictions/access";
 import { getRepo } from "@/lib/predictions/repo";
 import { SubmitPitchForm } from "@/components/predictions/SubmitPitchForm";
 
 export default async function SubmitPitchPage() {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
-  await requireAdmin();
+  await requirePredictionsAccess();
   const rounds = await getRepo().listRounds();
   const nextRound = (rounds[0]?.number ?? 0) + 1;
   return (

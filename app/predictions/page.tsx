@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin-guard";
+import { requirePredictionsAccess } from "@/lib/predictions/access";
 import { ExternalLink } from "lucide-react";
 import { loadRound } from "@/lib/predictions/load";
 import { shortDate } from "@/lib/predictions/format";
@@ -11,7 +11,7 @@ export const revalidate = 60;
 export default async function LatestRoundPage() {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
-  await requireAdmin();
+  await requirePredictionsAccess();
   const { round, pitches, quotes, histories, alerts } = await loadRound();
 
   if (!round) {

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin-guard";
+import { requirePredictionsAccess } from "@/lib/predictions/access";
 import { loadAllWithQuotes } from "@/lib/predictions/load";
 import { buildLeaderboard, type LeaderboardRow } from "@/lib/predictions/leaderboard";
 import { signedPct, toneClass, usd } from "@/lib/predictions/format";
@@ -48,7 +48,7 @@ function Table({ title, rows, label }: { title: string; rows: LeaderboardRow[]; 
 export default async function LeaderboardPage() {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
-  await requireAdmin();
+  await requirePredictionsAccess();
   const { rounds, pitches, trades, quotes } = await loadAllWithQuotes();
 
   if (pitches.length === 0) {
