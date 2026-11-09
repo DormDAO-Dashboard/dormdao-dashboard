@@ -4,6 +4,7 @@ import { buildPortfolioReportEmail, buildLeaderboardDigestEmail, personalizeRepo
 import { previousMonthPeriod, getClosingState, type ReportPeriod } from "@/lib/report-period";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
+import { getAdminEmails } from "@/lib/admin-config";
 
 // Sends the monthly reports for the last completed month: one Monthly
 // Portfolio Report per school (to that school's members, plus the usual
@@ -103,6 +104,38 @@ async function displayNames(userIds: string[]): Promise<Map<string, string | nul
   return names;
 }
 
+// Last line of defense before a school's Portfolio Report goes out: keep a
+// recipient only if their profile's school IS that school, or they're an
+// admin (dorm_admin, or an env-configured admin email) — so a report can
+// never reach another school's student even if the recipient list were
+// wrong. getSchoolRecipients only warns on a mismatch; this drops them.
+export function keepOnlySchool(
+  schoolName: string,
+  recipients: Recipient[],
+  profiles: Map<string, { school: string | null; role: string | null }>,
+  adminEmails: string[],
+): { kept: Recipient[]; dropped: Recipient[] } {
+  const admins = new Set(adminEmails.map((e) => e.toLowerCase()));
+  const kept: Recipient[] = [];
+  const dropped: Recipient[] = [];
+  for (const r of recipients) {
+    const p = profiles.get(r.userId);
+    const ok = admins.has(r.email.toLowerCase()) || p?.role === "dorm_admin" || p?.school === schoolName;
+    (ok ? kept : dropped).push(r);
+  }
+  return { kept, dropped };
+}
+
+async function profilesFor(userIds: string[]): Promise<Map<string, { school: string | null; role: string | null }>> {
+  const out = new Map<string, { school: string | null; role: string | null }>();
+  for (let i = 0; i < userIds.length; i += 200) {
+    const { data } = await createServiceClient()
+      .from("profiles").select("id, school, role").in("id", userIds.slice(i, i + 200));
+    for (const p of data ?? []) out.set(p.id as string, { school: (p.school as string | null) ?? null, role: (p.role as string | null) ?? null });
+  }
+  return out;
+}
+
 // Resend allows ~2 requests/s; leave a gap between sends.
 const pause = () => new Promise((r) => setTimeout(r, 600));
 
@@ -154,7 +187,9 @@ export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date =
     for (const name of SCHOOL_NAMES) recipientsBySchool.set(name, await getSchoolRecipients(slugify(name)));
     const everyone = new Map<string, Recipient>();
     for (const list of recipientsBySchool.values()) for (const r of list) if (!everyone.has(r.email)) everyone.set(r.email, r);
-    const names = await displayNames([...new Set([...everyone.values()].map((r) => r.userId))]);
+    const allIds = [...new Set([...everyone.values()].map((r) => r.userId))];
+    const [names, profiles] = await Promise.all([displayNames(allIds), profilesFor(allIds)]);
+    const adminEmails = getAdminEmails();
 
     // ── One portfolio report per school
     for (const school of state.schools) {
@@ -163,7 +198,11 @@ export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date =
       try {
         const email = await buildPortfolioReportEmail(slugify(school.name), now, { state, forSend: true });
         if (!email) throw new Error("No month-end data for this school.");
-        log.portfolio[school.name] = await sendReport(school.name, recipientsBySchool.get(school.name) ?? [], (r) => ({
+        const { kept, dropped } = keepOnlySchool(school.name, recipientsBySchool.get(school.name) ?? [], profiles, adminEmails);
+        if (dropped.length) {
+          console.warn(`[monthly-reports] dropped ${dropped.length} recipient(s) from ${school.name}'s report: profile school doesn't match`);
+        }
+        log.portfolio[school.name] = await sendReport(school.name, kept, (r) => ({
           subject: email.subject,
           html: personalizeReport(email.html, names.get(r.userId), r.userId),
         }));
