@@ -118,9 +118,21 @@ function returnLine(label: string, range: string, pct: number | null | undefined
 // time, and the admin preview shows it highlighted.
 export const RECIPIENT_NAME_TOKEN = "{{firstName}}";
 
+// First name for the greeting: the first word of the display name when
+// it looks like a name (letters, with ' or - inside), capitalized —
+// anything else (an email, a wallet address, a handle with digits) or no
+// name at all reads "Hi there," instead of greeting someone as "0x12ab".
+const NOT_A_NAME = new Set(["anonymous", "user", "member", "admin", "test", "unknown", "guest", "none"]);
+
+export function greetingName(displayName: string | null | undefined): string {
+  const first = displayName?.trim().split(/\s+/)[0] ?? "";
+  if (!/^\p{L}+(?:['’-]\p{L}+)*$/u.test(first)) return "there";
+  if (NOT_A_NAME.has(first.toLowerCase())) return "there";
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
 export function personalizeReport(html: string, displayName: string | null | undefined, userId?: string): string {
-  const first = displayName?.trim().split(/\s+/)[0];
-  const named = html.split(RECIPIENT_NAME_TOKEN).join(first ? escapeHtml(first) : "there");
+  const named = html.split(RECIPIENT_NAME_TOKEN).join(escapeHtml(greetingName(displayName)));
   // Reports are built once with the generic footer link; each recipient
   // gets their own one-click unsubscribe instead.
   return userId ? named.split(footerLinkHtml()).join(footerLinkHtml(userId)) : named;
