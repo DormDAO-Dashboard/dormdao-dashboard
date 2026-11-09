@@ -1,5 +1,6 @@
 import { requirePredictionsAccess } from "@/lib/predictions/access";
 import Link from "next/link";
+import { pitchHref } from "@/lib/predictions/schools";
 import { loadAllWithQuotes } from "@/lib/predictions/load";
 import { markPrice, returnPct, summarizePosition, withSettlement } from "@/lib/predictions/math";
 import { cents, signedPct, toneClass, usd } from "@/lib/predictions/format";
@@ -70,7 +71,7 @@ export default async function PortfolioPage() {
           <ul>
             {executed.map(({ round, pitch, mark, ret, resolved }) => (
               <li key={pitch.id} className="border-b border-gray-100 dark:border-gray-800/60 last:border-0">
-                <Link href={`/predictions/pitches/${pitch.id}`} className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                <Link href={pitchHref(pitch.id)} className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                   <span className="font-mono text-sm text-gray-500 dark:text-gray-400 w-10">#{round.number}</span>
                   <SectorBadge sector={pitch.sector} />
                   <span className="flex-1 min-w-[12rem] text-gray-900 dark:text-white">
@@ -115,7 +116,7 @@ export default async function PortfolioPage() {
               {[...open, ...closed].map(({ pitch, mark, summary }) => (
                 <tr key={pitch.id} className="border-b border-gray-100 dark:border-gray-800/60 last:border-0">
                   <td className="px-5 py-3">
-                    <Link href={`/predictions/pitches/${pitch.id}`} className="text-gray-900 dark:text-white hover:text-primary transition-colors">
+                    <Link href={pitchHref(pitch.id)} className="text-gray-900 dark:text-white hover:text-primary transition-colors">
                       {pitch.marketTitle}
                     </Link>
                     <div className="flex items-center gap-2 mt-1">

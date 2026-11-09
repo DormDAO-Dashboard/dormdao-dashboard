@@ -18,6 +18,15 @@ const nextConfig = {
         : []),
     ],
   },
+  // Predictions' original tabs now live on Oregon's prediction page;
+  // keep old links working. (Not permanent: other schools get pages later.)
+  async redirects() {
+    return [
+      { source: "/predictions/leaderboard", destination: "/predictions/schools/oregon/performance", permanent: false },
+      { source: "/predictions/:tab(portfolio|archive|submit)", destination: "/predictions/schools/oregon/:tab", permanent: false },
+      { source: "/predictions/pitches/:id", destination: "/predictions/schools/oregon/pitches/:id", permanent: false },
+    ];
+  },
   // No Content-Security-Policy here yet — this app's actual script/style/
   // image sources need to be inventoried and the policy verified against a
   // live build before shipping one; a wrong CSP fails silently in

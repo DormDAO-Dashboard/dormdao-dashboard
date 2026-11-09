@@ -45,7 +45,7 @@ function Table({ title, rows, label }: { title: string; rows: LeaderboardRow[]; 
   );
 }
 
-export default async function LeaderboardPage() {
+export default async function PerformancePage() {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
   await requirePredictionsAccess();
@@ -57,7 +57,7 @@ export default async function LeaderboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Leaderboard</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Performance</h1>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
         Accuracy covers every pitch, executed or not. Hit rate counts closed pitches that finished above entry; avg return is entry → current (or resolved) price. Selected = pitches that won the club vote. Fund P&amp;L comes only from executed trades.
       </p>

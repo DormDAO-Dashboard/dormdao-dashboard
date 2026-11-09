@@ -1,7 +1,8 @@
 import type { Pitch, Quote, Trade, Round } from "@/lib/predictions/types";
 import { markPrice, returnPct, summarizePosition } from "@/lib/predictions/math";
 
-export type LeaderboardGroup = "analyst" | "sector";
+// "club" puts every pitch in one row — a school's overall record.
+export type LeaderboardGroup = "analyst" | "sector" | "club";
 
 export interface LeaderboardRow {
   key: string;
@@ -25,7 +26,7 @@ export function buildLeaderboard(
   rounds: Round[],
   group: LeaderboardGroup,
 ): LeaderboardRow[] {
-  const keyOf = (p: Pitch) => (group === "analyst" ? p.analyst : p.sector);
+  const keyOf = (p: Pitch) => (group === "club" ? "club" : group === "analyst" ? p.analyst : p.sector);
   const keys = [...new Set(pitches.map(keyOf))];
   const selectedIds = new Set(rounds.flatMap((w) => (w.selectedPitchId ? [w.selectedPitchId] : [])));
 

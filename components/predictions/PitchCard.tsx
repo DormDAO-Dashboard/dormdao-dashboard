@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { pitchHref } from "@/lib/predictions/schools";
 import type { Pitch, PitchRole, PricePoint, Quote } from "@/lib/predictions/types";
 import { markPrice, returnPct } from "@/lib/predictions/math";
 import { cents, cn, shortDate, signedPct, toneClass } from "@/lib/predictions/format";
@@ -23,7 +24,7 @@ export function PitchCard({ pitch, quote, history, role, alerts }: PitchCardProp
 
   return (
     <Link
-      href={`/predictions/pitches/${pitch.id}`}
+      href={pitchHref(pitch.id)}
       className={cn(
         "group flex flex-col rounded-lg border bg-white dark:bg-gray-900/30 p-5 hover:border-primary/50 transition-colors",
         role === "executed" ? "border-primary/60 ring-1 ring-primary/30" : "border-gray-200 dark:border-gray-800",

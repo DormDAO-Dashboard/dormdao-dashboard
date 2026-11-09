@@ -1,5 +1,6 @@
 import { requirePredictionsAccess } from "@/lib/predictions/access";
 import Link from "next/link";
+import { predictionSchoolPath } from "@/lib/predictions/schools";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getRepo } from "@/lib/predictions/repo";
@@ -49,11 +50,11 @@ function TradesTable({ trades }: { trades: Trade[] }) {
   );
 }
 
-export default async function PitchPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PitchPage({ params }: { params: Promise<{ slug: string; id: string }> }) {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
   await requirePredictionsAccess();
-  const { id } = await params;
+  const { slug, id } = await params;
   const repo = getRepo();
   const [pitch, rounds, trades] = await Promise.all([repo.getPitch(id), repo.listRounds(), repo.listTrades(id)]);
   if (!pitch) notFound();
@@ -67,7 +68,7 @@ export default async function PitchPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="max-w-4xl">
-      <Link href="/predictions" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors">
+      <Link href={predictionSchoolPath(slug)} className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back
       </Link>
 

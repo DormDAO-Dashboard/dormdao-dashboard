@@ -1,5 +1,6 @@
 import { requirePredictionsAccess } from "@/lib/predictions/access";
 import Link from "next/link";
+import { pitchHref } from "@/lib/predictions/schools";
 import { ExternalLink } from "lucide-react";
 import { loadAllWithQuotes } from "@/lib/predictions/load";
 import { markPrice, returnPct } from "@/lib/predictions/math";
@@ -44,7 +45,7 @@ export default async function ArchivePage() {
                   const ret = mark === null ? null : returnPct(p.entryPrice, mark);
                   return (
                     <li key={p.id} className="border-b border-gray-100 dark:border-gray-800/60 last:border-0">
-                      <Link href={`/predictions/pitches/${p.id}`} className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                      <Link href={pitchHref(p.id)} className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                         <SectorBadge sector={p.sector} />
                         <span className="text-gray-900 dark:text-white flex-1 min-w-[12rem]">
                           {p.marketTitle}
