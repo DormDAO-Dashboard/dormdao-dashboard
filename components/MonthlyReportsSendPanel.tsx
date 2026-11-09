@@ -11,6 +11,8 @@ interface SendLog {
   errors: Record<string, string>;
   skipped: string[];
   completedAt: string | null;
+  paused?: { reason: "quota" | "cap"; at: string; resumesAt: string } | null;
+  sentTo?: Record<string, string[]>;
 }
 
 interface Status {
@@ -117,7 +119,10 @@ export function MonthlyReportsSendPanel({ monthName, testSchool, testSchoolLabel
   const partial = !!log && !log.completedAt && !log.runningSince;
   const running = !!log?.runningSince;
   const portfolioCount = log ? Object.keys(log.portfolio).length : 0;
-  const errors = log ? Object.entries(log.errors) : [];
+  const sentCount = log ? Object.values(log.sentTo ?? {}).reduce((n, l) => n + l.length, 0) : 0;
+  // Errors from hitting the daily limit aren't failures — the daily
+  // resume run finishes those.
+  const errors = log ? Object.entries(log.errors).filter(([, msg]) => !/quota|daily.?limit/i.test(msg)) : [];
 
   return (
     <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 space-y-4">
@@ -189,7 +194,18 @@ export function MonthlyReportsSendPanel({ monthName, testSchool, testSchoolLabel
         )}
         {partial && (
           <p className="text-xs text-gray-700 dark:text-gray-400 mt-2">
-            Partly sent: {portfolioCount} portfolio reports{log!.ramen != null ? ` and the Ramen Report` : ""} went out. Sending again only sends what&apos;s missing.
+            Partly sent: {portfolioCount} of the schools&apos; portfolio reports{log!.ramen != null ? " and the Ramen Report" : ""} have fully gone out ({sentCount} emails so far). Sending again only sends what&apos;s missing.
+          </p>
+        )}
+        {partial && (
+          <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mt-1">
+            {log!.paused?.reason === "quota"
+              ? "Paused: Resend's daily email limit was reached. "
+              : log!.paused?.reason === "cap"
+              ? "Paused for today, leaving room for the site's other emails. "
+              : ""}
+            The rest send automatically after Resend&apos;s limit resets each day
+            {log!.paused ? `, next at ${fmt(log!.paused.resumesAt)}` : " (just after midnight UTC)"}, until everyone has theirs. You don&apos;t need to do anything.
           </p>
         )}
         {log && log.skipped.length > 0 && (

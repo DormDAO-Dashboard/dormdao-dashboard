@@ -17,6 +17,10 @@
   "crons": [
     {
       "path": "/api/cron/monthly-reports",
+      "schedule": "15 0 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-reports",
       "schedule": "0 15 * * *"
     }
   ]

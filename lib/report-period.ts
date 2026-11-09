@@ -35,6 +35,15 @@ export function previousMonthPeriod(now: Date = new Date()): ReportPeriod {
   return { monthStart, cutoff, asOf: new Date(cutoff.getTime() - 86_400_000) };
 }
 
+// The period for a "2026-10"-style month key (see periodKey in
+// lib/monthly-report-sender.ts).
+export function periodFromKey(key: string): ReportPeriod {
+  const [y, m] = key.split("-").map(Number);
+  const monthStart = new Date(Date.UTC(y, m - 1, 1));
+  const cutoff = new Date(Date.UTC(y, m, 1));
+  return { monthStart, cutoff, asOf: new Date(cutoff.getTime() - 86_400_000) };
+}
+
 export interface ClosingSchool {
   name: string;
   capturedAt: string;

@@ -1,7 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { getSchoolRecipients, sendToRecipients, type Recipient } from "@/lib/email";
 import { buildPortfolioReportEmail, buildLeaderboardDigestEmail, personalizeReport } from "@/lib/report-emails";
-import { previousMonthPeriod, getClosingState, type ReportPeriod } from "@/lib/report-period";
+import { previousMonthPeriod, periodFromKey, getClosingState, type ReportPeriod } from "@/lib/report-period";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
 import { getAdminEmails } from "@/lib/admin-config";
@@ -37,6 +37,10 @@ export interface MonthSendLog {
   // Schools with no month-end data, so no report was built for them.
   skipped: string[];
   completedAt: string | null;
+  // Set when a run stopped early — Resend's daily limit, or the scheduled
+  // run's own cap — with when it'll pick up again (the daily resume run
+  // just after midnight UTC, when Resend's quota resets).
+  paused?: { reason: "quota" | "cap"; at: string; resumesAt: string } | null;
 }
 
 export interface MonthlyReportsStore {
@@ -82,6 +86,11 @@ export async function setAutoSend(autoSend: boolean): Promise<MonthlyReportsStor
   return store;
 }
 
+// Months whose send was started but hasn't finished, oldest first.
+export function incompleteMonths(store: MonthlyReportsStore): string[] {
+  return Object.keys(store.months).filter((k) => !store.months[k].completedAt).sort();
+}
+
 export function periodKey(period: ReportPeriod): string {
   return period.monthStart.toISOString().slice(0, 7);
 }
@@ -91,7 +100,7 @@ export function periodKey(period: ReportPeriod): string {
 const STALE_RUN_MS = 6 * 60_000;
 
 export type SendResult =
-  | { status: "sent" | "partial"; key: string; log: MonthSendLog }
+  | { status: "sent" | "partial" | "paused"; key: string; log: MonthSendLog }
   | { status: "already_sent" | "running"; key: string; log: MonthSendLog };
 
 async function displayNames(userIds: string[]): Promise<Map<string, string | null>> {
@@ -136,11 +145,41 @@ async function profilesFor(userIds: string[]): Promise<Map<string, { school: str
   return out;
 }
 
+// Stops a run without marking anything failed.
+class StopRun extends Error {
+  constructor(public reason: "quota" | "cap") { super(reason); }
+}
+
+// Resend's free plan allows 100 emails per UTC day; past that every send
+// fails with daily_quota_exceeded until midnight UTC.
+function isQuotaError(err: unknown): boolean {
+  return /quota|daily.?limit/i.test((err as Error)?.message ?? "");
+}
+
+// The daily resume run (app/api/cron/monthly-reports) — 00:15 UTC, just
+// after Resend's quota resets.
+function nextResumeAt(from: Date): string {
+  const d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + 1, 0, 15));
+  return d.toISOString();
+}
+
+// Small chunks so a nearly-used-up daily quota still gets used (Resend may
+// reject a whole batch that doesn't fit).
+const CHUNK = 10;
+
 // Resend allows ~2 requests/s; leave a gap between sends.
 const pause = () => new Promise((r) => setTimeout(r, 600));
 
-export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date = new Date()): Promise<SendResult> {
-  const period = previousMonthPeriod(now);
+export interface SendOptions {
+  // Month to send ("2026-10"); defaults to the last completed month.
+  key?: string;
+  // Max emails this run may send — the scheduled runs leave part of
+  // Resend's daily quota for the site's other emails (vote notices etc.).
+  maxEmails?: number;
+}
+
+export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date = new Date(), opts: SendOptions = {}): Promise<SendResult> {
+  const period = opts.key ? periodFromKey(opts.key) : previousMonthPeriod(now);
   const key = periodKey(period);
   const store = await readStore();
   const existing = store.months[key];
@@ -154,6 +193,8 @@ export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date =
     startedAt: now.toISOString(), trigger, runningSince: null, portfolio: {}, ramen: null, sentTo: {}, errors: {}, skipped: [], completedAt: null,
   };
   log.sentTo ??= {};
+  log.paused = null;
+  delete log.errors.Run;
   log.runningSince = new Date().toISOString();
   store.months[key] = log;
   await writeStore(store);
@@ -164,14 +205,33 @@ export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date =
     await writeStore(store);
   };
 
-  // Sends one report in chunks of 50, skipping anyone already sent this
-  // report and recording each chunk as soon as it's accepted.
+  // Sends one report in small chunks, skipping anyone already sent this
+  // report and recording each chunk as soon as it's accepted. Stops the
+  // whole run (StopRun) on Resend's daily limit or this run's cap.
+  let sentThisRun = 0;
   const sendReport = async (piece: string, recipients: Recipient[], build: (r: Recipient) => { subject: string; html: string }) => {
     const done = new Set(log.sentTo[piece] ?? []);
     const todo = recipients.filter((r) => !done.has(r.email));
-    for (let i = 0; i < todo.length; i += 50) {
-      const chunk = todo.slice(i, i + 50);
-      await sendToRecipients(chunk, build);
+    for (let i = 0; i < todo.length; i += CHUNK) {
+      let chunk = todo.slice(i, i + CHUNK);
+      if (opts.maxEmails != null) {
+        const left = opts.maxEmails - sentThisRun;
+        if (left <= 0) throw new StopRun("cap");
+        chunk = chunk.slice(0, left);
+      }
+      try {
+        await sendToRecipients(chunk, build);
+      } catch (err) {
+        if (isQuotaError(err)) throw new StopRun("quota");
+        throw err;
+      }
+      sentThisRun += chunk.length;
+      if (chunk.length < Math.min(CHUNK, todo.length - i)) {
+        // Cap reached mid-chunk: record what went, stop here.
+        log.sentTo[piece] = [...(log.sentTo[piece] ?? []), ...chunk.map((r) => r.email)];
+        await save();
+        throw new StopRun("cap");
+      }
       log.sentTo[piece] = [...(log.sentTo[piece] ?? []), ...chunk.map((r) => r.email)];
       await save();
       await pause();
@@ -208,6 +268,7 @@ export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date =
         }));
         delete log.errors[label];
       } catch (err) {
+        if (err instanceof StopRun) throw err;
         log.errors[label] = (err as Error).message;
       }
       await save();
@@ -223,6 +284,7 @@ export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date =
         }));
         delete log.errors["Ramen Report"];
       } catch (err) {
+        if (err instanceof StopRun) throw err;
         log.errors["Ramen Report"] = (err as Error).message;
       }
     }
@@ -234,8 +296,15 @@ export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date =
     await writeStore(store);
     return { status: allSent ? "sent" : "partial", key, log };
   } catch (err) {
-    log.errors.Run = (err as Error).message;
     log.runningSince = null;
+    if (err instanceof StopRun) {
+      const at = new Date();
+      log.paused = { reason: err.reason, at: at.toISOString(), resumesAt: nextResumeAt(at) };
+      store.months[key] = log;
+      await writeStore(store).catch(() => {});
+      return { status: "paused", key, log };
+    }
+    log.errors.Run = (err as Error).message;
     store.months[key] = log;
     await writeStore(store).catch(() => {});
     return { status: "partial", key, log };

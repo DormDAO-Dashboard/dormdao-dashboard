@@ -371,8 +371,10 @@ async function assertRecipientsScopedToSchool(schoolSlug: string, recipients: Re
 // unverified domain, sandbox restrictions, etc.) — it resolves with
 // { data: null, error: {...} } instead. Every call site must check this, or a
 // rejected send is indistinguishable from a successful one and fails silently.
-function assertResendOk(result: { error: { message: string } | null }): void {
-  if (result.error) throw new Error(`Resend: ${result.error.message}`);
+function assertResendOk(result: { error: { message: string; name?: string } | null }): void {
+  // The error name (e.g. "daily_quota_exceeded") is kept in the message so
+  // callers can tell a quota stop from a real failure.
+  if (result.error) throw new Error(`Resend${result.error.name ? ` (${result.error.name})` : ""}: ${result.error.message}`);
 }
 
 // ── Batch send helper ─────────────────────────────────────────────────────────
