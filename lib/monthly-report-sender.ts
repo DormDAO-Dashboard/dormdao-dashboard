@@ -202,3 +202,34 @@ export async function sendMonthlyReports(trigger: "manual" | "auto", now: Date =
     return { status: "partial", key, log };
   }
 }
+
+// "Send a test to me": the selected school's Portfolio Report and the Ramen
+// Report, built exactly as the real send builds them, to one admin only.
+// Subjects are marked [TEST]; nothing is written to the send log, so a test
+// never counts as (or blocks) the real send.
+export async function sendTestReports(
+  to: { email: string; userId: string },
+  schoolSlug: string,
+  now: Date = new Date(),
+): Promise<{ schoolLabel: string }> {
+  const period = previousMonthPeriod(now);
+  const state = await getClosingState(period);
+  const school = state.schools.find((s) => slugify(s.name) === schoolSlug);
+  if (!school) throw new Error("That school has no month-end data, so there's no report to test.");
+
+  const [portfolio, ramen, names] = await Promise.all([
+    buildPortfolioReportEmail(schoolSlug, now, { state, forSend: true }),
+    buildLeaderboardDigestEmail(now, { state, forSend: true }),
+    displayNames([to.userId]),
+  ]);
+  if (!portfolio) throw new Error("Couldn't build that school's report.");
+
+  for (const email of [portfolio, ramen]) {
+    await sendToRecipients([to], (r) => ({
+      subject: `[TEST] ${email.subject}`,
+      html: personalizeReport(email.html, names.get(r.userId), r.userId),
+    }));
+    await pause();
+  }
+  return { schoolLabel: schoolDisplayName(school.name) };
+}

@@ -93,7 +93,11 @@ export function AdminMonthlyReportsSection() {
         </p>
       </div>
 
-      <MonthlyReportsSendPanel monthName={reportMonthName} />
+      <MonthlyReportsSendPanel
+        monthName={reportMonthName}
+        testSchool={school}
+        testSchoolLabel={SCHOOL_OPTIONS.find((s) => s.slug === school)?.label ?? ""}
+      />
 
       <div className="divide-y divide-gray-200 dark:divide-gray-800">
         {rows.map((r) => (

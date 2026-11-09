@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Send, Loader2, AlertTriangle, CheckCircle2, AlertCircle } from "lucide-react";
+import { Send, Loader2, AlertTriangle, CheckCircle2, AlertCircle, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SendLog {
@@ -27,13 +27,40 @@ function fmt(iso: string): string {
 // Send button + auto-send switch for the monthly reports (see
 // lib/monthly-report-sender.ts). The button covers the last completed
 // month — the same month the previews below show.
-export function MonthlyReportsSendPanel({ monthName }: { monthName: string }) {
+export function MonthlyReportsSendPanel({ monthName, testSchool, testSchoolLabel }: {
+  monthName: string;
+  // School picked in the Monthly Portfolio Report preview row below — the
+  // test sends that school's report.
+  testSchool: string;
+  testSchoolLabel: string;
+}) {
   const [status, setStatus] = useState<Status | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [savingToggle, setSavingToggle] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  async function sendTest() {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch("/api/admin/monthly-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ test: true, school: testSchool }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? `Test send failed (${res.status})`);
+      setTestResult({ ok: true, message: `Test sent to ${json.sentTo}: ${json.schoolLabel}'s Portfolio Report and the Ramen Report, marked [TEST].` });
+    } catch (err) {
+      setTestResult({ ok: false, message: (err as Error).message });
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function load() {
     try {
@@ -176,6 +203,24 @@ export function MonthlyReportsSendPanel({ monthName }: { monthName: string }) {
           </ul>
         )}
         {sendError && <p className="text-xs text-danger mt-2">{sendError}</p>}
+      </div>
+
+      {/* Test send */}
+      <div>
+        <button
+          onClick={sendTest}
+          disabled={testing || !testSchool}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 transition-colors"
+        >
+          {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FlaskConical className="w-3.5 h-3.5" />}
+          {testing ? "Sending test…" : "Send a test to me"}
+        </button>
+        <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">
+          Emails jack@dormdao.io {testSchoolLabel ? `${testSchoolLabel}'s` : "the selected school's"} Portfolio Report (pick the school below) and the Ramen Report, exactly as they&apos;d send. Doesn&apos;t count as sending {monthName}.
+        </p>
+        {testResult && (
+          <p className={cn("text-xs mt-1", testResult.ok ? "text-primary" : "text-danger")}>{testResult.message}</p>
+        )}
       </div>
 
       {/* Auto-send switch */}
