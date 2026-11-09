@@ -41,6 +41,20 @@ export interface BuildOptions {
   forSend?: boolean;
 }
 
+// Border of the outlined boxes (the NAV / Performance vs boxes, the Ramen
+// Report snapshot). The old #e5e7eb all but vanished when a phone's mail
+// app auto-darkened the email (Gmail/Outlook invert light colors to near
+// the dark background); this mid gray stays visible after that inversion
+// and is still a light hairline in light mode. Clients that honor
+// prefers-color-scheme (Apple Mail, Outlook.com) get the lighter
+// DARK_BOX_BORDER via BOX_DARK_STYLE instead.
+const BOX_BORDER = "#b6bcc5";
+const DARK_BOX_BORDER = "#6b7280";
+const BOX_DARK_STYLE = `<style>
+  @media (prefers-color-scheme: dark) { .dd-box, .dd-box td { border-color: ${DARK_BOX_BORDER} !important; } }
+  [data-ogsc] .dd-box, [data-ogsc] .dd-box td { border-color: ${DARK_BOX_BORDER} !important; }
+</style>`;
+
 const GREEN = "#1D9E75";
 const RED = "#ef4444";
 const MUTED = "#9ca3af";
@@ -199,7 +213,8 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
 
   // ── Headline numbers
   const headline = `
-  <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;margin-bottom:20px">
+  ${BOX_DARK_STYLE}
+  <table class="dd-box" style="width:100%;border-collapse:collapse;border:1px solid ${BOX_BORDER};margin-bottom:20px">
     <tr>
       <td style="width:50%;padding:14px 16px;vertical-align:top">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">NAV</div>
@@ -210,8 +225,8 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
         <div style="font-size:20px;font-weight:700;font-family:ui-monospace,monospace;color:#111827">${school.pctDeployed.toFixed(1)}%</div>
       </td>
     </tr>
-    <tr style="border-top:1px solid #e5e7eb">
-      <td colspan="2" style="padding:14px 16px;vertical-align:top;border-top:1px solid #e5e7eb">
+    <tr>
+      <td colspan="2" style="padding:14px 16px;vertical-align:top;border-top:1px solid ${BOX_BORDER}">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Performance vs USD</div>
         ${returnLine("Month-to-Date", monthRange, mtd?.usdReturnPct, true)}
         ${returnLine("Current Season", seasonRange, school.seasonUsdReturn)}
@@ -219,7 +234,7 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
       </td>
     </tr>
     <tr>
-      <td colspan="2" style="padding:14px 16px;vertical-align:top;border-top:1px solid #e5e7eb">
+      <td colspan="2" style="padding:14px 16px;vertical-align:top;border-top:1px solid ${BOX_BORDER}">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Performance vs ETH</div>
         ${returnLine("Month-to-Date", monthRange, mtd?.ethReturnPct, true)}
         ${returnLine("Current Season", seasonRange, school.seasonEthReturn)}
@@ -452,7 +467,8 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date(), opts: 
       </td>`;
   const snapshot = `
   ${h3("18px 0 0")}Portfolio Snapshot <span style="font-weight:400;color:${MUTED};font-size:11px">As of ${fmtDate(asOfMs)}</span></h3>
-  <table style="width:100%;border-collapse:collapse;margin-top:10px;border:1px solid #e5e7eb">
+  ${BOX_DARK_STYLE}
+  <table class="dd-box" style="width:100%;border-collapse:collapse;margin-top:10px;border:1px solid ${BOX_BORDER}">
     <tr>
       ${kpi("DormDAO NAV", usd(totalNav), `${schools.length} schools`)}
       ${kpi("Avg ETH Return", signedPct(avgEth), "Season to date")}
