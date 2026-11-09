@@ -41,19 +41,29 @@ export interface BuildOptions {
   forSend?: boolean;
 }
 
-// Border of the outlined boxes (the NAV / Performance vs boxes, the Ramen
-// Report snapshot). The old #e5e7eb all but vanished when a phone's mail
-// app auto-darkened the email (Gmail/Outlook invert light colors to near
-// the dark background); this mid gray stays visible after that inversion
-// and is still a light hairline in light mode. Clients that honor
-// prefers-color-scheme (Apple Mail, Outlook.com) get the lighter
-// DARK_BOX_BORDER via BOX_DARK_STYLE instead.
-const BOX_BORDER = "#b6bcc5";
-const DARK_BOX_BORDER = "#6b7280";
-const BOX_DARK_STYLE = `<style>
-  @media (prefers-color-scheme: dark) { .dd-box, .dd-box td { border-color: ${DARK_BOX_BORDER} !important; } }
-  [data-ogsc] .dd-box, [data-ogsc] .dd-box td { border-color: ${DARK_BOX_BORDER} !important; }
-</style>`;
+// Outlined boxes (the NAV / Performance vs box, the Ramen Report snapshot)
+// are drawn with background colors, not CSS borders: the Gmail app in dark
+// mode doesn't draw these borders at all (seen on a phone, Nov 2026), but it
+// does keep — and darken consistently — background colors. So each box is
+// a FRAME-colored table with 1px of padding around a white inner table,
+// and sections are split by 1px FRAME-colored rows.
+const FRAME = "#c4c9d0";
+
+function framedBox(innerRows: string, margin: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate;background:${FRAME};margin:${margin}">
+    <tr><td style="padding:1px">
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background:#ffffff">${innerRows}</table>
+    </td></tr>
+  </table>`;
+}
+
+function frameDivider(colspan: number): string {
+  return `<tr><td colspan="${colspan}" style="height:1px;line-height:1px;font-size:1px;padding:0;background:${FRAME}">&nbsp;</td></tr>`;
+}
+
+// Stops phone mail apps (Gmail / iOS) from enlarging the text in wide
+// blocks — it blew the Performance vs lines up to ~2x everything else.
+const NO_TEXT_INFLATION = "-webkit-text-size-adjust:100%;text-size-adjust:100%;-ms-text-size-adjust:100%";
 
 const GREEN = "#1D9E75";
 const RED = "#ef4444";
@@ -212,9 +222,7 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
   const seasonRange = `${fmtDate(new Date(`${SEASON_START_DATE}T00:00:00Z`))}–${fmtDate(asOfMs)}`;
 
   // ── Headline numbers
-  const headline = `
-  ${BOX_DARK_STYLE}
-  <table class="dd-box" style="width:100%;border-collapse:collapse;border:1px solid ${BOX_BORDER};margin-bottom:20px">
+  const headline = framedBox(`
     <tr>
       <td style="width:50%;padding:14px 16px;vertical-align:top">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">NAV</div>
@@ -225,23 +233,24 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
         <div style="font-size:20px;font-weight:700;font-family:ui-monospace,monospace;color:#111827">${school.pctDeployed.toFixed(1)}%</div>
       </td>
     </tr>
+    ${frameDivider(2)}
     <tr>
-      <td colspan="2" style="padding:14px 16px;vertical-align:top;border-top:1px solid ${BOX_BORDER}">
+      <td colspan="2" style="padding:14px 16px;vertical-align:top">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Performance vs USD</div>
         ${returnLine("Month-to-Date", monthRange, mtd?.usdReturnPct, true)}
         ${returnLine("Current Season", seasonRange, school.seasonUsdReturn)}
         ${returnLine("Since Inception", `through ${fmtDate(asOfMs)}`, school.inceptionUsdReturn)}
       </td>
     </tr>
+    ${frameDivider(2)}
     <tr>
-      <td colspan="2" style="padding:14px 16px;vertical-align:top;border-top:1px solid ${BOX_BORDER}">
+      <td colspan="2" style="padding:14px 16px;vertical-align:top">
         <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Performance vs ETH</div>
         ${returnLine("Month-to-Date", monthRange, mtd?.ethReturnPct, true)}
         ${returnLine("Current Season", seasonRange, school.seasonEthReturn)}
         ${returnLine("Since Inception", `through ${fmtDate(asOfMs)}`, school.inceptionEthReturn)}
       </td>
-    </tr>
-  </table>`;
+    </tr>`, "0 0 20px");
 
   // ── Positions table
   const ethRow = ethHolding ? `
@@ -351,13 +360,14 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
   const intro = PORTFOLIO_INTRO_DRAFT
     .replace("{club}", escapeHtml(label))
     .replace("{month}", monthLabel(period.monthStart));
-  const bodyHtml = `
+  const bodyHtml = `<div style="${NO_TEXT_INFLATION}">
   <p style="font-size:12px;color:#6b7280;margin:-8px 0 16px">${monthLabel(period.monthStart)} · Season 2026–27 · As of ${fmtDate(asOfMs)}</p>
   <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px">${intro}</p>
   <p style="margin:0 0 20px"><a href="${dashboardUrl}" style="display:inline-block;padding:10px 22px;background:${GREEN};color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">View Full Portfolio Dashboard &rarr;</a></p>
   ${headline}
   ${positionsTable}
-  ${insights}`;
+  ${insights}
+  </div>`;
 
   return {
     subject: `${label} – Monthly Portfolio Report`,
@@ -467,15 +477,13 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date(), opts: 
       </td>`;
   const snapshot = `
   ${h3("18px 0 0")}Portfolio Snapshot <span style="font-weight:400;color:${MUTED};font-size:11px">As of ${fmtDate(asOfMs)}</span></h3>
-  ${BOX_DARK_STYLE}
-  <table class="dd-box" style="width:100%;border-collapse:collapse;margin-top:10px;border:1px solid ${BOX_BORDER}">
+  ${framedBox(`
     <tr>
       ${kpi("DormDAO NAV", usd(totalNav), `${schools.length} schools`)}
       ${kpi("Avg ETH Return", signedPct(avgEth), "Season to date")}
       ${kpi("Avg USD Return", signedPct(avgUsd), "Season to date")}
       ${kpi("Avg Deployed", `${avgDeployed.toFixed(1)}%`, "NAV outside ETH treasury")}
-    </tr>
-  </table>`;
+    </tr>`, "10px 0 0")}`;
 
   const pctCell = (v: number | null | undefined, bold = false) => v == null
     ? `<td style="${numCell};color:${MUTED}">—</td>`
@@ -629,13 +637,14 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date(), opts: 
     ? ""
     : `<div style="margin-top:22px;padding:10px 12px;border:1px dashed #f59e0b;background:#fffbeb;border-radius:6px;font-size:11px;color:#92400e;line-height:1.5"><strong>Disclosure — awaiting approved text.</strong> This placeholder must be replaced before the report is sent.</div>`;
 
-  const bodyHtml = `
+  const bodyHtml = `<div style="${NO_TEXT_INFLATION}">
   <p style="font-size:12.5px;color:${MUTED};margin:-8px 0 4px">${monthLabel(period.monthStart)} · Season 2026–27 · As of ${fmtDate(asOfMs)}</p>
   ${snapshot}
   ${chart}
   ${monthBoard}
   ${newPositions}
-  ${disclosure}`;
+  ${disclosure}
+  </div>`;
 
   return {
     subject: "Ramen Report – Monthly Dorm Performance Leaderboard",
