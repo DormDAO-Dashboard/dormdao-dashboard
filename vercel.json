@@ -16,7 +16,7 @@
   },
   "crons": [
     {
-      "path": "/api/cron/monthly-reports",
+      "path": "/api/cron/monthly-reports?slot=resume",
       "schedule": "15 0 * * *"
     },
     {

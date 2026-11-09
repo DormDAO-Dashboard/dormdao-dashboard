@@ -9,7 +9,9 @@ export const maxDuration = 300;
 // trade alerts) that day.
 const MAX_EMAILS_PER_RUN = 80;
 
-// Vercel cron (vercel.json), twice a day:
+// Vercel cron (vercel.json), twice a day (the 00:15 entry carries
+// ?slot=resume only so the two schedules have distinct paths — the route
+// does the same thing either way):
 //   00:15 UTC — just after Resend's daily quota resets: finishes any
 //               monthly send that stopped early (daily limit hit, or a
 //               failure), whatever the date and whether or not auto-send
