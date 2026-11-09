@@ -4,8 +4,20 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "functions": {
+    "app/api/admin/monthly-reports/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/cron/monthly-reports/route.ts": {
+      "maxDuration": 300
+    },
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/monthly-reports",
+      "schedule": "0 15 * * *"
+    }
+  ]
 }

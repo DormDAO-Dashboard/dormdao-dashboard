@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Eye, X, Loader2, AlertCircle, CalendarClock, ExternalLink } from "lucide-react";
 import { SCHOOL_NAMES, schoolDisplayName } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
+import { MonthlyReportsSendPanel } from "@/components/MonthlyReportsSendPanel";
 
 type ReportType = "portfolio" | "leaderboard";
 
@@ -17,8 +18,8 @@ function previewUrl(type: ReportType, school: string): string {
 }
 
 // The two monthly report emails, previewed for the last completed month,
-// exactly as they'd send now (see lib/report-emails.ts). Neither is scheduled to send yet — this box is how
-// they get reviewed before that's turned on.
+// exactly as they'd send now (see lib/report-emails.ts), with the Send
+// button and auto-send switch above them (MonthlyReportsSendPanel).
 // Mirrors previousMonthPeriod (lib/report-period.ts): the last completed
 // UTC calendar month.
 function lastCompletedMonth(now = new Date()) {
@@ -26,13 +27,14 @@ function lastCompletedMonth(now = new Date()) {
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
   const asOf = new Date(cutoff - 86_400_000);
   return {
+    reportMonthName: start.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" }),
     reportMonthLabel: start.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     reportAsOfLabel: asOf.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }),
   };
 }
 
 export function AdminMonthlyReportsSection() {
-  const { reportMonthLabel, reportAsOfLabel } = lastCompletedMonth();
+  const { reportMonthName, reportMonthLabel, reportAsOfLabel } = lastCompletedMonth();
   const [school, setSchool] = useState(SCHOOL_OPTIONS[0]?.slug ?? "");
   const [viewing, setViewing] = useState<{ title: string; subtitle?: string; url: string } | null>(null);
   const [html, setHtml] = useState<string | null>(null);
@@ -66,18 +68,16 @@ export function AdminMonthlyReportsSection() {
     }
   }
 
-  const rows: Array<{ type: ReportType; title: string; description: string; status?: string }> = [
+  const rows: Array<{ type: ReportType; title: string; description: string }> = [
     {
       type: "portfolio",
       title: "Monthly Portfolio Report",
       description: "One per club, opening with a short intro addressed to each recipient by first name — NAV, month / season / since inception returns, every position, and portfolio insights.",
-      status: "In review — intro copy is a placeholder until Jack's team drafts it and Zack approves",
     },
     {
       type: "leaderboard",
       title: "Ramen Report",
       description: "DormDAO-wide — portfolio snapshot, season-to-date Performance Leaderboard chart, the month's leaderboard, and positions opened during the month.",
-      status: "In review — needs Jack's sign-off and approved disclosure text before it can send",
     },
   ];
 
@@ -93,6 +93,8 @@ export function AdminMonthlyReportsSection() {
         </p>
       </div>
 
+      <MonthlyReportsSendPanel monthName={reportMonthName} />
+
       <div className="divide-y divide-gray-200 dark:divide-gray-800">
         {rows.map((r) => (
           <div key={r.type} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-5 py-4">
@@ -100,7 +102,6 @@ export function AdminMonthlyReportsSection() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-gray-900 dark:text-white">{r.title}</p>
               <p className="text-xs text-gray-700 dark:text-gray-400 mt-0.5">{r.description}</p>
-              <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mt-2">{r.status ?? "Not scheduled — preview only, nothing sends automatically yet"}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {r.type === "portfolio" && (

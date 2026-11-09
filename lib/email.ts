@@ -114,6 +114,15 @@ const SCHOOL_HEADER_IMAGES: Record<string, { file: string; width: number; height
   "waterloo":       { file: "waterloo.png",       width: 133, height: 28 },
 };
 
+// Footer link: a one-click unsubscribe for a known recipient, otherwise a
+// link to their preferences. Exported so an email built once without a
+// recipient (the monthly reports) can swap in each recipient's own link.
+export function footerLinkHtml(userId?: string): string {
+  return userId
+    ? `<a href="${buildUnsubUrl(userId)}" style="color:#9ca3af;text-decoration:underline">Unsubscribe</a>`
+    : `<a href="${APP_URL}/profile" style="color:#9ca3af;text-decoration:underline">Manage preferences</a>`;
+}
+
 export function buildTemplate(opts: {
   title: string;
   schoolLabel?: string;
@@ -152,9 +161,7 @@ export function buildTemplate(opts: {
   const ctaBtn = opts.cta
     ? `<p style="margin-top:20px"><a href="${opts.cta.url}" style="display:inline-block;padding:10px 22px;background:#1D9E75;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">${opts.cta.label}</a></p>`
     : "";
-  const footerLink = opts.userId
-    ? `<a href="${buildUnsubUrl(opts.userId)}" style="color:#9ca3af;text-decoration:underline">Unsubscribe</a>`
-    : `<a href="${APP_URL}/profile" style="color:#9ca3af;text-decoration:underline">Manage preferences</a>`;
+  const footerLink = footerLinkHtml(opts.userId);
 
   return `<div style="font-family:sans-serif;max-width:${opts.maxWidth ?? 520}px;margin:0 auto">
   <div style="background:${headerBg};padding:16px 24px;border-radius:12px 12px 0 0">
@@ -194,7 +201,7 @@ function renderMessageHtml(raw: string, vars: Record<string, string>): string {
 
 // ── School recipient resolution ───────────────────────────────────────────────
 
-interface Recipient {
+export interface Recipient {
   email: string;
   userId: string;
 }
@@ -369,6 +376,15 @@ function assertResendOk(result: { error: { message: string } | null }): void {
 }
 
 // ── Batch send helper ─────────────────────────────────────────────────────────
+
+// Per-recipient send from the notifications address, for callers outside
+// this file (the monthly reports — lib/monthly-report-sender.ts).
+export async function sendToRecipients(
+  recipients: Recipient[],
+  buildEmail: (r: Recipient) => { subject: string; html: string },
+): Promise<void> {
+  await batchSend(recipients, buildEmail, NOTIFICATIONS_EMAIL);
+}
 
 async function batchSend(
   recipients: Recipient[],

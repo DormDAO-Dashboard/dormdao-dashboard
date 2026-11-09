@@ -1,11 +1,11 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { buildTemplate, escapeHtml, APP_URL } from "@/lib/email";
+import { buildTemplate, escapeHtml, footerLinkHtml, APP_URL } from "@/lib/email";
 import { mergeHoldingsByTicker, parseDateMsAsc } from "@/lib/holdings";
 import { schoolDisplayName } from "@/lib/schoolData";
 import { SEASON_START_DATE, SEASON_START_NAV_USD } from "@/lib/seasonBaseline";
 import { getScaledTokenSeasonPerformance } from "@/lib/seasonPerformance";
 import { getPositionWindowReturns } from "@/lib/snapshotReturns";
-import { previousMonthPeriod, getClosingState, monthReturn, monthIsSeasonStart } from "@/lib/report-period";
+import { previousMonthPeriod, getClosingState, monthReturn, monthIsSeasonStart, type ClosingState } from "@/lib/report-period";
 import { slugify } from "@/lib/utils";
 import type { Holding } from "@/lib/types";
 
@@ -30,6 +30,15 @@ export interface BuiltEmail {
   // Open items for the reviewer, shown above the admin preview, never in
   // the email itself.
   review?: ReviewStatus;
+}
+
+export interface BuildOptions {
+  // Month-end state already loaded for this period — the sender builds all
+  // 18 emails from one load instead of one per email.
+  state?: ClosingState;
+  // Building for a real send rather than the admin preview: placeholders
+  // meant only for the reviewer (the missing-disclosure box) are left out.
+  forSend?: boolean;
 }
 
 const GREEN = "#1D9E75";
@@ -109,9 +118,12 @@ function returnLine(label: string, range: string, pct: number | null | undefined
 // time, and the admin preview shows it highlighted.
 export const RECIPIENT_NAME_TOKEN = "{{firstName}}";
 
-export function personalizeReport(html: string, displayName: string | null | undefined): string {
+export function personalizeReport(html: string, displayName: string | null | undefined, userId?: string): string {
   const first = displayName?.trim().split(/\s+/)[0];
-  return html.split(RECIPIENT_NAME_TOKEN).join(first ? escapeHtml(first) : "there");
+  const named = html.split(RECIPIENT_NAME_TOKEN).join(first ? escapeHtml(first) : "there");
+  // Reports are built once with the generic footer link; each recipient
+  // gets their own one-click unsubscribe instead.
+  return userId ? named.split(footerLinkHtml()).join(footerLinkHtml(userId)) : named;
 }
 
 // Intro shown above the report. PLACEHOLDER DRAFT: Jack's team is writing
@@ -122,9 +134,9 @@ const PORTFOLIO_INTRO_DRAFT =
   `Hi ${RECIPIENT_NAME_TOKEN}, here's {club}'s portfolio report for {month}: your NAV and returns, every active position, and your most recent portfolio transactions.`;
 const PORTFOLIO_INTRO_APPROVED = false;
 
-export async function buildPortfolioReportEmail(slug: string, now: Date = new Date()): Promise<BuiltEmail | null> {
-  const period = previousMonthPeriod(now);
-  const state = await getClosingState(period);
+export async function buildPortfolioReportEmail(slug: string, now: Date = new Date(), opts: BuildOptions = {}): Promise<BuiltEmail | null> {
+  const period = opts.state?.period ?? previousMonthPeriod(now);
+  const state = opts.state ?? await getClosingState(period);
   const school = state.schools.find((s) => slugify(s.name) === slug);
   if (!school) return null;
 
@@ -356,9 +368,18 @@ export async function buildPortfolioReportEmail(slug: string, now: Date = new Da
 // flags it, so the report can't look finished without it.
 const DIGEST_DISCLOSURE_HTML: string | null = null;
 
-export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promise<BuiltEmail> {
-  const period = previousMonthPeriod(now);
-  const state = await getClosingState(period);
+// Copy that's still unapproved, for the admin Send confirmation: what will
+// go out as-is if the reports are sent now.
+export function unapprovedCopyWarnings(): string[] {
+  const warnings: string[] = [];
+  if (!DIGEST_DISCLOSURE_HTML) warnings.push("The Ramen Report has no approved disclosure text, so it will go out with no disclosure.");
+  if (!PORTFOLIO_INTRO_APPROVED) warnings.push("Portfolio reports open with the draft intro (\"Hi {first name}, here's {club}'s portfolio report…\"), not final copy reviewed by Zack.");
+  return warnings;
+}
+
+export async function buildLeaderboardDigestEmail(now: Date = new Date(), opts: BuildOptions = {}): Promise<BuiltEmail> {
+  const period = opts.state?.period ?? previousMonthPeriod(now);
+  const state = opts.state ?? await getClosingState(period);
   const schools = state.schools; // sorted by season ETH return
   const flags: string[] = [];
 
@@ -576,6 +597,8 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date()): Promi
   }
   const disclosure = DIGEST_DISCLOSURE_HTML
     ? `<div style="margin-top:22px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:10px;color:${MUTED};line-height:1.5">${DIGEST_DISCLOSURE_HTML}</div>`
+    : opts.forSend
+    ? ""
     : `<div style="margin-top:22px;padding:10px 12px;border:1px dashed #f59e0b;background:#fffbeb;border-radius:6px;font-size:11px;color:#92400e;line-height:1.5"><strong>Disclosure — awaiting approved text.</strong> This placeholder must be replaced before the report is sent.</div>`;
 
   const bodyHtml = `
