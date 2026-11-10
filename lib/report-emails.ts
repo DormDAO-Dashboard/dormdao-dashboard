@@ -103,6 +103,8 @@ function investmentMs(h: Pick<Holding, "investmentDate">): number | null {
 }
 
 const cell = "padding:10px;border-bottom:1px solid #f0f0f0";
+// One style for school/club names in every Ramen Report table.
+const SCHOOL_TEXT = "font-size:12px;font-weight:600;color:#111827";
 const numCell = `${cell};text-align:right;font-family:ui-monospace,monospace;font-size:12px`;
 const th = (align: "left" | "right" | "center") =>
   `padding:8px 10px;text-align:${align};font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e5e7eb;white-space:nowrap`;
@@ -501,10 +503,10 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date(), opts: 
       `<div style="height:14px;width:${w}%;background:${side === "right" ? GREEN : RED};${side === "right" ? "border-radius:0 3px 3px 0" : "border-radius:3px 0 0 3px;margin-left:auto"}"></div>`;
     const leftCell = s.seasonEthReturn < 0 ? bar("left") : "";
     const rightCell = s.seasonEthReturn >= 0 ? bar("right") : "";
-    const side = "padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;font-size:11px;white-space:nowrap;width:1%";
+    const side = "padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;font-size:12px;white-space:nowrap;width:1%";
     return `
       <tr style="background:${i % 2 ? "#fafafa" : "#ffffff"}">
-        <td style="padding:5px 8px;font-size:11px;color:#374151;white-space:nowrap;width:1%">${escapeHtml(schoolDisplayName(s.name))}</td>
+        <td style="padding:5px 8px;${SCHOOL_TEXT};white-space:nowrap;width:1%">${escapeHtml(schoolDisplayName(s.name))}</td>
         <td style="padding:5px 4px">
           <table style="width:100%;border-collapse:collapse"><tr>
             <td style="width:50%;padding:0;border-right:1px solid #d1d5db">${leftCell}</td>
@@ -543,7 +545,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date(), opts: 
   const monthRows = monthRanked.map(({ s, r }, i) => `
       <tr style="background:${r && i < 3 ? "#f0fbf6" : i % 2 ? "#fafafa" : "#ffffff"}">
         <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12px;color:${r && i < 3 ? "#111827" : MUTED};text-align:center">${r ? i + 1 : "—"}</td>
-        <td style="${cell};font-size:12.5px;font-weight:600;color:#111827">${escapeHtml(schoolDisplayName(s.name))}</td>
+        <td style="${cell};${SCHOOL_TEXT}">${escapeHtml(schoolDisplayName(s.name))}</td>
         ${pctCell(r?.ethReturnPct, true)}
         ${pctCell(r?.usdReturnPct)}
       </tr>`).join("");
@@ -605,8 +607,8 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date(), opts: 
 
   const openedRows = opened.map((r, i) => `
       <tr style="background:${i % 2 ? "#fafafa" : "#ffffff"}">
-        <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12.5px;white-space:nowrap"><a href="${pitchUrl(r.h.ticker)}" style="color:${GREEN};text-decoration:none">$${escapeHtml(r.h.ticker)} &rarr;</a></td>
-        <td style="${cell};font-size:12px;color:#374151">${escapeHtml(schoolDisplayName(r.school.name))}</td>
+        <td style="${cell};font-family:ui-monospace,monospace;font-weight:700;font-size:12px;white-space:nowrap"><a href="${pitchUrl(r.h.ticker)}" style="color:${GREEN};text-decoration:none">$${escapeHtml(r.h.ticker)} &rarr;</a></td>
+        <td style="${cell};${SCHOOL_TEXT}">${escapeHtml(schoolDisplayName(r.school.name))}</td>
         <td style="${cell};font-size:11px;color:#6b7280;white-space:nowrap">${fmtDate(r.ms)}</td>
         <td style="${numCell};color:#374151;white-space:nowrap">${r.h.costBasisEth > 0 ? `${r.h.costBasisEth.toFixed(2)} ETH` : "—"}</td>
         <td style="${numCell};color:#374151">${r.h.marketValueUsd == null ? "—" : usd(r.h.marketValueUsd)}</td>
@@ -647,7 +649,7 @@ export async function buildLeaderboardDigestEmail(now: Date = new Date(), opts: 
   </div>`;
 
   return {
-    subject: "Ramen Report – Monthly Dorm Performance Leaderboard",
+    subject: `Ramen Report – Monthly Dorm Performance Leaderboard (${monthLabel(period.monthStart).split(" ")[0]})`,
     html: buildTemplate({
       title: "Ramen Report",
       schoolLabel: "DormDAO · All Schools",
