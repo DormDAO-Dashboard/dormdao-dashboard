@@ -6,6 +6,7 @@ const pitch = (p: Partial<Pitch>): Pitch => ({
   id: "p", roundNumber: 5, sector: "economics", analyst: "A", marketTitle: "m", outcomeLabel: "o",
   venue: "kalshi", market: { source: "manual" }, side: "NO", entryPrice: 0.53, impliedPrice: 1,
   sellLimit: null, sellLimitBefore: null, stopLoss: null, exitBy: null, thesis: [], status: "closed", votes: null,
+  exitPrice: null, exitedAt: null,
   ...p,
 });
 
@@ -28,5 +29,12 @@ describe("stakeTrades", () => {
   test("defers to real fills when a pitch already has them", () => {
     const real = [{ id: "t", pitchId: "a", action: "buy" as const, contracts: 10, price: 0.5, executedAt: "2026-10-08", reason: null }];
     expect(stakeTrades([pitch({ id: "a" })], [round(5, "a")], real)).toEqual([]);
+  });
+
+  test("sells the stake at the exit price when the pitch was exited early", () => {
+    const trades = stakeTrades([pitch({ id: "a", exitPrice: 0.8, exitedAt: "2026-10-10" })], [round(5, "a")], []);
+    expect(trades).toHaveLength(2);
+    expect(trades[1]).toMatchObject({ pitchId: "a", action: "sell", price: 0.8, executedAt: "2026-10-10", reason: "manual" });
+    expect(trades[1].contracts).toBeCloseTo(trades[0].contracts);
   });
 });

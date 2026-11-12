@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getRepo } from "@/lib/predictions/repo";
 import { loadPitches, pitchedAt } from "@/lib/predictions/load";
-import { markPrice, returnPct, summarizePosition, withSettlement } from "@/lib/predictions/math";
+import { isPitchClosed, markPrice, returnPct, summarizePosition, withSettlement } from "@/lib/predictions/math";
 import { cents, shortDate, signedPct, toneClass, usd } from "@/lib/predictions/format";
 import { SECTOR_LABEL, type Trade } from "@/lib/predictions/types";
 import { RoleBadge, SectorBadge, SideBadge, VenueLabel } from "@/components/predictions/Badges";
@@ -75,7 +75,7 @@ export default async function PitchPage({ params }: { params: Promise<{ slug: st
       <div className={`${card} mb-6`}>
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <SectorBadge sector={pitch.sector} />
-          <RoleBadge role={pitchRole(pitch, round)} closed={Boolean(quote?.resolved) || pitch.status === "closed"} />
+          <RoleBadge role={pitchRole(pitch, round)} closed={isPitchClosed(pitch, quote)} />
           <span className="text-xs text-gray-500 dark:text-gray-400">Pitch #{pitch.roundNumber}</span>
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -115,6 +115,11 @@ export default async function PitchPage({ params }: { params: Promise<{ slug: st
           pitchedAt={pitchedAt(round)}
         />
         {!quote && <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Live price unavailable right now.</p>}
+        {pitch.exitPrice !== null && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            Exited at {cents(pitch.exitPrice)}{pitch.exitedAt ? ` on ${shortDate(pitch.exitedAt)}` : ""} ({signedPct(returnPct(pitch.entryPrice, pitch.exitPrice))})
+          </p>
+        )}
         {pitch.exitBy && <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Mandatory exit by {shortDate(pitch.exitBy)}</p>}
       </div>
 

@@ -2,7 +2,7 @@ import { requirePredictionsAccess } from "@/lib/predictions/access";
 import Link from "next/link";
 import { pitchHref } from "@/lib/predictions/schools";
 import { loadAllWithQuotes } from "@/lib/predictions/load";
-import { markPrice, returnPct, summarizePosition, withSettlement } from "@/lib/predictions/math";
+import { isPitchClosed, markPrice, pitchMark, returnPct, summarizePosition, withSettlement } from "@/lib/predictions/math";
 import { cents, signedPct, toneClass, usd } from "@/lib/predictions/format";
 import { SectorBadge, SideBadge } from "@/components/predictions/Badges";
 import { Stat } from "@/components/predictions/Stat";
@@ -22,11 +22,12 @@ export default async function PortfolioPage() {
   const executed = rounds.flatMap((r) => {
     const pitch = pitches.find((p) => p.id === r.selectedPitchId);
     if (!pitch) return [];
-    const mark = markPrice(quotes[pitch.id] ?? null);
-    return [{ round: r, pitch, mark, ret: mark === null ? null : returnPct(pitch.entryPrice, mark), resolved: Boolean(quotes[pitch.id]?.resolved) }];
+    const quote = quotes[pitch.id] ?? null;
+    const mark = pitchMark(pitch, quote);
+    return [{ round: r, pitch, mark, ret: mark === null ? null : returnPct(pitch.entryPrice, mark), closed: isPitchClosed(pitch, quote) }];
   });
-  const resolvedPicks = executed.filter((e) => e.resolved);
-  const pickWins = resolvedPicks.filter((e) => (e.ret ?? 0) > 0).length;
+  const closedPicks = executed.filter((e) => e.closed);
+  const pickWins = closedPicks.filter((e) => (e.ret ?? 0) > 0).length;
   const pricedReturns = executed.flatMap((e) => (e.ret === null ? [] : [e.ret]));
   const avgPickReturn = pricedReturns.length > 0 ? pricedReturns.reduce((a, b) => a + b, 0) / pricedReturns.length : null;
 
@@ -61,7 +62,7 @@ export default async function PortfolioPage() {
         <div className="flex flex-wrap items-baseline justify-between gap-4 px-5 py-4 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Executed Picks</h2>
           <div className="flex gap-6">
-            <Stat label="Record" value={`${pickWins}–${resolvedPicks.length - pickWins}`} sub={`${executed.length - resolvedPicks.length} open`} />
+            <Stat label="Record" value={`${pickWins}–${closedPicks.length - pickWins}`} sub={`${executed.length - closedPicks.length} open`} />
             <Stat label="Avg return" value={signedPct(avgPickReturn)} subClass={toneClass(avgPickReturn)} />
           </div>
         </div>
@@ -69,7 +70,7 @@ export default async function PortfolioPage() {
           <p className="px-5 py-6 text-sm text-gray-500 dark:text-gray-400">No vote winners recorded yet.</p>
         ) : (
           <ul>
-            {executed.map(({ round, pitch, mark, ret, resolved }) => (
+            {executed.map(({ round, pitch, mark, ret, closed }) => (
               <li key={pitch.id} className="border-b border-gray-100 dark:border-gray-800/60 last:border-0">
                 <Link href={pitchHref(pitch.id)} className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                   <span className="font-mono text-sm text-gray-500 dark:text-gray-400 w-10">#{round.number}</span>
@@ -79,7 +80,7 @@ export default async function PortfolioPage() {
                     <span className="block text-xs text-gray-500 dark:text-gray-400">{pitch.analyst} · {pitch.side} {pitch.outcomeLabel}</span>
                   </span>
                   <span className="font-mono text-sm">{cents(pitch.entryPrice)} → {cents(mark)}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 w-14">{resolved ? "resolved" : "open"}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 w-14">{closed ? "closed" : "open"}</span>
                   <span className={`font-mono text-sm w-14 text-right ${toneClass(ret)}`}>{signedPct(ret)}</span>
                 </Link>
               </li>

@@ -39,7 +39,7 @@ export const SEED_ROUNDS: Round[] = [
   },
 ];
 
-const base = { sellLimit: null, sellLimitBefore: null, stopLoss: null, votes: null } as const;
+const base = { sellLimit: null, sellLimitBefore: null, stopLoss: null, votes: null, exitPrice: null, exitedAt: null } as const;
 
 export const SEED_PITCHES: Pitch[] = [
   // ── Round 5 ────────────────────────────────────────────────────────────

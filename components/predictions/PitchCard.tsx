@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { pitchHref } from "@/lib/predictions/schools";
 import type { Pitch, PitchRole, PricePoint, Quote } from "@/lib/predictions/types";
-import { markPrice, returnPct } from "@/lib/predictions/math";
+import { isPitchClosed, pitchMark, returnPct } from "@/lib/predictions/math";
 import { cents, cn, shortDate, signedPct, toneClass } from "@/lib/predictions/format";
 import { RoleBadge, SectorBadge, SideBadge, VenueLabel } from "@/components/predictions/Badges";
 import { OddsChart } from "@/components/predictions/OddsChart";
@@ -18,7 +18,7 @@ interface PitchCardProps {
 }
 
 export function PitchCard({ pitch, quote, history, role, alerts }: PitchCardProps) {
-  const mark = markPrice(quote);
+  const mark = pitchMark(pitch, quote);
   const pnl = mark === null ? null : returnPct(pitch.entryPrice, mark);
   const target = pitch.sellLimit ?? pitch.impliedPrice;
 
@@ -32,7 +32,7 @@ export function PitchCard({ pitch, quote, history, role, alerts }: PitchCardProp
     >
       <div className="flex items-center justify-between gap-2 mb-3">
         <SectorBadge sector={pitch.sector} />
-        <RoleBadge role={role} closed={Boolean(quote?.resolved) || pitch.status === "closed"} />
+        <RoleBadge role={role} closed={isPitchClosed(pitch, quote)} />
       </div>
       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
         {pitch.analyst} · <VenueLabel venue={pitch.venue} />
@@ -50,7 +50,7 @@ export function PitchCard({ pitch, quote, history, role, alerts }: PitchCardProp
       <div className="grid grid-cols-3 gap-3 mb-4">
         <Stat label="Entry" value={cents(pitch.entryPrice)} />
         <Stat
-          label={quote?.resolved ? "Resolved" : "Now"}
+          label={pitch.exitPrice !== null ? "Exited" : quote?.resolved ? "Resolved" : "Now"}
           value={cents(mark)}
           sub={signedPct(pnl)}
           subClass={toneClass(pnl)}

@@ -1,5 +1,5 @@
 import type { Pitch, Quote, Trade, Round } from "@/lib/predictions/types";
-import { markPrice, returnPct, summarizePosition } from "@/lib/predictions/math";
+import { isPitchClosed, markPrice, pitchMark, returnPct, summarizePosition } from "@/lib/predictions/math";
 
 // "club" puts every pitch in one row — a school's overall record.
 export type LeaderboardGroup = "analyst" | "sector" | "club";
@@ -13,10 +13,6 @@ export interface LeaderboardRow {
   hitRate: number | null;   // % of closed picks (executed + paper) marked above entry
   avgReturn: number | null; // mean % return across priced picks (mark-to-market)
   pnlUsd: number;
-}
-
-function isClosed(pitch: Pitch, quote: Quote | null): boolean {
-  return pitch.status === "closed" || Boolean(quote?.resolved);
 }
 
 export function buildLeaderboard(
@@ -33,11 +29,13 @@ export function buildLeaderboard(
   const rows = keys.map((key): LeaderboardRow => {
     const mine = pitches.filter((p) => keyOf(p) === key);
     const scored = mine.map((p) => {
-      const mark = markPrice(quotes[p.id] ?? null);
+      const quote = quotes[p.id] ?? null;
+      const mark = pitchMark(p, quote);
       return {
-        closed: isClosed(p, quotes[p.id] ?? null),
+        closed: isPitchClosed(p, quote),
         ret: mark === null ? null : returnPct(p.entryPrice, mark),
-        pnl: summarizePosition(trades.filter((t) => t.pitchId === p.id), mark).totalPnl,
+        // Open contracts are marked live; exited ones already sold.
+        pnl: summarizePosition(trades.filter((t) => t.pitchId === p.id), markPrice(quote)).totalPnl,
       };
     });
     const closed = scored.filter((s) => s.closed);

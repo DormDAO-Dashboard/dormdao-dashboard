@@ -1,8 +1,15 @@
+import Link from "next/link";
 import { requirePredictionsAccess } from "@/lib/predictions/access";
+import { loadSchoolRecords } from "@/lib/predictions/schoolRecords";
+import { predictionSchoolPath } from "@/lib/predictions/schools";
+import { signedPct, toneClass, usd } from "@/lib/predictions/format";
+import { SchoolLogo } from "@/components/SchoolLogo";
+import { schoolDisplayName } from "@/lib/schoolData";
+
+export const revalidate = 60;
 
 // Predictions Leaderboard tab — one table, styled like the main
-// /leaderboard's Current Season panel. Deliberately empty for now: it'll
-// rank schools once more than one is running prediction markets.
+// /leaderboard's Current Season panel. Ranks schools by average return.
 const COLUMNS: Array<{ label: string; className: string }> = [
   { label: "#",          className: "text-left w-[8%]" },
   { label: "School",     className: "text-left" },
@@ -16,6 +23,7 @@ export default async function PredictionsLeaderboardPage() {
   // Gate in the page itself, not only the layout: Next renders layouts and
   // pages in parallel, so a layout-only check still streams page data.
   await requirePredictionsAccess();
+  const schools = await loadSchoolRecords();
 
   return (
     <div className="max-w-3xl">
@@ -41,11 +49,30 @@ export default async function PredictionsLeaderboardPage() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={COLUMNS.length} className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs px-4">
-                  No rankings yet.
-                </td>
-              </tr>
+              {schools.length === 0 ? (
+                <tr>
+                  <td colSpan={COLUMNS.length} className="py-16 text-center text-gray-700 dark:text-gray-400 text-xs px-4">
+                    No rankings yet.
+                  </td>
+                </tr>
+              ) : schools.map((s, i) => (
+                <tr key={s.slug} className="border-b border-gray-100 dark:border-gray-800/60 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                  <td className="px-3 py-2 font-mono text-gray-700 dark:text-gray-400">{i + 1}</td>
+                  <td className="px-3 py-2">
+                    <Link href={predictionSchoolPath(s.slug)} className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary">
+                      <SchoolLogo name={s.name} size={20} />
+                      <span className="truncate">{schoolDisplayName(s.name)}</span>
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2 text-right font-mono">{s.pitches}</td>
+                  <td className="px-3 py-2 text-right font-mono">
+                    {s.hitRate === null ? "—" : `${Math.round(s.hitRate)}%`}
+                    <span className="text-[10px] text-gray-700 dark:text-gray-400 ml-1">({s.wins}/{s.closed})</span>
+                  </td>
+                  <td className={`px-3 py-2 text-right font-mono ${toneClass(s.avgReturn)}`}>{signedPct(s.avgReturn)}</td>
+                  <td className={`px-3 py-2 text-right font-mono ${toneClass(s.pnlUsd)}`}>{usd(s.pnlUsd, true)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

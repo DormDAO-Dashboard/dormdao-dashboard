@@ -9,6 +9,7 @@ const pitch = (p: Partial<Pitch>): Pitch => ({
   id: "p", roundNumber: 6, sector: "economics", analyst: "A", marketTitle: "m", outcomeLabel: "o",
   venue: "kalshi", market: { source: "manual" }, side: "YES", entryPrice: 0.36, impliedPrice: 0.52,
   sellLimit: null, sellLimitBefore: null, stopLoss: null, exitBy: null, thesis: [], status: "open", votes: null,
+  exitPrice: null, exitedAt: null,
   ...p,
 });
 

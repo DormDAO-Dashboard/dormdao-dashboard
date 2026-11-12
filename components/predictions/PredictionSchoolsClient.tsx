@@ -9,17 +9,9 @@ import { cn, slugify } from "@/lib/utils";
 import { signedPct, toneClass, usd } from "@/lib/predictions/format";
 import { predictionSchoolPath } from "@/lib/predictions/schools";
 
-export interface PredictionSchoolCardData {
-  name: string;
-  slug: string;
-  pitches: number;
-  selected: number;
-  hitRate: number | null;
-  wins: number;
-  closed: number;
-  avgReturn: number | null;
-  pnlUsd: number;
-}
+import type { PredictionSchoolRecord } from "@/lib/predictions/schoolRecords";
+
+export type PredictionSchoolCardData = PredictionSchoolRecord;
 
 // Same card shape as the main Schools page (components/SchoolsClient.tsx),
 // with prediction-market stats in place of portfolio ones.

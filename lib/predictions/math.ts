@@ -1,4 +1,4 @@
-import type { Quote, Side, Trade } from "@/lib/predictions/types";
+import type { Pitch, Quote, Side, Trade } from "@/lib/predictions/types";
 
 // % return from buying at `entry` and marking/exiting at `exit`.
 export function returnPct(entry: number, exit: number): number | null {
@@ -16,6 +16,17 @@ export function markPrice(quote: Quote | null): number | null {
   if (!quote) return null;
   if (quote.resolved && quote.resolvedPrice !== null) return quote.resolvedPrice;
   return quote.price;
+}
+
+// Price a pitch's accuracy is scored at: frozen at its exit price once
+// exited early, else the live/resolved mark.
+export function pitchMark(pitch: Pick<Pitch, "exitPrice">, quote: Quote | null): number | null {
+  return pitch.exitPrice ?? markPrice(quote);
+}
+
+// One rule for "closed" everywhere: marked closed, exited, or resolved.
+export function isPitchClosed(pitch: Pick<Pitch, "status" | "exitPrice">, quote: Quote | null): boolean {
+  return pitch.status === "closed" || pitch.exitPrice !== null || Boolean(quote?.resolved);
 }
 
 export type PickOutcome = "up" | "down" | "flat";

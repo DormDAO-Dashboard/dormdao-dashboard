@@ -3,7 +3,7 @@ import Link from "next/link";
 import { pitchHref } from "@/lib/predictions/schools";
 import { ExternalLink } from "lucide-react";
 import { loadAllWithQuotes } from "@/lib/predictions/load";
-import { markPrice, returnPct } from "@/lib/predictions/math";
+import { isPitchClosed, pitchMark, returnPct } from "@/lib/predictions/math";
 import { cents, shortDate, signedPct, toneClass } from "@/lib/predictions/format";
 import { RoleBadge, SectorBadge, SideBadge } from "@/components/predictions/Badges";
 import { pitchRole } from "@/lib/predictions/selection";
@@ -41,7 +41,8 @@ export default async function ArchivePage() {
               </header>
               <ul>
                 {roundPitches.map((p) => {
-                  const mark = markPrice(quotes[p.id] ?? null);
+                  const quote = quotes[p.id] ?? null;
+                  const mark = pitchMark(p, quote);
                   const ret = mark === null ? null : returnPct(p.entryPrice, mark);
                   return (
                     <li key={p.id} className="border-b border-gray-100 dark:border-gray-800/60 last:border-0">
@@ -51,7 +52,7 @@ export default async function ArchivePage() {
                           {p.marketTitle}
                           <span className="block text-xs text-gray-500 dark:text-gray-400">{p.analyst}</span>
                         </span>
-                        <RoleBadge role={pitchRole(p, round)} closed={false} />
+                        <RoleBadge role={pitchRole(p, round)} closed={isPitchClosed(p, quote)} />
                         <SideBadge side={p.side} />
                         <span className="text-sm text-gray-600 dark:text-gray-400">{p.outcomeLabel}</span>
                         <span className="font-mono text-sm w-24 text-right">{cents(p.entryPrice)} → {cents(mark)}</span>

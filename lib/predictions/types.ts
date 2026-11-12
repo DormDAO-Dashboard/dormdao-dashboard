@@ -53,6 +53,10 @@ export interface Pitch {
   exitBy: string | null;          // mandatory exit date
   thesis: string[];               // paragraphs
   status: PitchStatus;
+  // Chosen-side price the pitch was exited at before resolution (sell limit,
+  // stop, exit date or manual), for paper picks too. null = held.
+  exitPrice: number | null;
+  exitedAt: string | null; // ISO date of the exit
   votes: number | null; // club votes received; null if not recorded
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { returnPct, sidePrice, summarizePosition, pickOutcome, markPrice, withSettlement } from "@/lib/predictions/math";
-import type { Trade, Quote } from "@/lib/predictions/types";
+import { returnPct, sidePrice, summarizePosition, pickOutcome, markPrice, withSettlement, pitchMark, isPitchClosed } from "@/lib/predictions/math";
+import type { Trade, Quote, Pitch } from "@/lib/predictions/types";
 
 const trade = (t: Partial<Trade>): Trade => ({
   id: "t", pitchId: "p", action: "buy", contracts: 100, price: 0.36,
@@ -120,5 +120,34 @@ describe("pickOutcome", () => {
   test("is flat when equal or unknown", () => {
     expect(pickOutcome(0.5, 0.5)).toBe("flat");
     expect(pickOutcome(0.5, null)).toBe("flat");
+  });
+});
+
+describe("pitchMark", () => {
+  const live: Quote = { price: 0.8, resolved: false, resolvedPrice: null, closesAt: null, fetchedAt: "" };
+
+  test("uses the live/resolved mark while the pitch is held", () => {
+    expect(pitchMark({ exitPrice: null }, live)).toBe(0.8);
+  });
+
+  test("freezes an exited pitch at its exit price, whatever the market does after", () => {
+    expect(pitchMark({ exitPrice: 0.42 }, live)).toBe(0.42);
+    expect(pitchMark({ exitPrice: 0.42 }, null)).toBe(0.42);
+  });
+});
+
+describe("isPitchClosed", () => {
+  const quote = (resolved: boolean): Quote => ({ price: 0.5, resolved, resolvedPrice: resolved ? 1 : null, closesAt: null, fetchedAt: "" });
+  const pitch = (p: Partial<Pick<Pitch, "status" | "exitPrice">>) => ({ status: "open" as const, exitPrice: null, ...p });
+
+  test("open while held and unresolved", () => {
+    expect(isPitchClosed(pitch({}), quote(false))).toBe(false);
+    expect(isPitchClosed(pitch({}), null)).toBe(false);
+  });
+
+  test("closed when marked closed, exited, or the market resolved", () => {
+    expect(isPitchClosed(pitch({ status: "closed" }), null)).toBe(true);
+    expect(isPitchClosed(pitch({ exitPrice: 0.3 }), null)).toBe(true);
+    expect(isPitchClosed(pitch({}), quote(true))).toBe(true);
   });
 });

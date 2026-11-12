@@ -6,6 +6,7 @@ const pitch = (p: Partial<Pitch>): Pitch => ({
   id: "p", roundNumber: 1, sector: "economics", analyst: "A", marketTitle: "m", outcomeLabel: "o",
   venue: "kalshi", market: { source: "manual" }, side: "YES", entryPrice: 0.5, impliedPrice: 0.7,
   sellLimit: null, sellLimitBefore: null, stopLoss: null, exitBy: null, thesis: [], status: "open", votes: null,
+  exitPrice: null, exitedAt: null,
   ...p,
 });
 
@@ -73,5 +74,12 @@ describe("buildLeaderboard", () => {
     ];
     const rows = buildLeaderboard(pitches, quotes, trades, rounds, "analyst");
     expect(rows.find((r) => r.key === "Ana")!.pnlUsd).toBeCloseTo(9);
+  });
+
+  test("scores an exited pitch at its exit price and counts it as closed", () => {
+    const exited = [pitch({ id: "x", analyst: "Cy", entryPrice: 0.5, exitPrice: 0.4, exitedAt: "2026-10-20" })];
+    const rows = buildLeaderboard(exited, { x: quote(0.9) }, [], [round(1, null)], "analyst");
+    expect(rows[0]).toMatchObject({ closed: 1, wins: 0, hitRate: 0 });
+    expect(rows[0].avgReturn).toBeCloseTo(-20);
   });
 });
