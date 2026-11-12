@@ -21,7 +21,8 @@ interface CacheEntry {
 // to be.
 const priceCache = new Map<string, CacheEntry>();
 const CACHE_TTL = 60_000;
-const BATCH_SIZE = 20;
+// simple/price takes many ids per call; fewer, bigger calls mean fewer 429s.
+const BATCH_SIZE = 100;
 
 async function fetchBatch(ids: string[]): Promise<Record<string, PriceEntry> | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -91,7 +92,11 @@ export async function getPricesForTickers(
       batches.push(staleIds.slice(i, i + BATCH_SIZE));
     }
 
-    const batchResults = await Promise.all(batches.map(fetchBatch));
+    // One after another, not in parallel: CoinGecko's free tier rate-limits
+    // bursts, and parallel batches on a cold instance were getting 429s,
+    // leaving whole groups of tokens unpriced for that cycle.
+    const batchResults: Array<Record<string, PriceEntry> | null> = [];
+    for (const batch of batches) batchResults.push(await fetchBatch(batch));
 
     batches.forEach((batch, i) => {
       const data = batchResults[i];

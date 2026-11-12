@@ -32,7 +32,15 @@ export interface SchoolsCache {
   // monthly reports can recompute Since Inception as of a past date.
   // Optional: snapshots saved before this field existed don't have it.
   subDaoOpeningYearByName?: Record<string, number | null>;
+  // Last live CoinGecko quote seen for each ticker, carried from snapshot to
+  // snapshot. When a price fetch fails (rate limit on a cold instance), a
+  // token is valued at its last real price instead of at its purchase price,
+  // which made schools whose tokens had fallen show huge false gains (NYU
+  // read +90% ETH on 2026-11-11). Optional: older snapshots don't have it.
+  lastPrices?: PriceMap;
 }
+
+type PriceMap = Record<string, { usd: number; usd_24h_change: number }>;
 
 export interface PricesCache {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
@@ -74,14 +82,17 @@ function applySeasonBaselineReturn(row: SchoolRowWithHoldings, ethPriceUsdNow: n
 // A school with holdings data missing entirely (fetch failure) passes
 // through with whatever the sheet produced. Rank is always recomputed
 // across the full merged list so every school sorts on one consistent basis.
-async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]): Promise<SchoolRowWithHoldings[]> {
+async function applyInternallyComputedSchools(
+  schools: SchoolRowWithHoldings[],
+  lastPrices: PriceMap,
+): Promise<{ schools: SchoolRowWithHoldings[]; prices: PriceMap }> {
   const positionsBySchool = await getPositionsBySchool();
   const needsComputedNav = schools.filter(
     (s) => (s.holdings?.length ?? 0) > 0 && !positionsBySchool[s.name]
   );
 
   if (Object.keys(positionsBySchool).length === 0 && needsComputedNav.length === 0) {
-    return schools;
+    return { schools, prices: lastPrices };
   }
 
   const allTickers = new Set<string>(["ETH"]);
@@ -106,10 +117,18 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
     }
   }
 
-  const [prices, vaultEquityResults] = await Promise.all([
+  const [livePrices, vaultEquityResults] = await Promise.all([
     getPricesForTickers([...allTickers]),
     Promise.all(vaultLookups.map(async (l) => ({ ...l, usd: await getVaultUserEquityUsd(l.vaultAddress, l.userAddress) }))),
   ]);
+  // Any ticker CoinGecko didn't quote this cycle falls back to its last
+  // live quote (see SchoolsCache.lastPrices).
+  const missingPrices = [...allTickers].filter((t) => !livePrices[t]);
+  const filled = missingPrices.filter((t) => lastPrices[t]);
+  if (missingPrices.length > 0) {
+    console.warn(`[prices] no live quote for ${missingPrices.join(",")}; using last known price for ${filled.length}`);
+  }
+  const prices: PriceMap = { ...lastPrices, ...livePrices };
   // Falls back to the fixed SEASON_START_ETH_USD reference price (never 0)
   // when CoinGecko's live quote is unavailable — same reasoning as
   // computeSchoolMetrics's own ethPriceUsd fallback (lib/positions.ts).
@@ -161,7 +180,7 @@ async function applyInternallyComputedSchools(schools: SchoolRowWithHoldings[]):
 
   const merged = [...bySchoolName.values()].sort((a, b) => b.ethReturn - a.ethReturn);
   merged.forEach((s, i) => { s.rank = i + 1; });
-  return merged;
+  return { schools: merged, prices };
 }
 
 // Builds the All-Time (Since Inception) panel from the already-live-computed
@@ -241,7 +260,8 @@ const getSchoolsDataLive = unstable_cache(
     const sheetsData = await fetchSheetsData();
     let { schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324 } = sheetsData;
     const { fetchedAt, subDaoOpeningYearByName } = sheetsData;
-    let schools = await applyInternallyComputedSchools(sheetsData.schools);
+    const computed = await applyInternallyComputedSchools(sheetsData.schools, previous?.lastPrices ?? {});
+    let schools = computed.schools;
 
     // A school whose NAV and holdings both came back empty this cycle is
     // exactly the "whole portfolio missing" failure mode — either its sheet
@@ -262,7 +282,7 @@ const getSchoolsDataLive = unstable_cache(
     // own baseline-relative calc couldn't run during a live-price outage
     // and deferred to the same row.ethReturn Current Season was also
     // deferring to, making every panel show identical numbers.
-    const ethPriceUsdNow = (await getPricesForTickers(["ETH"])).ETH?.usd ?? SEASON_START_ETH_USD;
+    const ethPriceUsdNow = (await getPricesForTickers(["ETH"])).ETH?.usd ?? computed.prices.ETH?.usd ?? SEASON_START_ETH_USD;
     const sinceInceptionSchools = rerank(
       patchZeroedFromSnapshot(
         computeSinceInceptionSchools(schools, subDaoOpeningYearByName, ethPriceUsdNow),
@@ -293,7 +313,7 @@ const getSchoolsDataLive = unstable_cache(
 
     const schools2526 = getSchools2526();
 
-    const result: SchoolsCache = { schools, sinceInceptionSchools, schools2526, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools, subDaoOpeningYearByName };
+    const result: SchoolsCache = { schools, sinceInceptionSchools, schools2526, schools2425, schools2324, daoReturnEth2526, daoReturnEthAllTime, daoReturnEth2425, daoReturnEth2324, fetchedAt, totalNAV, avgUsdReturn, avgEthReturn, avgDeployed, tokenToSchools, subDaoOpeningYearByName, lastPrices: computed.prices };
     // The saved snapshot is the last-good fallback patchZeroedFromSnapshot
     // reads next cycle. If it couldn't be read this cycle, nothing above was
     // patched, so saving now would overwrite a good snapshot with zeroed
@@ -304,7 +324,7 @@ const getSchoolsDataLive = unstable_cache(
     if (!(brokenCount > 0 && !previous)) await saveSchoolsSnapshot(result);
     return result;
   },
-  ["schools-data-v29"],
+  ["schools-data-v30"],
   { revalidate: 600 }
 );
 
