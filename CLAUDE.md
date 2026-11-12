@@ -127,6 +127,7 @@ Static marketing/showcase pages for DormDAO's sub-programs, each with a hero + c
 - forum_thread_votes (id, thread_id, user_id)
 - push_subscriptions (id, user_id, endpoint, p256dh, auth, created_at)
 - positions (id, school, ticker, blockchain, tokens, cost_basis_eth, purchase_price_usd, investment_date, created_at, updated_at) — admin-entered fixed position data; a school with ≥1 row here gets its current-season NAV/USD-return/ETH-return/%-deployed computed internally from these + live CoinGecko prices instead of the Google Sheet (see lib/positions.ts, lib/cache.ts's applyInternallyComputedSchools). ticker "ETH" = idle treasury. Managed via the "Positions" tab on a school's page (visible to that school's leadership or a DormDAO admin, gated by canModerate()).
+- pm_rounds, pm_pitches, pm_votes, pm_trades — OBG Prediction Markets (see supabase-predictions-migration.sql, seeded by supabase-predictions-seed.sql). RLS on with no policies: service-role only, read server-side after the Oregon/admin gate in lib/predictions/access.ts. Used when PREDICTIONS_SOURCE=supabase; otherwise /predictions reads the in-code seed (lib/predictions/seed.ts).
 - wallet_login_nonces (nonce, used_at) — service-role only. Single-use claim table for the wallet-signature login nonce in app/api/auth/wallet/route.ts; an insert conflict means that signed login payload was already redeemed. See supabase-wallet-nonce-migration.sql.
 
 ## Scripts
@@ -161,6 +162,7 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY
 VAPID_PRIVATE_KEY
 VAPID_SUBJECT
 RESEND_API_KEY
+PREDICTIONS_SOURCE (optional; "supabase" reads pm_* tables, unset = in-code seed)
 
 ## Known issues to fix
 1. /compare page stub exists but has no implementation yet
