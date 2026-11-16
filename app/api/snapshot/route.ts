@@ -9,6 +9,9 @@ import { send12HourWarningEmail, sendLiquidationAlertEmail } from "@/lib/email";
 import { getCurrentFdvForTickers, checkLiquidationStatus } from "@/lib/fdv";
 import type { Proposal } from "@/lib/proposals";
 import { resolveExpiredProposals } from "@/lib/proposal-resolution";
+import { inceptionBaselineForYear, SEASON_START_NAV_ETH, SEASON_START_DATE } from "@/lib/seasonBaseline";
+import { schoolNameFromSlug } from "@/lib/schoolData";
+import { slugify } from "@/lib/utils";
 
 // A school can act on the Programmatic Liquidation Policy's 50% trim
 // manually/early, ahead of (or instead of relying on) this automated
@@ -475,12 +478,30 @@ export async function GET(req: NextRequest) {
       if (!data || data.length < PAGE) break;
     }
 
-    const lastPerDay = new Map<string, Row>();
-    for (const r of rows) lastPerDay.set(`${r.school_name}|${r.captured_at.slice(0, 10)}`, r);
-    const daily = [...lastPerDay.values()].sort((a, b) => a.captured_at.localeCompare(b.captured_at));
+    // One point per UTC day. Some hourly snapshots were taken mid-outage —
+    // ETH's live price missing (idle ETH valued at $0, so NAV halved and ETH
+    // return read -100%, e.g. Purdue 9/29) or the ETH row missing from
+    // holdings (ETH balance 0, Purdue 9/6). So per day: drop snapshots whose
+    // NAV is >10% off that day's median, then take the latest one whose
+    // holdings have a priced ETH balance.
+    const byDay = new Map<string, Row[]>();
+    for (const r of rows) {
+      const day = r.captured_at.slice(0, 10);
+      if (!byDay.has(day)) byDay.set(day, []);
+      byDay.get(day)!.push(r);
+    }
+    const median = (xs: number[]) => { const a = [...xs].sort((x, y) => x - y); return a[Math.floor(a.length / 2)]; };
+    const candidatesByDay = new Map<string, Row[]>();
+    for (const [day, list] of byDay) {
+      const med = median(list.map((r) => r.nav_usd));
+      const sane = list.filter((r) => Math.abs(r.nav_usd - med) <= med * 0.1);
+      // Latest first; a few per day is plenty to find a clean one.
+      candidatesByDay.set(day, (sane.length ? sane : list).slice(-3).reverse());
+    }
 
-    const ethBalanceById = new Map<string, number>();
-    const ids = daily.map((r) => r.id);
+    type Eth = { tokens: number; priceUsd: number | null };
+    const ethById = new Map<string, Eth>();
+    const ids = [...candidatesByDay.values()].flat().map((r) => r.id);
     for (let i = 0; i < ids.length; i += 100) {
       const { data, error } = await supabase
         .from("portfolio_snapshots")
@@ -488,14 +509,51 @@ export async function GET(req: NextRequest) {
         .in("id", ids.slice(i, i + 100));
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       for (const row of data ?? []) {
-        const holdings = (row.holdings ?? []) as Array<{ ticker: string; tokens: number }>;
-        ethBalanceById.set(row.id, holdings.filter((h) => h.ticker === "ETH").reduce((s, h) => s + (h.tokens ?? 0), 0));
+        const eth = ((row.holdings ?? []) as Array<{ ticker: string; tokens: number; marketValueUsd?: number }>)
+          .filter((h) => h.ticker === "ETH");
+        const tokens = eth.reduce((sum, h) => sum + (h.tokens ?? 0), 0);
+        const value = eth.reduce((sum, h) => sum + (h.marketValueUsd ?? 0), 0);
+        ethById.set(row.id, { tokens, priceUsd: tokens > 0 && value > 0 ? value / tokens : null });
       }
     }
 
-    const snapshots = daily.map((r) => ({ ...r, eth_balance: ethBalanceById.get(r.id) ?? 0 }));
+    // All-time ETH return is measured from the school's inception cohort
+    // baseline (same as the leaderboard's All-Time view); season return from
+    // this season's start NAV. Both from NAV and that day's ETH price, so the
+    // lines are continuous across season rollovers — the stored
+    // eth_return_pct resets at each season start.
+    const schoolName = schoolNameFromSlug(slugify(school)) ?? school;
+    const { subDaoOpeningYearByName } = await getSchoolsData();
+    const inception = inceptionBaselineForYear(subDaoOpeningYearByName?.[schoolName] ?? null);
+    const seasonBaseEth = SEASON_START_NAV_ETH[schoolName] ?? null;
 
-    return NextResponse.json({ snapshots });
+    let lastEthPrice: number | null = null;
+    const snapshots = [...candidatesByDay.keys()].sort().map((day) => {
+      const cands = candidatesByDay.get(day)!;
+      const pick = cands.find((r) => { const e = ethById.get(r.id); return e && e.tokens > 0 && e.priceUsd != null; })
+        ?? cands.find((r) => (ethById.get(r.id)?.tokens ?? 0) === 0 && r.deployed_pct < 99.9)
+        ?? cands[0];
+      const eth = ethById.get(pick.id);
+      // A school holding no idle ETH has no ETH price in its own snapshot;
+      // carry the last one seen forward.
+      const ethPrice = eth?.priceUsd ?? lastEthPrice;
+      if (eth?.priceUsd) lastEthPrice = eth.priceUsd;
+      const navEth = ethPrice ? pick.nav_usd / ethPrice : null;
+      return {
+        ...pick,
+        eth_balance: eth?.tokens ?? 0,
+        all_time_eth_return_pct: navEth != null && inception && inception.ethAmount > 0
+          ? ((navEth - inception.ethAmount) / inception.ethAmount) * 100
+          : null,
+        season_eth_return_pct: day >= SEASON_START_DATE
+          ? (navEth != null && seasonBaseEth ? ((navEth - seasonBaseEth) / seasonBaseEth) * 100 : pick.eth_return_pct)
+          : null,
+      };
+    });
+
+    return NextResponse.json({ snapshots, seasonStart: SEASON_START_DATE }, {
+      headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" },
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: msg }, { status: 500 });

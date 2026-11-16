@@ -6,6 +6,14 @@ import {
 import { useTheme } from "@/components/ThemeProvider";
 import { formatUSD, formatPct } from "@/lib/utils";
 import { schoolDisplayName } from "@/lib/schoolData";
+import { cn } from "@/lib/utils";
+import { SEASON_START_DATE } from "@/lib/seasonBaseline";
+
+// "26-27 Season", from the season start year.
+const SEASON_TAB_LABEL = (() => {
+  const y = Number(SEASON_START_DATE.slice(2, 4));
+  return `${y}-${y + 1} Season`;
+})();
 
 interface Snapshot {
   id: string;
@@ -16,7 +24,13 @@ interface Snapshot {
   usd_return_pct: number;
   deployed_pct: number;
   eth_balance: number;
+  // ETH return since the school's inception baseline, and since this
+  // season's start (null before it) — see app/api/snapshot/route.ts.
+  all_time_eth_return_pct: number | null;
+  season_eth_return_pct: number | null;
 }
+
+type View = "all" | "season";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -29,6 +43,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<View>("all");
 
   useEffect(() => {
     fetch(`/api/snapshot?school=${encodeURIComponent(schoolName)}`)
@@ -76,16 +91,37 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
     );
   }
 
-  const chartData = snapshots.map(s => ({
+  const shown = view === "season"
+    ? snapshots.filter(s => s.captured_at.slice(0, 10) >= SEASON_START_DATE)
+    : snapshots;
+  const chartData = shown.map(s => ({
     date: formatDate(s.captured_at),
     nav: s.nav_usd,
-    ethReturn: s.eth_return_pct,
+    ethReturn: view === "season" ? s.season_eth_return_pct : s.all_time_eth_return_pct,
     usdReturn: s.usd_return_pct,
     ethBalance: s.eth_balance,
   }));
 
+  const pill = (v: View, label: string) => (
+    <button
+      onClick={() => setView(v)}
+      className={cn(
+        "shrink-0 whitespace-nowrap text-xs px-2.5 py-1 rounded-full border transition-colors",
+        view === v
+          ? "bg-primary text-[#fff] border-primary"
+          : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-400 bg-white dark:bg-transparent hover:border-gray-300 dark:hover:border-white/20"
+      )}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div className="space-y-6">
+      <div className="flex gap-2">
+        {pill("all", "All-Time")}
+        {pill("season", SEASON_TAB_LABEL)}
+      </div>
       {/* NAV over time */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">NAV Over Time</h3>
@@ -106,7 +142,9 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
 
       {/* ETH Return over time */}
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">ETH Return Over Time</h3>
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-4">ETH Return Over Time
+          <span className="font-normal text-xs ml-2">{view === "season" ? `since ${formatDate(SEASON_START_DATE + "T12:00:00Z")}` : "since inception"}</span>
+        </h3>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={grid} />
@@ -123,6 +161,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
               stroke="#34d399"
               strokeWidth={2}
               dot={false}
+              connectNulls
             />
           </LineChart>
         </ResponsiveContainer>
