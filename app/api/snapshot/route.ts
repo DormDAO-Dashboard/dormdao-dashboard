@@ -496,11 +496,15 @@ export async function GET(req: NextRequest) {
     for (const [day, list] of byDay) {
       const med = median(list.map((r) => r.nav_usd));
       const sane = list.filter((r) => Math.abs(r.nav_usd - med) <= med * 0.1);
-      // Latest first; a few per day is plenty to find a clean one.
-      candidatesByDay.set(day, (sane.length ? sane : list).slice(-3).reverse());
+      // Latest first; a handful per day is enough to find a clean one.
+      candidatesByDay.set(day, (sane.length ? sane : list).slice(-6).reverse());
     }
 
-    type Eth = { tokens: number; priceUsd: number | null };
+    // atCostUsd: value of tokens priced at exactly their purchase price
+    // (0% ROI). When CoinGecko failed, every unquoted token fell back to
+    // purchase price — fixed 2026-11-11, but snapshots from those stretches
+    // overstate NAV (NYU 11/5–11/8, Columbia 8/25–9/1).
+    type Eth = { tokens: number; priceUsd: number | null; atCostUsd: number };
     const ethById = new Map<string, Eth>();
     const ids = [...candidatesByDay.values()].flat().map((r) => r.id);
     for (let i = 0; i < ids.length; i += 100) {
@@ -510,11 +514,14 @@ export async function GET(req: NextRequest) {
         .in("id", ids.slice(i, i + 100));
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       for (const row of data ?? []) {
-        const eth = ((row.holdings ?? []) as Array<{ ticker: string; tokens: number; marketValueUsd?: number }>)
-          .filter((h) => h.ticker === "ETH");
+        const holdings = (row.holdings ?? []) as Array<{ ticker: string; tokens: number; marketValueUsd?: number; roiUsdPct?: number }>;
+        const eth = holdings.filter((h) => h.ticker === "ETH");
         const tokens = eth.reduce((sum, h) => sum + (h.tokens ?? 0), 0);
         const value = eth.reduce((sum, h) => sum + (h.marketValueUsd ?? 0), 0);
-        ethById.set(row.id, { tokens, priceUsd: tokens > 0 && value > 0 ? value / tokens : null });
+        const atCostUsd = holdings
+          .filter((h) => h.ticker !== "ETH" && h.roiUsdPct === 0)
+          .reduce((sum, h) => sum + (h.marketValueUsd ?? 0), 0);
+        ethById.set(row.id, { tokens, priceUsd: tokens > 0 && value > 0 ? value / tokens : null, atCostUsd });
       }
     }
 
@@ -542,9 +549,18 @@ export async function GET(req: NextRequest) {
       }
     } catch { /* fall through to carry-forward */ }
 
+    // A school can legitimately hold a token with no live price (valued at
+    // cost every day), so "at cost" only flags a snapshot when it's well
+    // above that school's usual share.
+    const costShare = (r: Row) => (ethById.get(r.id)?.atCostUsd ?? 0) / r.nav_usd;
+    const allCands = [...candidatesByDay.values()].flat();
+    const usualCostShare = allCands.length ? allCands.map(costShare).sort((a, b) => a - b)[Math.floor(allCands.length / 2)] : 0;
+    const pricedOk = (r: Row) => costShare(r) <= usualCostShare + 0.05;
+
     let lastEthPrice: number | null = null;
-    const picked = [...candidatesByDay.keys()].sort().map((day) => {
-      const cands = candidatesByDay.get(day)!;
+    const days = [...candidatesByDay.keys()].sort().filter((day) => candidatesByDay.get(day)!.some(pricedOk));
+    const picked = days.map((day) => {
+      const cands = candidatesByDay.get(day)!.filter(pricedOk);
       const pick = cands.find((r) => { const e = ethById.get(r.id); return e && e.tokens > 0 && e.priceUsd != null; })
         ?? cands.find((r) => (ethById.get(r.id)?.tokens ?? 0) === 0 && r.deployed_pct < 99.9)
         ?? cands[0];
@@ -569,17 +585,24 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Some days only have one snapshot and it's a bad one, so also check each
-    // day against its neighbours: a NAV that's >20% off both the day before
-    // and the day after (which agree with each other) is a glitch, not a
-    // move, and is dropped; an ETH balance of 0 between two days that have
-    // ETH is blanked. A real drop that persists isn't touched.
-    const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol * Math.max(Math.abs(a), Math.abs(b));
+    // Then check each day against the week around it. A day whose NAV is
+    // >8% off the 7-day median, or whose All-Time ETH return is >8 points
+    // off it, is a glitch (a bad ETH price, a failed fetch), not a move — a
+    // real move that holds pulls the median with it and isn't touched. A NAV
+    // identical to the day before means data collection was paused and the
+    // same figure was re-saved, so those repeats are dropped too.
+    const med = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
     const snapshots = picked.filter((cur, i) => {
-      const prev = picked[i - 1], next = picked[i + 1];
-      if (!prev || !next) return true;
-      return !(near(prev.nav_usd, next.nav_usd, 0.2) && !near(cur.nav_usd, prev.nav_usd, 0.2) && !near(cur.nav_usd, next.nav_usd, 0.2));
+      if (i > 0 && cur.nav_usd === picked[i - 1].nav_usd) return false;
+      const win = picked.slice(Math.max(0, i - 3), i + 4);
+      const navMed = med(win.map((r) => r.nav_usd));
+      if (Math.abs(cur.nav_usd - navMed) > navMed * 0.08) return false;
+      const rets = win.map((r) => r.all_time_eth_return_pct).filter((v): v is number => v != null);
+      if (cur.all_time_eth_return_pct != null && rets.length && Math.abs(cur.all_time_eth_return_pct - med(rets)) > 8) return false;
+      return true;
     });
+    // An ETH balance of 0 between two days that have ETH is a snapshot
+    // missing its ETH row (Purdue 9/6) — blank it rather than plot 0.
     snapshots.forEach((cur, i) => {
       const prev = snapshots[i - 1], next = snapshots[i + 1];
       if (prev && next && cur.eth_balance === 0 && (prev.eth_balance ?? 0) > 0 && (next.eth_balance ?? 0) > 0) cur.eth_balance = null;
