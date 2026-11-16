@@ -4,11 +4,14 @@ import { SCHOOL_SOCIALS, type SchoolSocials } from "./schoolData";
 const BUCKET = "admin-data";
 const FILE   = "school-socials.json";
 
-// school name (SCHOOL_NAMES entry, e.g. "Oregon") -> admin-entered field
-// overrides. Only the four fields exposed in the editor are ever written
-// here — website/twitter/linkedin/instagram — same shape as SchoolSocials
-// but partial, same pattern as EmailTemplateOverrides.
-export type SchoolSocialsOverrides = Record<string, Partial<SchoolSocials>>;
+// school name (SCHOOL_NAMES entry, e.g. "Oregon") -> link overrides entered
+// in the school page's editor, plus an uploaded profile photo (photoUrl).
+// Same override-wins pattern as EmailTemplateOverrides.
+export type SchoolProfileOverride = Partial<SchoolSocials> & { photoUrl?: string };
+export type SchoolSocialsOverrides = Record<string, SchoolProfileOverride>;
+
+// Link fields the editor exposes.
+export const EDITABLE_SOCIAL_FIELDS = ["website", "twitter", "linkedin", "instagram", "discord", "github", "telegram"] as const;
 
 async function getStorage() {
   const supabase = createServiceClient();
@@ -19,7 +22,19 @@ async function getStorage() {
   return supabase.storage.from(BUCKET);
 }
 
+// Short in-memory cache: every school logo on the site resolves through
+// getSchoolPhotoUrl (app/api/schools/[slug]/photo), so this is read often.
+let memo: { at: number; value: SchoolSocialsOverrides } | null = null;
+const MEMO_MS = 60_000;
+
 export async function getSchoolSocialsOverrides(): Promise<SchoolSocialsOverrides> {
+  if (memo && Date.now() - memo.at < MEMO_MS) return memo.value;
+  const value = await readOverrides();
+  memo = { at: Date.now(), value };
+  return value;
+}
+
+async function readOverrides(): Promise<SchoolSocialsOverrides> {
   try {
     const storage = await getStorage();
     const { data, error } = await storage.download(FILE);
@@ -31,12 +46,15 @@ export async function getSchoolSocialsOverrides(): Promise<SchoolSocialsOverride
   }
 }
 
+// Merges into the school's existing override, so saving links keeps the
+// photo and vice versa.
 export async function saveSchoolSocialsOverride(
   schoolName: string,
-  fields: Partial<SchoolSocials>
+  fields: SchoolProfileOverride
 ): Promise<void> {
-  const overrides = await getSchoolSocialsOverrides();
-  overrides[schoolName] = fields;
+  const overrides = await readOverrides();
+  overrides[schoolName] = { ...overrides[schoolName], ...fields };
+  memo = null;
   const storage = await getStorage();
   const { error } = await storage.upload(FILE, JSON.stringify(overrides, null, 2), {
     contentType: "application/json",
@@ -53,5 +71,12 @@ export async function getEffectiveSchoolSocials(schoolName: string): Promise<Sch
   const base = SCHOOL_SOCIALS[schoolName] ?? {};
   const overrides = await getSchoolSocialsOverrides();
   const override = overrides[schoolName] ?? {};
-  return { ...base, ...override };
+  const links = { ...override };
+  delete links.photoUrl;
+  return { ...base, ...links };
+}
+
+export async function getSchoolPhotoUrl(schoolName: string): Promise<string | null> {
+  const overrides = await getSchoolSocialsOverrides();
+  return overrides[schoolName]?.photoUrl || null;
 }

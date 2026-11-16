@@ -9,7 +9,7 @@ import { SyncFooter } from "@/components/SyncFooter";
 import { SchoolLogo } from "@/components/SchoolLogo";
 import { SchoolSocialsEditor } from "@/components/SchoolSocialsEditor";
 import { schoolDisplayName, schoolNameFromSlug, type SchoolSocials } from "@/lib/schoolData";
-import { getEffectiveSchoolSocials } from "@/lib/school-socials-store";
+import { getEffectiveSchoolSocials, getSchoolPhotoUrl } from "@/lib/school-socials-store";
 import { getSchoolColors, accentBorderColor } from "@/lib/schoolColors";
 import { mergeHoldingsByTicker } from "@/lib/holdings";
 import { getScaledTokenSeasonPerformance } from "@/lib/seasonPerformance";
@@ -65,6 +65,7 @@ async function SchoolContent({ slug }: { slug: string }) {
   const colors = getSchoolColors(school.slug);
   const boxBorder = accentBorderColor(colors.primary);
   const socials = await getEffectiveSchoolSocials(school.name);
+  const photoUrl = await getSchoolPhotoUrl(school.name);
 
   const otherSchools: Record<string, string[]> = {};
   for (const h of school.holdings ?? []) {
@@ -114,7 +115,7 @@ async function SchoolContent({ slug }: { slug: string }) {
             style={{ backgroundColor: colors.secondary }}
           >
             <div className="rounded-full p-0.5" style={{ backgroundColor: colors.primary }}>
-              <SchoolLogo name={school.name} size={48} />
+              <SchoolLogo name={school.name} size={48} src={photoUrl} />
             </div>
           </div>
           <div>
@@ -124,9 +125,11 @@ async function SchoolContent({ slug }: { slug: string }) {
         </div>
         <SchoolSocialsEditor
           schoolSlug={school.slug}
+          schoolKey={school.name}
           schoolName={schoolDisplayName(school.name)}
           colors={colors}
           initialSocials={socials}
+          photoUrl={photoUrl}
         />
       </div>
 

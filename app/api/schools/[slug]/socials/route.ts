@@ -1,51 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { isAdminUser } from "@/lib/admin-config";
 import { schoolNameFromSlug } from "@/lib/schoolData";
-import { getEffectiveSchoolSocials, saveSchoolSocialsOverride } from "@/lib/school-socials-store";
+import { getEffectiveSchoolSocials, saveSchoolSocialsOverride, EDITABLE_SOCIAL_FIELDS } from "@/lib/school-socials-store";
+import { canEditSchoolProfile } from "@/lib/school-profile-access";
 
-// Same "true admin" gate as /admin/* pages (lib/admin-guard.ts's
-// requireAdmin) — deliberately NOT canModerate()/club-leadership, per the
-// explicit ask that only admins with access to the admin page can edit this.
-async function requireTrueAdmin(): Promise<boolean> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-  if (isAdminUser(user.email, user.user_metadata?.wallet_address as string | undefined)) return true;
-  const service = createServiceClient();
-  const { data: prof } = await service.from("profiles").select("role").eq("id", user.id).single();
-  return prof?.role === "dorm_admin";
+// Whether the signed-in user may edit this school's profile — drives the
+// edit button on the school page.
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params;
+  const schoolName = schoolNameFromSlug(slug);
+  if (!schoolName) return NextResponse.json({ error: "Unknown school" }, { status: 404 });
+  return NextResponse.json({ canEdit: await canEditSchoolProfile(schoolName) });
 }
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  if (!(await requireTrueAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { slug } = await params;
   const schoolName = schoolNameFromSlug(slug);
   if (!schoolName) return NextResponse.json({ error: "Unknown school" }, { status: 404 });
+  if (!(await canEditSchoolProfile(schoolName))) {
+    return NextResponse.json({ error: "Only admins and this school's Directors and Presidents can edit its profile" }, { status: 403 });
+  }
 
-  const body = await req.json() as {
-    website?: string;
-    twitter?: string;
-    linkedin?: string;
-    instagram?: string;
-  };
+  const body = await req.json() as Record<string, unknown>;
 
-  // Trim every field; an all-whitespace entry is treated as "cleared" (empty
-  // string) rather than saved as literal whitespace, same as leaving it
-  // blank — both mean "no link", and SocialLinks' falsy check on the
-  // resulting empty string already handles hiding it.
-  const fields = {
-    website: (body.website ?? "").trim(),
-    twitter: (body.twitter ?? "").trim(),
-    linkedin: (body.linkedin ?? "").trim(),
-    instagram: (body.instagram ?? "").trim(),
-  };
+  // Trim every field; blank means "no link" (an explicit "" also clears a
+  // built-in link from SCHOOL_SOCIALS). Only http(s) links are accepted.
+  const fields: Record<string, string> = {};
+  for (const key of EDITABLE_SOCIAL_FIELDS) {
+    const value = typeof body[key] === "string" ? (body[key] as string).trim() : "";
+    if (value && !/^https?:\/\/\S+$/i.test(value)) {
+      return NextResponse.json({ error: `${key[0].toUpperCase()}${key.slice(1)} must be a full link starting with https://` }, { status: 400 });
+    }
+    fields[key] = value;
+  }
 
   try {
     await saveSchoolSocialsOverride(schoolName, fields);

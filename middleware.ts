@@ -85,6 +85,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // School logos (app/api/schools/[slug]/photo) are excluded: a page shows
+    // many of them and they need no session.
+    "/((?!_next/static|_next/image|favicon\\.ico|api/schools/[^/]+/photo$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
