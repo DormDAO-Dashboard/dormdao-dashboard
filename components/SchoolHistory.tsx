@@ -92,7 +92,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={grid} />
-            <XAxis dataKey="date" tick={{ fill: tick, fontSize: 11 }} />
+            <XAxis dataKey="date" tick={{ fill: tick, fontSize: 11 }} minTickGap={24} />
             <YAxis tick={{ fill: tick, fontSize: 11 }} tickFormatter={(v) => formatUSD(v, true)} />
             <Tooltip
               formatter={(v) => [formatUSD(Number(v)), "NAV"]}
@@ -110,7 +110,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={grid} />
-            <XAxis dataKey="date" tick={{ fill: tick, fontSize: 11 }} />
+            <XAxis dataKey="date" tick={{ fill: tick, fontSize: 11 }} minTickGap={24} />
             <YAxis tick={{ fill: tick, fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
             <Tooltip
               formatter={(v) => [formatPct(Number(v)), "ETH Return"]}
@@ -134,7 +134,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={grid} />
-            <XAxis dataKey="date" tick={{ fill: tick, fontSize: 11 }} />
+            <XAxis dataKey="date" tick={{ fill: tick, fontSize: 11 }} minTickGap={24} />
             <YAxis tick={{ fill: tick, fontSize: 11 }} tickFormatter={(v) => `${Number(v).toFixed(2)} ETH`} />
             <Tooltip
               formatter={(v) => [`${Number(v).toFixed(4)} ETH`, "ETH Balance"]}

@@ -446,30 +446,54 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const school = searchParams.get("school");
+    // Only the school History tab reads this; across every school the
+    // full history is far too many rows to page through.
+    if (!school) return NextResponse.json({ error: "school is required" }, { status: 400 });
 
     const supabase = createServiceClient();
 
-    let query = supabase
-      .from("portfolio_snapshots")
-      .select("id, captured_at, school_name, nav_usd, eth_return_pct, usd_return_pct, deployed_pct, holdings")
-      .order("captured_at", { ascending: true });
-
-    if (school) {
-      query = query.ilike("school_name", school);
+    // Snapshots are hourly, so a school has thousands of rows. This used to
+    // take the first 200 in ascending order, which cut every history chart
+    // off at its first ~8 days (Purdue's ended 6/23). Read the whole history
+    // in pages (light columns only), keep the last snapshot of each UTC day,
+    // then load holdings just for those to get the ETH balance.
+    type Row = { id: string; captured_at: string; school_name: string; nav_usd: number; eth_return_pct: number; usd_return_pct: number; deployed_pct: number };
+    const rows: Row[] = [];
+    const PAGE = 1000;
+    for (let from = 0; ; from += PAGE) {
+      let query = supabase
+        .from("portfolio_snapshots")
+        .select("id, captured_at, school_name, nav_usd, eth_return_pct, usd_return_pct, deployed_pct")
+        // Skip snapshots taken during a failed upstream fetch (NAV 0).
+        .gt("nav_usd", 0)
+        .order("captured_at", { ascending: true })
+        .range(from, from + PAGE - 1)
+        .ilike("school_name", school);
+      const { data, error } = await query;
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      rows.push(...((data ?? []) as Row[]));
+      if (!data || data.length < PAGE) break;
     }
 
-    const { data, error } = await query.limit(200);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const lastPerDay = new Map<string, Row>();
+    for (const r of rows) lastPerDay.set(`${r.school_name}|${r.captured_at.slice(0, 10)}`, r);
+    const daily = [...lastPerDay.values()].sort((a, b) => a.captured_at.localeCompare(b.captured_at));
 
-    const snapshots = (data ?? []).map((row) => {
-      const holdings = (row.holdings ?? []) as Array<{ ticker: string; tokens: number }>;
-      const eth_balance = holdings
-        .filter((h) => h.ticker === "ETH")
-        .reduce((s, h) => s + (h.tokens ?? 0), 0);
-      const { holdings: _h, ...rest } = row;
-      void _h;
-      return { ...rest, eth_balance };
-    });
+    const ethBalanceById = new Map<string, number>();
+    const ids = daily.map((r) => r.id);
+    for (let i = 0; i < ids.length; i += 100) {
+      const { data, error } = await supabase
+        .from("portfolio_snapshots")
+        .select("id, holdings")
+        .in("id", ids.slice(i, i + 100));
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      for (const row of data ?? []) {
+        const holdings = (row.holdings ?? []) as Array<{ ticker: string; tokens: number }>;
+        ethBalanceById.set(row.id, holdings.filter((h) => h.ticker === "ETH").reduce((s, h) => s + (h.tokens ?? 0), 0));
+      }
+    }
+
+    const snapshots = daily.map((r) => ({ ...r, eth_balance: ethBalanceById.get(r.id) ?? 0 }));
 
     return NextResponse.json({ snapshots });
   } catch (err: unknown) {
