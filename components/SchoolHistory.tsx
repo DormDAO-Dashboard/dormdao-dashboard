@@ -23,7 +23,8 @@ interface Snapshot {
   eth_return_pct: number;
   usd_return_pct: number;
   deployed_pct: number;
-  eth_balance: number;
+  // null on a day whose snapshot was missing its ETH row.
+  eth_balance: number | null;
   // ETH return since the school's inception baseline, and since this
   // season's start (null before it) — see app/api/snapshot/route.ts.
   all_time_eth_return_pct: number | null;
@@ -186,6 +187,7 @@ export function SchoolHistory({ schoolName }: { schoolName: string }) {
               stroke="#60a5fa"
               strokeWidth={2}
               dot={false}
+              connectNulls
             />
           </LineChart>
         </ResponsiveContainer>

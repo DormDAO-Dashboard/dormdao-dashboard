@@ -12,6 +12,7 @@ import { resolveExpiredProposals } from "@/lib/proposal-resolution";
 import { inceptionBaselineForYear, SEASON_START_NAV_ETH, SEASON_START_DATE } from "@/lib/seasonBaseline";
 import { schoolNameFromSlug } from "@/lib/schoolData";
 import { slugify } from "@/lib/utils";
+import { fetchCoinGecko } from "@/lib/coingecko";
 
 // A school can act on the Programmatic Liquidation Policy's 50% trim
 // manually/early, ahead of (or instead of relying on) this automated
@@ -527,8 +528,22 @@ export async function GET(req: NextRequest) {
     const inception = inceptionBaselineForYear(subDaoOpeningYearByName?.[schoolName] ?? null);
     const seasonBaseEth = SEASON_START_NAV_ETH[schoolName] ?? null;
 
+    // Older snapshots don't store ETH's price, so fall back to CoinGecko's
+    // daily ETH close for that date (one cached call covering the past year).
+    const dailyEthUsd = new Map<string, number>();
+    try {
+      const res = await fetchCoinGecko(
+        "https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=365&interval=daily",
+        { next: { revalidate: 3600 } }
+      );
+      if (res.ok) {
+        const json = await res.json() as { prices?: [number, number][] };
+        for (const [ms, usd] of json.prices ?? []) dailyEthUsd.set(new Date(ms).toISOString().slice(0, 10), usd);
+      }
+    } catch { /* fall through to carry-forward */ }
+
     let lastEthPrice: number | null = null;
-    const snapshots = [...candidatesByDay.keys()].sort().map((day) => {
+    const picked = [...candidatesByDay.keys()].sort().map((day) => {
       const cands = candidatesByDay.get(day)!;
       const pick = cands.find((r) => { const e = ethById.get(r.id); return e && e.tokens > 0 && e.priceUsd != null; })
         ?? cands.find((r) => (ethById.get(r.id)?.tokens ?? 0) === 0 && r.deployed_pct < 99.9)
@@ -536,12 +551,15 @@ export async function GET(req: NextRequest) {
       const eth = ethById.get(pick.id);
       // A school holding no idle ETH has no ETH price in its own snapshot;
       // carry the last one seen forward.
-      const ethPrice = eth?.priceUsd ?? lastEthPrice;
-      if (eth?.priceUsd) lastEthPrice = eth.priceUsd;
+      // CoinGecko's daily points sit at 00:00 UTC, i.e. the close of the
+      // day before — so the next date's point is this day's close.
+      const nextDay = new Date(Date.parse(day) + 86_400_000).toISOString().slice(0, 10);
+      const ethPrice = eth?.priceUsd ?? dailyEthUsd.get(nextDay) ?? dailyEthUsd.get(day) ?? lastEthPrice;
+      if (ethPrice) lastEthPrice = ethPrice;
       const navEth = ethPrice ? pick.nav_usd / ethPrice : null;
       return {
         ...pick,
-        eth_balance: eth?.tokens ?? 0,
+        eth_balance: (eth?.tokens ?? 0) as number | null,
         all_time_eth_return_pct: navEth != null && inception && inception.ethAmount > 0
           ? ((navEth - inception.ethAmount) / inception.ethAmount) * 100
           : null,
@@ -549,6 +567,22 @@ export async function GET(req: NextRequest) {
           ? (navEth != null && seasonBaseEth ? ((navEth - seasonBaseEth) / seasonBaseEth) * 100 : pick.eth_return_pct)
           : null,
       };
+    });
+
+    // Some days only have one snapshot and it's a bad one, so also check each
+    // day against its neighbours: a NAV that's >20% off both the day before
+    // and the day after (which agree with each other) is a glitch, not a
+    // move, and is dropped; an ETH balance of 0 between two days that have
+    // ETH is blanked. A real drop that persists isn't touched.
+    const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol * Math.max(Math.abs(a), Math.abs(b));
+    const snapshots = picked.filter((cur, i) => {
+      const prev = picked[i - 1], next = picked[i + 1];
+      if (!prev || !next) return true;
+      return !(near(prev.nav_usd, next.nav_usd, 0.2) && !near(cur.nav_usd, prev.nav_usd, 0.2) && !near(cur.nav_usd, next.nav_usd, 0.2));
+    });
+    snapshots.forEach((cur, i) => {
+      const prev = snapshots[i - 1], next = snapshots[i + 1];
+      if (prev && next && cur.eth_balance === 0 && (prev.eth_balance ?? 0) > 0 && (next.eth_balance ?? 0) > 0) cur.eth_balance = null;
     });
 
     return NextResponse.json({ snapshots, seasonStart: SEASON_START_DATE }, {
